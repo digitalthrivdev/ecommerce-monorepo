@@ -71,7 +71,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Operations",
     items: [
       { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: BOTH, ready: true },
-      { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH },
+      { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH, ready: true },
       { title: "Inventory", href: "/inventory", icon: Boxes, roles: BOTH },
       { title: "Delivery partners", href: "/delivery-partners", icon: Bike, roles: ADMIN },
     ],

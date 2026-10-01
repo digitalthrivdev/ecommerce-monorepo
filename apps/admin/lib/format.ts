@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentMethod } from "./types";
+import type { DeliveryStatus, OrderAction, OrderStatus, PaymentMethod, PaymentStatus, UserRole } from "./types";
 
 const LOCALE = "en-IN";
 
@@ -37,7 +37,36 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   ONLINE: "Online",
 };
 
-export const ROLE_LABELS = {
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: "Pending",
+  PROCESSING: "Processing",
+  PAID: "Paid",
+  FAILED: "Failed",
+  REFUNDED: "Refunded",
+};
+
+export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
+  PENDING: "Pending",
+  ASSIGNED: "Assigned",
+  PICKED_UP: "Picked up",
+  OUT_FOR_DELIVERY: "Out for delivery",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
+export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
+  accept: "Accept order",
+  "start-picking": "Start picking",
+  pack: "Mark packed",
+  ready: "Ready for pickup",
+  assign: "Assign partner",
+  reassign: "Reassign partner",
+  cancel: "Cancel order",
+};
+
+export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Admin",
   STORE_STAFF: "Store staff",
-} as const;
+  CUSTOMER: "Customer",
+  DELIVERY_PARTNER: "Delivery partner",
+};

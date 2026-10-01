@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Boxes, IndianRupee, PackageCheck, ShoppingBag, type LucideIcon } from "lucide-react";
 
 import { OrderStatusBadge } from "@/components/order-status-badge";
@@ -101,7 +102,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                     {stats.recentOrders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell>
-                          <div className="font-medium">{order.orderNumber}</div>
+                          <Link href={`/orders/${order.id}`} className="font-medium underline-offset-4 hover:underline">
+                            {order.orderNumber}
+                          </Link>
                           <div className="text-xs text-muted-foreground">{formatDateTime(order.createdAt, stats.timezone)}</div>
                         </TableCell>
                         <TableCell>{order.customerName}</TableCell>

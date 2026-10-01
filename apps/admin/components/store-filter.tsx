@@ -16,6 +16,7 @@ export function StoreFilter({ stores }: { stores: Store[] }) {
 
   function onChange(value: string) {
     const params = new URLSearchParams(searchParams);
+    params.delete("page");
     if (value === ALL) {
       params.delete("storeId");
     } else {
