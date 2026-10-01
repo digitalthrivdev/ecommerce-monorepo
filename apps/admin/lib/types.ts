@@ -267,6 +267,49 @@ export type PlatformSettings = {
   updatedAt: string;
 };
 
+export type AppearanceLink = { type: "none" } | { type: "category"; categoryId: string };
+
+export type AppearanceTheme = {
+  colors: { primary: string; onPrimary: string; accent: string; onAccent: string };
+  radius: number;
+  cardStyle: "flat" | "outlined" | "elevated";
+  colorScheme: "light" | "dark" | "system";
+};
+
+export type Announcement = { enabled: boolean; text: string; backgroundColor: string | null; textColor: string | null };
+
+export type HomeBanner = { id: string; imageUrl: string; title: string | null; subtitle: string | null; link: AppearanceLink };
+
+export type HomeSection =
+  | { id: string; enabled: boolean; type: "banner_carousel"; banners: HomeBanner[]; autoplay: boolean }
+  | { id: string; enabled: boolean; type: "category_grid"; title: string | null; columns: 3 | 4; categoryIds: string[] }
+  | { id: string; enabled: boolean; type: "product_rail"; title: string; categoryId: string; limit: number }
+  | {
+      id: string;
+      enabled: boolean;
+      type: "offer_strip";
+      title: string;
+      subtitle: string | null;
+      imageUrl: string | null;
+      backgroundColor: string;
+      textColor: string;
+      link: AppearanceLink;
+    };
+
+export type HomeSectionType = HomeSection["type"];
+
+/** The customer app's look and home screen, edited on the Appearance screen. */
+export type Appearance = {
+  appName: string;
+  logoUrl: string | null;
+  theme: AppearanceTheme;
+  announcement: Announcement;
+  homeSections: HomeSection[];
+};
+
+/** `updatedAt` is null while the defaults from the server configuration are in use. */
+export type AdminAppearance = Appearance & { updatedAt: string | null; updatedById: string | null };
+
 /** Result returned by Server Actions to client components for toasts and inline errors. */
 export type ActionResult =
   | { ok: true; message: string }

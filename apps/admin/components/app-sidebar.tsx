@@ -13,6 +13,7 @@ import {
   Monitor,
   Moon,
   Package,
+  Palette,
   Settings,
   ShoppingBag,
   Store,
@@ -88,6 +89,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Administration",
     items: [
       { title: "Customers", href: "/customers", icon: Users, roles: ADMIN, ready: true },
+      { title: "Appearance", href: "/appearance", icon: Palette, roles: ADMIN, ready: true },
       { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN, ready: true },
     ],
   },

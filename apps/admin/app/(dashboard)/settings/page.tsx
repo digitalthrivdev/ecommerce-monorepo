@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
 import { SettingsForm } from "@/components/settings/settings-form";
@@ -10,36 +11,13 @@ import type { PlatformSettings } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Settings" };
 
-function ColorSwatch({ label, color }: { label: string; color: string }) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span className="size-4 rounded border" style={{ backgroundColor: color }} aria-hidden />
-      <span className="font-mono text-xs">{color}</span>
-      <span className="sr-only">{label}</span>
-    </span>
-  );
-}
-
 export default async function SettingsPage() {
   await requireAdmin();
   const [settings, deployment] = await Promise.all([apiFetch<PlatformSettings>("/settings/platform"), getPublicSettings()]);
 
-  const rows: [string, React.ReactNode][] = [
-    ["App name", deployment.appName],
+  const rows: [string, string][] = [
     ["Currency", deployment.currency],
     ["Time zone", deployment.timezone],
-    ["Primary color", <ColorSwatch key="primary" label="Primary color" color={deployment.branding.primaryColor} />],
-    ["Secondary color", <ColorSwatch key="secondary" label="Secondary color" color={deployment.branding.secondaryColor} />],
-    [
-      "Logo",
-      deployment.branding.logoUrl ? (
-        <a key="logo" href={deployment.branding.logoUrl} target="_blank" rel="noopener noreferrer" className="break-all underline-offset-4 hover:underline">
-          {deployment.branding.logoUrl}
-        </a>
-      ) : (
-        "Not set"
-      ),
-    ],
   ];
 
   return (
@@ -75,6 +53,13 @@ export default async function SettingsPage() {
                 </div>
               ))}
             </dl>
+            <p className="mt-4 text-sm text-muted-foreground">
+              The app name, logo, colours and home screen are edited on the{" "}
+              <Link href="/appearance" className="font-medium text-foreground underline-offset-4 hover:underline">
+                Appearance
+              </Link>{" "}
+              page.
+            </p>
           </CardContent>
         </Card>
       </div>
