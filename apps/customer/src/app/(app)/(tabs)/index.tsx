@@ -56,10 +56,15 @@ function HomeHeader() {
 function SearchBar() {
   return (
     <View className="bg-highlight px-4 pb-3">
-      <View className="h-12 flex-row items-center gap-2.5 rounded-lg border border-border bg-card px-3.5">
+      <Pressable
+        onPress={() => router.push("/search")}
+        className="h-12 flex-row items-center gap-2.5 rounded-lg border border-border bg-card px-3.5 active:opacity-80"
+        accessibilityRole="search"
+        accessibilityLabel="Search products"
+      >
         <Icon as={Search} size={18} className="text-muted-foreground" />
         <Text className="text-[15px] text-muted-foreground">Search for &quot;milk&quot;</Text>
-      </View>
+      </Pressable>
     </View>
   );
 }

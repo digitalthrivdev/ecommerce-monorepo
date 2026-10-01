@@ -2,9 +2,10 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 
 import { Text } from "@/components/ui/text";
+import { linkAction } from "@/lib/navigation";
 import type { BannerCarouselSection } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +17,10 @@ type Banner = BannerCarouselSection["banners"][number];
 
 function BannerSlide({ banner, width }: { banner: Banner; width: number }) {
   const hasCaption = Boolean(banner.title || banner.subtitle);
+  const onPress = linkAction(banner.link);
 
   return (
-    <View className="overflow-hidden rounded-lg bg-muted" style={{ width, aspectRatio: 2 }}>
+    <Pressable onPress={onPress} disabled={!onPress} className="overflow-hidden rounded-lg bg-muted active:opacity-90" style={{ width, aspectRatio: 2 }}>
       <Image source={{ uri: banner.imageUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" transition={150} />
       {hasCaption && (
         <LinearGradient colors={["transparent", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, gap: 2, paddingHorizontal: 16, paddingBottom: 12, paddingTop: 32 }}>
@@ -34,7 +36,7 @@ function BannerSlide({ banner, width }: { banner: Banner; width: number }) {
           )}
         </LinearGradient>
       )}
-    </View>
+    </Pressable>
   );
 }
 

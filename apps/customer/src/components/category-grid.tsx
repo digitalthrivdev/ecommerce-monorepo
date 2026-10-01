@@ -1,10 +1,11 @@
 import { Image } from "expo-image";
 import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
+import { openCategory } from "@/lib/navigation";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ function CategoryTile({ category }: { category: Category }) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <View className="flex-1 items-center gap-1.5">
+    <Pressable onPress={() => openCategory(category)} className="flex-1 items-center gap-1.5 active:opacity-70" accessibilityRole="button" accessibilityLabel={category.name}>
       <View className={cn("aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-tile", TILE_SURFACE[cardStyle])}>
         {category.imageUrl && !failed ? (
           <Image source={{ uri: category.imageUrl }} style={{ width: "78%", height: "78%" }} contentFit="contain" onError={() => setFailed(true)} />
@@ -30,7 +31,7 @@ function CategoryTile({ category }: { category: Category }) {
       <Text className="text-center text-xs font-semibold leading-tight" numberOfLines={2}>
         {category.name}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
