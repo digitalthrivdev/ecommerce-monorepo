@@ -1,0 +1,33 @@
+{
+  "name": "@grocery/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "db:seed": "prisma db seed",
+    "postinstall": "prisma skills sync || exit 0"
+  },
+  "dependencies": {
+    "@fastify/cors": "latest",
+    "@fastify/env": "^7.0.0",
+    "@fastify/helmet": "latest",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "dotenv": "^18.0.4",
+    "fastify": "latest",
+    "fastify-plugin": "^6.0.0",
+    "ioredis": "^6.0.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/pg": "^8.23.1",
+    "prisma": "7.10.0",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

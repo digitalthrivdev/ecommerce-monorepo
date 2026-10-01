@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# env files
+.env
+.env.*
+!.env.example
+
+# build output
+dist/
+build/
+out/
+.next/
+coverage/
+*.tsbuildinfo
+
+# turborepo
+.turbo/
+
+# expo
+.expo/
+web-build/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# os
+.DS_Store
