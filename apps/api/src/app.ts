@@ -13,6 +13,7 @@ import categoriesRoutes from "./modules/categories/categories.routes.js";
 import deliveryRoutes from "./modules/delivery/delivery.routes.js";
 import partnersRoutes from "./modules/delivery/partners.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
+import dashboardRoutes from "./modules/orders/dashboard.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
 import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
@@ -64,6 +65,7 @@ export async function buildApp() {
   await app.register(partnersRoutes, { prefix: "/delivery-partners" });
   await app.register(deliveryRoutes, { prefix: "/delivery" });
   await app.register(settingsRoutes, { prefix: "/settings" });
+  await app.register(dashboardRoutes, { prefix: "/dashboard" });
 
   return app;
 }

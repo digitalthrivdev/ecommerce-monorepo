@@ -13,7 +13,14 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/me", { preHandler: app.authenticate }, async (request) => {
     const user = await app.prisma.user.findUnique({
       where: { id: request.user.sub },
-      select: { id: true, phone: true, name: true, email: true, role: true },
+      select: {
+        id: true,
+        phone: true,
+        name: true,
+        email: true,
+        role: true,
+        store: { select: { id: true, name: true, code: true } },
+      },
     });
 
     if (!user) {
