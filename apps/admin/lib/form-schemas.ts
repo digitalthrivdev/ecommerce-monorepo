@@ -38,6 +38,25 @@ export const optionalPositiveDecimal = (message: string) =>
     .refine((value) => value === "" || (DECIMAL_PATTERN.test(value) && Number(value) > 0), message)
     .transform((value) => value || null);
 
+/** Money that may be zero, with up to 2 decimals, as the API expects it (a string). */
+export const decimal = (message: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => DECIMAL_PATTERN.test(value), message);
+
+export const optionalDecimal = (message: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value === "" || DECIMAL_PATTERN.test(value), message)
+    .transform((value) => value || null);
+
+export const optionalEmail = z
+  .string()
+  .trim()
+  .pipe(z.union([z.literal("").transform(() => null), z.email("Enter a valid email address").max(200, "Keep this under 200 characters")]));
+
 /** Accepts spaces, dashes and brackets ("+91 98765-43210") and sends E.164 to the API. */
 export const phoneInput = z
   .string()

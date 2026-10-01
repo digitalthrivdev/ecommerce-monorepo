@@ -202,11 +202,69 @@ export type PartnerDelivery = {
   };
 };
 
+export type Customer = {
+  id: string;
+  phone: string;
+  name: string | null;
+  email: string | null;
+  createdAt: string;
+};
+
+export type CustomerListItem = Customer & {
+  orderCount: number;
+  lastOrder: { id: string; orderNumber: string; status: OrderStatus; total: string; createdAt: string } | null;
+};
+
+export type CustomerAddress = {
+  id: string;
+  label: string | null;
+  name: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  latitude: string | null;
+  longitude: string | null;
+  isDefault: boolean;
+};
+
+export type CustomerDetails = Customer & {
+  addresses: CustomerAddress[];
+  stats: { orders: number; delivered: number; cancelled: number; totalSpent: string; lastOrderAt: string | null };
+};
+
+export type CustomerOrder = {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  total: string;
+  createdAt: string;
+  store: { id: string; name: string };
+  itemCount: number;
+};
+
 export type PublicSettings = {
   appName: string;
   branding: { logoUrl: string | null; primaryColor: string; secondaryColor: string };
   currency: string;
   timezone: string;
+};
+
+/** Editable platform settings (admin only). */
+export type PlatformSettings = {
+  deliveryFee: string;
+  freeDeliveryThreshold: string | null;
+  minOrderValue: string;
+  deliveryPartnerFee: string;
+  supportPhone: string | null;
+  supportEmail: string | null;
+  /** Null until an admin first saves; the values are then the server defaults. */
+  updatedById: string | null;
+  updatedAt: string;
 };
 
 /** Result returned by Server Actions to client components for toasts and inline errors. */

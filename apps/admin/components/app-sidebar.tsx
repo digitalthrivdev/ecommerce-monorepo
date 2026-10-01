@@ -87,8 +87,8 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Administration",
     items: [
-      { title: "Customers", href: "/customers", icon: Users, roles: ADMIN },
-      { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN },
+      { title: "Customers", href: "/customers", icon: Users, roles: ADMIN, ready: true },
+      { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN, ready: true },
     ],
   },
 ];

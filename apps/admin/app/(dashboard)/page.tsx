@@ -174,7 +174,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                   </dl>
                   {stats.customers !== null && (
                     <p className="mt-4 text-sm text-muted-foreground">
-                      {formatNumber(stats.customers)} registered customers
+                      <Link href="/customers" className="underline-offset-4 hover:underline">
+                        {formatNumber(stats.customers)} registered customers
+                      </Link>
                     </p>
                   )}
                 </CardContent>
