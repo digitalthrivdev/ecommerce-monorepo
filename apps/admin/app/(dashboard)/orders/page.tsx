@@ -7,6 +7,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { AdvanceOrderButton } from "@/components/orders/order-actions";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PaginationLinks } from "@/components/pagination-links";
 import { StoreFilter } from "@/components/store-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { listOrders } from "@/lib/orders";
 import type { OrderStatus, Paginated, Store } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Orders" };
 
@@ -200,18 +200,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
             <span>
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, orders.total)} of {orders.total}
             </span>
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm" className={cn(page <= 1 && "pointer-events-none opacity-50")}>
-                <Link href={href({ page: String(page - 1) })} aria-disabled={page <= 1}>
-                  Previous
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className={cn(page >= lastPage && "pointer-events-none opacity-50")}>
-                <Link href={href({ page: String(page + 1) })} aria-disabled={page >= lastPage}>
-                  Next
-                </Link>
-              </Button>
-            </div>
+            <PaginationLinks page={page} lastPage={lastPage} href={(target) => href({ page: String(target) })} />
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import type { DeliveryStatus, OrderAction, OrderStatus, PaymentMethod, PaymentStatus, UserRole } from "./types";
+import type { DeliveryPartnerStatus, DeliveryStatus, OrderAction, OrderStatus, PaymentMethod, PaymentStatus, UserRole } from "./types";
 
 const LOCALE = "en-IN";
 
@@ -17,6 +17,16 @@ export function formatDateTime(value: string | Date, timeZone: string) {
 /** "500 g", "1 L"; null when the product has no pack size. */
 export function formatPackSize(quantity: string | null, unit: string | null) {
   return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;
+}
+
+/** "just now", "4 min ago", "2 hr ago". */
+export function formatTimeAgo(value: string | Date) {
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 1000));
+  if (seconds < 60) return "just now";
+  const format = new Intl.RelativeTimeFormat(LOCALE, { numeric: "always", style: "short" });
+  if (seconds < 3600) return format.format(-Math.floor(seconds / 60), "minute");
+  if (seconds < 86_400) return format.format(-Math.floor(seconds / 3600), "hour");
+  return format.format(-Math.floor(seconds / 86_400), "day");
 }
 
 export function formatNumber(value: number) {
@@ -57,6 +67,12 @@ export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
   OUT_FOR_DELIVERY: "Out for delivery",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
+};
+
+export const PARTNER_STATUS_LABELS: Record<DeliveryPartnerStatus, string> = {
+  ONLINE: "Online",
+  BUSY: "On a delivery",
+  OFFLINE: "Offline",
 };
 
 export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {

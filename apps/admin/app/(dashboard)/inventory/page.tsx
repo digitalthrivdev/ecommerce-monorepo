@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 
 import { AvailabilitySwitch, StockAdjustDialog } from "@/components/inventory/inventory-controls";
 import { PageHeader } from "@/components/page-header";
+import { PaginationLinks } from "@/components/pagination-links";
 import { StoreFilter } from "@/components/store-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -172,18 +173,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
             {inventory.total > 0 && `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, inventory.total)} of ${inventory.total}`}
           </span>
           {inventory.total > PAGE_SIZE && (
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm" className={cn(page <= 1 && "pointer-events-none opacity-50")}>
-                <Link href={href({ page: String(page - 1) })} aria-disabled={page <= 1}>
-                  Previous
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className={cn(page >= lastPage && "pointer-events-none opacity-50")}>
-                <Link href={href({ page: String(page + 1) })} aria-disabled={page >= lastPage}>
-                  Next
-                </Link>
-              </Button>
-            </div>
+            <PaginationLinks page={page} lastPage={lastPage} href={(target) => href({ page: String(target) })} />
           )}
         </div>
       </div>

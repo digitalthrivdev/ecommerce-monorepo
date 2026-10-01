@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
 
 import { CategoryFilter } from "@/components/category-filter";
 import { PageHeader } from "@/components/page-header";
+import { PaginationLinks } from "@/components/pagination-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -117,14 +118,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
             <span>
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, products.total)} of {products.total}
             </span>
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm" className={cn(page <= 1 && "pointer-events-none opacity-50")}>
-                <Link href={href(page - 1)}>Previous</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className={cn(page >= lastPage && "pointer-events-none opacity-50")}>
-                <Link href={href(page + 1)}>Next</Link>
-              </Button>
-            </div>
+            <PaginationLinks page={page} lastPage={lastPage} href={href} />
           </div>
         )}
       </div>

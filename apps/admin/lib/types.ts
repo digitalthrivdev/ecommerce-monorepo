@@ -168,6 +168,38 @@ export type DeliveryPartner = {
   isActive: boolean;
   vehicleType: string | null;
   vehicleNumber: string | null;
+  activeDelivery: { orderId: string; orderNumber: string; orderStatus: OrderStatus; accepted: boolean } | null;
+  /** Latest reported position; only kept for a few minutes. */
+  lastLocation: { latitude: number; longitude: number; updatedAt: string } | null;
+  createdAt: string;
+};
+
+export type PartnerList = Paginated<DeliveryPartner> & {
+  counts: { all: number; online: number; busy: number; offline: number; inactive: number };
+};
+
+export type DeliveryPartnerDetails = DeliveryPartner & {
+  stats: {
+    today: { deliveries: number; earnings: string; cashCollected: string };
+    allTime: { deliveries: number; earnings: string };
+  };
+};
+
+export type PartnerDelivery = {
+  id: string;
+  status: DeliveryStatus;
+  assignedAt: string | null;
+  pickedUpAt: string | null;
+  deliveredAt: string | null;
+  earning: string | null;
+  order: {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    paymentMethod: PaymentMethod;
+    total: string;
+    store: { id: string; name: string };
+  };
 };
 
 export type PublicSettings = {
