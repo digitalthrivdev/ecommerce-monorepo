@@ -1,6 +1,7 @@
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CartBar } from "@/components/cart-bar";
 import { CategoryGrid, CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
@@ -29,6 +30,7 @@ export default function CategoriesScreen() {
           <CategoryGrid categories={categories.data.items} />
         )}
       </ScrollView>
+      <CartBar inset={false} />
     </View>
   );
 }

@@ -85,6 +85,48 @@ export type StoreProduct = {
   inStock: boolean;
 };
 
+/** Why a cart line can't be ordered as it is. */
+export type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK";
+
+/** Prices are null when the store no longer sells the product. */
+export type CartItem = {
+  id: string;
+  productId: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  unit: string | null;
+  packQuantity: string | null;
+  quantity: number;
+  unitPrice: string | null;
+  mrp: string | null;
+  lineTotal: string | null;
+  issue: CartItemIssue | null;
+  availableQuantity?: number;
+};
+
+/** Preview of the checkout bill for the orderable items; checkout recalculates it. */
+export type CartBill = {
+  subtotal: string;
+  deliveryFee: string;
+  discount: string;
+  total: string;
+  minOrderValue: string;
+  meetsMinimum: boolean;
+  amountToFreeDelivery: string | null;
+};
+
+/** `GET /cart`: one store's items. `store` and `bill` are null while the cart is empty. */
+export type Cart = {
+  id: string | null;
+  store: { id: string; name: string; code: string; status: string } | null;
+  items: CartItem[];
+  itemCount: number;
+  subtotal: string;
+  bill: CartBill | null;
+  isValid: boolean;
+};
+
 export type HomeLink = { type: "none" } | { type: "category"; category: Category };
 
 export type BannerCarouselSection = {

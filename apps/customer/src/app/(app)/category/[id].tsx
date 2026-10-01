@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
 import { ScreenHeader } from "@/components/screen-header";
@@ -67,6 +68,7 @@ export default function CategoryScreen() {
       />
       {categories.data && categories.data.items.length > 1 && <CategoryChips categories={categories.data.items} selectedId={id} />}
       {store ? <ProductList key={id} query={products} emptyText="No products in this category yet." /> : <StoreRequired />}
+      <CartBar />
     </View>
   );
 }

@@ -17,6 +17,11 @@ export function formatPackSize(quantity: string | null, unit: string | null) {
   return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;
 }
 
+/** How far `amount` is below `target`, as a decimal string. Display only. */
+export function shortfall(target: string, amount: string) {
+  return (Math.max(0, Math.round(Number(target) * 100) - Math.round(Number(amount) * 100)) / 100).toFixed(2);
+}
+
 /** Whole-percent discount from MRP, or null when there is none. */
 export function discountPercent(sellingPrice: string, mrp: string | null) {
   if (!mrp) return null;

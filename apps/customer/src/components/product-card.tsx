@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
+import { AddToCartButton } from "@/components/add-to-cart";
 import { Text } from "@/components/ui/text";
 import { useCardSurface } from "@/lib/app-theme";
 import { discountPercent, formatMoney, formatPackSize } from "@/lib/format";
@@ -45,9 +46,18 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
       <Text className="text-xs text-muted-foreground" numberOfLines={1}>
         {packSize ?? " "}
       </Text>
-      <View className="flex-row items-baseline gap-1.5">
-        <Text className="text-sm font-extrabold">{formatMoney(product.sellingPrice, currency)}</Text>
-        {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(product.mrp!, currency)}</Text>}
+      <View className="mt-auto flex-row items-end justify-between gap-1">
+        <View className="shrink">
+          <Text className="text-sm font-extrabold" numberOfLines={1}>
+            {formatMoney(product.sellingPrice, currency)}
+          </Text>
+          {discount && (
+            <Text className="text-xs text-muted-foreground line-through" numberOfLines={1}>
+              {formatMoney(product.mrp!, currency)}
+            </Text>
+          )}
+        </View>
+        <AddToCartButton product={product} />
       </View>
     </Pressable>
   );

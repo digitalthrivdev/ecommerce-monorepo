@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AnnouncementBar } from "@/components/announcement-bar";
+import { CartBar } from "@/components/cart-bar";
 import { BrandMark } from "@/components/brand-mark";
 import { CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
@@ -181,6 +182,7 @@ export default function HomeScreen() {
           <HomeContent />
         </View>
       </ScrollView>
+      <CartBar inset={false} />
     </View>
   );
 }

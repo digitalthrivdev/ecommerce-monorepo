@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AddToCartButton } from "@/components/add-to-cart";
+import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -81,6 +83,27 @@ function ProductDetails({ product }: { product: StoreProduct }) {
   );
 }
 
+function ProductFooter({ product }: { product: StoreProduct }) {
+  const insets = useSafeAreaInsets();
+  const { currency } = useSettings();
+  const packSize = formatPackSize(product.quantity, product.unit);
+
+  return (
+    <View className="gap-1 border-t border-border bg-card pt-3" style={{ paddingBottom: insets.bottom + 4 }}>
+      <View className="flex-row items-center justify-between gap-3 px-4 pb-2">
+        <View className="shrink">
+          <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+            {packSize ?? product.name}
+          </Text>
+          <Text className="text-lg font-extrabold">{formatMoney(product.sellingPrice, currency)}</Text>
+        </View>
+        <AddToCartButton product={product} size="lg" />
+      </View>
+      <CartBar inset={false} className="bg-card pt-0" />
+    </View>
+  );
+}
+
 function DetailsSkeleton() {
   const { width } = useWindowDimensions();
   return (
@@ -109,7 +132,10 @@ export default function ProductScreen() {
       {!store ? (
         <StoreRequired />
       ) : product.data ? (
-        <ProductDetails product={product.data} />
+        <>
+          <ProductDetails product={product.data} />
+          <ProductFooter product={product.data} />
+        </>
       ) : product.isPending ? (
         <DetailsSkeleton />
       ) : unavailable ? (

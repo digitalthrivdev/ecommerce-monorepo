@@ -8,6 +8,7 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly issues?: { path: string; message: string }[],
+    readonly details?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -61,7 +62,7 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query }:
 
   if (!response.ok) {
     if (response.status === 401 && token && token === accessToken) onUnauthorized?.();
-    throw new ApiError(response.status, data?.error ?? "REQUEST_FAILED", data?.message ?? "Something went wrong. Please try again.", data?.issues);
+    throw new ApiError(response.status, data?.error ?? "REQUEST_FAILED", data?.message ?? "Something went wrong. Please try again.", data?.issues, data?.details);
   }
   return data as T;
 }
