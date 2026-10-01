@@ -15,6 +15,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().url(),
 
   JWT_SECRET: z.string().min(32),
+
+  JWT_EXPIRES_IN: z.string().default("7d"),
 });
 
 export const env = envSchema.parse(process.env);
