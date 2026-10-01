@@ -133,6 +133,7 @@ export const StoreScalarFieldEnum = {
   postalCode: 'postalCode',
   latitude: 'latitude',
   longitude: 'longitude',
+  serviceRadiusKm: 'serviceRadiusKm',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

@@ -35,6 +35,7 @@ const store = {
   postalCode: "560034",
   latitude: "12.9352000",
   longitude: "77.6245000",
+  serviceRadiusKm: "5.00",
 };
 
 const categories: SeedCategory[] = [

@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-export const phoneSchema = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{7,14}$/, "Phone must be in E.164 format, e.g. +919876543210");
+import { phoneSchema } from "../../shared/schemas.js";
 
 export const sendOtpBodySchema = z.object({
   phone: phoneSchema,

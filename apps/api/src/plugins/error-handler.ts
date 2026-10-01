@@ -2,6 +2,7 @@ import fp from "fastify-plugin";
 import type { FastifyError } from "fastify";
 import { ZodError } from "zod";
 
+import { Prisma } from "../generated/prisma/client";
 import { AppError } from "../shared/errors.js";
 
 export default fp(async (app) => {
@@ -12,7 +13,11 @@ export default fp(async (app) => {
     });
   });
 
-  app.setErrorHandler((error: FastifyError | AppError | ZodError, request, reply) => {
+  app.setErrorHandler((
+    error: FastifyError | AppError | ZodError | Prisma.PrismaClientKnownRequestError,
+    request,
+    reply,
+  ) => {
     if (error instanceof ZodError) {
       return reply.status(400).send({
         error: "VALIDATION_ERROR",
@@ -31,7 +36,23 @@ export default fp(async (app) => {
       });
     }
 
-    const statusCode = error.statusCode ?? 500;
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return reply.status(409).send({
+          error: "CONFLICT",
+          message: "A record with the same unique value already exists",
+        });
+      }
+
+      if (error.code === "P2025") {
+        return reply.status(404).send({
+          error: "NOT_FOUND",
+          message: "Record not found",
+        });
+      }
+    }
+
+    const statusCode = ("statusCode" in error && error.statusCode) || 500;
 
     if (statusCode >= 500) {
       request.log.error(error);
