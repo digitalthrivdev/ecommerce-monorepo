@@ -70,9 +70,9 @@ export function createStoreProductsService(prisma: PrismaClient) {
   async function listStoreProducts(
     storeId: string,
     { limit, offset, categoryId, search, includeUnavailable }: ListStoreProductsQuery,
-    options: { isAdmin: boolean },
+    options: { canManage: boolean },
   ) {
-    await assertStore(storeId, { includeInactive: options.isAdmin });
+    await assertStore(storeId, { includeInactive: options.canManage });
 
     const productFilter: Prisma.ProductWhereInput = {
       ...(categoryId && { categoryId }),
@@ -99,18 +99,18 @@ export function createStoreProductsService(prisma: PrismaClient) {
     ]);
 
     return {
-      items: rows.map((row) => toView(row, { includeStock: options.isAdmin })),
+      items: rows.map((row) => toView(row, { includeStock: options.canManage })),
       total,
       limit,
       offset,
     };
   }
 
-  async function getStoreProduct(storeId: string, productId: string, options: { isAdmin: boolean }) {
-    await assertStore(storeId, { includeInactive: options.isAdmin });
+  async function getStoreProduct(storeId: string, productId: string, options: { canManage: boolean }) {
+    await assertStore(storeId, { includeInactive: options.canManage });
 
     const storeProduct = await prisma.storeProduct.findFirst({
-      where: options.isAdmin
+      where: options.canManage
         ? { storeId, productId }
         : { storeId, productId, ...customerVisible },
       include: storeProductInclude,
@@ -120,7 +120,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
       throw new AppError(404, "PRODUCT_NOT_AVAILABLE", "Product is not available at this store");
     }
 
-    return toView(storeProduct, { includeStock: options.isAdmin });
+    return toView(storeProduct, { includeStock: options.canManage });
   }
 
   async function createStoreProduct(storeId: string, data: CreateStoreProductInput) {

@@ -18,15 +18,20 @@ model User {
   email String?
   role  UserRole @default(CUSTOMER)
 
+  // Set only for STORE_STAFF: the store they work at.
+  storeId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  store           Store?           @relation(fields: [storeId], references: [id])
   addresses       Address[]
   cart            Cart?
   orders          Order[]
   deliveryPartner DeliveryPartner?
 
   @@index([role])
+  @@index([storeId])
 }
 
 enum UserRole {
@@ -97,6 +102,7 @@ model Store {
   products StoreProduct[]
   orders   Order[]
   carts    Cart[]
+  staff    User[]
 
   @@index([status])
 }

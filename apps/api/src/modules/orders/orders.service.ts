@@ -9,9 +9,10 @@ import {
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
-import { releaseStock, reserveStock } from "../inventory/inventory.service.js";
+import { reserveStock } from "../inventory/inventory.service.js";
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
+import { transitionOrder } from "./order-status.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
 export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
@@ -31,7 +32,7 @@ function generateOrderNumber() {
   return `ORD-${date}-${suffix}`;
 }
 
-const orderDetailInclude = {
+export const orderDetailInclude = {
   store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
   payment: { select: { method: true, status: true, amount: true, paidAt: true } },
@@ -41,9 +42,9 @@ const orderDetailInclude = {
   },
 } satisfies Prisma.OrderInclude;
 
-type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
+export type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
 
-function toDetailView(order: OrderDetail) {
+export function toDetailView(order: OrderDetail) {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -293,49 +294,17 @@ export function createOrdersService(prisma: PrismaClient) {
   }
 
   async function cancelOrder(userId: string, orderId: string, reason?: string) {
-    await prisma.$transaction(async (tx) => {
-      const [locked] = await tx.$queryRaw<{ status: OrderStatus; storeId: string }[]>`
-        SELECT status, "storeId" FROM "Order" WHERE id = ${orderId} AND "userId" = ${userId} FOR UPDATE
-      `;
-
-      if (!locked) {
-        throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
-      }
-
-      if (!CUSTOMER_CANCELLABLE_STATUSES.includes(locked.status)) {
-        throw new AppError(409, "ORDER_NOT_CANCELLABLE", "This order can no longer be cancelled", {
-          status: locked.status,
-        });
-      }
-
-      const items = await tx.orderItem.findMany({
-        where: { orderId },
-        select: { productId: true, quantity: true },
-      });
-      const storeProducts = await tx.storeProduct.findMany({
-        where: { storeId: locked.storeId, productId: { in: items.map((item) => item.productId) } },
-        select: { id: true, productId: true },
-      });
-      const storeProductIdByProductId = new Map(storeProducts.map((sp) => [sp.productId, sp.id]));
-
-      await releaseStock(
-        tx,
-        items
-          .filter((item) => storeProductIdByProductId.has(item.productId))
-          .map((item) => ({ storeProductId: storeProductIdByProductId.get(item.productId)!, quantity: item.quantity })),
-      );
-
-      await tx.order.update({ where: { id: orderId }, data: { status: OrderStatus.CANCELLED } });
-      await tx.orderStatusHistory.create({
-        data: {
-          orderId,
-          fromStatus: locked.status,
-          toStatus: OrderStatus.CANCELLED,
-          changedById: userId,
-          note: reason ?? "Cancelled by customer",
-        },
-      });
-    });
+    await prisma.$transaction((tx) =>
+      transitionOrder(tx, {
+        orderId,
+        scope: { userId },
+        allowedFrom: CUSTOMER_CANCELLABLE_STATUSES,
+        to: OrderStatus.CANCELLED,
+        changedById: userId,
+        note: reason ?? "Cancelled by customer",
+        notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
+      }),
+    );
 
     return getOrder(userId, orderId);
   }

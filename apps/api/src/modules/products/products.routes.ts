@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
+import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
 import {
   createProductBodySchema,
@@ -54,26 +55,26 @@ export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
   const storeProductsService = createStoreProductsService(app.prisma);
   const requireAdmin = app.requireRole(UserRole.ADMIN);
 
-  const isAdmin = async (request: FastifyRequest) =>
-    (await app.tryAuthenticate(request)) && request.user.role === UserRole.ADMIN;
+  const canManage = async (request: FastifyRequest, storeId: string) =>
+    (await app.tryAuthenticate(request)) && (await app.canManageStore(request, storeId));
 
   app.get("/", async (request) => {
     const { storeId } = storeParamsSchema.parse(request.params);
     const query = listStoreProductsQuerySchema.parse(request.query);
 
     if (query.includeUnavailable) {
-      await requireAdmin(request);
+      await app.requireStoreAccess(request);
     }
 
     return storeProductsService.listStoreProducts(storeId, query, {
-      isAdmin: await isAdmin(request),
+      canManage: await canManage(request, storeId),
     });
   });
 
   app.get("/:productId", async (request) => {
     const { storeId, productId } = storeProductParamsSchema.parse(request.params);
     return storeProductsService.getStoreProduct(storeId, productId, {
-      isAdmin: await isAdmin(request),
+      canManage: await canManage(request, storeId),
     });
   });
 
@@ -84,9 +85,14 @@ export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(storeProduct);
   });
 
-  app.patch("/:productId", { preHandler: requireAdmin }, async (request) => {
+  app.patch("/:productId", { preHandler: app.requireStoreAccess }, async (request) => {
     const { storeId, productId } = storeProductParamsSchema.parse(request.params);
     const body = updateStoreProductBodySchema.parse(request.body);
+
+    if (request.user.role !== UserRole.ADMIN && (body.sellingPrice !== undefined || body.mrp !== undefined)) {
+      throw new AppError(403, "FORBIDDEN", "Only admins can change prices");
+    }
+
     return storeProductsService.updateStoreProduct(storeId, productId, body);
   });
 };

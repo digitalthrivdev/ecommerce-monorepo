@@ -3,7 +3,7 @@ import jwt from "@fastify/jwt";
 import type { FastifyRequest } from "fastify";
 
 import { env } from "../config/env.js";
-import type { UserRole } from "../generated/prisma/client";
+import { UserRole } from "../generated/prisma/client";
 import { AppError } from "../shared/errors.js";
 
 export default fp(async (app) => {
@@ -41,5 +41,32 @@ export default fp(async (app) => {
         throw new AppError(403, "FORBIDDEN", "You do not have access to this resource");
       }
     };
+  });
+
+  // Staff membership is read from the database so removing someone from a store takes effect immediately.
+  app.decorate("canManageStore", async (request: FastifyRequest, storeId: string) => {
+    if (request.user.role === UserRole.ADMIN) {
+      return true;
+    }
+    if (request.user.role !== UserRole.STORE_STAFF) {
+      return false;
+    }
+
+    const user = await app.prisma.user.findUnique({
+      where: { id: request.user.sub },
+      select: { role: true, storeId: true },
+    });
+
+    return user?.role === UserRole.STORE_STAFF && user.storeId === storeId;
+  });
+
+  app.decorate("requireStoreAccess", async (request: FastifyRequest) => {
+    await app.authenticate(request);
+
+    const { storeId } = request.params as { storeId?: string };
+
+    if (!storeId || !(await app.canManageStore(request, storeId))) {
+      throw new AppError(403, "FORBIDDEN", "You do not have access to this store");
+    }
   });
 });

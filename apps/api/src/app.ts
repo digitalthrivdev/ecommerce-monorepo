@@ -11,7 +11,9 @@ import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
+import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
+import staffRoutes from "./modules/stores/staff.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 
@@ -50,6 +52,8 @@ export async function buildApp() {
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });
   await app.register(ordersRoutes, { prefix: "/orders" });
+  await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
+  await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
 
   return app;
 }

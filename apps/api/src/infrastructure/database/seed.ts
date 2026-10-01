@@ -24,6 +24,8 @@ const users = [
   { phone: "+919000000002", name: "Test Customer", role: UserRole.CUSTOMER },
 ];
 
+const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff" };
+
 const store = {
   code: "BLR-KRM-01",
   name: "Koramangala Store",
@@ -133,6 +135,12 @@ async function main() {
     create: store,
   });
 
+  await prisma.user.upsert({
+    where: { phone: storeStaff.phone },
+    update: { name: storeStaff.name, role: UserRole.STORE_STAFF, storeId: seededStore.id },
+    create: { ...storeStaff, role: UserRole.STORE_STAFF, storeId: seededStore.id },
+  });
+
   let productCount = 0;
 
   for (const [index, category] of categories.entries()) {
@@ -177,7 +185,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${users.length} users, 1 store, ${categories.length} categories, ${productCount} products`,
+    `Seeded ${users.length + 1} users, 1 store, ${categories.length} categories, ${productCount} products`,
   );
 }
 

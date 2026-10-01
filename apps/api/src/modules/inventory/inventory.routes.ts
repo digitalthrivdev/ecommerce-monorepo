@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
 
-import { UserRole } from "../../generated/prisma/client";
 import {
   adjustInventoryBodySchema,
   inventoryItemParamsSchema,
@@ -12,7 +11,7 @@ import { createInventoryService } from "./inventory.service.js";
 const inventoryRoutes: FastifyPluginAsync = async (app) => {
   const inventoryService = createInventoryService(app.prisma);
 
-  app.addHook("preHandler", app.requireRole(UserRole.ADMIN));
+  app.addHook("preHandler", app.requireStoreAccess);
 
   app.get("/", async (request) => {
     const { storeId } = storeParamsSchema.parse(request.params);

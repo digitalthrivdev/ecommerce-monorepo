@@ -9,6 +9,8 @@ declare module "fastify" {
     authenticate: (request: FastifyRequest) => Promise<void>;
     tryAuthenticate: (request: FastifyRequest) => Promise<boolean>;
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;
+    canManageStore: (request: FastifyRequest, storeId: string) => Promise<boolean>;
+    requireStoreAccess: (request: FastifyRequest) => Promise<void>;
   }
 }
 
