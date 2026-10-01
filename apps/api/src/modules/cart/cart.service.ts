@@ -17,7 +17,7 @@ const cartInclude = {
 
 type Tx = Prisma.TransactionClient;
 
-async function lockCart(tx: Tx, cartId: string) {
+export async function lockCart(tx: Tx, cartId: string) {
   await tx.$queryRaw`SELECT id FROM "Cart" WHERE id = ${cartId} FOR UPDATE`;
 }
 

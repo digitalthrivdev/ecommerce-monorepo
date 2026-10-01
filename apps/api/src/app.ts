@@ -10,6 +10,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
+import ordersRoutes from "./modules/orders/orders.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
@@ -48,6 +49,7 @@ export async function buildApp() {
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });
+  await app.register(ordersRoutes, { prefix: "/orders" });
 
   return app;
 }

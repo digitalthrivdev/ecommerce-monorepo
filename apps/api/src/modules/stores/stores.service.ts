@@ -1,5 +1,6 @@
 import { StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { distanceKmSql } from "./geo.js";
 import type { CreateStoreInput, UpdateStoreInput } from "./stores.schemas.js";
 
 export function createStoresService(prisma: PrismaClient) {
@@ -52,11 +53,7 @@ export function createStoresService(prisma: PrismaClient) {
         SELECT
           id,
           "serviceRadiusKm"::float8 AS radius_km,
-          2 * 6371 * asin(least(1, sqrt(
-            power(sin(radians(latitude::float8 - ${latitude}) / 2), 2) +
-            cos(radians(${latitude})) * cos(radians(latitude::float8)) *
-            power(sin(radians(longitude::float8 - ${longitude}) / 2), 2)
-          ))) AS distance_km
+          ${distanceKmSql(latitude, longitude)} AS distance_km
         FROM "Store"
         WHERE status = 'ACTIVE'
       ) candidates

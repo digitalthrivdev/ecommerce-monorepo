@@ -1,0 +1,36 @@
+import type { FastifyPluginAsync } from "fastify";
+
+import { UserRole } from "../../generated/prisma/client";
+import { idParamsSchema } from "../../shared/schemas.js";
+import { cancelOrderBodySchema, createOrderBodySchema, listOrdersQuerySchema } from "./orders.schemas.js";
+import { createOrdersService } from "./orders.service.js";
+
+const ordersRoutes: FastifyPluginAsync = async (app) => {
+  const ordersService = createOrdersService(app.prisma);
+
+  app.addHook("preHandler", app.requireRole(UserRole.CUSTOMER));
+
+  app.post("/", async (request, reply) => {
+    const body = createOrderBodySchema.parse(request.body);
+    const order = await ordersService.createOrder(request.user.sub, body);
+    return reply.status(201).send(order);
+  });
+
+  app.get("/", async (request) => {
+    const query = listOrdersQuerySchema.parse(request.query);
+    return ordersService.listOrders(request.user.sub, query);
+  });
+
+  app.get("/:id", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return ordersService.getOrder(request.user.sub, id);
+  });
+
+  app.post("/:id/cancel", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const { reason } = cancelOrderBodySchema.parse(request.body ?? undefined);
+    return ordersService.cancelOrder(request.user.sub, id, reason);
+  });
+};
+
+export default ordersRoutes;
