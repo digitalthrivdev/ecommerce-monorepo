@@ -29,6 +29,7 @@ model User {
   cart            Cart?
   orders          Order[]
   deliveryPartner DeliveryPartner?
+  pushTokens      PushToken[]
 
   @@index([role])
   @@index([storeId])
@@ -327,9 +328,13 @@ model OrderStatusHistory {
 
   createdAt DateTime @default(now())
 
+  // Set when the notification worker has handled this change (sent, or nothing to send).
+  notifiedAt DateTime?
+
   order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId, createdAt])
+  @@index([notifiedAt, createdAt])
 }
 
 // ─────────────────────────────────────────────
@@ -463,7 +468,7 @@ model DeliveryLocation {
 // ─────────────────────────────────────────────
 
 // Single row (id = "platform") of operational settings that admins can edit.
-// Branding comes from environment configuration instead.
+// Branding and the home screen live in AppAppearance.
 model PlatformSettings {
   id String @id @default("platform")
 
@@ -480,4 +485,44 @@ model PlatformSettings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Single row (id = "app"): the customer app's branding, theme and home screen layout, edited by
+// admins. `config` follows the appearance schema in the API; missing keys fall back to defaults
+// built from the environment. No row means the defaults are in use.
+model AppAppearance {
+  id String @id @default("app")
+
+  config Json
+
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+// A device that receives push notifications for the signed-in user.
+// A token belongs to one user; signing in as someone else on the device moves it.
+model PushToken {
+  id     String @id @default(cuid())
+  userId String
+
+  token    String         @unique
+  platform DevicePlatform
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, updatedAt])
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
 }

@@ -61,9 +61,18 @@ const envSchema = z.object({
 
   // 0 disables the background check for unpaid orders and pending refunds.
   PAYMENT_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3600).default(60),
+
+  // "log" writes pushes to the API log instead of sending them (development only).
+  PUSH_PROVIDER: z.enum(["none", "log"]).default("log"),
+
+  // 0 disables the background sender for order status notifications.
+  NOTIFICATION_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(60).default(3),
 }).refine((value) => !(value.NODE_ENV === "production" && value.PAYMENT_PROVIDER === "mock"), {
   message: "PAYMENT_PROVIDER=mock is not allowed in production",
   path: ["PAYMENT_PROVIDER"],
+}).refine((value) => !(value.NODE_ENV === "production" && value.PUSH_PROVIDER === "log"), {
+  message: "PUSH_PROVIDER=log is not allowed in production",
+  path: ["PUSH_PROVIDER"],
 });
 
 export const env = envSchema.parse(process.env);

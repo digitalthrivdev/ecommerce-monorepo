@@ -124,3 +124,13 @@ export type DeliveryLocation = Prisma.DeliveryLocationModel
  * 
  */
 export type PlatformSettings = Prisma.PlatformSettingsModel
+/**
+ * Model AppAppearance
+ * 
+ */
+export type AppAppearance = Prisma.AppAppearanceModel
+/**
+ * Model PushToken
+ * 
+ */
+export type PushToken = Prisma.PushTokenModel

@@ -1,6 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import type { PrismaClient, UserRole } from "../generated/prisma/client";
 import type Redis from "ioredis";
+import type { NotificationsService } from "../modules/notifications/notifications.service.js";
 import type { PaymentsService } from "../modules/payments/payments.service.js";
 
 declare module "fastify" {
@@ -8,6 +9,7 @@ declare module "fastify" {
     prisma: PrismaClient;
     redis: Redis;
     payments: PaymentsService;
+    notifications: NotificationsService;
     authenticate: (request: FastifyRequest) => Promise<void>;
     tryAuthenticate: (request: FastifyRequest) => Promise<boolean>;
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;

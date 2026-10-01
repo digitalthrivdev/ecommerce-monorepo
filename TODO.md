@@ -6,6 +6,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 - [ ] **SMS provider for login OTP.** `apps/api/src/modules/auth/otp-sender.ts` refuses to run in production until a real sender (e.g. MSG91, Twilio) is added.
 - [ ] **Real payment provider.** Implement `PaymentProvider` (`apps/api/src/modules/payments/payment-provider.ts`) for Razorpay or Cashfree, or deploy with `PAYMENT_PROVIDER=none` (cash on delivery only).
+- [ ] **Real push provider.** Implement `PushSender` (`apps/api/src/modules/notifications/push-sender.ts`) for Expo Push (or FCM/APNs), or deploy with `PUSH_PROVIDER=none` (no pushes).
 - [ ] **Per-IP rate limiting** on `POST /auth/send-otp` (per-phone limits already exist).
 - [ ] **Production deployment:** Docker images, production Compose file, Nginx, secrets, backups.
 
@@ -15,6 +16,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Admin override to mark delivered** when the delivery OTP is locked after too many wrong attempts.
 - [ ] **Admin unassign** (send an assigned order back to `READY_FOR_PICKUP` without picking a replacement).
 - [ ] Semi-automatic assignment suggestion (nearest online partner, using last known location).
+- [ ] Push to the previous partner when an admin reassigns their order (only the new partner is notified today).
 
 ## Orders and store workflow
 
@@ -27,7 +29,9 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Catalog
 
-- [ ] **Image upload** for products and categories (object storage such as S3/R2 plus a signed upload URL). Admin currently takes an image URL.
+- [ ] **Image upload** for products, categories, the logo and home banners (object storage such as S3/R2 plus a signed upload URL). Admin currently takes an image URL.
+- [ ] **Hand-picked products** on the home screen: product rails and banner/offer links can only point at a category today.
+- [ ] **Scheduled home content:** start/end dates for banners and offer strips (e.g. festival campaigns).
 - [ ] **Bulk import** of products, store prices and opening stock from CSV, for onboarding a new client's catalog.
 
 ## Stores

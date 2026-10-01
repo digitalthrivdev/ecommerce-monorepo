@@ -1,5 +1,6 @@
 import { env } from "../../config/env.js";
 import { PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { getAppearance } from "./appearance.service.js";
 import type { UpdateSettingsInput } from "./settings.schemas.js";
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -64,15 +65,17 @@ function toAdminView(settings: PlatformSettings) {
 
 export function createSettingsService(prisma: PrismaClient) {
   async function getPublicSettings() {
-    const settings = await getPlatformSettings(prisma);
+    const [settings, { appearance }] = await Promise.all([getPlatformSettings(prisma), getAppearance(prisma)]);
 
     return {
-      appName: env.APP_NAME,
+      appName: appearance.appName,
       branding: {
-        logoUrl: env.LOGO_URL ?? null,
-        primaryColor: env.PRIMARY_COLOR,
-        secondaryColor: env.SECONDARY_COLOR,
+        logoUrl: appearance.logoUrl,
+        primaryColor: appearance.theme.colors.primary,
+        secondaryColor: appearance.theme.colors.accent,
       },
+      theme: appearance.theme,
+      announcement: appearance.announcement,
       currency: env.CURRENCY,
       timezone: env.TIMEZONE,
       pricing: {
