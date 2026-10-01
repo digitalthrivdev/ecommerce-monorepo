@@ -6,8 +6,18 @@ import {
   type PrismaClient,
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import type { CreatePartnerInput, UpdatePartnerInput } from "./delivery.schemas.js";
+import { roleConflictError } from "../../shared/roles.js";
+import { startOfTodaySql } from "../../shared/time.js";
+import type { CreatePartnerInput, ListPartnersQuery, UpdatePartnerInput } from "./delivery.schemas.js";
 import type { createTrackingService } from "./tracking.service.js";
+
+type StatsRow = {
+  todayDeliveries: bigint;
+  todayEarnings: Prisma.Decimal | null;
+  todayCashCollected: Prisma.Decimal | null;
+  totalDeliveries: bigint;
+  totalEarnings: Prisma.Decimal | null;
+};
 
 export const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = [
   DeliveryStatus.ASSIGNED,
@@ -57,29 +67,69 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
     });
   }
 
-  async function listPartners(query: {
-    limit: number;
-    offset: number;
-    status?: DeliveryPartnerStatus;
-    isActive?: boolean;
-  }) {
+  async function listPartners(query: ListPartnersQuery) {
+    const search: Prisma.DeliveryPartnerWhereInput = query.q
+      ? { user: { OR: [{ name: { contains: query.q, mode: "insensitive" } }, { phone: { contains: query.q } }] } }
+      : {};
     const where: Prisma.DeliveryPartnerWhereInput = {
+      ...search,
       ...(query.status && { status: query.status }),
       ...(query.isActive !== undefined && { isActive: query.isActive }),
     };
 
-    const [rows, total] = await prisma.$transaction([
+    const [rows, total, byStatus] = await prisma.$transaction([
       prisma.deliveryPartner.findMany({
         where,
         include: partnerInclude,
-        orderBy: { createdAt: "asc" },
+        // Busy, then online, then offline (enum order); deactivated partners last.
+        orderBy: [{ isActive: "desc" }, { status: "desc" }, { createdAt: "asc" }],
         take: query.limit,
         skip: query.offset,
       }),
       prisma.deliveryPartner.count({ where }),
+      prisma.deliveryPartner.groupBy({
+        by: ["isActive", "status"],
+        where: search,
+        orderBy: [{ isActive: "asc" }, { status: "asc" }],
+        _count: { _all: true },
+      }),
     ]);
 
-    return { items: await toViews(rows), total, limit: query.limit, offset: query.offset };
+    const counts = { all: 0, online: 0, busy: 0, offline: 0, inactive: 0 };
+    for (const row of byStatus) {
+      const count = row._count._all;
+      counts.all += count;
+      if (!row.isActive) counts.inactive += count;
+      else if (row.status === DeliveryPartnerStatus.ONLINE) counts.online += count;
+      else if (row.status === DeliveryPartnerStatus.BUSY) counts.busy += count;
+      else counts.offline += count;
+    }
+
+    return { items: await toViews(rows), total, limit: query.limit, offset: query.offset, counts };
+  }
+
+  async function getStats(partnerId: string) {
+    const [row] = await prisma.$queryRaw<StatsRow[]>`
+      SELECT
+        count(*) FILTER (WHERE d."deliveredAt" >= ${startOfTodaySql()}) AS "todayDeliveries",
+        sum(d.earning) FILTER (WHERE d."deliveredAt" >= ${startOfTodaySql()}) AS "todayEarnings",
+        sum(o.total) FILTER (WHERE d."deliveredAt" >= ${startOfTodaySql()} AND o."paymentMethod" = 'COD') AS "todayCashCollected",
+        count(*) AS "totalDeliveries",
+        sum(d.earning) AS "totalEarnings"
+      FROM "Delivery" d
+      JOIN "Order" o ON o.id = d."orderId"
+      WHERE d."partnerId" = ${partnerId} AND d.status = 'DELIVERED'
+    `;
+    const money = (value: Prisma.Decimal | null | undefined) => (value ?? new Prisma.Decimal(0)).toFixed(2);
+
+    return {
+      today: {
+        deliveries: Number(row?.todayDeliveries ?? 0),
+        earnings: money(row?.todayEarnings),
+        cashCollected: money(row?.todayCashCollected),
+      },
+      allTime: { deliveries: Number(row?.totalDeliveries ?? 0), earnings: money(row?.totalEarnings) },
+    };
   }
 
   async function getPartner(id: string) {
@@ -89,8 +139,54 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
       throw new AppError(404, "PARTNER_NOT_FOUND", "Delivery partner not found");
     }
 
-    const [view] = await toViews([row]);
-    return view!;
+    const [[view], stats] = await Promise.all([toViews([row]), getStats(id)]);
+    return { ...view!, stats };
+  }
+
+  /** Every delivery assigned to the partner, newest first, for admin review. */
+  async function listDeliveries(partnerId: string, { limit, offset }: { limit: number; offset: number }) {
+    const partner = await prisma.deliveryPartner.findUnique({ where: { id: partnerId }, select: { id: true } });
+
+    if (!partner) {
+      throw new AppError(404, "PARTNER_NOT_FOUND", "Delivery partner not found");
+    }
+
+    const where = { partnerId };
+    const [rows, total] = await prisma.$transaction([
+      prisma.delivery.findMany({
+        where,
+        select: {
+          id: true,
+          status: true,
+          assignedAt: true,
+          pickedUpAt: true,
+          deliveredAt: true,
+          earning: true,
+          order: {
+            select: {
+              id: true,
+              orderNumber: true,
+              status: true,
+              paymentMethod: true,
+              total: true,
+              store: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.delivery.count({ where }),
+    ]);
+
+    const items = rows.map(({ earning, order: { total, ...order }, ...delivery }) => ({
+      ...delivery,
+      earning: earning?.toFixed(2) ?? null,
+      order: { ...order, total: total.toFixed(2) },
+    }));
+
+    return { items, total, limit, offset };
   }
 
   async function createPartner({ phone, name, vehicleType, vehicleNumber }: CreatePartnerInput) {
@@ -100,7 +196,7 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
     });
 
     if (existing && existing.role !== UserRole.DELIVERY_PARTNER) {
-      throw new AppError(409, "USER_HAS_OTHER_ROLE", `This phone number belongs to a ${existing.role} account`);
+      throw roleConflictError(existing.role);
     }
 
     if (existing?.deliveryPartner) {
@@ -154,5 +250,5 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
     return getPartner(id);
   }
 
-  return { listPartners, getPartner, createPartner, updatePartner };
+  return { listPartners, getPartner, listDeliveries, createPartner, updatePartner };
 }

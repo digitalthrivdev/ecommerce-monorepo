@@ -1,14 +1,8 @@
 import { UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { roleConflictError } from "../../shared/roles.js";
 
 const staffSelect = { id: true, phone: true, name: true, role: true, storeId: true, createdAt: true } as const;
-
-const OTHER_ROLE_LABELS: Record<UserRole, string> = {
-  CUSTOMER: "a customer",
-  DELIVERY_PARTNER: "a delivery partner",
-  ADMIN: "an admin",
-  STORE_STAFF: "store staff",
-};
 
 export function createStaffService(prisma: PrismaClient) {
   async function assertStoreExists(storeId: string) {
@@ -49,11 +43,7 @@ export function createStaffService(prisma: PrismaClient) {
     }
 
     if (existing.role !== UserRole.STORE_STAFF) {
-      throw new AppError(
-        409,
-        "USER_HAS_OTHER_ROLE",
-        `This phone number is already registered as ${OTHER_ROLE_LABELS[existing.role]}`,
-      );
+      throw roleConflictError(existing.role);
     }
 
     if (existing.storeId && existing.storeId !== storeId) {

@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import {
   createPartnerBodySchema,
+  historyQuerySchema,
   listPartnersQuerySchema,
   partnerParamsSchema,
   updatePartnerBodySchema,
@@ -24,6 +25,12 @@ const partnersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/:id", async (request) => {
     const { id } = partnerParamsSchema.parse(request.params);
     return partners.getPartner(id);
+  });
+
+  app.get("/:id/deliveries", async (request) => {
+    const { id } = partnerParamsSchema.parse(request.params);
+    const query = historyQuerySchema.parse(request.query);
+    return partners.listDeliveries(id, query);
   });
 
   app.post("/", async (request, reply) => {

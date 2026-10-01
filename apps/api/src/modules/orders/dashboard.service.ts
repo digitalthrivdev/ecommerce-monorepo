@@ -7,6 +7,7 @@ import {
   UserRole,
   type PrismaClient,
 } from "../../generated/prisma/client";
+import { startOfTodaySql } from "../../shared/time.js";
 import { ACTIVE_ORDER_STATUSES as ACTIVE_STATUSES } from "./order-status.js";
 
 type TodayRow = {
@@ -30,7 +31,7 @@ export function createDashboardService(prisma: PrismaClient) {
         count(*) FILTER (WHERE status = 'DELIVERED') AS delivered,
         count(*) FILTER (WHERE status = 'CANCELLED') AS cancelled
       FROM "Order"
-      WHERE "createdAt" >= (date_trunc('day', now() AT TIME ZONE ${env.TIMEZONE}) AT TIME ZONE ${env.TIMEZONE})
+      WHERE "createdAt" >= ${startOfTodaySql()}
       ${storeFilter}
     `;
 

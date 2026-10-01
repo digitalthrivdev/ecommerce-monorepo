@@ -15,6 +15,13 @@ export const listPartnersQuerySchema = paginationQuerySchema.extend({
     .enum(["true", "false"])
     .transform((value) => value === "true")
     .optional(),
+  /** Name or phone number. */
+  q: z
+    .string()
+    .trim()
+    .max(50)
+    .optional()
+    .transform((value) => value || undefined),
 });
 
 export const createPartnerBodySchema = z.object({
@@ -75,6 +82,7 @@ export const earningsQuerySchema = z
   .refine(({ from, to }) => from < to, "from must be before to")
   .refine(({ from, to }) => to.getTime() - from.getTime() <= 92 * 24 * 60 * 60 * 1000, "Range can be at most 92 days");
 
+export type ListPartnersQuery = z.infer<typeof listPartnersQuerySchema>;
 export type CreatePartnerInput = z.infer<typeof createPartnerBodySchema>;
 export type UpdatePartnerInput = z.infer<typeof updatePartnerBodySchema>;
 export type LocationInput = z.infer<typeof locationBodySchema>;
