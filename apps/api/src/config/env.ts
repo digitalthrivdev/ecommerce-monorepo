@@ -3,6 +3,17 @@ import { z } from "zod";
 
 const moneyEnv = z.string().regex(/^\d{1,8}(\.\d{1,2})?$/, "Must be a decimal amount, e.g. 25.00");
 
+const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a hex colour, e.g. #0C831F");
+
+function isValidTimeZone(timeZone: string) {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -20,6 +31,20 @@ const envSchema = z.object({
 
   JWT_EXPIRES_IN: z.string().default("7d"),
 
+  APP_NAME: z.string().trim().min(1).max(50).default("Grocery"),
+
+  LOGO_URL: z.url().optional(),
+
+  PRIMARY_COLOR: hexColor.default("#0C831F"),
+
+  SECONDARY_COLOR: hexColor.default("#F8CB46"),
+
+  TIMEZONE: z
+    .string()
+    .default("Asia/Kolkata")
+    .refine(isValidTimeZone, "Must be an IANA time zone, e.g. Asia/Kolkata"),
+
+  // Initial values for the platform settings row; afterwards admins edit them in the dashboard.
   DELIVERY_FEE: moneyEnv.default("25.00"),
 
   FREE_DELIVERY_THRESHOLD: moneyEnv.default("199.00"),

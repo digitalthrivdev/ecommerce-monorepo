@@ -97,3 +97,8 @@ export type Delivery = Prisma.DeliveryModel
  * 
  */
 export type DeliveryLocation = Prisma.DeliveryLocationModel
+/**
+ * Model PlatformSettings
+ * 
+ */
+export type PlatformSettings = Prisma.PlatformSettingsModel

@@ -457,3 +457,27 @@ model DeliveryLocation {
 
   @@index([deliveryId, recordedAt])
 }
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+
+// Single row (id = "platform") of operational settings that admins can edit.
+// Branding comes from environment configuration instead.
+model PlatformSettings {
+  id String @id @default("platform")
+
+  deliveryFee           Decimal  @db.Decimal(10, 2)
+  // Null means delivery is never free.
+  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+  minOrderValue         Decimal  @db.Decimal(10, 2)
+  deliveryPartnerFee    Decimal  @db.Decimal(10, 2)
+
+  supportPhone String?
+  supportEmail String?
+
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

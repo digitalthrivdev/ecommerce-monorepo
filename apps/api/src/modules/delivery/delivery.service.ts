@@ -12,12 +12,12 @@ import {
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { lockOrder, transitionOrder } from "../orders/order-status.js";
+import { getPlatformSettings } from "../settings/settings.service.js";
 import { deliveryOtp, hashDeliveryOtp, verifyDeliveryOtp } from "./delivery-otp.js";
 import { ACTIVE_DELIVERY_STATUSES } from "./partners.service.js";
 
 type Tx = Prisma.TransactionClient;
 
-const PARTNER_FEE = new Prisma.Decimal(env.DELIVERY_PARTNER_FEE);
 const OTP_MAX_ATTEMPTS = 5;
 const OTP_LOCK_SECONDS = 15 * 60;
 
@@ -351,7 +351,11 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
       });
       await tx.delivery.update({
         where: { id: delivery.id },
-        data: { status: DeliveryStatus.DELIVERED, deliveredAt: now, earning: PARTNER_FEE },
+        data: {
+          status: DeliveryStatus.DELIVERED,
+          deliveredAt: now,
+          earning: (await getPlatformSettings(tx)).deliveryPartnerFee,
+        },
       });
       await freePartner(tx, partner.id);
       await tx.payment.updateMany({

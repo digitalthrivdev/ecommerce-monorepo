@@ -66,7 +66,8 @@ export const ModelName = {
   Payment: 'Payment',
   DeliveryPartner: 'DeliveryPartner',
   Delivery: 'Delivery',
-  DeliveryLocation: 'DeliveryLocation'
+  DeliveryLocation: 'DeliveryLocation',
+  PlatformSettings: 'PlatformSettings'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -337,6 +338,22 @@ export const DeliveryLocationScalarFieldEnum = {
 } as const
 
 export type DeliveryLocationScalarFieldEnum = (typeof DeliveryLocationScalarFieldEnum)[keyof typeof DeliveryLocationScalarFieldEnum]
+
+
+export const PlatformSettingsScalarFieldEnum = {
+  id: 'id',
+  deliveryFee: 'deliveryFee',
+  freeDeliveryThreshold: 'freeDeliveryThreshold',
+  minOrderValue: 'minOrderValue',
+  deliveryPartnerFee: 'deliveryPartnerFee',
+  supportPhone: 'supportPhone',
+  supportEmail: 'supportEmail',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlatformSettingsScalarFieldEnum = (typeof PlatformSettingsScalarFieldEnum)[keyof typeof PlatformSettingsScalarFieldEnum]
 
 
 export const SortOrder = {

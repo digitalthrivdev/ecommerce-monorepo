@@ -12,6 +12,7 @@ import { lockCart } from "../cart/cart.service.js";
 import { deliveryOtp } from "../delivery/delivery-otp.js";
 import { reserveStock } from "../inventory/inventory.service.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
+import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
 import { transitionOrder } from "./order-status.js";
@@ -27,10 +28,6 @@ const OTP_VISIBLE_STATUSES: OrderStatus[] = [
   OrderStatus.PICKED_UP,
   OrderStatus.OUT_FOR_DELIVERY,
 ];
-
-const DELIVERY_FEE = new Prisma.Decimal(env.DELIVERY_FEE);
-const FREE_DELIVERY_THRESHOLD = new Prisma.Decimal(env.FREE_DELIVERY_THRESHOLD);
-const MIN_ORDER_VALUE = new Prisma.Decimal(env.MIN_ORDER_VALUE);
 
 const ORDER_NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -250,17 +247,16 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         });
 
         const subtotal = lines.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
+        const charges = calculateCharges(subtotal, await getPlatformSettings(tx));
 
-        if (subtotal.lt(MIN_ORDER_VALUE)) {
-          throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${MIN_ORDER_VALUE.toFixed(2)}`, {
-            minOrderValue: MIN_ORDER_VALUE.toFixed(2),
+        if (!charges.meetsMinimum) {
+          throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${charges.minOrderValue.toFixed(2)}`, {
+            minOrderValue: charges.minOrderValue.toFixed(2),
             subtotal: subtotal.toFixed(2),
           });
         }
 
-        const deliveryFee = subtotal.gte(FREE_DELIVERY_THRESHOLD) ? new Prisma.Decimal(0) : DELIVERY_FEE;
-        const discount = new Prisma.Decimal(0);
-        const total = subtotal.add(deliveryFee).sub(discount);
+        const { deliveryFee, discount, total } = charges;
 
         try {
           await reserveStock(tx, lines);

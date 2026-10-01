@@ -1,6 +1,7 @@
 import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { customerVisible } from "../products/store-products.service.js";
+import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
 import { MAX_QUANTITY_PER_ITEM, type AddCartItemInput } from "./cart.schemas.js";
 
 type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK";
@@ -63,6 +64,7 @@ export function createCartService(prisma: PrismaClient) {
         items: [],
         itemCount: 0,
         subtotal: "0.00",
+        bill: null,
         isValid: false,
       };
     }
@@ -112,12 +114,24 @@ export function createCartService(prisma: PrismaClient) {
       };
     });
 
+    const charges = calculateCharges(subtotal, await getPlatformSettings(prisma));
+
     return {
       id: cart.id,
       store: cart.store,
       items,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       subtotal: subtotal.toFixed(2),
+      // Preview of the checkout bill for the items that can be ordered; checkout recalculates it.
+      bill: {
+        subtotal: charges.subtotal.toFixed(2),
+        deliveryFee: charges.deliveryFee.toFixed(2),
+        discount: charges.discount.toFixed(2),
+        total: charges.total.toFixed(2),
+        minOrderValue: charges.minOrderValue.toFixed(2),
+        meetsMinimum: charges.meetsMinimum,
+        amountToFreeDelivery: charges.amountToFreeDelivery?.toFixed(2) ?? null,
+      },
       isValid: storeIsActive && items.every((item) => item.issue === null),
     };
   }
