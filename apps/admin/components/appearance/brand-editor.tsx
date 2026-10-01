@@ -208,7 +208,7 @@ export function BrandEditor({ value, onChange, errors }: BrandEditorProps) {
                   setAnnouncement(custom ? { backgroundColor: theme.colors.primary, textColor: theme.colors.onPrimary } : { backgroundColor: null, textColor: null })
                 }
               />
-              <FieldLabel htmlFor="announcement-custom">Use custom colours (otherwise the accent colours)</FieldLabel>
+              <FieldLabel htmlFor="announcement-custom">Use custom colours (otherwise the primary colours)</FieldLabel>
             </Field>
             {customAnnouncementColors && (
               <div className="grid gap-4 sm:grid-cols-2">
