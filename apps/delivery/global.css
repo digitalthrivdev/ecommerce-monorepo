@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Neutral palettes for light and dark mode. The brand colours (primary, highlight) and the radius
+ * are defaults only: the app replaces them at runtime with the theme set in the admin panel.
+ */
+@layer base {
+  :root {
+    --background: 245 246 248;
+    --foreground: 28 28 28;
+    --card: 255 255 255;
+    --card-foreground: 28 28 28;
+    --popover: 255 255 255;
+    --popover-foreground: 28 28 28;
+    --primary: 12 131 31;
+    --primary-foreground: 255 255 255;
+    --highlight: 248 203 70;
+    --highlight-foreground: 28 28 28;
+    --secondary: 238 240 243;
+    --secondary-foreground: 28 28 28;
+    --muted: 238 240 243;
+    --muted-foreground: 107 107 107;
+    --accent: 238 240 243;
+    --accent-foreground: 28 28 28;
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --border: 232 232 232;
+    --input: 224 224 224;
+    --ring: 160 160 160;
+    --tile: 233 244 251;
+    --radius: 12px;
+    --radius-xl: 16px;
+    --radius-md: 10px;
+    --radius-sm: 8px;
+  }
+
+  .dark:root {
+    --background: 15 16 18;
+    --foreground: 242 242 242;
+    --card: 26 28 31;
+    --card-foreground: 242 242 242;
+    --popover: 26 28 31;
+    --popover-foreground: 242 242 242;
+    --secondary: 37 40 44;
+    --secondary-foreground: 242 242 242;
+    --muted: 37 40 44;
+    --muted-foreground: 154 157 163;
+    --accent: 37 40 44;
+    --accent-foreground: 242 242 242;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 42 45 49;
+    --input: 52 55 60;
+    --ring: 110 110 110;
+    --tile: 30 37 44;
+  }
+}
