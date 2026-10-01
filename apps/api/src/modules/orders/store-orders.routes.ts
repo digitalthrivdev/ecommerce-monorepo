@@ -1,21 +1,15 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-import { OrderStatus, UserRole } from "../../generated/prisma/client";
-import { paginationQuerySchema } from "../../shared/schemas.js";
+import { UserRole } from "../../generated/prisma/client";
 import { assignBodySchema } from "../delivery/delivery.schemas.js";
 import { createDeliveryService } from "../delivery/delivery.service.js";
+import { manageOrdersQuerySchema } from "./orders.schemas.js";
 import { STORE_ACTIONS, createStoreOrdersService, type StoreAction } from "./store-orders.service.js";
 
 const idSchema = z.string().trim().min(1).max(64);
 const storeParamsSchema = z.object({ storeId: idSchema });
 const orderParamsSchema = z.object({ storeId: idSchema, orderId: idSchema });
-
-const listQuerySchema = paginationQuerySchema.extend({
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-  status: z.enum(OrderStatus).optional(),
-  sort: z.enum(["newest", "oldest"]).default("newest"),
-});
 
 const actionBodySchema = z
   .object({ note: z.string().trim().min(1).max(300).optional() })
@@ -38,7 +32,7 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/", async (request) => {
     const { storeId } = storeParamsSchema.parse(request.params);
-    const query = listQuerySchema.parse(request.query);
+    const query = manageOrdersQuerySchema.parse(request.query);
     return storeOrdersService.listOrders(storeId, query, actor(request));
   });
 

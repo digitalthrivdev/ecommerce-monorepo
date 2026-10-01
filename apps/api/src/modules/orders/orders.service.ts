@@ -55,7 +55,7 @@ export const orderDetailInclude = {
   },
   statusHistory: {
     orderBy: { createdAt: "asc" },
-    select: { fromStatus: true, toStatus: true, note: true, createdAt: true },
+    select: { fromStatus: true, toStatus: true, note: true, changedById: true, createdAt: true },
   },
 } satisfies Prisma.OrderInclude;
 
@@ -111,7 +111,7 @@ export function toDetailView(order: OrderDetail) {
       latitude: order.latitude,
       longitude: order.longitude,
     },
-    statusHistory: order.statusHistory,
+    statusHistory: order.statusHistory.map(({ changedById: _changedById, ...entry }) => entry),
     createdAt: order.createdAt,
   };
 }

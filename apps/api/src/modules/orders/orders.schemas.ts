@@ -13,6 +13,19 @@ export const listOrdersQuerySchema = paginationQuerySchema.extend({
   status: z.enum(OrderStatus).optional(),
 });
 
+/** Store staff and admin order lists. */
+export const manageOrdersQuerySchema = paginationQuerySchema.extend({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  /** One status or a comma-separated list, e.g. `PICKING,PACKED`. */
+  status: z
+    .string()
+    .transform((value) => [...new Set(value.split(",").map((status) => status.trim()).filter(Boolean))])
+    .pipe(z.array(z.enum(OrderStatus)).min(1))
+    .optional(),
+  q: z.string().trim().min(1).max(50).optional(),
+  sort: z.enum(["newest", "oldest"]).default("newest"),
+});
+
 export const cancelOrderBodySchema = z
   .object({
     reason: z.string().trim().min(1).max(300).optional(),
