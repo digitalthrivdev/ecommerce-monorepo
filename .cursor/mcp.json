@@ -9,6 +9,13 @@
       ],
       "cwd": "/home/piyush/projects/grocery-platform",
       "type": "stdio"
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
     }
   }
 }
