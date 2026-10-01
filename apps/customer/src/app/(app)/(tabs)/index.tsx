@@ -154,7 +154,7 @@ export default function HomeScreen() {
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all(["addresses", "serviceability", "home"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
+    await Promise.all(["settings", "addresses", "serviceability", "home"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
     setRefreshing(false);
   }
 

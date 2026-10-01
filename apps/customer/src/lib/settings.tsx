@@ -55,7 +55,7 @@ export function SettingsProvider({ children }: PropsWithChildren) {
     queryKey: ["settings"],
     queryFn: () => apiFetch<PublicSettings>("/settings"),
     enabled: cached !== undefined,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
   });
 
   useEffect(() => {
