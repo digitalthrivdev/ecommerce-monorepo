@@ -667,7 +667,7 @@ Current Docker Compose:
 ```text
 PostgreSQL:
 postgres:17-alpine
-port: 5432
+host port: 5433 (container port 5432; 5432 is taken by a Windows PostgreSQL under WSL mirrored networking)
 
 Redis:
 redis:7-alpine
@@ -697,7 +697,7 @@ NODE_ENV=development
 PORT=4000
 HOST=0.0.0.0
 
-DATABASE_URL="postgresql://grocery:grocery_dev@localhost:5432/grocery"
+DATABASE_URL="postgresql://grocery:grocery_dev@localhost:5433/grocery"
 
 REDIS_URL="redis://localhost:6379"
 
