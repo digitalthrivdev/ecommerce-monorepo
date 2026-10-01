@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
-import { advanceOrder, assignPartner, cancelOrder, type ActionResult } from "@/app/(dashboard)/orders/actions";
+import { advanceOrder, assignPartner, cancelOrder } from "@/app/(dashboard)/orders/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +19,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ORDER_ACTION_LABELS } from "@/lib/format";
+import { toastResult } from "@/lib/action-toast";
 import type { DeliveryPartner, OrderAction, StoreOrderAction } from "@/lib/types";
 
 const ADVANCE_ACTIONS: readonly StoreOrderAction[] = ["accept", "start-picking", "pack", "ready"];
@@ -28,15 +28,6 @@ const isAdvance = (action: OrderAction): action is StoreOrderAction =>
   (ADVANCE_ACTIONS as readonly string[]).includes(action);
 
 type Target = { storeId: string; orderId: string };
-
-function report(result: ActionResult) {
-  if (result.ok) {
-    toast.success(result.message);
-  } else {
-    toast.error(result.error);
-  }
-  return result.ok;
-}
 
 /** The next store workflow step, used inline in the orders table. */
 export function AdvanceOrderButton({ storeId, orderId, allowedActions, size = "sm" }: Target & {
@@ -51,7 +42,7 @@ export function AdvanceOrderButton({ storeId, orderId, allowedActions, size = "s
     <Button
       size={size}
       disabled={pending}
-      onClick={() => startTransition(async () => void report(await advanceOrder({ storeId, orderId, action })))}
+      onClick={() => startTransition(async () => void toastResult(await advanceOrder({ storeId, orderId, action })))}
     >
       {pending && <Loader2 className="animate-spin" />}
       {ORDER_ACTION_LABELS[action]}
@@ -66,7 +57,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber }: Target & { orderNu
 
   function submit() {
     startTransition(async () => {
-      if (report(await cancelOrder({ storeId, orderId, reason }))) {
+      if (toastResult(await cancelOrder({ storeId, orderId, reason }))) {
         setOpen(false);
         setReason("");
       }
@@ -120,7 +111,7 @@ function AssignPartnerDialog({ storeId, orderId, mode, partners }: Target & {
 
   function submit() {
     startTransition(async () => {
-      if (report(await assignPartner({ storeId, orderId, partnerId, mode }))) {
+      if (toastResult(await assignPartner({ storeId, orderId, partnerId, mode }))) {
         setOpen(false);
         setPartnerId("");
       }

@@ -107,6 +107,24 @@ export type OrderDetail = {
   createdAt: string;
 };
 
+export type Category = { id: string; name: string; slug: string; isActive: boolean };
+
+export type InventoryItem = {
+  productId: string;
+  storeProductId: string;
+  name: string;
+  slug: string;
+  unit: string | null;
+  packQuantity: string | null;
+  category: { id: string; name: string };
+  isAvailable: boolean;
+  productIsActive: boolean;
+  stockQuantity: number;
+  stockUpdatedAt: string | null;
+};
+
+export type InventoryList = Paginated<InventoryItem> & { lowStockThreshold: number };
+
 export type DeliveryPartner = {
   id: string;
   name: string | null;
@@ -123,6 +141,9 @@ export type PublicSettings = {
   currency: string;
   timezone: string;
 };
+
+/** Result returned by Server Actions to client components for toasts and inline errors. */
+export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 

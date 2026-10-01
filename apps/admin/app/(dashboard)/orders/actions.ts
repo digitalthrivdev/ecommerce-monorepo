@@ -4,9 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { ApiError, apiFetch } from "@/lib/api";
-import type { OrderAction } from "@/lib/types";
-
-export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+import type { ActionResult, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
 const targetSchema = z.object({ storeId: idSchema, orderId: idSchema });

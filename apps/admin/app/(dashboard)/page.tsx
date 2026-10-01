@@ -14,9 +14,15 @@ import type { DashboardStats, Paginated, Store } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-function StatCard({ title, value, hint, icon: Icon }: { title: string; value: string; hint: string; icon: LucideIcon }) {
-  return (
-    <Card>
+function StatCard({ title, value, hint, icon: Icon, href }: {
+  title: string;
+  value: string;
+  hint: string;
+  icon: LucideIcon;
+  href?: string;
+}) {
+  const card = (
+    <Card className={href ? "h-full transition-colors hover:bg-muted/50" : undefined}>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardDescription>{title}</CardDescription>
         <Icon className="size-4 text-muted-foreground" />
@@ -27,6 +33,7 @@ function StatCard({ title, value, hint, icon: Icon }: { title: string; value: st
       </CardContent>
     </Card>
   );
+  return href ? <Link href={href}>{card}</Link> : card;
 }
 
 export default async function DashboardPage({ searchParams }: PageProps<"/">) {
@@ -69,12 +76,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
             value={formatNumber(stats.activeOrders)}
             hint={`${stats.awaitingAssignment} ready for pickup`}
             icon={PackageCheck}
+            href={storeId ? `/orders?storeId=${storeId}` : "/orders"}
           />
           <StatCard
             title="Low stock"
             value={formatNumber(stats.lowStock.count)}
             hint={`Available products with ${stats.lowStock.threshold} or fewer in stock`}
             icon={Boxes}
+            href={storeId ? `/inventory?tab=low&storeId=${storeId}` : "/inventory?tab=low"}
           />
         </div>
 
