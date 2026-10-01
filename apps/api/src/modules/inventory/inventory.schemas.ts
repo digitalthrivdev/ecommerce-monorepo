@@ -22,6 +22,13 @@ export const listInventoryQuerySchema = paginationQuerySchema.extend({
     .optional()
     .transform((value) => value || undefined),
   maxQuantity: z.coerce.number().int().min(0).max(MAX_STOCK).optional(),
+  isAvailable: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+  categoryId: idSchema.optional(),
+  /** `low`: available and at or below the low-stock threshold; `out`: no stock. */
+  stock: z.enum(["low", "out"]).optional(),
 });
 
 export const adjustInventoryBodySchema = z.union(

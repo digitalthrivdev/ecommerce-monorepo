@@ -1,4 +1,5 @@
 import { env } from "../../config/env.js";
+import { LOW_STOCK_THRESHOLD } from "../inventory/inventory.service.js";
 import {
   DeliveryPartnerStatus,
   OrderStatus,
@@ -6,8 +7,6 @@ import {
   UserRole,
   type PrismaClient,
 } from "../../generated/prisma/client";
-
-export const LOW_STOCK_THRESHOLD = 5;
 
 const ACTIVE_STATUSES: OrderStatus[] = [
   OrderStatus.CONFIRMED,

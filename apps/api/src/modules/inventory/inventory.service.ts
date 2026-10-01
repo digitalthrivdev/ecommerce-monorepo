@@ -4,8 +4,21 @@ import type { AdjustInventoryInput, ListInventoryQuery } from "./inventory.schem
 
 export type StockLine = { storeProductId: string; quantity: number };
 
+/** Available products at or below this quantity count as low stock. */
+export const LOW_STOCK_THRESHOLD = 5;
+
 const inventoryInclude = {
-  product: { select: { id: true, name: true, slug: true, unit: true, quantity: true, isActive: true } },
+  product: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      unit: true,
+      quantity: true,
+      isActive: true,
+      category: { select: { id: true, name: true } },
+    },
+  },
   inventory: { select: { quantity: true, updatedAt: true } },
 } satisfies Prisma.StoreProductInclude;
 
@@ -19,6 +32,7 @@ function toView(row: StoreProductWithInventory) {
     slug: row.product.slug,
     unit: row.product.unit,
     packQuantity: row.product.quantity,
+    category: row.product.category,
     isAvailable: row.isAvailable,
     productIsActive: row.product.isActive,
     stockQuantity: row.inventory?.quantity ?? 0,
@@ -92,15 +106,28 @@ export function createInventoryService(prisma: PrismaClient) {
     }
   }
 
-  async function listInventory(storeId: string, { limit, offset, search, maxQuantity }: ListInventoryQuery) {
+  async function listInventory(
+    storeId: string,
+    { limit, offset, search, maxQuantity, isAvailable, categoryId, stock }: ListInventoryQuery,
+  ) {
     await assertStoreExists(storeId);
+
+    const atMost = (quantity: number): Prisma.StoreProductWhereInput => ({
+      OR: [{ inventory: { quantity: { lte: quantity } } }, { inventory: { is: null } }],
+    });
 
     const where: Prisma.StoreProductWhereInput = {
       storeId,
-      ...(search && { product: { name: { contains: search, mode: "insensitive" } } }),
-      ...(maxQuantity !== undefined && {
-        OR: [{ inventory: { quantity: { lte: maxQuantity } } }, { inventory: { is: null } }],
-      }),
+      ...(isAvailable !== undefined && { isAvailable }),
+      product: {
+        ...(search && { name: { contains: search, mode: "insensitive" } }),
+        ...(categoryId && { categoryId }),
+      },
+      AND: [
+        maxQuantity !== undefined ? atMost(maxQuantity) : {},
+        stock === "low" ? { isAvailable: true, ...atMost(LOW_STOCK_THRESHOLD) } : {},
+        stock === "out" ? atMost(0) : {},
+      ],
     };
 
     const [rows, total] = await prisma.$transaction([
@@ -114,7 +141,7 @@ export function createInventoryService(prisma: PrismaClient) {
       prisma.storeProduct.count({ where }),
     ]);
 
-    return { items: rows.map(toView), total, limit, offset };
+    return { items: rows.map(toView), total, limit, offset, lowStockThreshold: LOW_STOCK_THRESHOLD };
   }
 
   async function adjustInventory(storeId: string, productId: string, input: AdjustInventoryInput) {
