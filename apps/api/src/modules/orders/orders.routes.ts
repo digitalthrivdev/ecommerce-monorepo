@@ -2,12 +2,14 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
+import { createTrackingService } from "../delivery/tracking.service.js";
 import { verifyPaymentBodySchema } from "../payments/payments.schemas.js";
 import { cancelOrderBodySchema, createOrderBodySchema, listOrdersQuerySchema } from "./orders.schemas.js";
 import { createOrdersService } from "./orders.service.js";
 
 const ordersRoutes: FastifyPluginAsync = async (app) => {
   const ordersService = createOrdersService(app.prisma, app.payments);
+  const tracking = createTrackingService(app.prisma, app.redis);
 
   app.addHook("preHandler", app.requireRole(UserRole.CUSTOMER));
 
@@ -25,6 +27,11 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/:id", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return ordersService.getOrder(request.user.sub, id);
+  });
+
+  app.get("/:id/tracking", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return tracking.getCustomerTracking(request.user.sub, id);
   });
 
   app.post("/:id/cancel", async (request) => {

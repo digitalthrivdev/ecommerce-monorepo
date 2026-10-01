@@ -28,6 +28,7 @@ export type DeliveryPartnerMinAggregateOutputType = {
   id: string | null
   userId: string | null
   status: $Enums.DeliveryPartnerStatus | null
+  isActive: boolean | null
   vehicleType: string | null
   vehicleNumber: string | null
   createdAt: Date | null
@@ -38,6 +39,7 @@ export type DeliveryPartnerMaxAggregateOutputType = {
   id: string | null
   userId: string | null
   status: $Enums.DeliveryPartnerStatus | null
+  isActive: boolean | null
   vehicleType: string | null
   vehicleNumber: string | null
   createdAt: Date | null
@@ -48,6 +50,7 @@ export type DeliveryPartnerCountAggregateOutputType = {
   id: number
   userId: number
   status: number
+  isActive: number
   vehicleType: number
   vehicleNumber: number
   createdAt: number
@@ -60,6 +63,7 @@ export type DeliveryPartnerMinAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  isActive?: true
   vehicleType?: true
   vehicleNumber?: true
   createdAt?: true
@@ -70,6 +74,7 @@ export type DeliveryPartnerMaxAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  isActive?: true
   vehicleType?: true
   vehicleNumber?: true
   createdAt?: true
@@ -80,6 +85,7 @@ export type DeliveryPartnerCountAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  isActive?: true
   vehicleType?: true
   vehicleNumber?: true
   createdAt?: true
@@ -163,6 +169,7 @@ export type DeliveryPartnerGroupByOutputType = {
   id: string
   userId: string
   status: $Enums.DeliveryPartnerStatus
+  isActive: boolean
   vehicleType: string | null
   vehicleNumber: string | null
   createdAt: Date
@@ -194,6 +201,7 @@ export type DeliveryPartnerWhereInput = {
   id?: Prisma.StringFilter<"DeliveryPartner"> | string
   userId?: Prisma.StringFilter<"DeliveryPartner"> | string
   status?: Prisma.EnumDeliveryPartnerStatusFilter<"DeliveryPartner"> | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFilter<"DeliveryPartner"> | boolean
   vehicleType?: Prisma.StringNullableFilter<"DeliveryPartner"> | string | null
   vehicleNumber?: Prisma.StringNullableFilter<"DeliveryPartner"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DeliveryPartner"> | Date | string
@@ -206,6 +214,7 @@ export type DeliveryPartnerOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   vehicleType?: Prisma.SortOrderInput | Prisma.SortOrder
   vehicleNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -221,6 +230,7 @@ export type DeliveryPartnerWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.DeliveryPartnerWhereInput[]
   NOT?: Prisma.DeliveryPartnerWhereInput | Prisma.DeliveryPartnerWhereInput[]
   status?: Prisma.EnumDeliveryPartnerStatusFilter<"DeliveryPartner"> | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFilter<"DeliveryPartner"> | boolean
   vehicleType?: Prisma.StringNullableFilter<"DeliveryPartner"> | string | null
   vehicleNumber?: Prisma.StringNullableFilter<"DeliveryPartner"> | string | null
   createdAt?: Prisma.DateTimeFilter<"DeliveryPartner"> | Date | string
@@ -233,6 +243,7 @@ export type DeliveryPartnerOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   vehicleType?: Prisma.SortOrderInput | Prisma.SortOrder
   vehicleNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -249,6 +260,7 @@ export type DeliveryPartnerScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"DeliveryPartner"> | string
   userId?: Prisma.StringWithAggregatesFilter<"DeliveryPartner"> | string
   status?: Prisma.EnumDeliveryPartnerStatusWithAggregatesFilter<"DeliveryPartner"> | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolWithAggregatesFilter<"DeliveryPartner"> | boolean
   vehicleType?: Prisma.StringNullableWithAggregatesFilter<"DeliveryPartner"> | string | null
   vehicleNumber?: Prisma.StringNullableWithAggregatesFilter<"DeliveryPartner"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DeliveryPartner"> | Date | string
@@ -258,6 +270,7 @@ export type DeliveryPartnerScalarWhereWithAggregatesInput = {
 export type DeliveryPartnerCreateInput = {
   id?: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -270,6 +283,7 @@ export type DeliveryPartnerUncheckedCreateInput = {
   id?: string
   userId: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -280,6 +294,7 @@ export type DeliveryPartnerUncheckedCreateInput = {
 export type DeliveryPartnerUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -292,6 +307,7 @@ export type DeliveryPartnerUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -303,6 +319,7 @@ export type DeliveryPartnerCreateManyInput = {
   id?: string
   userId: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -312,6 +329,7 @@ export type DeliveryPartnerCreateManyInput = {
 export type DeliveryPartnerUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -322,6 +340,7 @@ export type DeliveryPartnerUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -337,6 +356,7 @@ export type DeliveryPartnerCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   vehicleType?: Prisma.SortOrder
   vehicleNumber?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -347,6 +367,7 @@ export type DeliveryPartnerMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   vehicleType?: Prisma.SortOrder
   vehicleNumber?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -357,6 +378,7 @@ export type DeliveryPartnerMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   vehicleType?: Prisma.SortOrder
   vehicleNumber?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -418,6 +440,7 @@ export type DeliveryPartnerUpdateOneWithoutDeliveriesNestedInput = {
 export type DeliveryPartnerCreateWithoutUserInput = {
   id?: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -428,6 +451,7 @@ export type DeliveryPartnerCreateWithoutUserInput = {
 export type DeliveryPartnerUncheckedCreateWithoutUserInput = {
   id?: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -454,6 +478,7 @@ export type DeliveryPartnerUpdateToOneWithWhereWithoutUserInput = {
 export type DeliveryPartnerUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -464,6 +489,7 @@ export type DeliveryPartnerUpdateWithoutUserInput = {
 export type DeliveryPartnerUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -474,6 +500,7 @@ export type DeliveryPartnerUncheckedUpdateWithoutUserInput = {
 export type DeliveryPartnerCreateWithoutDeliveriesInput = {
   id?: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -485,6 +512,7 @@ export type DeliveryPartnerUncheckedCreateWithoutDeliveriesInput = {
   id?: string
   userId: string
   status?: $Enums.DeliveryPartnerStatus
+  isActive?: boolean
   vehicleType?: string | null
   vehicleNumber?: string | null
   createdAt?: Date | string
@@ -510,6 +538,7 @@ export type DeliveryPartnerUpdateToOneWithWhereWithoutDeliveriesInput = {
 export type DeliveryPartnerUpdateWithoutDeliveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -521,6 +550,7 @@ export type DeliveryPartnerUncheckedUpdateWithoutDeliveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryPartnerStatusFieldUpdateOperationsInput | $Enums.DeliveryPartnerStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   vehicleType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -562,6 +592,7 @@ export type DeliveryPartnerSelect<ExtArgs extends runtime.Types.Extensions.Inter
   id?: boolean
   userId?: boolean
   status?: boolean
+  isActive?: boolean
   vehicleType?: boolean
   vehicleNumber?: boolean
   createdAt?: boolean
@@ -575,6 +606,7 @@ export type DeliveryPartnerSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   id?: boolean
   userId?: boolean
   status?: boolean
+  isActive?: boolean
   vehicleType?: boolean
   vehicleNumber?: boolean
   createdAt?: boolean
@@ -586,6 +618,7 @@ export type DeliveryPartnerSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   id?: boolean
   userId?: boolean
   status?: boolean
+  isActive?: boolean
   vehicleType?: boolean
   vehicleNumber?: boolean
   createdAt?: boolean
@@ -597,13 +630,14 @@ export type DeliveryPartnerSelectScalar = {
   id?: boolean
   userId?: boolean
   status?: boolean
+  isActive?: boolean
   vehicleType?: boolean
   vehicleNumber?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DeliveryPartnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "vehicleType" | "vehicleNumber" | "createdAt" | "updatedAt", ExtArgs["result"]["deliveryPartner"]>
+export type DeliveryPartnerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "isActive" | "vehicleType" | "vehicleNumber" | "createdAt" | "updatedAt", ExtArgs["result"]["deliveryPartner"]>
 export type DeliveryPartnerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   deliveries?: boolean | Prisma.DeliveryPartner$deliveriesArgs<ExtArgs>
@@ -626,6 +660,7 @@ export type $DeliveryPartnerPayload<ExtArgs extends runtime.Types.Extensions.Int
     id: string
     userId: string
     status: $Enums.DeliveryPartnerStatus
+    isActive: boolean
     vehicleType: string | null
     vehicleNumber: string | null
     createdAt: Date
@@ -1058,6 +1093,7 @@ export interface DeliveryPartnerFieldRefs {
   readonly id: Prisma.FieldRef<"DeliveryPartner", 'String'>
   readonly userId: Prisma.FieldRef<"DeliveryPartner", 'String'>
   readonly status: Prisma.FieldRef<"DeliveryPartner", 'DeliveryPartnerStatus'>
+  readonly isActive: Prisma.FieldRef<"DeliveryPartner", 'Boolean'>
   readonly vehicleType: Prisma.FieldRef<"DeliveryPartner", 'String'>
   readonly vehicleNumber: Prisma.FieldRef<"DeliveryPartner", 'String'>
   readonly createdAt: Prisma.FieldRef<"DeliveryPartner", 'DateTime'>

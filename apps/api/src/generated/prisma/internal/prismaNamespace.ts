@@ -1870,6 +1870,7 @@ export const DeliveryPartnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   status: 'status',
+  isActive: 'isActive',
   vehicleType: 'vehicleType',
   vehicleNumber: 'vehicleNumber',
   createdAt: 'createdAt',
@@ -1885,9 +1886,11 @@ export const DeliveryScalarFieldEnum = {
   partnerId: 'partnerId',
   status: 'status',
   assignedAt: 'assignedAt',
+  acceptedAt: 'acceptedAt',
   pickedUpAt: 'pickedUpAt',
   deliveredAt: 'deliveredAt',
   deliveryOtpHash: 'deliveryOtpHash',
+  earning: 'earning',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

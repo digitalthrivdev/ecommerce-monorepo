@@ -20,8 +20,18 @@ export type DeliveryModel = runtime.Types.Result.DefaultSelection<Prisma.$Delive
 
 export type AggregateDelivery = {
   _count: DeliveryCountAggregateOutputType | null
+  _avg: DeliveryAvgAggregateOutputType | null
+  _sum: DeliverySumAggregateOutputType | null
   _min: DeliveryMinAggregateOutputType | null
   _max: DeliveryMaxAggregateOutputType | null
+}
+
+export type DeliveryAvgAggregateOutputType = {
+  earning: runtime.Decimal | null
+}
+
+export type DeliverySumAggregateOutputType = {
+  earning: runtime.Decimal | null
 }
 
 export type DeliveryMinAggregateOutputType = {
@@ -30,9 +40,11 @@ export type DeliveryMinAggregateOutputType = {
   partnerId: string | null
   status: $Enums.DeliveryStatus | null
   assignedAt: Date | null
+  acceptedAt: Date | null
   pickedUpAt: Date | null
   deliveredAt: Date | null
   deliveryOtpHash: string | null
+  earning: runtime.Decimal | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -43,9 +55,11 @@ export type DeliveryMaxAggregateOutputType = {
   partnerId: string | null
   status: $Enums.DeliveryStatus | null
   assignedAt: Date | null
+  acceptedAt: Date | null
   pickedUpAt: Date | null
   deliveredAt: Date | null
   deliveryOtpHash: string | null
+  earning: runtime.Decimal | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -56,14 +70,24 @@ export type DeliveryCountAggregateOutputType = {
   partnerId: number
   status: number
   assignedAt: number
+  acceptedAt: number
   pickedUpAt: number
   deliveredAt: number
   deliveryOtpHash: number
+  earning: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type DeliveryAvgAggregateInputType = {
+  earning?: true
+}
+
+export type DeliverySumAggregateInputType = {
+  earning?: true
+}
 
 export type DeliveryMinAggregateInputType = {
   id?: true
@@ -71,9 +95,11 @@ export type DeliveryMinAggregateInputType = {
   partnerId?: true
   status?: true
   assignedAt?: true
+  acceptedAt?: true
   pickedUpAt?: true
   deliveredAt?: true
   deliveryOtpHash?: true
+  earning?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -84,9 +110,11 @@ export type DeliveryMaxAggregateInputType = {
   partnerId?: true
   status?: true
   assignedAt?: true
+  acceptedAt?: true
   pickedUpAt?: true
   deliveredAt?: true
   deliveryOtpHash?: true
+  earning?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -97,9 +125,11 @@ export type DeliveryCountAggregateInputType = {
   partnerId?: true
   status?: true
   assignedAt?: true
+  acceptedAt?: true
   pickedUpAt?: true
   deliveredAt?: true
   deliveryOtpHash?: true
+  earning?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -143,6 +173,18 @@ export type DeliveryAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: DeliveryAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: DeliverySumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: DeliveryMinAggregateInputType
@@ -173,6 +215,8 @@ export type DeliveryGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   _count?: DeliveryCountAggregateInputType | true
+  _avg?: DeliveryAvgAggregateInputType
+  _sum?: DeliverySumAggregateInputType
   _min?: DeliveryMinAggregateInputType
   _max?: DeliveryMaxAggregateInputType
 }
@@ -183,12 +227,16 @@ export type DeliveryGroupByOutputType = {
   partnerId: string | null
   status: $Enums.DeliveryStatus
   assignedAt: Date | null
+  acceptedAt: Date | null
   pickedUpAt: Date | null
   deliveredAt: Date | null
   deliveryOtpHash: string | null
+  earning: runtime.Decimal | null
   createdAt: Date
   updatedAt: Date
   _count: DeliveryCountAggregateOutputType | null
+  _avg: DeliveryAvgAggregateOutputType | null
+  _sum: DeliverySumAggregateOutputType | null
   _min: DeliveryMinAggregateOutputType | null
   _max: DeliveryMaxAggregateOutputType | null
 }
@@ -217,9 +265,11 @@ export type DeliveryWhereInput = {
   partnerId?: Prisma.StringNullableFilter<"Delivery"> | string | null
   status?: Prisma.EnumDeliveryStatusFilter<"Delivery"> | $Enums.DeliveryStatus
   assignedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
+  acceptedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   pickedUpAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
+  earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -233,9 +283,11 @@ export type DeliveryOrderByWithRelationInput = {
   partnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   assignedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   pickedUpAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  earning?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   order?: Prisma.OrderOrderByWithRelationInput
@@ -252,9 +304,11 @@ export type DeliveryWhereUniqueInput = Prisma.AtLeast<{
   partnerId?: Prisma.StringNullableFilter<"Delivery"> | string | null
   status?: Prisma.EnumDeliveryStatusFilter<"Delivery"> | $Enums.DeliveryStatus
   assignedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
+  acceptedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   pickedUpAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
+  earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -268,14 +322,18 @@ export type DeliveryOrderByWithAggregationInput = {
   partnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   assignedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  acceptedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   pickedUpAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  earning?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DeliveryCountOrderByAggregateInput
+  _avg?: Prisma.DeliveryAvgOrderByAggregateInput
   _max?: Prisma.DeliveryMaxOrderByAggregateInput
   _min?: Prisma.DeliveryMinOrderByAggregateInput
+  _sum?: Prisma.DeliverySumOrderByAggregateInput
 }
 
 export type DeliveryScalarWhereWithAggregatesInput = {
@@ -287,9 +345,11 @@ export type DeliveryScalarWhereWithAggregatesInput = {
   partnerId?: Prisma.StringNullableWithAggregatesFilter<"Delivery"> | string | null
   status?: Prisma.EnumDeliveryStatusWithAggregatesFilter<"Delivery"> | $Enums.DeliveryStatus
   assignedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Delivery"> | Date | string | null
+  acceptedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Delivery"> | Date | string | null
   pickedUpAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Delivery"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableWithAggregatesFilter<"Delivery"> | string | null
+  earning?: Prisma.DecimalNullableWithAggregatesFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Delivery"> | Date | string
 }
@@ -298,9 +358,11 @@ export type DeliveryCreateInput = {
   id?: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -314,9 +376,11 @@ export type DeliveryUncheckedCreateInput = {
   partnerId?: string | null
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -326,9 +390,11 @@ export type DeliveryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -342,9 +408,11 @@ export type DeliveryUncheckedUpdateInput = {
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -356,9 +424,11 @@ export type DeliveryCreateManyInput = {
   partnerId?: string | null
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -367,9 +437,11 @@ export type DeliveryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -380,9 +452,11 @@ export type DeliveryUncheckedUpdateManyInput = {
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -408,11 +482,17 @@ export type DeliveryCountOrderByAggregateInput = {
   partnerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   assignedAt?: Prisma.SortOrder
+  acceptedAt?: Prisma.SortOrder
   pickedUpAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
+  earning?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type DeliveryAvgOrderByAggregateInput = {
+  earning?: Prisma.SortOrder
 }
 
 export type DeliveryMaxOrderByAggregateInput = {
@@ -421,9 +501,11 @@ export type DeliveryMaxOrderByAggregateInput = {
   partnerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   assignedAt?: Prisma.SortOrder
+  acceptedAt?: Prisma.SortOrder
   pickedUpAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
+  earning?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -434,11 +516,17 @@ export type DeliveryMinOrderByAggregateInput = {
   partnerId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   assignedAt?: Prisma.SortOrder
+  acceptedAt?: Prisma.SortOrder
   pickedUpAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
+  earning?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type DeliverySumOrderByAggregateInput = {
+  earning?: Prisma.SortOrder
 }
 
 export type DeliveryScalarRelationFilter = {
@@ -542,9 +630,11 @@ export type DeliveryCreateWithoutOrderInput = {
   id?: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   partner?: Prisma.DeliveryPartnerCreateNestedOneWithoutDeliveriesInput
@@ -556,9 +646,11 @@ export type DeliveryUncheckedCreateWithoutOrderInput = {
   partnerId?: string | null
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -584,9 +676,11 @@ export type DeliveryUpdateWithoutOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   partner?: Prisma.DeliveryPartnerUpdateOneWithoutDeliveriesNestedInput
@@ -598,9 +692,11 @@ export type DeliveryUncheckedUpdateWithoutOrderInput = {
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -610,9 +706,11 @@ export type DeliveryCreateWithoutPartnerInput = {
   id?: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -624,9 +722,11 @@ export type DeliveryUncheckedCreateWithoutPartnerInput = {
   orderId: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -667,9 +767,11 @@ export type DeliveryScalarWhereInput = {
   partnerId?: Prisma.StringNullableFilter<"Delivery"> | string | null
   status?: Prisma.EnumDeliveryStatusFilter<"Delivery"> | $Enums.DeliveryStatus
   assignedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
+  acceptedAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   pickedUpAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
+  earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
 }
@@ -678,9 +780,11 @@ export type DeliveryCreateWithoutLocationsInput = {
   id?: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -693,9 +797,11 @@ export type DeliveryUncheckedCreateWithoutLocationsInput = {
   partnerId?: string | null
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -720,9 +826,11 @@ export type DeliveryUpdateWithoutLocationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -735,9 +843,11 @@ export type DeliveryUncheckedUpdateWithoutLocationsInput = {
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -747,9 +857,11 @@ export type DeliveryCreateManyPartnerInput = {
   orderId: string
   status?: $Enums.DeliveryStatus
   assignedAt?: Date | string | null
+  acceptedAt?: Date | string | null
   pickedUpAt?: Date | string | null
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
+  earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -758,9 +870,11 @@ export type DeliveryUpdateWithoutPartnerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -772,9 +886,11 @@ export type DeliveryUncheckedUpdateWithoutPartnerInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -785,9 +901,11 @@ export type DeliveryUncheckedUpdateManyWithoutPartnerInput = {
   orderId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumDeliveryStatusFieldUpdateOperationsInput | $Enums.DeliveryStatus
   assignedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pickedUpAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -829,9 +947,11 @@ export type DeliverySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   partnerId?: boolean
   status?: boolean
   assignedAt?: boolean
+  acceptedAt?: boolean
   pickedUpAt?: boolean
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
+  earning?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -846,9 +966,11 @@ export type DeliverySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   partnerId?: boolean
   status?: boolean
   assignedAt?: boolean
+  acceptedAt?: boolean
   pickedUpAt?: boolean
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
+  earning?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -861,9 +983,11 @@ export type DeliverySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   partnerId?: boolean
   status?: boolean
   assignedAt?: boolean
+  acceptedAt?: boolean
   pickedUpAt?: boolean
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
+  earning?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -876,14 +1000,16 @@ export type DeliverySelectScalar = {
   partnerId?: boolean
   status?: boolean
   assignedAt?: boolean
+  acceptedAt?: boolean
   pickedUpAt?: boolean
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
+  earning?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DeliveryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "partnerId" | "status" | "assignedAt" | "pickedUpAt" | "deliveredAt" | "deliveryOtpHash" | "createdAt" | "updatedAt", ExtArgs["result"]["delivery"]>
+export type DeliveryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "partnerId" | "status" | "assignedAt" | "acceptedAt" | "pickedUpAt" | "deliveredAt" | "deliveryOtpHash" | "earning" | "createdAt" | "updatedAt", ExtArgs["result"]["delivery"]>
 export type DeliveryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   partner?: boolean | Prisma.Delivery$partnerArgs<ExtArgs>
@@ -912,9 +1038,11 @@ export type $DeliveryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     partnerId: string | null
     status: $Enums.DeliveryStatus
     assignedAt: Date | null
+    acceptedAt: Date | null
     pickedUpAt: Date | null
     deliveredAt: Date | null
     deliveryOtpHash: string | null
+    earning: runtime.Decimal | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["delivery"]>
@@ -1348,9 +1476,11 @@ export interface DeliveryFieldRefs {
   readonly partnerId: Prisma.FieldRef<"Delivery", 'String'>
   readonly status: Prisma.FieldRef<"Delivery", 'DeliveryStatus'>
   readonly assignedAt: Prisma.FieldRef<"Delivery", 'DateTime'>
+  readonly acceptedAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly pickedUpAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly deliveredAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly deliveryOtpHash: Prisma.FieldRef<"Delivery", 'String'>
+  readonly earning: Prisma.FieldRef<"Delivery", 'Decimal'>
   readonly createdAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Delivery", 'DateTime'>
 }

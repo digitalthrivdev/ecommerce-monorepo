@@ -26,6 +26,13 @@ const users = [
 
 const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff" };
 
+const deliveryPartner = {
+  phone: "+919000000004",
+  name: "Test Delivery Partner",
+  vehicleType: "Bike",
+  vehicleNumber: "KA01AB1234",
+};
+
 const store = {
   code: "BLR-KRM-01",
   name: "Koramangala Store",
@@ -141,6 +148,19 @@ async function main() {
     create: { ...storeStaff, role: UserRole.STORE_STAFF, storeId: seededStore.id },
   });
 
+  const { vehicleType, vehicleNumber, ...partnerUser } = deliveryPartner;
+  const partnerAccount = await prisma.user.upsert({
+    where: { phone: partnerUser.phone },
+    update: { name: partnerUser.name, role: UserRole.DELIVERY_PARTNER },
+    create: { ...partnerUser, role: UserRole.DELIVERY_PARTNER },
+  });
+  // Keep the partner's live status on reseed.
+  await prisma.deliveryPartner.upsert({
+    where: { userId: partnerAccount.id },
+    update: { vehicleType, vehicleNumber },
+    create: { userId: partnerAccount.id, vehicleType, vehicleNumber },
+  });
+
   let productCount = 0;
 
   for (const [index, category] of categories.entries()) {
@@ -185,7 +205,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${users.length + 1} users, 1 store, ${categories.length} categories, ${productCount} products`,
+    `Seeded ${users.length + 2} users (incl. store staff and a delivery partner), 1 store, ${categories.length} categories, ${productCount} products`,
   );
 }
 

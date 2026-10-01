@@ -384,7 +384,9 @@ model DeliveryPartner {
   id     String @id @default(cuid())
   userId String @unique
 
-  status DeliveryPartnerStatus @default(OFFLINE)
+  status   DeliveryPartnerStatus @default(OFFLINE)
+  // Inactive partners cannot use the delivery app or be assigned.
+  isActive Boolean               @default(true)
 
   vehicleType   String?
   vehicleNumber String?
@@ -394,6 +396,8 @@ model DeliveryPartner {
 
   user       User       @relation(fields: [userId], references: [id])
   deliveries Delivery[]
+
+  @@index([status])
 }
 
 enum DeliveryPartnerStatus {
@@ -410,10 +414,14 @@ model Delivery {
   status DeliveryStatus @default(PENDING)
 
   assignedAt  DateTime?
+  acceptedAt  DateTime?
   pickedUpAt  DateTime?
   deliveredAt DateTime?
 
   deliveryOtpHash String?
+
+  // Partner earning snapshot, set when delivered.
+  earning Decimal? @db.Decimal(10, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

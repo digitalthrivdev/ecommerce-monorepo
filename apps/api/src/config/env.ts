@@ -26,6 +26,8 @@ const envSchema = z.object({
 
   MIN_ORDER_VALUE: moneyEnv.default("99.00"),
 
+  DELIVERY_PARTNER_FEE: moneyEnv.default("30.00"),
+
   CURRENCY: z.string().regex(/^[A-Z]{3}$/, "Must be an ISO 4217 code, e.g. INR").default("INR"),
 
   PAYMENT_PROVIDER: z.enum(["none", "mock"]).default("mock"),

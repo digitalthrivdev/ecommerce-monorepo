@@ -25,14 +25,29 @@ function hiddenStatuses(isAdmin: boolean) {
   return isAdmin ? [] : [OrderStatus.PENDING_PAYMENT];
 }
 
+// Admins can also cancel failed deliveries; the rider brings the items back, so stock is returned.
+const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [
+  OrderStatus.PENDING_PAYMENT,
+  OrderStatus.ASSIGNED,
+  OrderStatus.PICKED_UP,
+  OrderStatus.OUT_FOR_DELIVERY,
+];
+
 function cancellableFrom(isAdmin: boolean) {
-  return isAdmin ? [OrderStatus.PENDING_PAYMENT, ...STORE_CANCELLABLE] : STORE_CANCELLABLE;
+  return isAdmin ? [...STORE_CANCELLABLE, ...ADMIN_ONLY_CANCELLABLE] : STORE_CANCELLABLE;
 }
 
 function allowedActions(status: OrderStatus, isAdmin: boolean) {
   const actions: string[] = Object.entries(STORE_ACTIONS)
     .filter(([, action]) => (action.from as readonly OrderStatus[]).includes(status))
     .map(([name]) => name);
+
+  if (isAdmin && status === OrderStatus.READY_FOR_PICKUP) {
+    actions.push("assign");
+  }
+  if (isAdmin && status === OrderStatus.ASSIGNED) {
+    actions.push("reassign");
+  }
 
   if (cancellableFrom(isAdmin).includes(status)) {
     actions.push("cancel");

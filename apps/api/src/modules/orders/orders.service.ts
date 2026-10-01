@@ -9,6 +9,7 @@ import {
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
+import { deliveryOtp } from "../delivery/delivery-otp.js";
 import { reserveStock } from "../inventory/inventory.service.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { customerVisible } from "../products/store-products.service.js";
@@ -19,6 +20,12 @@ import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
   OrderStatus.PENDING_PAYMENT,
   OrderStatus.CONFIRMED,
+];
+
+const OTP_VISIBLE_STATUSES: OrderStatus[] = [
+  OrderStatus.ASSIGNED,
+  OrderStatus.PICKED_UP,
+  OrderStatus.OUT_FOR_DELIVERY,
 ];
 
 const DELIVERY_FEE = new Prisma.Decimal(env.DELIVERY_FEE);
@@ -37,6 +44,18 @@ export const orderDetailInclude = {
   store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
   payment: { select: { method: true, status: true, amount: true, paidAt: true, refundedAt: true } },
+  delivery: {
+    select: {
+      id: true,
+      status: true,
+      assignedAt: true,
+      pickedUpAt: true,
+      deliveredAt: true,
+      partner: {
+        select: { vehicleType: true, vehicleNumber: true, user: { select: { name: true, phone: true } } },
+      },
+    },
+  },
   statusHistory: {
     orderBy: { createdAt: "asc" },
     select: { fromStatus: true, toStatus: true, note: true, createdAt: true },
@@ -59,6 +78,18 @@ export function toDetailView(order: OrderDetail) {
       refundedAt: order.payment.refundedAt,
     },
     paymentExpiresAt: order.status === OrderStatus.PENDING_PAYMENT ? paymentDeadline(order.createdAt) : null,
+    delivery: order.delivery && {
+      status: order.delivery.status,
+      partner: order.delivery.partner && {
+        name: order.delivery.partner.user.name,
+        phone: order.delivery.partner.user.phone,
+        vehicleType: order.delivery.partner.vehicleType,
+        vehicleNumber: order.delivery.partner.vehicleNumber,
+      },
+      assignedAt: order.delivery.assignedAt,
+      pickedUpAt: order.delivery.pickedUpAt,
+      deliveredAt: order.delivery.deliveredAt,
+    },
     store: order.store,
     items: order.items.map((item) => ({
       productId: item.productId,
@@ -99,7 +130,10 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
 
-    return toDetailView(order);
+    const view = toDetailView(order);
+    // Only the customer sees the OTP; they share it with the partner at the door.
+    const showOtp = order.delivery?.partner && OTP_VISIBLE_STATUSES.includes(order.status);
+    return { ...view, deliveryOtp: showOtp ? deliveryOtp(order.delivery!.id) : null };
   }
 
   async function listOrders(userId: string, { limit, offset, status }: ListOrdersQuery) {

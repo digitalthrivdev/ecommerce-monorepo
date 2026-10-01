@@ -10,6 +10,8 @@ import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
+import deliveryRoutes from "./modules/delivery/delivery.routes.js";
+import partnersRoutes from "./modules/delivery/partners.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
@@ -58,6 +60,8 @@ export async function buildApp() {
   await app.register(paymentsRoutes, { prefix: "/payments" });
   await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
   await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
+  await app.register(partnersRoutes, { prefix: "/delivery-partners" });
+  await app.register(deliveryRoutes, { prefix: "/delivery" });
 
   return app;
 }
