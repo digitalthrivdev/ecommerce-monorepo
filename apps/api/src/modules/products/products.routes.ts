@@ -18,6 +18,7 @@ import { createStoreProductsService } from "./store-products.service.js";
 
 export const productsRoutes: FastifyPluginAsync = async (app) => {
   const productsService = createProductsService(app.prisma);
+  const storeProductsService = createStoreProductsService(app.prisma);
   const requireAdmin = app.requireRole(UserRole.ADMIN);
 
   const isAdmin = async (request: FastifyRequest) =>
@@ -36,6 +37,11 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
   app.get("/:id", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return productsService.getProduct(id, { includeInactive: await isAdmin(request) });
+  });
+
+  app.get("/:id/listings", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return storeProductsService.listProductListings(id);
   });
 
   app.post("/", { preHandler: requireAdmin }, async (request, reply) => {

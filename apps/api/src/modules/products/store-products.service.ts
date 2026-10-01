@@ -123,6 +123,53 @@ export function createStoreProductsService(prisma: PrismaClient) {
     return toView(storeProduct, { includeStock: options.canManage });
   }
 
+  /** Every store with this product's listing there, or null where it is not listed (admin view). */
+  async function listProductListings(productId: string) {
+    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+
+    if (!product) {
+      throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
+    }
+
+    const [stores, listings] = await prisma.$transaction([
+      prisma.store.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, code: true, status: true },
+      }),
+      prisma.storeProduct.findMany({
+        where: { productId },
+        select: {
+          id: true,
+          storeId: true,
+          sellingPrice: true,
+          mrp: true,
+          isAvailable: true,
+          inventory: { select: { quantity: true } },
+        },
+      }),
+    ]);
+
+    const byStore = new Map(listings.map((listing) => [listing.storeId, listing]));
+
+    return {
+      items: stores.map((store) => {
+        const listing = byStore.get(store.id);
+        return {
+          store,
+          listing: listing
+            ? {
+                storeProductId: listing.id,
+                sellingPrice: listing.sellingPrice.toFixed(2),
+                mrp: listing.mrp?.toFixed(2) ?? null,
+                isAvailable: listing.isAvailable,
+                stockQuantity: listing.inventory?.quantity ?? 0,
+              }
+            : null,
+        };
+      }),
+    };
+  }
+
   async function createStoreProduct(storeId: string, data: CreateStoreProductInput) {
     await assertStore(storeId, { includeInactive: true });
 
@@ -176,5 +223,5 @@ export function createStoreProductsService(prisma: PrismaClient) {
     return toView(storeProduct, { includeStock: true });
   }
 
-  return { listStoreProducts, getStoreProduct, createStoreProduct, updateStoreProduct };
+  return { listStoreProducts, getStoreProduct, listProductListings, createStoreProduct, updateStoreProduct };
 }

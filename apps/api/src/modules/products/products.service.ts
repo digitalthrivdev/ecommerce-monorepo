@@ -30,16 +30,21 @@ export function createProductsService(prisma: PrismaClient) {
       ...(search && { name: { contains: search, mode: "insensitive" } }),
     };
 
-    const [items, total] = await prisma.$transaction([
+    const [rows, total] = await prisma.$transaction([
       prisma.product.findMany({
         where,
-        include: productInclude,
+        include: { ...productInclude, _count: { select: { stores: true } } },
         orderBy: { name: "asc" },
         take: limit,
         skip: offset,
       }),
       prisma.product.count({ where }),
     ]);
+
+    // How many stores list the product is admin information.
+    const items = rows.map(({ _count, ...product }) =>
+      includeInactive ? { ...product, storeCount: _count.stores } : product,
+    );
 
     return { items, total, limit, offset };
   }

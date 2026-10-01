@@ -7,15 +7,21 @@ export function createCategoriesService(prisma: PrismaClient) {
   async function listCategories(params: { limit: number; offset: number; includeInactive: boolean }) {
     const where = params.includeInactive ? {} : { isActive: true };
 
-    const [items, total] = await prisma.$transaction([
+    const [rows, total] = await prisma.$transaction([
       prisma.category.findMany({
         where,
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         take: params.limit,
         skip: params.offset,
+        include: { _count: { select: { products: true } } },
       }),
       prisma.category.count({ where }),
     ]);
+
+    // Product counts include inactive products, so they are only shown to admins.
+    const items = rows.map(({ _count, ...category }) =>
+      params.includeInactive ? { ...category, productCount: _count.products } : category,
+    );
 
     return { items, total, limit: params.limit, offset: params.offset };
   }
