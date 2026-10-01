@@ -1,0 +1,115 @@
+export type CardStyle = "flat" | "outlined" | "elevated";
+export type ColorSchemePreference = "light" | "dark" | "system";
+
+export type AppTheme = {
+  colors: { primary: string; onPrimary: string; accent: string; onAccent: string };
+  radius: number;
+  cardStyle: CardStyle;
+  colorScheme: ColorSchemePreference;
+};
+
+export type Announcement = { enabled: boolean; text: string; backgroundColor: string | null; textColor: string | null };
+
+/** `GET /settings`: everything the app needs at startup. Money values are decimal strings. */
+export type PublicSettings = {
+  appName: string;
+  branding: { logoUrl: string | null; primaryColor: string; secondaryColor: string };
+  theme: AppTheme;
+  announcement: Announcement;
+  currency: string;
+  timezone: string;
+  pricing: { deliveryFee: string; freeDeliveryThreshold: string | null; minOrderValue: string };
+  payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
+  support: { phone: string | null; email: string | null };
+};
+
+export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";
+
+export type User = { id: string; phone: string; name: string | null; email: string | null; role: UserRole };
+
+export type Category = { id: string; name: string; slug: string; imageUrl: string | null; sortOrder: number };
+
+export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
+
+export type Coordinates = { latitude: number; longitude: number };
+
+/** Coordinates are decimal strings; they are null only for addresses saved without a location. */
+export type Address = {
+  id: string;
+  label: string | null;
+  name: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  latitude: string | null;
+  longitude: string | null;
+  isDefault: boolean;
+};
+
+export type AddressInput = Omit<Address, "id" | "latitude" | "longitude" | "isDefault"> & Coordinates & { isDefault?: boolean };
+
+export type Store = {
+  id: string;
+  name: string;
+  code: string;
+  phone: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  latitude: string;
+  longitude: string;
+  serviceRadiusKm: string;
+};
+
+/** `GET /stores/serviceability`: the nearest active store whose radius covers the point. */
+export type Serviceability = { serviceable: boolean; distanceKm: number | null; store: Store | null };
+
+/** A product as sold by one store. Money values are decimal strings. */
+export type StoreProduct = {
+  productId: string;
+  storeProductId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  unit: string | null;
+  quantity: string | null;
+  category: { id: string; name: string; slug: string };
+  sellingPrice: string;
+  mrp: string | null;
+  isAvailable: boolean;
+  inStock: boolean;
+};
+
+export type HomeLink = { type: "none" } | { type: "category"; category: Category };
+
+export type BannerCarouselSection = {
+  id: string;
+  type: "banner_carousel";
+  autoplay: boolean;
+  banners: { id: string; imageUrl: string; title: string | null; subtitle: string | null; link: HomeLink }[];
+};
+
+export type CategoryGridSection = { id: string; type: "category_grid"; title: string | null; columns: 3 | 4; categories: Category[] };
+
+export type ProductRailSection = { id: string; type: "product_rail"; title: string; category: Category; products: StoreProduct[] };
+
+export type OfferStripSection = {
+  id: string;
+  type: "offer_strip";
+  title: string;
+  subtitle: string | null;
+  imageUrl: string | null;
+  backgroundColor: string;
+  textColor: string;
+  link: HomeLink;
+};
+
+export type HomeSection = BannerCarouselSection | CategoryGridSection | ProductRailSection | OfferStripSection;
+
+/** `GET /home`: the admin's home sections, ready to render in order. */
+export type HomeFeed = { storeId: string | null; sections: HomeSection[] };
