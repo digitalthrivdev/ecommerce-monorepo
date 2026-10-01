@@ -1855,7 +1855,10 @@ export const PaymentScalarFieldEnum = {
   provider: 'provider',
   transactionId: 'transactionId',
   providerOrderId: 'providerOrderId',
+  providerRefundId: 'providerRefundId',
+  failureReason: 'failureReason',
   paidAt: 'paidAt',
+  refundedAt: 'refundedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

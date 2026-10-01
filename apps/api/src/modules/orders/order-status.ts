@@ -6,12 +6,14 @@ type Tx = Prisma.TransactionClient;
 
 type TransitionParams = {
   orderId: string;
-  scope: { userId: string } | { storeId: string };
+  /** Omit only for system changes (payments, expiry) that are not made on behalf of a caller. */
+  scope?: { userId: string } | { storeId: string };
   /** Orders in these statuses are treated as not found for this caller. */
   hiddenStatuses?: OrderStatus[];
   allowedFrom: OrderStatus[];
   to: OrderStatus;
-  changedById: string;
+  /** Null for system changes. */
+  changedById: string | null;
   note?: string | null;
   notAllowed?: { code: string; message: string };
 };
@@ -41,8 +43,9 @@ async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
  * status history. Cancelling returns the order's stock. Must run inside a transaction.
  */
 export async function transitionOrder(tx: Tx, params: TransitionParams) {
-  const scopeFilter =
-    "userId" in params.scope
+  const scopeFilter = !params.scope
+    ? Prisma.empty
+    : "userId" in params.scope
       ? Prisma.sql`AND "userId" = ${params.scope.userId}`
       : Prisma.sql`AND "storeId" = ${params.scope.storeId}`;
 

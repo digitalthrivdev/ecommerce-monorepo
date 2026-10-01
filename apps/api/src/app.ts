@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 
 import authPlugin from "./plugins/auth.js";
 import errorHandlerPlugin from "./plugins/error-handler.js";
+import paymentsPlugin from "./plugins/payments.js";
 import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
@@ -11,6 +12,7 @@ import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
+import paymentsRoutes from "./modules/payments/payments.routes.js";
 import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
 import staffRoutes from "./modules/stores/staff.routes.js";
@@ -29,6 +31,7 @@ export async function buildApp() {
   await app.register(prismaPlugin);
   await app.register(redisPlugin);
   await app.register(authPlugin);
+  await app.register(paymentsPlugin);
 
   app.get("/health", async () => {
     await app.prisma.$queryRaw`SELECT 1`;
@@ -52,6 +55,7 @@ export async function buildApp() {
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });
   await app.register(ordersRoutes, { prefix: "/orders" });
+  await app.register(paymentsRoutes, { prefix: "/payments" });
   await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
   await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
 

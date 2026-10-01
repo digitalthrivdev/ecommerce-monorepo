@@ -24,7 +24,7 @@ const cancelBodySchema = z.object({
 });
 
 const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
-  const storeOrdersService = createStoreOrdersService(app.prisma);
+  const storeOrdersService = createStoreOrdersService(app.prisma, app.payments);
 
   app.addHook("preHandler", app.requireStoreAccess);
 

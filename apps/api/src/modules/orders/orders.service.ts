@@ -10,6 +10,7 @@ import {
 import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
 import { reserveStock } from "../inventory/inventory.service.js";
+import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
 import { transitionOrder } from "./order-status.js";
@@ -35,7 +36,7 @@ function generateOrderNumber() {
 export const orderDetailInclude = {
   store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
-  payment: { select: { method: true, status: true, amount: true, paidAt: true } },
+  payment: { select: { method: true, status: true, amount: true, paidAt: true, refundedAt: true } },
   statusHistory: {
     orderBy: { createdAt: "asc" },
     select: { fromStatus: true, toStatus: true, note: true, createdAt: true },
@@ -55,7 +56,9 @@ export function toDetailView(order: OrderDetail) {
       status: order.payment.status,
       amount: order.payment.amount.toFixed(2),
       paidAt: order.payment.paidAt,
+      refundedAt: order.payment.refundedAt,
     },
+    paymentExpiresAt: order.status === OrderStatus.PENDING_PAYMENT ? paymentDeadline(order.createdAt) : null,
     store: order.store,
     items: order.items.map((item) => ({
       productId: item.productId,
@@ -85,7 +88,7 @@ export function toDetailView(order: OrderDetail) {
   };
 }
 
-export function createOrdersService(prisma: PrismaClient) {
+export function createOrdersService(prisma: PrismaClient, payments: PaymentsService) {
   async function getOrder(userId: string, orderId: string) {
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId },
@@ -136,6 +139,10 @@ export function createOrdersService(prisma: PrismaClient) {
   }
 
   async function createOrder(userId: string, { addressId, paymentMethod }: CreateOrderInput) {
+    if (paymentMethod === PaymentMethod.ONLINE && env.PAYMENT_PROVIDER === "none") {
+      throw new AppError(400, "ONLINE_PAYMENTS_DISABLED", "Online payments are not available");
+    }
+
     const cartRef = await prisma.cart.findUnique({ where: { userId }, select: { id: true } });
 
     if (!cartRef) {
@@ -305,9 +312,15 @@ export function createOrdersService(prisma: PrismaClient) {
         notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
       }),
     );
+    await payments.settleCancelledOrder(orderId);
 
     return getOrder(userId, orderId);
   }
 
-  return { getOrder, listOrders, createOrder, cancelOrder };
+  async function verifyPayment(userId: string, orderId: string, input: { providerPaymentId: string; signature: string }) {
+    await payments.verifyPayment(userId, orderId, input);
+    return getOrder(userId, orderId);
+  }
+
+  return { getOrder, listOrders, createOrder, cancelOrder, verifyPayment };
 }

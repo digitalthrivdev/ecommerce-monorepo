@@ -1,5 +1,6 @@
 import { OrderStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import type { PaymentsService } from "../payments/payments.service.js";
 import { transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
 
@@ -42,7 +43,7 @@ function allowedActions(status: OrderStatus, isAdmin: boolean) {
 
 type Actor = { userId: string; isAdmin: boolean };
 
-export function createStoreOrdersService(prisma: PrismaClient) {
+export function createStoreOrdersService(prisma: PrismaClient, payments: PaymentsService) {
   async function listOrders(
     storeId: string,
     query: { limit: number; offset: number; status?: OrderStatus; sort: "newest" | "oldest" },
@@ -138,6 +139,7 @@ export function createStoreOrdersService(prisma: PrismaClient) {
         notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
       }),
     );
+    await payments.settleCancelledOrder(orderId);
 
     return getOrder(storeId, orderId, actor);
   }
