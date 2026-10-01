@@ -3,6 +3,13 @@ import { AppError } from "../../shared/errors.js";
 
 const staffSelect = { id: true, phone: true, name: true, role: true, storeId: true, createdAt: true } as const;
 
+const OTHER_ROLE_LABELS: Record<UserRole, string> = {
+  CUSTOMER: "a customer",
+  DELIVERY_PARTNER: "a delivery partner",
+  ADMIN: "an admin",
+  STORE_STAFF: "store staff",
+};
+
 export function createStaffService(prisma: PrismaClient) {
   async function assertStoreExists(storeId: string) {
     const store = await prisma.store.findUnique({ where: { id: storeId }, select: { id: true } });
@@ -45,7 +52,7 @@ export function createStaffService(prisma: PrismaClient) {
       throw new AppError(
         409,
         "USER_HAS_OTHER_ROLE",
-        `This phone number belongs to a ${existing.role} account`,
+        `This phone number is already registered as ${OTHER_ROLE_LABELS[existing.role]}`,
       );
     }
 

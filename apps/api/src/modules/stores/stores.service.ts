@@ -1,19 +1,41 @@
-import { StoreStatus, type PrismaClient } from "../../generated/prisma/client";
+import { StoreStatus, UserRole, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { ACTIVE_ORDER_STATUSES } from "../orders/order-status.js";
 import { distanceKmSql } from "./geo.js";
 import type { CreateStoreInput, UpdateStoreInput } from "./stores.schemas.js";
 
+/** Operational counts shown to admins; customers only see the store itself. */
+const adminCountsInclude = {
+  _count: {
+    select: {
+      staff: { where: { role: UserRole.STORE_STAFF } },
+      products: true,
+      orders: { where: { status: { in: ACTIVE_ORDER_STATUSES } } },
+    },
+  },
+} satisfies Prisma.StoreInclude;
+
+type StoreWithCounts = Prisma.StoreGetPayload<{ include: typeof adminCountsInclude }>;
+
+function withCounts({ _count, ...store }: StoreWithCounts) {
+  return { ...store, staffCount: _count.staff, productCount: _count.products, activeOrderCount: _count.orders };
+}
+
 export function createStoresService(prisma: PrismaClient) {
   async function listStores(params: { limit: number; offset: number; includeInactive: boolean }) {
-    const where = params.includeInactive ? {} : { status: StoreStatus.ACTIVE };
+    const page = { orderBy: { name: "asc" }, take: params.limit, skip: params.offset } as const;
 
+    if (params.includeInactive) {
+      const [items, total] = await prisma.$transaction([
+        prisma.store.findMany({ ...page, include: adminCountsInclude }),
+        prisma.store.count(),
+      ]);
+      return { items: items.map(withCounts), total, limit: params.limit, offset: params.offset };
+    }
+
+    const where = { status: StoreStatus.ACTIVE };
     const [items, total] = await prisma.$transaction([
-      prisma.store.findMany({
-        where,
-        orderBy: { name: "asc" },
-        take: params.limit,
-        skip: params.offset,
-      }),
+      prisma.store.findMany({ ...page, where }),
       prisma.store.count({ where }),
     ]);
 
@@ -21,9 +43,9 @@ export function createStoresService(prisma: PrismaClient) {
   }
 
   async function getStore(id: string, options: { includeInactive: boolean }) {
-    const store = await prisma.store.findFirst({
-      where: options.includeInactive ? { id } : { id, status: StoreStatus.ACTIVE },
-    });
+    const store = options.includeInactive
+      ? await prisma.store.findUnique({ where: { id }, include: adminCountsInclude }).then((found) => found && withCounts(found))
+      : await prisma.store.findFirst({ where: { id, status: StoreStatus.ACTIVE } });
 
     if (!store) {
       throw new AppError(404, "STORE_NOT_FOUND", "Store not found");

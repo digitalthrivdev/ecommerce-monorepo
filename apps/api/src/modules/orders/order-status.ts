@@ -5,6 +5,18 @@ import { releaseStock } from "../inventory/inventory.service.js";
 
 type Tx = Prisma.TransactionClient;
 
+/** Paid orders that are still being prepared or delivered. */
+export const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
+  OrderStatus.CONFIRMED,
+  OrderStatus.STORE_ACCEPTED,
+  OrderStatus.PICKING,
+  OrderStatus.PACKED,
+  OrderStatus.READY_FOR_PICKUP,
+  OrderStatus.ASSIGNED,
+  OrderStatus.PICKED_UP,
+  OrderStatus.OUT_FOR_DELIVERY,
+];
+
 type TransitionParams = {
   orderId: string;
   /** Omit only for system changes (payments, expiry) that are not made on behalf of a caller. */

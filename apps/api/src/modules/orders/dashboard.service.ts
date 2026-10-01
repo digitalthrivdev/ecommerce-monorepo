@@ -7,17 +7,7 @@ import {
   UserRole,
   type PrismaClient,
 } from "../../generated/prisma/client";
-
-const ACTIVE_STATUSES: OrderStatus[] = [
-  OrderStatus.CONFIRMED,
-  OrderStatus.STORE_ACCEPTED,
-  OrderStatus.PICKING,
-  OrderStatus.PACKED,
-  OrderStatus.READY_FOR_PICKUP,
-  OrderStatus.ASSIGNED,
-  OrderStatus.PICKED_UP,
-  OrderStatus.OUT_FOR_DELIVERY,
-];
+import { ACTIVE_ORDER_STATUSES as ACTIVE_STATUSES } from "./order-status.js";
 
 type TodayRow = {
   orders: bigint;
