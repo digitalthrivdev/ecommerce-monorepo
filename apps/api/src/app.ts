@@ -22,6 +22,7 @@ import { productsRoutes, storeProductsRoutes } from "./modules/products/products
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import staffRoutes from "./modules/stores/staff.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
+import customersRoutes from "./modules/users/customers.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 
 export async function buildApp() {
@@ -64,6 +65,7 @@ export async function buildApp() {
   await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
   await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
   await app.register(adminOrdersRoutes, { prefix: "/admin/orders" });
+  await app.register(customersRoutes, { prefix: "/admin/customers" });
   await app.register(partnersRoutes, { prefix: "/delivery-partners" });
   await app.register(deliveryRoutes, { prefix: "/delivery" });
   await app.register(settingsRoutes, { prefix: "/settings" });
