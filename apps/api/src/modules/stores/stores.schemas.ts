@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { StoreStatus } from "../../generated/prisma/client";
-import { paginationQuerySchema, phoneSchema } from "../../shared/schemas.js";
+import { booleanQuery, paginationQuerySchema, phoneSchema } from "../../shared/schemas.js";
 
 const queryNumber = (min: number, max: number) =>
   z.string().trim().min(1).transform(Number).pipe(z.number().min(min).max(max));
@@ -32,10 +32,7 @@ export const updateStoreBodySchema = storeBodySchema
   .refine((body) => Object.keys(body).length > 0, "Provide at least one field to update");
 
 export const listStoresQuerySchema = paginationQuerySchema.extend({
-  includeInactive: z
-    .enum(["true", "false"])
-    .default("false")
-    .transform((value) => value === "true"),
+  includeInactive: booleanQuery,
 });
 
 export const serviceabilityQuerySchema = z.object({

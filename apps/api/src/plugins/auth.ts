@@ -20,6 +20,19 @@ export default fp(async (app) => {
     }
   });
 
+  app.decorate("tryAuthenticate", async (request: FastifyRequest) => {
+    if (!request.headers.authorization) {
+      return false;
+    }
+
+    try {
+      await request.jwtVerify();
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
   app.decorate("requireRole", (...roles: UserRole[]) => {
     return async (request: FastifyRequest) => {
       await app.authenticate(request);

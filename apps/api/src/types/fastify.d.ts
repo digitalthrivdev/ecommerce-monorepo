@@ -7,6 +7,7 @@ declare module "fastify" {
     prisma: PrismaClient;
     redis: Redis;
     authenticate: (request: FastifyRequest) => Promise<void>;
+    tryAuthenticate: (request: FastifyRequest) => Promise<boolean>;
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;
   }
 }

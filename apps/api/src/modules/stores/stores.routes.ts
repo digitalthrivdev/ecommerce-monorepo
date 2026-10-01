@@ -14,18 +14,8 @@ const storesRoutes: FastifyPluginAsync = async (app) => {
   const storesService = createStoresService(app.prisma);
   const requireAdmin = app.requireRole(UserRole.ADMIN);
 
-  async function isAdmin(request: FastifyRequest) {
-    if (!request.headers.authorization) {
-      return false;
-    }
-
-    try {
-      await request.jwtVerify();
-      return request.user.role === UserRole.ADMIN;
-    } catch {
-      return false;
-    }
-  }
+  const isAdmin = async (request: FastifyRequest) =>
+    (await app.tryAuthenticate(request)) && request.user.role === UserRole.ADMIN;
 
   app.get("/", async (request) => {
     const query = listStoresQuerySchema.parse(request.query);

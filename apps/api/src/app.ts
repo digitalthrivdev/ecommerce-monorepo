@@ -7,6 +7,7 @@ import errorHandlerPlugin from "./plugins/error-handler.js";
 import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import categoriesRoutes from "./modules/categories/categories.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 
@@ -39,6 +40,7 @@ export async function buildApp() {
   await app.register(authRoutes, { prefix: "/auth" });
   await app.register(usersRoutes, { prefix: "/users" });
   await app.register(storesRoutes, { prefix: "/stores" });
+  await app.register(categoriesRoutes, { prefix: "/categories" });
 
   return app;
 }
