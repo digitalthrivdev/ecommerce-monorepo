@@ -21,6 +21,7 @@ import ordersRoutes from "./modules/orders/orders.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
 import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
+import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import staffRoutes from "./modules/stores/staff.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
@@ -72,6 +73,7 @@ export async function buildApp() {
   await app.register(partnersRoutes, { prefix: "/delivery-partners" });
   await app.register(deliveryRoutes, { prefix: "/delivery" });
   await app.register(settingsRoutes, { prefix: "/settings" });
+  await app.register(homeRoutes, { prefix: "/home" });
   await app.register(notificationsRoutes, { prefix: "/notifications" });
   await app.register(dashboardRoutes, { prefix: "/dashboard" });
 

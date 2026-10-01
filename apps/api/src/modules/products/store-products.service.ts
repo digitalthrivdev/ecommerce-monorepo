@@ -6,7 +6,7 @@ import type {
   UpdateStoreProductInput,
 } from "./products.schemas.js";
 
-const storeProductInclude = {
+export const storeProductInclude = {
   product: {
     include: { category: { select: { id: true, name: true, slug: true } } },
   },
@@ -17,7 +17,7 @@ type StoreProductWithRelations = Prisma.StoreProductGetPayload<{
   include: typeof storeProductInclude;
 }>;
 
-function toView(storeProduct: StoreProductWithRelations, options: { includeStock: boolean }) {
+export function toStoreProductView(storeProduct: StoreProductWithRelations, options: { includeStock: boolean }) {
   const { product } = storeProduct;
   const stockQuantity = storeProduct.inventory?.quantity ?? 0;
 
@@ -99,7 +99,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
     ]);
 
     return {
-      items: rows.map((row) => toView(row, { includeStock: options.canManage })),
+      items: rows.map((row) => toStoreProductView(row, { includeStock: options.canManage })),
       total,
       limit,
       offset,
@@ -120,7 +120,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
       throw new AppError(404, "PRODUCT_NOT_AVAILABLE", "Product is not available at this store");
     }
 
-    return toView(storeProduct, { includeStock: options.canManage });
+    return toStoreProductView(storeProduct, { includeStock: options.canManage });
   }
 
   /** Every store with this product's listing there, or null where it is not listed (admin view). */
@@ -196,7 +196,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
       include: storeProductInclude,
     });
 
-    return toView(storeProduct, { includeStock: true });
+    return toStoreProductView(storeProduct, { includeStock: true });
   }
 
   async function updateStoreProduct(storeId: string, productId: string, data: UpdateStoreProductInput) {
@@ -220,7 +220,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
       include: storeProductInclude,
     });
 
-    return toView(storeProduct, { includeStock: true });
+    return toStoreProductView(storeProduct, { includeStock: true });
   }
 
   return { listStoreProducts, getStoreProduct, listProductListings, createStoreProduct, updateStoreProduct };

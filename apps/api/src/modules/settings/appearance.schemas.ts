@@ -132,6 +132,10 @@ export const updateAppearanceBodySchema = appearanceSchema
   .strict()
   .refine((body) => Object.keys(body).length > 0, "Provide at least one part to update");
 
+export const homeQuerySchema = z.object({
+  storeId: z.string().trim().min(1).max(64).optional(),
+});
+
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type HomeSection = z.infer<typeof homeSectionSchema>;
 export type UpdateAppearanceInput = z.infer<typeof updateAppearanceBodySchema>;
