@@ -127,6 +127,74 @@ export type Cart = {
   isValid: boolean;
 };
 
+export type OrderStatus =
+  | "PENDING_PAYMENT"
+  | "CONFIRMED"
+  | "STORE_ACCEPTED"
+  | "PICKING"
+  | "PACKED"
+  | "READY_FOR_PICKUP"
+  | "ASSIGNED"
+  | "PICKED_UP"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED";
+
+export type PaymentMethod = "COD" | "ONLINE";
+export type PaymentStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED";
+
+/** `GET /orders` row. */
+export type OrderSummary = {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  total: string;
+  createdAt: string;
+  store: { id: string; name: string };
+  itemCount: number;
+  canCancel: boolean;
+};
+
+/** `GET /orders/:id`. Items, prices and address are snapshots taken when the order was placed. */
+export type OrderDetail = {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  canCancel: boolean;
+  paymentMethod: PaymentMethod;
+  payment: { status: PaymentStatus; amount: string; paidAt: string | null; refundedAt: string | null } | null;
+  /** Set while an online payment is awaited; the order is cancelled after it. */
+  paymentExpiresAt: string | null;
+  delivery: {
+    status: string;
+    partner: { name: string | null; phone: string; vehicleType: string | null; vehicleNumber: string | null } | null;
+    assignedAt: string | null;
+    pickedUpAt: string | null;
+    deliveredAt: string | null;
+  } | null;
+  store: { id: string; name: string; phone: string | null };
+  items: { productId: string; productName: string; quantity: number; unitPrice: string; totalPrice: string }[];
+  subtotal: string;
+  deliveryFee: string;
+  discount: string;
+  total: string;
+  deliveryAddress: {
+    name: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2: string | null;
+    landmark: string | null;
+    city: string;
+    state: string;
+    postalCode: string;
+  };
+  statusHistory: { fromStatus: OrderStatus | null; toStatus: OrderStatus; note: string | null; createdAt: string }[];
+  createdAt: string;
+  /** Shown once a partner is on the way; the customer reads it out at the door. */
+  deliveryOtp: string | null;
+};
+
 export type HomeLink = { type: "none" } | { type: "category"; category: Category };
 
 export type BannerCarouselSection = {

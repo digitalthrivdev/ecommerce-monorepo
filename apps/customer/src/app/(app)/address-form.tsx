@@ -142,7 +142,8 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
       });
       if (selectAfterSave) {
         selectAddress(saved);
-        router.dismissAll();
+        // Close this form and the location picker under it, returning to wherever the picker was opened.
+        router.dismiss(2);
       } else {
         router.back();
       }

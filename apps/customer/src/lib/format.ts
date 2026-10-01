@@ -12,6 +12,16 @@ export function formatMoney(amount: string, currency: string) {
   }).format(value);
 }
 
+/** "1 Oct, 4:32 pm" */
+export function formatDateTime(iso: string) {
+  return new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+}
+
+/** "4:32 pm" */
+export function formatTime(iso: string) {
+  return new Intl.DateTimeFormat(LOCALE, { hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+}
+
 /** "500 g", "1 L"; null when the product has no pack size. */
 export function formatPackSize(quantity: string | null, unit: string | null) {
   return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;

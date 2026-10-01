@@ -14,9 +14,9 @@ import { formatPhone } from "@/lib/phone";
 import { useSession } from "@/lib/session";
 import { useSettings } from "@/lib/settings";
 
-type RowProps = { icon: LucideIcon; label: string; detail?: string; onPress?: () => void; soon?: boolean };
+type RowProps = { icon: LucideIcon; label: string; detail?: string; onPress?: () => void };
 
-function Row({ icon, label, detail, onPress, soon = false }: RowProps) {
+function Row({ icon, label, detail, onPress }: RowProps) {
   return (
     <Pressable onPress={onPress} disabled={!onPress} className="flex-row items-center gap-3 px-4 py-3.5 active:bg-accent">
       <View className="size-9 items-center justify-center rounded-md bg-muted">
@@ -26,13 +26,7 @@ function Row({ icon, label, detail, onPress, soon = false }: RowProps) {
         <Text className="text-[15px] font-semibold">{label}</Text>
         {detail ? <Text className="text-xs text-muted-foreground">{detail}</Text> : null}
       </View>
-      {soon ? (
-        <View className="rounded-full bg-muted px-2 py-0.5">
-          <Text className="text-[11px] font-semibold text-muted-foreground">Soon</Text>
-        </View>
-      ) : onPress ? (
-        <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
-      ) : null}
+      {onPress ? <Icon as={ChevronRight} size={18} className="text-muted-foreground" /> : null}
     </Pressable>
   );
 }
@@ -72,7 +66,7 @@ export default function AccountScreen() {
         </Card>
 
         <Card className="gap-0 overflow-hidden py-1">
-          <Row icon={Package} label="Your orders" soon />
+          <Row icon={Package} label="Your orders" onPress={() => router.push("/orders")} />
           <Separator className="ml-16 w-auto" />
           <Row icon={MapPin} label="Saved addresses" onPress={() => router.push("/addresses")} />
         </Card>

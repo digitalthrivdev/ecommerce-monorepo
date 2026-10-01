@@ -4,11 +4,12 @@ import { Alert } from "react-native";
 
 import { ApiError, apiFetch, errorMessage } from "./api";
 import { useDeliveryLocation } from "./delivery-location";
+import { formatMoney, shortfall } from "./format";
 import type { Cart, CartItem, Store, StoreProduct } from "./types";
 
 export const MAX_QUANTITY_PER_ITEM = 50;
 
-const CART_KEY = ["cart"] as const;
+export const CART_KEY = ["cart"] as const;
 /** Id of a line the server hasn't created yet. */
 const PENDING_ID = "pending:";
 
@@ -36,6 +37,17 @@ export function useCartQuantity(productId: string) {
 
 /** Lines the customer sees; a line set to 0 stays cached until the server confirms the removal. */
 export const visibleItems = (cart: Cart) => cart.items.filter((item) => item.quantity > 0);
+
+/** Why the cart can't be ordered yet, or null when checkout can go ahead. */
+export function checkoutBlocker(cart: Cart, storeId: string | undefined, currency: string) {
+  if (!storeId) return "Choose a delivery location to check out.";
+  if (cart.store?.id !== storeId) return "Your cart is from a store that doesn't deliver to this location.";
+  if (!cart.isValid) return "Remove or update the items marked in your cart.";
+  if (cart.bill && !cart.bill.meetsMinimum) {
+    return `Add ${formatMoney(shortfall(cart.bill.minOrderValue, cart.bill.subtotal), currency)} more to reach the ${formatMoney(cart.bill.minOrderValue, currency)} minimum order.`;
+  }
+  return null;
+}
 
 // Paise keep the optimistic preview free of float rounding; the server's totals replace it.
 const toPaise = (amount: string) => Math.round(Number(amount) * 100);

@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-nat
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { QuantityStepper } from "@/components/add-to-cart";
+import { BillDetails } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -13,12 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
+import { checkoutBlocker, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
 import { useDeliveryLocation } from "@/lib/delivery-location";
-import { formatMoney, formatPackSize, shortfall } from "@/lib/format";
+import { formatMoney, formatPackSize } from "@/lib/format";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
-import type { Cart, CartBill, CartItem } from "@/lib/types";
+import type { Cart, CartItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function CartLine({ item, currency }: { item: CartItem; currency: string }) {
@@ -76,34 +77,6 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
   );
 }
 
-function BillRow({ label, value, strong = false }: { label: string; value: ReactNode; strong?: boolean }) {
-  return (
-    <View className="flex-row items-center justify-between gap-3">
-      <Text className={cn("text-sm", strong ? "text-base font-extrabold" : "text-muted-foreground")}>{label}</Text>
-      {typeof value === "string" ? <Text className={cn("text-sm font-semibold", strong && "text-base font-extrabold")}>{value}</Text> : value}
-    </View>
-  );
-}
-
-function BillDetails({ bill, currency, updating }: { bill: CartBill; currency: string; updating: boolean }) {
-  const surface = useCardSurface();
-  const free = Number(bill.deliveryFee) === 0;
-
-  return (
-    <View className={cn("mx-4 gap-2.5 rounded-lg p-4", surface, updating && "opacity-60")}>
-      <Text className="text-base font-bold">Bill details</Text>
-      <BillRow label="Item total" value={formatMoney(bill.subtotal, currency)} />
-      <BillRow label="Delivery fee" value={free ? <Text className="text-sm font-bold text-primary">FREE</Text> : formatMoney(bill.deliveryFee, currency)} />
-      {Number(bill.discount) > 0 && <BillRow label="Discount" value={`−${formatMoney(bill.discount, currency)}`} />}
-      <View className="h-px bg-border" />
-      <BillRow label="To pay" value={formatMoney(bill.total, currency)} strong />
-      {bill.amountToFreeDelivery && !free && (
-        <Text className="text-xs font-semibold text-primary">Add {formatMoney(bill.amountToFreeDelivery, currency)} more for free delivery</Text>
-      )}
-    </View>
-  );
-}
-
 function Notice({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <View className="mx-4 gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
@@ -129,17 +102,6 @@ function EmptyCart() {
       </Button>
     </View>
   );
-}
-
-/** Why the order can't be placed yet, or null when checkout can go ahead. */
-function checkoutBlocker(cart: Cart, storeId: string | undefined, currency: string) {
-  if (!storeId) return "Choose a delivery location to check out.";
-  if (cart.store?.id !== storeId) return "Your cart is from a store that doesn't deliver to this location.";
-  if (!cart.isValid) return "Remove or update the items marked above.";
-  if (cart.bill && !cart.bill.meetsMinimum) {
-    return `Add ${formatMoney(shortfall(cart.bill.minOrderValue, cart.bill.subtotal), currency)} more to reach the ${formatMoney(cart.bill.minOrderValue, currency)} minimum order.`;
-  }
-  return null;
 }
 
 function CartContent({ cart }: { cart: Cart }) {
@@ -197,14 +159,14 @@ function CartContent({ cart }: { cart: Cart }) {
           ))}
         </View>
 
-        {cart.bill && <BillDetails bill={cart.bill} currency={currency} updating={updating} />}
+        {cart.bill && <BillDetails bill={cart.bill} stale={updating} />}
       </ScrollView>
 
       <View className="gap-2 border-t border-border bg-card px-4 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
         {blocker && <Text className="text-center text-xs text-muted-foreground">{blocker}</Text>}
         <Button
           disabled={blocker !== null || updating}
-          onPress={() => Alert.alert("Checkout", "Checkout is coming in the next update.")}
+          onPress={() => router.push("/checkout")}
           className="h-14 flex-row justify-between rounded-lg px-4"
         >
           <View>
