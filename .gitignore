@@ -29,3 +29,5 @@ yarn-error.log*
 
 # os
 .DS_Store
+# Added by code-review-graph
+.code-review-graph/
