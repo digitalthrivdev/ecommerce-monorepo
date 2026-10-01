@@ -8,6 +8,7 @@ import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
+import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
@@ -44,6 +45,7 @@ export async function buildApp() {
   await app.register(categoriesRoutes, { prefix: "/categories" });
   await app.register(productsRoutes, { prefix: "/products" });
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
+  await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
 
   return app;
 }

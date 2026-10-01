@@ -33,6 +33,7 @@ export default fp(async (app) => {
       return reply.status(error.statusCode).send({
         error: error.code,
         message: error.message,
+        ...(error.details !== undefined && { details: error.details }),
       });
     }
 
