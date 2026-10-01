@@ -25,6 +25,22 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 - [ ] Inventory adjustment audit log (who changed stock, when, why).
 
+## Catalog
+
+- [ ] **Image upload** for products and categories (object storage such as S3/R2 plus a signed upload URL). Admin currently takes an image URL.
+- [ ] **Bulk import** of products, store prices and opening stock from CSV, for onboarding a new client's catalog.
+
+## Stores
+
+- [ ] **Opening hours.** Stores accept orders whenever they are active; there is no schedule or "closed for the night" state.
+- [ ] Map picker for the store location and a preview of the delivery radius. Admin currently enters latitude and longitude.
+- [ ] Show the store phone to delivery partners (delivery app) and customers.
+
+## Auth
+
+- [ ] Refresh tokens and server-side logout. Access tokens stay valid until they expire; signing out only deletes the cookie.
+
 ## Engineering
 
 - [ ] Automated test runner and CI (current verification uses throwaway scripts against the dev database).
+- [ ] Share validation rules (phone, money, slugs) between the API and admin through `packages/validation` instead of duplicating them.
