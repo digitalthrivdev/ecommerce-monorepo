@@ -14,6 +14,11 @@ export function formatDateTime(value: string | Date, timeZone: string) {
   }).format(new Date(value));
 }
 
+/** "500 g", "1 L"; null when the product has no pack size. */
+export function formatPackSize(quantity: string | null, unit: string | null) {
+  return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;
+}
+
 export function formatNumber(value: number) {
   return new Intl.NumberFormat(LOCALE).format(value);
 }

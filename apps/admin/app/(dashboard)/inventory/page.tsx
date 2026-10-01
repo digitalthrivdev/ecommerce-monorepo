@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
-import { formatDateTime } from "@/lib/format";
-import type { InventoryItem, InventoryList, Paginated, Store } from "@/lib/types";
+import { formatDateTime, formatPackSize } from "@/lib/format";
+import type { InventoryList, Paginated, Store } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inventory" };
@@ -29,11 +29,6 @@ const TABS = [
 ] as const;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-
-function packSize(item: InventoryItem) {
-  if (!item.packQuantity && !item.unit) return null;
-  return [item.packQuantity && Number(item.packQuantity).toString(), item.unit].filter(Boolean).join(" ");
-}
 
 function StockCell({ quantity, threshold }: { quantity: number; threshold: number }) {
   if (quantity === 0) return <Badge variant="destructive">Out of stock</Badge>;
@@ -145,7 +140,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                       <TableCell className="whitespace-normal">
                         <div className="font-medium">{item.name}</div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {packSize(item)}
+                          {formatPackSize(item.packQuantity, item.unit)}
                           {!item.productIsActive && <Badge variant="outline">Removed from catalog</Badge>}
                         </div>
                       </TableCell>

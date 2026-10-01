@@ -107,7 +107,42 @@ export type OrderDetail = {
   createdAt: string;
 };
 
-export type Category = { id: string; name: string; slug: string; isActive: boolean };
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  /** Admin listings only. */
+  productCount?: number;
+};
+
+export type Product = {
+  id: string;
+  categoryId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  unit: string | null;
+  quantity: string | null;
+  isActive: boolean;
+  category: { id: string; name: string; slug: string };
+  /** Admin listings only. */
+  storeCount?: number;
+};
+
+export type ProductListing = {
+  store: Store;
+  listing: {
+    storeProductId: string;
+    sellingPrice: string;
+    mrp: string | null;
+    isAvailable: boolean;
+    stockQuantity: number;
+  } | null;
+};
 
 export type InventoryItem = {
   productId: string;
@@ -143,7 +178,9 @@ export type PublicSettings = {
 };
 
 /** Result returned by Server Actions to client components for toasts and inline errors. */
-export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+export type ActionResult =
+  | { ok: true; message: string }
+  | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 
