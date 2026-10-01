@@ -7,6 +7,7 @@ import errorHandlerPlugin from "./plugins/error-handler.js";
 import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import { productsRoutes, storeProductsRoutes } from "./modules/products/products.routes.js";
@@ -46,6 +47,7 @@ export async function buildApp() {
   await app.register(productsRoutes, { prefix: "/products" });
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
+  await app.register(cartRoutes, { prefix: "/cart" });
 
   return app;
 }

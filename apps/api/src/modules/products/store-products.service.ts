@@ -50,7 +50,7 @@ function assertMrpNotBelowPrice(sellingPrice: DecimalInput, mrp: DecimalInput | 
   }
 }
 
-const customerVisible = {
+export const customerVisible = {
   isAvailable: true,
   product: { isActive: true, category: { isActive: true } },
 } satisfies Prisma.StoreProductWhereInput;
