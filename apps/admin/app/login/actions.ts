@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { ApiError, apiFetch } from "@/lib/api";
+import { phoneInput as phoneSchema } from "@/lib/form-schemas";
 import { setSession } from "@/lib/session";
 import { isDashboardRole, type UserRole } from "@/lib/types";
 
@@ -14,11 +15,6 @@ export type LoginState = {
   error?: string;
   fieldErrors?: { phone?: string; otp?: string };
 };
-
-const phoneSchema = z
-  .string()
-  .transform((value) => value.replace(/[\s()-]/g, ""))
-  .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter the number with country code, e.g. +919876543210"));
 
 const otpSchema = z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code");
 

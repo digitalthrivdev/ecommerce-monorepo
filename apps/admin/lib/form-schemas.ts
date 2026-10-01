@@ -38,5 +38,13 @@ export const optionalPositiveDecimal = (message: string) =>
     .refine((value) => value === "" || (DECIMAL_PATTERN.test(value) && Number(value) > 0), message)
     .transform((value) => value || null);
 
+/** Accepts spaces, dashes and brackets ("+91 98765-43210") and sends E.164 to the API. */
+export const phoneInput = z
+  .string()
+  .transform((value) => value.replace(/[\s()-]/g, ""))
+  .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter the number with country code, e.g. +919876543210"));
+
+export const optionalPhoneInput = z.union([z.literal("").transform(() => null), phoneInput]);
+
 export const formText = (formData: FormData, name: string) => String(formData.get(name) ?? "");
 export const formChecked = (formData: FormData, name: string) => formData.get(name) === "on";

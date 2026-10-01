@@ -186,6 +186,25 @@ export type Paginated<T> = { items: T[]; total: number; limit: number; offset: n
 
 export type Store = StoreSummary & { status: "ACTIVE" | "INACTIVE" };
 
+/** A store as admins see it, with operational counts. */
+export type StoreDetails = Store & {
+  phone: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  latitude: string;
+  longitude: string;
+  serviceRadiusKm: string;
+  createdAt: string;
+  staffCount: number;
+  productCount: number;
+  activeOrderCount: number;
+};
+
+export type StaffMember = { id: string; phone: string; name: string | null; createdAt: string };
+
 export type DashboardStats = {
   storeId: string | null;
   timezone: string;
