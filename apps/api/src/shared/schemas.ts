@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { Prisma } from "../generated/prisma/client";
+
 export const phoneSchema = z
   .string()
   .trim()
@@ -25,6 +27,18 @@ export const slugSchema = z
   .toLowerCase()
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, digits and single dashes")
   .max(100);
+
+const DECIMAL_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
+
+export const decimalSchema = z
+  .string()
+  .trim()
+  .regex(DECIMAL_PATTERN, 'Must be a decimal string with up to 2 decimal places, e.g. "68.00"');
+
+export const positiveDecimalSchema = decimalSchema.refine(
+  (value) => !DECIMAL_PATTERN.test(value) || new Prisma.Decimal(value).gt(0),
+  "Must be greater than 0",
+);
 
 export function slugify(value: string) {
   return value
