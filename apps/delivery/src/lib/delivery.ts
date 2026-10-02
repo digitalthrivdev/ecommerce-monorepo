@@ -7,7 +7,7 @@ const PROFILE_KEY = ["partner"] as const;
 const ACTIVE_KEY = ["deliveries", "active"] as const;
 const HISTORY_KEY = ["deliveries", "history"] as const;
 const HISTORY_PAGE_SIZE = 20;
-/** New assignments only arrive by polling until push notifications are added. */
+/** Backs up push notifications, which can be denied or unavailable (e.g. in Expo Go). */
 const POLL_MS = 10_000;
 
 const deliveryKey = (orderId: string) => ["delivery", orderId] as const;

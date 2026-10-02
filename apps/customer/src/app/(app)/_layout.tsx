@@ -1,8 +1,11 @@
 import { Stack } from "expo-router";
 
 import { DeliveryLocationProvider } from "@/lib/delivery-location";
+import { usePushNotifications } from "@/lib/push";
 
 export default function AppLayout() {
+  usePushNotifications();
+
   return (
     <DeliveryLocationProvider>
       <Stack screenOptions={{ headerShown: false }}>
