@@ -686,6 +686,8 @@ Development environment only.
 
 Never copy development credentials into production.
 
+Production uses `deploy/` instead: one Compose stack per client (PostgreSQL, Redis, migrate, API, admin, Nginx with Let's Encrypt, daily backups), configured by `deploy/.env` and `deploy/api.env` on the server. Images build from `apps/api/Dockerfile` and `apps/admin/Dockerfile`. Setup steps are in `deploy/.env.example`.
+
 ---
 
 # 23. Current API Environment

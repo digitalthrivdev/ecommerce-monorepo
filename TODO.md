@@ -7,7 +7,13 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Message Central go-live check.** Implemented from the VerifyNow guide but only tested against fake credentials. With a real account, add the keys under Settings → SMS provider keys, select it, and sign in with a real phone; confirm the token lifetime and whether `validateOtp` is GET or POST (both are handled).
 - [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `SECRETS_ENCRYPTION_KEY` set and webhooks registered (see `apps/api/.env.example`).
 - [ ] **Real push provider.** Implement `PushSender` (`apps/api/src/modules/notifications/push-sender.ts`) for Expo Push (or FCM/APNs), or deploy with `PUSH_PROVIDER=none` (no pushes).
-- [ ] **Production deployment:** Docker images, production Compose file, Nginx, secrets, backups.
+- [ ] **Off-site backups.** `deploy/` keeps daily database dumps on the server only (`deploy/backups`); copy them to object storage or another machine (e.g. a nightly rclone/rsync job).
+- [ ] **First real deployment.** The production stack (`deploy/`) is tested locally with a self-signed certificate only. On the client's VPS, run `deploy/init-letsencrypt.sh` with `STAGING=1` first, then for real.
+
+## Deployment
+
+- [ ] Build images in CI and push them to a registry, so small VPSs do not have to build (the admin build needs about 1.5 GB of RAM).
+- [ ] Smaller API image (about 800 MB): the Prisma CLI and Studio are pulled into production dependencies as a peer of `@prisma/client`.
 
 ## Delivery
 

@@ -6,6 +6,10 @@ node_modules/
 .env.*
 !.env.example
 
+# production deployment (per client, on the server)
+deploy/api.env
+deploy/backups/
+
 # build output
 dist/
 build/
