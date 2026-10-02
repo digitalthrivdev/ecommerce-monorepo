@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "db:seed": "prisma db seed",
+    "admin:create": "tsx src/scripts/create-admin.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
