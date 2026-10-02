@@ -11,6 +11,7 @@ import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
 import { deliveryOtp } from "../delivery/delivery-otp.js";
 import { reserveStock } from "../inventory/inventory.service.js";
+import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
 import { customerVisible } from "../products/store-products.service.js";
@@ -175,7 +176,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
   }
 
   async function createOrder(userId: string, { addressId, paymentMethod }: CreateOrderInput) {
-    if (paymentMethod === PaymentMethod.ONLINE && env.PAYMENT_PROVIDER === "none") {
+    if (paymentMethod === PaymentMethod.ONLINE && !(await activePaymentProvider(prisma, await getPlatformSettings(prisma)))) {
       throw new AppError(400, "ONLINE_PAYMENTS_DISABLED", "Online payments are not available");
     }
 
@@ -352,10 +353,5 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     return getOrder(userId, orderId);
   }
 
-  async function verifyPayment(userId: string, orderId: string, input: { providerPaymentId: string; signature: string }) {
-    await payments.verifyPayment(userId, orderId, input);
-    return getOrder(userId, orderId);
-  }
-
-  return { getOrder, listOrders, createOrder, cancelOrder, verifyPayment };
+  return { getOrder, listOrders, createOrder, cancelOrder };
 }

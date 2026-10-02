@@ -1,11 +1,10 @@
 import fp from "fastify-plugin";
 
 import { env } from "../config/env.js";
-import { createPaymentProvider } from "../modules/payments/payment-provider.js";
 import { createPaymentsService } from "../modules/payments/payments.service.js";
 
 export default fp(async (app) => {
-  const payments = createPaymentsService(app.prisma, createPaymentProvider(), app.log);
+  const payments = createPaymentsService(app.prisma, app.redis, app.log);
   app.decorate("payments", payments);
 
   if (env.PAYMENT_SWEEP_INTERVAL_SECONDS === 0) {

@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 
 import type { FastifyBaseLogger } from "fastify";
+import type Redis from "ioredis";
 
 import { env } from "../../config/env.js";
 import {
@@ -12,6 +13,11 @@ import {
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { transitionOrder } from "../orders/order-status.js";
+import { getAppearance } from "../settings/appearance.service.js";
+import { getPlatformSettings } from "../settings/settings.service.js";
+import { createCheckoutToken, readCheckoutToken } from "./checkout-token.js";
+import { escapeHtml, paymentPage, scriptJson, toMinorUnits } from "./gateway-helpers.js";
+import { activePaymentProvider, getPaymentProvider } from "./gateway-registry.js";
 import type { PaymentEvent, PaymentProvider } from "./payment-provider.js";
 
 const PAYMENT_TIMEOUT_MS = env.PAYMENT_TIMEOUT_MINUTES * 60_000;
@@ -22,48 +28,76 @@ export function paymentDeadline(createdAt: Date) {
   return new Date(createdAt.getTime() + PAYMENT_TIMEOUT_MS);
 }
 
+/** Where the customer's browser lands after checkout: back in the app, with how the payment ended. */
+export type PaymentResult = "success" | "failed" | "cancelled" | "pending";
+
+/** A page for the customer's browser. */
+export type BrowserResponse = { html: string; status: number };
+
+const appReturnKey = (paymentId: string) => `payment:app-return:${paymentId}`;
+
+const paymentSelect = {
+  id: true,
+  status: true,
+  amount: true,
+  provider: true,
+  providerOrderId: true,
+  order: {
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentMethod: true,
+      createdAt: true,
+      userId: true,
+      customerName: true,
+      customerPhone: true,
+      user: { select: { email: true } },
+    },
+  },
+} satisfies Prisma.PaymentSelect;
+
+type PaymentWithOrder = Prisma.PaymentGetPayload<{ select: typeof paymentSelect }>;
+
 export type PaymentsService = ReturnType<typeof createPaymentsService>;
 
-export function createPaymentsService(
-  prisma: PrismaClient,
-  provider: PaymentProvider | null,
-  log: FastifyBaseLogger,
-) {
-  function requireProvider() {
-    if (!provider) {
-      throw new AppError(409, "ONLINE_PAYMENTS_DISABLED", "Online payments are not available");
-    }
-    return provider;
+export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: FastifyBaseLogger) {
+  function providerFor(name: string | null) {
+    return getPaymentProvider(prisma, name);
   }
 
-  async function findOnlineOrder(userId: string, orderId: string) {
-    const order = await prisma.order.findFirst({
-      where: { id: orderId, userId },
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        paymentMethod: true,
-        createdAt: true,
-        payment: { select: { id: true, status: true, amount: true, providerOrderId: true, transactionId: true } },
-      },
+  function checkoutUrls(baseUrl: string, provider: PaymentProvider, payment: PaymentWithOrder) {
+    const token = createCheckoutToken(payment.id, paymentDeadline(payment.order.createdAt));
+    return {
+      checkoutUrl: `${baseUrl}/payments/checkout/${token}`,
+      returnUrl: `${baseUrl}/payments/return/${provider.name}/${token}`,
+      // Gateways only call webhooks on public https URLs.
+      notifyUrl: baseUrl.startsWith("https://") ? `${baseUrl}/payments/webhooks/${provider.name}` : undefined,
+    };
+  }
+
+  function customerOf(payment: PaymentWithOrder) {
+    const { order } = payment;
+    return { id: order.userId, name: order.customerName, phone: order.customerPhone, email: order.user.email };
+  }
+
+  /**
+   * Prepares the hosted checkout for an unpaid online order. A payment keeps the gateway it was
+   * started on (so switching gateways never strands it) unless that gateway is no longer configured.
+   */
+  async function startPayment(userId: string, orderId: string, input: { appReturnUrl: string; baseUrl: string }) {
+    const payment = await prisma.payment.findFirst({
+      where: { orderId, order: { userId } },
+      select: paymentSelect,
     });
 
-    if (!order?.payment) {
+    if (!payment) {
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
+    const { order } = payment;
     if (order.paymentMethod !== PaymentMethod.ONLINE) {
       throw new AppError(409, "PAYMENT_NOT_ONLINE", "This order is paid by cash on delivery");
     }
-
-    return { ...order, payment: order.payment };
-  }
-
-  async function startPayment(userId: string, orderId: string) {
-    const paymentProvider = requireProvider();
-    const order = await findOnlineOrder(userId, orderId);
-    const { payment } = order;
-
     if (payment.status === PaymentStatus.PAID || payment.status === PaymentStatus.REFUNDED) {
       throw new AppError(409, "ALREADY_PAID", "This order has already been paid");
     }
@@ -78,61 +112,157 @@ export function createPaymentsService(
       throw new AppError(409, "PAYMENT_EXPIRED", "The time to pay for this order has run out");
     }
 
-    let providerOrderId = payment.providerOrderId;
-    if (!providerOrderId) {
-      const created = await paymentProvider.createOrder({
+    const existing = payment.providerOrderId ? await providerFor(payment.provider) : null;
+    const provider = existing ?? (await activePaymentProvider(prisma, await getPlatformSettings(prisma)));
+    if (!provider) {
+      throw new AppError(409, "ONLINE_PAYMENTS_DISABLED", "Online payments are not available right now");
+    }
+
+    const urls = checkoutUrls(input.baseUrl, provider, payment);
+
+    if (!existing) {
+      const created = await provider.createOrder({
         amount: payment.amount,
         currency: env.CURRENCY,
         receipt: order.orderNumber,
+        customer: customerOf(payment),
+        returnUrl: urls.returnUrl,
+        notifyUrl: urls.notifyUrl,
       });
-      // Two concurrent starts may both create a provider order; only the first one is kept.
+      // Two concurrent starts may both create a gateway order; only the first one is kept.
       const claimed = await prisma.payment.updateMany({
-        where: { id: payment.id, providerOrderId: null },
-        data: { providerOrderId: created.providerOrderId, provider: paymentProvider.name },
+        where: { id: payment.id, providerOrderId: payment.providerOrderId },
+        data: { providerOrderId: created.providerOrderId, provider: provider.name },
       });
-      providerOrderId =
-        claimed.count === 1
-          ? created.providerOrderId
-          : (await prisma.payment.findUniqueOrThrow({ where: { id: payment.id } })).providerOrderId!;
+      if (claimed.count === 0) {
+        const current = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id }, select: { provider: true } });
+        if (current.provider !== provider.name) {
+          throw new AppError(409, "PAYMENT_IN_PROGRESS", "Payment is already being started. Please try again.");
+        }
+      }
     }
 
     await prisma.payment.updateMany({
       where: { id: payment.id, status: { in: [PaymentStatus.PENDING, PaymentStatus.FAILED] } },
       data: { status: PaymentStatus.PROCESSING, failureReason: null },
     });
+    await redis.set(appReturnKey(payment.id), input.appReturnUrl, "PX", Math.max(expiresAt.getTime() - Date.now(), 1000) + 600_000);
 
     return {
       orderId: order.id,
-      provider: paymentProvider.name,
-      providerOrderId,
+      provider: provider.name,
+      testMode: provider.testMode,
       amount: payment.amount.toFixed(2),
       currency: env.CURRENCY,
       expiresAt,
-      checkout: paymentProvider.checkoutOptions(providerOrderId),
+      checkoutUrl: urls.checkoutUrl,
     };
   }
 
-  async function verifyPayment(
-    userId: string,
-    orderId: string,
-    input: { providerPaymentId: string; signature: string },
-  ) {
-    const paymentProvider = requireProvider();
-    const { payment } = await findOnlineOrder(userId, orderId);
-
-    if (!payment.providerOrderId) {
-      throw new AppError(409, "PAYMENT_NOT_STARTED", "Payment has not been started for this order");
-    }
-
-    const valid = paymentProvider.verifyCheckout({ providerOrderId: payment.providerOrderId, ...input });
-    if (!valid) {
-      throw new AppError(400, "INVALID_PAYMENT_SIGNATURE", "Payment could not be verified");
-    }
-
-    await recordCapture(payment.providerOrderId, input.providerPaymentId);
+  function messagePage(title: string, message: string, status = 200): BrowserResponse {
+    return { html: paymentPage({ title, message }), status };
   }
 
-  /** Idempotent: the app's verify call and the provider's webhook can both report the same payment. */
+  async function loadForBrowser(token: string) {
+    const paymentId = readCheckoutToken(token);
+    return paymentId ? prisma.payment.findUnique({ where: { id: paymentId }, select: paymentSelect }) : null;
+  }
+
+  async function backToApp(paymentId: string, orderId: string, result: PaymentResult): Promise<BrowserResponse> {
+    const appUrl = await redis.get(appReturnKey(paymentId));
+    const messages: Record<PaymentResult, [string, string]> = {
+      success: ["Payment successful", "Your order is confirmed."],
+      failed: ["Payment failed", "No money was taken. You can try again from the app."],
+      cancelled: ["Payment cancelled", "You can try again from the app."],
+      pending: ["Checking your payment", "We will update your order as soon as the payment is confirmed."],
+    };
+    const [title, message] = messages[result];
+
+    if (!appUrl) {
+      return messagePage(title, `${message} You can close this page and return to the app.`);
+    }
+
+    const url = `${appUrl}${appUrl.includes("?") ? "&" : "?"}${new URLSearchParams({ status: result, orderId })}`;
+    return {
+      status: 200,
+      html: paymentPage({
+        title,
+        message,
+        body: `<a class="button" href="${escapeHtml(url)}">Return to the app</a>
+<script>location.replace(${scriptJson(url)});</script>`,
+      }),
+    };
+  }
+
+  /** The page the app opens in the browser; it hands the customer to the gateway's checkout. */
+  async function renderCheckout(token: string, baseUrl: string): Promise<BrowserResponse> {
+    const payment = await loadForBrowser(token);
+    if (!payment) {
+      return messagePage("Payment link expired", "Return to the app and try again.", 404);
+    }
+    if (payment.status === PaymentStatus.PAID || payment.status === PaymentStatus.REFUNDED) {
+      return backToApp(payment.id, payment.order.id, "success");
+    }
+    if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
+      return messagePage("Payment closed", "This order is no longer awaiting payment.", 409);
+    }
+
+    const provider = await providerFor(payment.provider);
+    if (!provider || !payment.providerOrderId) {
+      return messagePage("Payment unavailable", "Return to the app and try again.", 409);
+    }
+
+    const { appearance } = await getAppearance(prisma);
+    const html = await provider.checkoutPage({
+      providerOrderId: payment.providerOrderId,
+      amount: payment.amount,
+      currency: env.CURRENCY,
+      orderNumber: payment.order.orderNumber,
+      customer: customerOf(payment),
+      appName: appearance.appName,
+      brandColor: appearance.theme.colors.primary,
+      returnUrl: checkoutUrls(baseUrl, provider, payment).returnUrl,
+    });
+    return { html, status: 200 };
+  }
+
+  /** The gateway sends the customer here after checkout; the result is verified before it is recorded. */
+  async function handleReturn(providerName: string, token: string, params: Record<string, string>): Promise<BrowserResponse> {
+    const payment = await loadForBrowser(token);
+    if (!payment || payment.provider !== providerName || !payment.providerOrderId) {
+      return messagePage("Payment link expired", "If money was taken, your order will update shortly.", 404);
+    }
+    if (payment.status === PaymentStatus.PAID || payment.status === PaymentStatus.REFUNDED) {
+      return backToApp(payment.id, payment.order.id, "success");
+    }
+
+    const provider = await providerFor(payment.provider);
+    if (!provider) {
+      return backToApp(payment.id, payment.order.id, "pending");
+    }
+
+    let result: PaymentResult;
+    try {
+      const outcome = await provider.confirmReturn({ providerOrderId: payment.providerOrderId, params });
+      if (outcome.type === "payment.captured") {
+        await recordCapture(payment.providerOrderId, outcome.providerPaymentId);
+        result = "success";
+      } else if (outcome.type === "payment.failed") {
+        await recordFailure(payment.providerOrderId, outcome.reason);
+        result = "failed";
+      } else {
+        result = outcome.type === "cancelled" ? "cancelled" : "pending";
+      }
+    } catch (error) {
+      // The webhook or the app's next refresh settles it.
+      log.error({ err: error, paymentId: payment.id, provider: provider.name }, "Could not confirm payment return");
+      result = "pending";
+    }
+
+    return backToApp(payment.id, payment.order.id, result);
+  }
+
+  /** Idempotent: the return page and the gateway's webhook can both report the same payment. */
   async function recordCapture(providerOrderId: string, providerPaymentId: string) {
     const ref = await prisma.payment.findUnique({
       where: { providerOrderId },
@@ -210,8 +340,10 @@ export function createPaymentsService(
     }
   }
 
+  /** Webhooks are accepted from every configured gateway, so payments started before a switch still settle. */
   async function handleWebhook(providerName: string, rawBody: string, headers: IncomingHttpHeaders) {
-    if (!provider || provider.name !== providerName) {
+    const provider = await providerFor(providerName);
+    if (!provider) {
       throw new AppError(404, "NOT_FOUND", "Unknown payment provider");
     }
 
@@ -220,17 +352,27 @@ export function createPaymentsService(
       throw new AppError(401, "INVALID_WEBHOOK_SIGNATURE", "Webhook signature is invalid");
     }
 
+    if (event.type !== "ignored") {
+      const payment = await prisma.payment.findUnique({
+        where: { providerOrderId: event.providerOrderId },
+        select: { provider: true },
+      });
+      if (payment && payment.provider !== provider.name) {
+        log.warn({ providerOrderId: event.providerOrderId, provider: provider.name }, "Webhook from a different gateway ignored");
+        return;
+      }
+    }
+
     await handleEvent(event);
   }
 
   /**
    * Refunds whatever a paid online payment holds beyond what the order now costs: everything once
-   * the order is cancelled, or the price of items the store could not supply. The payment row stays
-   * locked during the provider call so concurrent callers cannot refund twice.
+   * the order is cancelled, or the price of items the store could not supply. Refunds go through the
+   * gateway that took the payment. The payment row stays locked during the gateway call so
+   * concurrent callers cannot refund twice.
    */
   async function refundOrderPayment(orderId: string) {
-    const paymentProvider = requireProvider();
-
     return prisma.$transaction(
       async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Payment" WHERE "orderId" = ${orderId} FOR UPDATE`;
@@ -243,7 +385,8 @@ export function createPaymentsService(
           !payment ||
           payment.method !== PaymentMethod.ONLINE ||
           payment.status !== PaymentStatus.PAID ||
-          !payment.transactionId
+          !payment.transactionId ||
+          !payment.providerOrderId
         ) {
           return false;
         }
@@ -254,11 +397,17 @@ export function createPaymentsService(
           return false;
         }
 
-        const { providerRefundId } = await paymentProvider.refund({
+        const provider = await providerFor(payment.provider);
+        if (!provider) {
+          throw new AppError(409, "PAYMENT_GATEWAY_NOT_CONFIGURED", `Gateway "${payment.provider}" is not configured`);
+        }
+
+        const { providerRefundId } = await provider.refund({
+          providerOrderId: payment.providerOrderId,
           providerPaymentId: payment.transactionId,
           amount: due,
           // Stable across retries of the same refund, different for each later refund.
-          idempotencyKey: `${payment.id}:${payment.refundedAmount.toFixed(2)}`,
+          idempotencyKey: `${payment.id}_${toMinorUnits(payment.refundedAmount)}`,
         });
 
         const refundedAmount = payment.refundedAmount.plus(due);
@@ -358,7 +507,8 @@ export function createPaymentsService(
 
   return {
     startPayment,
-    verifyPayment,
+    renderCheckout,
+    handleReturn,
     handleEvent,
     handleWebhook,
     settleCancelledOrder,

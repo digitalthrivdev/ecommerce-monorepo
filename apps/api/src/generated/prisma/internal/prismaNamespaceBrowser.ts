@@ -68,6 +68,7 @@ export const ModelName = {
   Delivery: 'Delivery',
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
+  PaymentGatewayCredential: 'PaymentGatewayCredential',
   AppAppearance: 'AppAppearance',
   PushToken: 'PushToken'
 } as const
@@ -353,12 +354,24 @@ export const PlatformSettingsScalarFieldEnum = {
   deliveryPartnerFee: 'deliveryPartnerFee',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
+  paymentProvider: 'paymentProvider',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PlatformSettingsScalarFieldEnum = (typeof PlatformSettingsScalarFieldEnum)[keyof typeof PlatformSettingsScalarFieldEnum]
+
+
+export const PaymentGatewayCredentialScalarFieldEnum = {
+  gateway: 'gateway',
+  credentials: 'credentials',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PaymentGatewayCredentialScalarFieldEnum = (typeof PaymentGatewayCredentialScalarFieldEnum)[keyof typeof PaymentGatewayCredentialScalarFieldEnum]
 
 
 export const AppAppearanceScalarFieldEnum = {

@@ -414,6 +414,7 @@ export const ModelName = {
   Delivery: 'Delivery',
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
+  PaymentGatewayCredential: 'PaymentGatewayCredential',
   AppAppearance: 'AppAppearance',
   PushToken: 'PushToken'
 } as const
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "category" | "product" | "storeProduct" | "inventory" | "cart" | "cartItem" | "order" | "orderItem" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "category" | "product" | "storeProduct" | "inventory" | "cart" | "cartItem" | "order" | "orderItem" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "paymentGatewayCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1693,6 +1694,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PaymentGatewayCredential: {
+      payload: Prisma.$PaymentGatewayCredentialPayload<ExtArgs>
+      fields: Prisma.PaymentGatewayCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PaymentGatewayCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PaymentGatewayCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.PaymentGatewayCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PaymentGatewayCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.PaymentGatewayCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.PaymentGatewayCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.PaymentGatewayCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PaymentGatewayCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.PaymentGatewayCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        update: {
+          args: Prisma.PaymentGatewayCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.PaymentGatewayCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PaymentGatewayCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PaymentGatewayCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.PaymentGatewayCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentGatewayCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.PaymentGatewayCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePaymentGatewayCredential>
+        }
+        groupBy: {
+          args: Prisma.PaymentGatewayCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PaymentGatewayCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PaymentGatewayCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PaymentGatewayCredentialCountAggregateOutputType> | number
+        }
+      }
+    }
     AppAppearance: {
       payload: Prisma.$AppAppearancePayload<ExtArgs>
       fields: Prisma.AppAppearanceFieldRefs
@@ -2145,12 +2220,24 @@ export const PlatformSettingsScalarFieldEnum = {
   deliveryPartnerFee: 'deliveryPartnerFee',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
+  paymentProvider: 'paymentProvider',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PlatformSettingsScalarFieldEnum = (typeof PlatformSettingsScalarFieldEnum)[keyof typeof PlatformSettingsScalarFieldEnum]
+
+
+export const PaymentGatewayCredentialScalarFieldEnum = {
+  gateway: 'gateway',
+  credentials: 'credentials',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PaymentGatewayCredentialScalarFieldEnum = (typeof PaymentGatewayCredentialScalarFieldEnum)[keyof typeof PaymentGatewayCredentialScalarFieldEnum]
 
 
 export const AppAppearanceScalarFieldEnum = {
@@ -2592,6 +2679,7 @@ export type GlobalOmitConfig = {
   delivery?: Prisma.DeliveryOmit
   deliveryLocation?: Prisma.DeliveryLocationOmit
   platformSettings?: Prisma.PlatformSettingsOmit
+  paymentGatewayCredential?: Prisma.PaymentGatewayCredentialOmit
   appAppearance?: Prisma.AppAppearanceOmit
   pushToken?: Prisma.PushTokenOmit
 }

@@ -5,6 +5,16 @@ const moneyEnv = z.string().regex(/^\d{1,8}(\.\d{1,2})?$/, "Must be a decimal am
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a hex colour, e.g. #0C831F");
 
+/** Blank values (e.g. `RAZORPAY_KEY_ID=`) count as not set. */
+const optionalSecret = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().min(1).optional(),
+);
+
+function allOrNone(values: (string | undefined)[]) {
+  return values.every(Boolean) || values.every((value) => !value);
+}
+
 function isValidTimeZone(timeZone: string) {
   try {
     new Intl.DateTimeFormat("en", { timeZone });
@@ -55,7 +65,25 @@ const envSchema = z.object({
 
   CURRENCY: z.string().regex(/^[A-Z]{3}$/, "Must be an ISO 4217 code, e.g. INR").default("INR"),
 
-  PAYMENT_PROVIDER: z.enum(["none", "mock"]).default("mock"),
+  // Public base URL of this API (https in production). Payment gateways send customers and
+  // webhooks back to it. In development it defaults to the address the app called.
+  PUBLIC_API_URL: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
+
+  // Encrypts payment gateway keys that admins enter in the dashboard. Without it, keys can only be
+  // set below. Changing it makes saved keys unreadable, so they must be entered again.
+  PAYMENT_SECRETS_KEY: optionalSecret.refine((value) => value === undefined || value.length >= 32, {
+    message: "Must be at least 32 characters, e.g. from `openssl rand -base64 32`",
+  }),
+
+  // Payment gateway credentials. Values set here take priority over keys saved in the dashboard.
+  // Admins choose the active gateway in the dashboard.
+  RAZORPAY_KEY_ID: optionalSecret,
+  RAZORPAY_KEY_SECRET: optionalSecret,
+  RAZORPAY_WEBHOOK_SECRET: optionalSecret,
+
+  CASHFREE_APP_ID: optionalSecret,
+  CASHFREE_SECRET_KEY: optionalSecret,
+  CASHFREE_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
 
   PAYMENT_TIMEOUT_MINUTES: z.coerce.number().int().min(1).max(120).default(15),
 
@@ -70,9 +98,15 @@ const envSchema = z.object({
 
   // 0 disables the background sender for order status notifications.
   NOTIFICATION_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(60).default(3),
-}).refine((value) => !(value.NODE_ENV === "production" && value.PAYMENT_PROVIDER === "mock"), {
-  message: "PAYMENT_PROVIDER=mock is not allowed in production",
-  path: ["PAYMENT_PROVIDER"],
+}).refine((value) => value.NODE_ENV !== "production" || value.PUBLIC_API_URL?.startsWith("https://"), {
+  message: "PUBLIC_API_URL must be set to an https URL in production",
+  path: ["PUBLIC_API_URL"],
+}).refine(
+  (value) => allOrNone([value.RAZORPAY_KEY_ID, value.RAZORPAY_KEY_SECRET, value.RAZORPAY_WEBHOOK_SECRET]),
+  { message: "Set all of RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET, or none", path: ["RAZORPAY_KEY_ID"] },
+).refine((value) => allOrNone([value.CASHFREE_APP_ID, value.CASHFREE_SECRET_KEY]), {
+  message: "Set both CASHFREE_APP_ID and CASHFREE_SECRET_KEY, or neither",
+  path: ["CASHFREE_APP_ID"],
 }).refine((value) => !(value.NODE_ENV === "production" && value.PUSH_PROVIDER === "log"), {
   message: "PUSH_PROVIDER=log is not allowed in production",
   path: ["PUSH_PROVIDER"],

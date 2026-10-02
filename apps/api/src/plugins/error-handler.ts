@@ -30,6 +30,9 @@ export default fp(async (app) => {
     }
 
     if (error instanceof AppError) {
+      if (error.statusCode >= 500) {
+        request.log.error(error);
+      }
       return reply.status(error.statusCode).send({
         error: error.code,
         message: error.message,

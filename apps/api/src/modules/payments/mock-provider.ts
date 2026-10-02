@@ -1,23 +1,16 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 
 import { z } from "zod";
 
+import { escapeHtml, headerValue, hmacSha256, paymentPage, safeEqual } from "./gateway-helpers.js";
 import type { PaymentProvider } from "./payment-provider.js";
 
-// Development-only provider. The secret is public on purpose; env validation keeps it out of production.
+// Development-only gateway. The secret is public on purpose; it is never registered in production.
 const MOCK_SECRET = "mock-payment-provider-secret";
 
 export const MOCK_WEBHOOK_SIGNATURE_HEADER = "x-mock-signature";
 
-function sign(value: string) {
-  return createHmac("sha256", MOCK_SECRET).update(value).digest("hex");
-}
-
-function safeEqual(a: string, b: string) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  return left.length === right.length && timingSafeEqual(left, right);
-}
+const sign = (value: string) => hmacSha256(MOCK_SECRET, value, "hex");
 
 function randomId(prefix: string) {
   return `${prefix}_${randomBytes(9).toString("base64url")}`;
@@ -30,24 +23,50 @@ const webhookBodySchema = z.object({
   reason: z.string().optional(),
 });
 
+function hiddenForm(action: string, fields: Record<string, string>, label: string, className = "") {
+  const inputs = Object.entries(fields)
+    .map(([name, value]) => `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`)
+    .join("");
+  return `<form method="post" action="${escapeHtml(action)}">${inputs}<button class="${className}">${escapeHtml(label)}</button></form>`;
+}
+
 export const mockPaymentProvider = {
   name: "mock",
+  label: "Test gateway",
+  testMode: true,
 
   async createOrder() {
     return { providerOrderId: randomId("mock_order") };
   },
 
-  checkoutOptions() {
-    return { payUrl: "/payments/mock/pay" };
+  async checkoutPage({ providerOrderId, amount, currency, brandColor, returnUrl }) {
+    const providerPaymentId = randomId("mock_pay");
+    return paymentPage({
+      title: `Pay ${currency} ${amount.toFixed(2)}`,
+      message: "Test gateway: no money is charged. Choose how this payment should end.",
+      brandColor,
+      body: [
+        hiddenForm(returnUrl, { mock_payment_id: providerPaymentId, mock_signature: sign(`${providerOrderId}|${providerPaymentId}`) }, "Pay successfully"),
+        hiddenForm(returnUrl, { mock_outcome: "failed" }, "Simulate a failed payment", "secondary"),
+        `<a class="button secondary" href="${escapeHtml(`${returnUrl}?cancelled=1`)}">Cancel</a>`,
+      ].join("\n"),
+    });
   },
 
-  verifyCheckout({ providerOrderId, providerPaymentId, signature }) {
-    return safeEqual(sign(`${providerOrderId}|${providerPaymentId}`), signature);
+  async confirmReturn({ providerOrderId, params }) {
+    const { mock_payment_id: paymentId, mock_signature: signature } = params;
+    if (paymentId && signature && safeEqual(sign(`${providerOrderId}|${paymentId}`), signature)) {
+      return { type: "payment.captured", providerOrderId, providerPaymentId: paymentId };
+    }
+    if (params.mock_outcome === "failed") {
+      return { type: "payment.failed", providerOrderId, reason: "Payment declined (test gateway)" };
+    }
+    return { type: "cancelled" };
   },
 
   parseWebhook(rawBody, headers) {
-    const signature = headers[MOCK_WEBHOOK_SIGNATURE_HEADER];
-    if (typeof signature !== "string" || !safeEqual(sign(rawBody), signature)) {
+    const signature = headerValue(headers, MOCK_WEBHOOK_SIGNATURE_HEADER);
+    if (!signature || !safeEqual(sign(rawBody), signature)) {
       return null;
     }
 
@@ -68,7 +87,7 @@ export const mockPaymentProvider = {
       return { type: "payment.captured", providerOrderId, providerPaymentId };
     }
     if (event === "payment.failed") {
-      return { type: "payment.failed", providerOrderId, providerPaymentId, reason: reason ?? "Payment failed" };
+      return { type: "payment.failed", providerOrderId, reason: reason ?? "Payment failed" };
     }
     return { type: "ignored" };
   },
@@ -76,17 +95,11 @@ export const mockPaymentProvider = {
   async refund() {
     return { providerRefundId: randomId("mock_rfnd") };
   },
+
+  async checkCredentials() {
+    return true;
+  },
 } satisfies PaymentProvider;
-
-/** What the provider's checkout would hand back to the app after the customer pays. */
-export function mockCheckoutResult(providerOrderId: string) {
-  const providerPaymentId = randomId("mock_pay");
-  return { providerPaymentId, signature: sign(`${providerOrderId}|${providerPaymentId}`) };
-}
-
-export function mockFailedPaymentId() {
-  return randomId("mock_pay");
-}
 
 export function signMockWebhook(rawBody: string) {
   return sign(rawBody);

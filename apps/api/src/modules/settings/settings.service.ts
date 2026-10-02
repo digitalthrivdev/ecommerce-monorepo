@@ -1,5 +1,14 @@
 import { env } from "../../config/env.js";
 import { PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { AppError } from "../../shared/errors.js";
+import {
+  activePaymentProvider,
+  getPaymentProvider,
+  paymentGatewayOptions,
+  removeGatewayCredentials,
+  saveGatewayCredentials,
+} from "../payments/gateway-registry.js";
+import { canStoreSecrets } from "../payments/secret-box.js";
 import { getAppearance } from "./appearance.service.js";
 import type { UpdateSettingsInput } from "./settings.schemas.js";
 
@@ -50,7 +59,7 @@ export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSet
   };
 }
 
-function toAdminView(settings: PlatformSettings) {
+async function toAdminView(prisma: PrismaClient, settings: PlatformSettings) {
   return {
     deliveryFee: settings.deliveryFee.toFixed(2),
     freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
@@ -58,6 +67,9 @@ function toAdminView(settings: PlatformSettings) {
     deliveryPartnerFee: settings.deliveryPartnerFee.toFixed(2),
     supportPhone: settings.supportPhone,
     supportEmail: settings.supportEmail,
+    paymentProvider: settings.paymentProvider,
+    paymentGateways: await paymentGatewayOptions(prisma),
+    canStoreGatewayKeys: canStoreSecrets,
     updatedById: settings.updatedById,
     updatedAt: settings.updatedAt,
   };
@@ -84,7 +96,7 @@ export function createSettingsService(prisma: PrismaClient) {
         minOrderValue: settings.minOrderValue.toFixed(2),
       },
       payments: {
-        methods: env.PAYMENT_PROVIDER === "none" ? [PaymentMethod.COD] : [PaymentMethod.COD, PaymentMethod.ONLINE],
+        methods: (await activePaymentProvider(prisma, settings)) ? [PaymentMethod.COD, PaymentMethod.ONLINE] : [PaymentMethod.COD],
         onlinePaymentTimeoutMinutes: env.PAYMENT_TIMEOUT_MINUTES,
       },
       support: {
@@ -95,17 +107,34 @@ export function createSettingsService(prisma: PrismaClient) {
   }
 
   async function getAdminSettings() {
-    return toAdminView(await getPlatformSettings(prisma));
+    return toAdminView(prisma, await getPlatformSettings(prisma));
   }
 
   async function updateSettings(input: UpdateSettingsInput, adminId: string) {
+    if (input.paymentProvider && !(await getPaymentProvider(prisma, input.paymentProvider))) {
+      throw new AppError(400, "PAYMENT_GATEWAY_NOT_CONFIGURED", "This payment gateway is not configured on the server", {
+        paymentProvider: input.paymentProvider,
+      });
+    }
+
     await getPlatformSettings(prisma);
     const updated = await prisma.platformSettings.update({
       where: { id: SETTINGS_ID },
       data: { ...input, updatedById: adminId },
     });
-    return toAdminView(updated);
+    return toAdminView(prisma, updated);
   }
 
-  return { getPublicSettings, getAdminSettings, updateSettings };
+  async function saveGatewayKeys(gateway: string, credentials: Record<string, string>, adminId: string) {
+    await saveGatewayCredentials(prisma, gateway, credentials, adminId);
+    return getAdminSettings();
+  }
+
+  async function removeGatewayKeys(gateway: string) {
+    const settings = await getPlatformSettings(prisma);
+    await removeGatewayCredentials(prisma, gateway, settings.paymentProvider);
+    return getAdminSettings();
+  }
+
+  return { getPublicSettings, getAdminSettings, updateSettings, saveGatewayKeys, removeGatewayKeys };
 }

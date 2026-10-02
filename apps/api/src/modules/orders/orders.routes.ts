@@ -3,7 +3,8 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { createTrackingService } from "../delivery/tracking.service.js";
-import { verifyPaymentBodySchema } from "../payments/payments.schemas.js";
+import { startPaymentBodySchema } from "../payments/payments.schemas.js";
+import { publicBaseUrl } from "../payments/public-url.js";
 import { cancelOrderBodySchema, createOrderBodySchema, listOrdersQuerySchema } from "./orders.schemas.js";
 import { createOrdersService } from "./orders.service.js";
 
@@ -42,13 +43,11 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/:id/payment", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
-    return app.payments.startPayment(request.user.sub, id);
-  });
-
-  app.post("/:id/payment/verify", async (request) => {
-    const { id } = idParamsSchema.parse(request.params);
-    const body = verifyPaymentBodySchema.parse(request.body);
-    return ordersService.verifyPayment(request.user.sub, id, body);
+    const { returnUrl } = startPaymentBodySchema.parse(request.body);
+    return app.payments.startPayment(request.user.sub, id, {
+      appReturnUrl: returnUrl,
+      baseUrl: publicBaseUrl(request),
+    });
   });
 };
 

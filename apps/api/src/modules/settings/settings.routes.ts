@@ -3,7 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { updateAppearanceBodySchema } from "./appearance.schemas.js";
 import { createAppearanceService } from "./appearance.service.js";
-import { updateSettingsBodySchema } from "./settings.schemas.js";
+import { gatewayParamsSchema, saveGatewayKeysBodySchema, updateSettingsBodySchema } from "./settings.schemas.js";
 import { createSettingsService } from "./settings.service.js";
 
 const settingsRoutes: FastifyPluginAsync = async (app) => {
@@ -19,6 +19,17 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
   app.patch("/platform", adminOnly, async (request) => {
     const body = updateSettingsBodySchema.parse(request.body);
     return settings.updateSettings(body, request.user.sub);
+  });
+
+  app.put("/payment-gateways/:gateway", adminOnly, async (request) => {
+    const { gateway } = gatewayParamsSchema.parse(request.params);
+    const { credentials } = saveGatewayKeysBodySchema.parse(request.body);
+    return settings.saveGatewayKeys(gateway, credentials, request.user.sub);
+  });
+
+  app.delete("/payment-gateways/:gateway", adminOnly, async (request) => {
+    const { gateway } = gatewayParamsSchema.parse(request.params);
+    return settings.removeGatewayKeys(gateway);
   });
 
   app.get("/appearance", adminOnly, async () => appearance.getAdminAppearance());

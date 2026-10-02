@@ -103,6 +103,11 @@ export type DeliveryLocation = Prisma.DeliveryLocationModel
  */
 export type PlatformSettings = Prisma.PlatformSettingsModel
 /**
+ * Model PaymentGatewayCredential
+ * 
+ */
+export type PaymentGatewayCredential = Prisma.PaymentGatewayCredentialModel
+/**
  * Model AppAppearance
  * 
  */
