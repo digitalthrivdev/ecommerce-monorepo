@@ -5,7 +5,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 ## Before the first production launch
 
 - [ ] **SMS provider for login OTP.** `apps/api/src/modules/auth/otp-sender.ts` refuses to run in production until a real sender (e.g. MSG91, Twilio) is added.
-- [ ] **Real payment provider.** Implement `PaymentProvider` (`apps/api/src/modules/payments/payment-provider.ts`) for Razorpay or Cashfree, or deploy with `PAYMENT_PROVIDER=none` (cash on delivery only).
+- [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `PAYMENT_SECRETS_KEY` set and webhooks registered (see `apps/api/.env.example`).
 - [ ] **Real push provider.** Implement `PushSender` (`apps/api/src/modules/notifications/push-sender.ts`) for Expo Push (or FCM/APNs), or deploy with `PUSH_PROVIDER=none` (no pushes).
 - [ ] **Per-IP rate limiting** on `POST /auth/send-otp` (per-phone limits already exist).
 - [ ] **Production deployment:** Docker images, production Compose file, Nginx, secrets, backups.
@@ -21,7 +21,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Orders and store workflow
 
-- [ ] **Partial fulfilment:** store marks individual items unavailable, totals and payment adjust, partial refund for online orders.
+- [ ] Undo for an item marked unavailable by mistake (today the refund is issued immediately, so it is final).
 - [ ] Automatic refund of a duplicate online payment (currently logged as an error for manual refund).
 
 ## Inventory

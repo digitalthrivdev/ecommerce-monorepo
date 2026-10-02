@@ -830,6 +830,8 @@ HOME_SECTIONS
 
 Secrets remain environment variables.
 
+Exception: payment gateway keys (Razorpay, Cashfree, …) may also be entered by admins in the dashboard. They are stored AES-256-GCM encrypted with `PAYMENT_SECRETS_KEY` (an environment variable), are write-only (the API never returns them), and keys set in the environment take priority. Do not extend this to other secrets without an explicit decision.
+
 Public branding/configuration should be replaceable without modifying business logic.
 
 ---
