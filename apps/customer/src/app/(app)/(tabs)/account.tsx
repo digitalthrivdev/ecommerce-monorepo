@@ -49,21 +49,29 @@ export default function AccountScreen() {
       <ScrollView contentContainerClassName="gap-4 px-4 pb-10 pt-3">
         <Text className="text-2xl font-extrabold">Account</Text>
 
-        <Card className="flex-row items-center gap-4 px-4 py-4">
-          <View className="size-14 items-center justify-center rounded-full bg-highlight">
-            {user?.name ? (
-              <Text className="text-xl font-extrabold text-highlight-foreground">{user.name.charAt(0).toUpperCase()}</Text>
-            ) : (
-              <Icon as={UserRound} size={26} className="text-highlight-foreground" />
-            )}
-          </View>
-          <View className="flex-1 gap-0.5">
-            <Text className="text-lg font-bold" numberOfLines={1}>
-              {user?.name ?? "Welcome"}
-            </Text>
-            {user ? <Text className="text-sm text-muted-foreground">{formatPhone(user.phone)}</Text> : null}
-          </View>
-        </Card>
+        <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Edit profile">
+          <Card className="flex-row items-center gap-4 px-4 py-4">
+            <View className="size-14 items-center justify-center rounded-full bg-highlight">
+              {user?.name ? (
+                <Text className="text-xl font-extrabold text-highlight-foreground">{user.name.charAt(0).toUpperCase()}</Text>
+              ) : (
+                <Icon as={UserRound} size={26} className="text-highlight-foreground" />
+              )}
+            </View>
+            <View className="flex-1 gap-0.5">
+              <Text className="text-lg font-bold" numberOfLines={1}>
+                {user?.name ?? "Add your name"}
+              </Text>
+              {user ? <Text className="text-sm text-muted-foreground">{formatPhone(user.phone)}</Text> : null}
+              {user?.email ? (
+                <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                  {user.email}
+                </Text>
+              ) : null}
+            </View>
+            <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
+          </Card>
+        </Pressable>
 
         <Card className="gap-0 overflow-hidden py-1">
           <Row icon={Package} label="Your orders" onPress={() => router.push("/orders")} />
