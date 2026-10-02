@@ -1,0 +1,23 @@
+---
+description: Local testing setup, WSL limits and the VPS deployment workflow
+alwaysApply: true
+---
+
+# Local testing
+- Start test servers with OTP logging and a separate port, so no real SMS is sent (the dev database may have Message Central selected; real SMS went out once):
+  ```bash
+  cd apps/api && OTP_PROVIDER=log PORT=4100 nohup pnpm exec tsx src/server.ts > ~/.cache/grocery-build/api-test.log 2>&1 &
+  ```
+- Stop every server you started before finishing (`pkill -f "tsx src/server.ts"`, then check with `pgrep`).
+- Seed accounts: `admin@grocery.test` and `staff@grocery.test`, password `grocery-dev`. Customer `+919000000002`, partner `+919000000004` (OTP in the API log).
+- WSL memory is limited: run one heavy build at a time (Next.js build, Docker build) and write logs to `~/.cache/grocery-build/`, not `/tmp` (WSL restarts wipe it).
+
+# Production VPS (test client "moozy")
+- Connect with `ssh grocery-vps` (key-based, `deploy` user with passwordless sudo). The stack is in `~/moozy/deploy`; domains are `api.moozy.in` and `admin.moozy.in`.
+- Deploy after the developer pushes:
+  ```bash
+  ssh grocery-vps 'cd ~/moozy && git pull && cd deploy && docker compose up -d --build'
+  ```
+  1 CPU: about 5 minutes. Don't poll it repeatedly; check once with `docker compose ps`.
+- Never print values from `deploy/.env` or `deploy/api.env`; show variable names only. Never ask for passwords in chat.
+- Before anything destructive on the server (deleting volumes, data, containers), back up, explain, and get confirmation.

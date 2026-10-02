@@ -1,0 +1,7 @@
+# Kept out of Cursor's index and search results, but still readable when needed.
+# node_modules, build output, uploads and backups are already excluded through .gitignore.
+
+# Generated Prisma client (regenerate with `pnpm exec prisma generate`; read the schema instead).
+apps/api/src/generated/
+
+pnpm-lock.yaml
