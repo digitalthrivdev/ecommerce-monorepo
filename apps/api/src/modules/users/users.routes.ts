@@ -1,33 +1,39 @@
 import type { FastifyPluginAsync } from "fastify";
 
-import { UserRole } from "../../generated/prisma/client";
+import { Prisma, UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { createAddressBodySchema, updateAddressBodySchema } from "./addresses.schemas.js";
 import { createAddressesService } from "./addresses.service.js";
+import { updateProfileBodySchema } from "./users.schemas.js";
+
+const meSelect = {
+  id: true,
+  phone: true,
+  name: true,
+  email: true,
+  role: true,
+  store: { select: { id: true, name: true, code: true } },
+} satisfies Prisma.UserSelect;
 
 const usersRoutes: FastifyPluginAsync = async (app) => {
   const addressesService = createAddressesService(app.prisma);
   const requireCustomer = app.requireRole(UserRole.CUSTOMER);
 
   app.get("/me", { preHandler: app.authenticate }, async (request) => {
-    const user = await app.prisma.user.findUnique({
-      where: { id: request.user.sub },
-      select: {
-        id: true,
-        phone: true,
-        name: true,
-        email: true,
-        role: true,
-        store: { select: { id: true, name: true, code: true } },
-      },
-    });
+    const user = await app.prisma.user.findUnique({ where: { id: request.user.sub }, select: meSelect });
 
     if (!user) {
       throw new AppError(401, "UNAUTHORIZED", "User no longer exists");
     }
 
     return user;
+  });
+
+  // Staff and partner names are managed by admins.
+  app.patch("/me", { preHandler: requireCustomer }, async (request) => {
+    const body = updateProfileBodySchema.parse(request.body);
+    return app.prisma.user.update({ where: { id: request.user.sub }, data: body, select: meSelect });
   });
 
   app.get("/me/addresses", { preHandler: requireCustomer }, async (request) => {
