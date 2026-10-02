@@ -7,6 +7,8 @@ export const phoneSchema = z
   .trim()
   .regex(/^\+[1-9]\d{7,14}$/, "Phone must be in E.164 format, e.g. +919876543210");
 
+export const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address").max(200));
+
 export const idParamsSchema = z.object({
   id: z.string().trim().min(1).max(64),
 });

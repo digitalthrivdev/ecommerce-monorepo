@@ -1,6 +1,7 @@
 import { UserRole } from "../../generated/prisma/client";
 
 import { env } from "../../config/env.js";
+import { hashPassword } from "../../shared/password.js";
 import { prisma } from "./prisma.js";
 
 type SeedProduct = {
@@ -19,12 +20,15 @@ type SeedCategory = {
   products: SeedProduct[];
 };
 
+// Development only; the seed refuses to run in production.
+const DEV_PASSWORD = "grocery-dev";
+
 const users = [
-  { phone: "+919000000001", name: "Platform Admin", role: UserRole.ADMIN },
-  { phone: "+919000000002", name: "Test Customer", role: UserRole.CUSTOMER },
+  { phone: "+919000000001", name: "Platform Admin", email: "admin@grocery.test", role: UserRole.ADMIN },
+  { phone: "+919000000002", name: "Test Customer", email: null, role: UserRole.CUSTOMER },
 ];
 
-const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff" };
+const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff", email: "staff@grocery.test" };
 
 const deliveryPartner = {
   phone: "+919000000004",
@@ -130,7 +134,7 @@ async function main() {
   for (const user of users) {
     await prisma.user.upsert({
       where: { phone: user.phone },
-      update: { name: user.name, role: user.role },
+      update: { name: user.name, email: user.email, role: user.role },
       create: user,
     });
   }
@@ -144,8 +148,14 @@ async function main() {
 
   await prisma.user.upsert({
     where: { phone: storeStaff.phone },
-    update: { name: storeStaff.name, role: UserRole.STORE_STAFF, storeId: seededStore.id },
+    update: { name: storeStaff.name, email: storeStaff.email, role: UserRole.STORE_STAFF, storeId: seededStore.id },
     create: { ...storeStaff, role: UserRole.STORE_STAFF, storeId: seededStore.id },
+  });
+
+  // Only where none is set, so a password changed while testing survives a reseed.
+  await prisma.user.updateMany({
+    where: { phone: { in: [users[0]!.phone, storeStaff.phone] }, passwordHash: null },
+    data: { passwordHash: await hashPassword(DEV_PASSWORD) },
   });
 
   const { vehicleType, vehicleNumber, ...partnerUser } = deliveryPartner;
@@ -207,6 +217,7 @@ async function main() {
   console.log(
     `Seeded ${users.length + 2} users (incl. store staff and a delivery partner), 1 store, ${categories.length} categories, ${productCount} products`,
   );
+  console.log(`Dashboard sign-in: ${users[0]!.email} or ${storeStaff.email}, password "${DEV_PASSWORD}"`);
 }
 
 main()

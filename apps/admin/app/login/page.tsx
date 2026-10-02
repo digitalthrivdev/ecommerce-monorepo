@@ -22,13 +22,12 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-xl">{appName ? `${appName} dashboard` : "Dashboard"}</CardTitle>
-          <CardDescription>Sign in with your registered phone number.</CardDescription>
+          <CardDescription>Sign in with your email and password.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm
             next={typeof next === "string" ? next : undefined}
             initialError={typeof error === "string" ? ERRORS[error] : undefined}
-            showDevHint={process.env.NODE_ENV !== "production"}
           />
         </CardContent>
       </Card>

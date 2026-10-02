@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import { createAuthService } from "./auth.service.js";
-import { sendOtpBodySchema, verifyOtpBodySchema } from "./auth.schemas.js";
+import { loginBodySchema, sendOtpBodySchema, verifyOtpBodySchema } from "./auth.schemas.js";
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   const authService = createAuthService({
@@ -20,6 +20,11 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   app.post("/verify-otp", async (request) => {
     const { phone, otp } = verifyOtpBodySchema.parse(request.body);
     return authService.verifyOtp(phone, otp);
+  });
+
+  app.post("/login", async (request) => {
+    const { email, password } = loginBodySchema.parse(request.body);
+    return authService.login(email, password, request.ip);
   });
 };
 

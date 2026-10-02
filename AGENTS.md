@@ -633,6 +633,8 @@ OTP should expire automatically.
 
 Do not store OTPs permanently in PostgreSQL unless a future requirement explicitly needs an audit trail.
 
+Customers and delivery partners sign in with phone OTP. Admins and store staff sign in to the dashboard with email and password (`POST /auth/login`) and cannot use OTP. Passwords are stored as scrypt hashes (`shared/password.ts`), and failed attempts are rate-limited per email and network. Admins set and reset staff passwords in the dashboard; the first admin, and any admin password reset, uses the `create-admin` script.
+
 ---
 
 # 21. Current Environment
@@ -834,7 +836,7 @@ Secrets remain environment variables.
 
 Exception: payment gateway keys (Razorpay, Cashfree, …) and SMS/OTP provider keys (Message Central, …) may also be entered by admins in the dashboard. They are stored AES-256-GCM encrypted with `SECRETS_ENCRYPTION_KEY` (an environment variable), are write-only (the API never returns them), and keys set in the environment take priority. Do not extend this to other secrets without an explicit decision.
 
-Until an SMS provider is set up, login OTPs are written to the API log: for everyone in development, and in production only for existing admins (so the first admin can sign in and configure SMS). `OTP_PROVIDER` in the environment overrides the dashboard choice for recovery.
+Until an SMS provider is set up, login OTPs are written to the API log in development; in production OTP sign-in is unavailable until an admin configures SMS. `OTP_PROVIDER` in the environment overrides the dashboard choice for recovery.
 
 Public branding/configuration should be replaceable without modifying business logic.
 

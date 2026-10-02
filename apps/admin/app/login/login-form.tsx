@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 
 import { loginAction, type LoginState } from "./actions";
 
-const initialState: LoginState = { step: "phone" };
+const initialState: LoginState = {};
 
-export function LoginForm({ next, initialError, showDevHint }: { next?: string; initialError?: string; showDevHint: boolean }) {
+export function LoginForm({ next, initialError }: { next?: string; initialError?: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const error = state === initialState ? initialError : state.error;
 
@@ -27,67 +27,39 @@ export function LoginForm({ next, initialError, showDevHint }: { next?: string; 
         </Alert>
       )}
 
-      {state.step === "phone" ? (
-        <FieldGroup>
-          <Field data-invalid={Boolean(state.fieldErrors?.phone)}>
-            <FieldLabel htmlFor="phone">Phone number</FieldLabel>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              defaultValue={state.phone ?? "+91"}
-              aria-invalid={Boolean(state.fieldErrors?.phone)}
-              autoFocus
-              required
-            />
-            <FieldDescription>Include the country code.</FieldDescription>
-            <FieldError>{state.fieldErrors?.phone}</FieldError>
-          </Field>
-          <Button type="submit" name="intent" value="send" disabled={pending}>
-            {pending && <Loader2 className="animate-spin" />}
-            Send code
-          </Button>
-        </FieldGroup>
-      ) : (
-        <FieldGroup>
-          <input type="hidden" name="phone" value={state.phone ?? ""} />
-          <Field data-invalid={Boolean(state.fieldErrors?.otp)}>
-            <FieldLabel htmlFor="otp">Verification code</FieldLabel>
-            <Input
-              key={state.phone}
-              id="otp"
-              name="otp"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="\d{6}"
-              maxLength={6}
-              placeholder="6-digit code"
-              aria-invalid={Boolean(state.fieldErrors?.otp)}
-              autoFocus
-              required
-            />
-            <FieldDescription>
-              {state.message ?? `Enter the code sent to ${state.phone}.`}
-              {showDevHint && " In development the code is printed in the API server log."}
-            </FieldDescription>
-            <FieldError>{state.fieldErrors?.otp}</FieldError>
-          </Field>
-          <Button type="submit" name="intent" value="verify" disabled={pending}>
-            {pending && <Loader2 className="animate-spin" />}
-            Sign in
-          </Button>
-          <div className="flex justify-between">
-            <Button type="submit" name="intent" value="change-phone" variant="link" size="sm" formNoValidate disabled={pending} className="px-0">
-              Change number
-            </Button>
-            <Button type="submit" name="intent" value="resend" variant="link" size="sm" formNoValidate disabled={pending} className="px-0">
-              Resend code
-            </Button>
-          </div>
-        </FieldGroup>
-      )}
+      <FieldGroup>
+        <Field data-invalid={Boolean(state.fieldErrors?.email)}>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="username"
+            defaultValue={state.email}
+            aria-invalid={Boolean(state.fieldErrors?.email)}
+            autoFocus
+            required
+          />
+          <FieldError>{state.fieldErrors?.email}</FieldError>
+        </Field>
+        <Field data-invalid={Boolean(state.fieldErrors?.password)}>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            aria-invalid={Boolean(state.fieldErrors?.password)}
+            required
+          />
+          <FieldDescription>Forgot it? Ask an admin to reset it.</FieldDescription>
+          <FieldError>{state.fieldErrors?.password}</FieldError>
+        </Field>
+        <Button type="submit" disabled={pending}>
+          {pending && <Loader2 className="animate-spin" />}
+          Sign in
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

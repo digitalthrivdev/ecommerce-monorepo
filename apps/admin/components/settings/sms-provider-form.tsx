@@ -36,8 +36,8 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
       value: "",
       title: "None",
       description:
-        sms.fallback === "admins"
-          ? "No SMS is sent. Customers cannot sign in; admins can, with codes written to the server log."
+        sms.fallback === "nobody"
+          ? "No SMS is sent, so customers and delivery partners cannot sign in."
           : "Codes are written to the API log instead of being sent. Fine for development.",
       disabled: locked,
     },
@@ -52,7 +52,7 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
         </p>
       ) : (
         !sms.active &&
-        sms.fallback === "admins" && (
+        sms.fallback === "nobody" && (
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
             {sms.selected && !selected?.configured
               ? `The selected provider (${selected?.label ?? sms.selected}) has no working keys, so customers cannot sign in.`

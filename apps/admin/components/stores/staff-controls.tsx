@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Loader2, UserPlus } from "lucide-react";
 
-import { addStaff, removeStaff } from "@/app/(dashboard)/stores/actions";
+import { addStaff, removeStaff, setStaffPassword } from "@/app/(dashboard)/stores/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,13 +54,34 @@ export function AddStaffDialog({ storeId, storeName }: { storeId: string; storeN
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>Add staff to {storeName}</DialogTitle>
-            <DialogDescription>They sign in to this dashboard with an OTP sent to their phone.</DialogDescription>
+            <DialogDescription>They sign in to this dashboard with the email and password you set here.</DialogDescription>
           </DialogHeader>
           <input type="hidden" name="storeId" value={storeId} />
           <FieldGroup>
+            <Field data-invalid={Boolean(fieldErrors.email)}>
+              <FieldLabel htmlFor="staff-email">Email</FieldLabel>
+              <Input id="staff-email" name="email" type="email" autoComplete="off" required aria-invalid={Boolean(fieldErrors.email)} />
+              <FieldError>{fieldErrors.email}</FieldError>
+            </Field>
+            <Field data-invalid={Boolean(fieldErrors.password)}>
+              <FieldLabel htmlFor="staff-password">Password</FieldLabel>
+              <Input
+                id="staff-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+                aria-invalid={Boolean(fieldErrors.password)}
+              />
+              <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
+              <FieldError>{fieldErrors.password}</FieldError>
+            </Field>
             <Field data-invalid={Boolean(fieldErrors.phone)}>
               <FieldLabel htmlFor="staff-phone">Phone</FieldLabel>
               <Input id="staff-phone" name="phone" type="tel" placeholder="+919876543210" required aria-invalid={Boolean(fieldErrors.phone)} />
+              <FieldDescription>For contacting them. Not used to sign in.</FieldDescription>
               <FieldError>{fieldErrors.phone}</FieldError>
             </Field>
             <Field data-invalid={Boolean(fieldErrors.name)}>
@@ -79,6 +100,66 @@ export function AddStaffDialog({ storeId, storeName }: { storeId: string; storeN
             <Button type="submit" disabled={pending}>
               {pending && <Loader2 className="animate-spin" />}
               Add staff
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function SetStaffPasswordDialog({ storeId, member }: { storeId: string; member: StaffMember & { email: string } }) {
+  const [open, setOpen] = useState(false);
+  const { pending, fieldErrors, onSubmit, reset } = useFormAction(setStaffPassword, () => setOpen(false));
+  const label = member.name ?? member.email;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          {member.hasPassword ? "Reset password" : "Set password"}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>Set a password for {label}</DialogTitle>
+            <DialogDescription>
+              They sign in with {member.email}.{member.hasPassword && " Their current password stops working."}
+            </DialogDescription>
+          </DialogHeader>
+          <input type="hidden" name="storeId" value={storeId} />
+          <input type="hidden" name="userId" value={member.id} />
+          <Field data-invalid={Boolean(fieldErrors.password)}>
+            <FieldLabel htmlFor={`password-${member.id}`}>New password</FieldLabel>
+            <Input
+              id={`password-${member.id}`}
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
+              aria-invalid={Boolean(fieldErrors.password)}
+            />
+            <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
+            <FieldError>{fieldErrors.password}</FieldError>
+          </Field>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              Set password
             </Button>
           </DialogFooter>
         </form>

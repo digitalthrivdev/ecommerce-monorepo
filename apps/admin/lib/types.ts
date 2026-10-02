@@ -301,8 +301,8 @@ export type SmsSettings = {
   active: string | null;
   /** Set when OTP_PROVIDER on the server overrides the dashboard choice. */
   environmentOverride: string | null;
-  /** Who can sign in while no provider is set up (their codes go to the server log). */
-  fallback: "admins" | "everyone";
+  /** Who can sign in by OTP while no provider is set up (their codes go to the server log). */
+  fallback: "nobody" | "everyone";
   providers: OtpProviderOption[];
 };
 
@@ -404,7 +404,15 @@ export type StoreDetails = Store & {
   activeOrderCount: number;
 };
 
-export type StaffMember = { id: string; phone: string; name: string | null; createdAt: string };
+export type StaffMember = {
+  id: string;
+  phone: string;
+  email: string | null;
+  name: string | null;
+  /** Staff added before password sign-in existed have none and cannot sign in until one is set. */
+  hasPassword: boolean;
+  createdAt: string;
+};
 
 export type DashboardStats = {
   storeId: string | null;

@@ -3,6 +3,8 @@ import type Redis from "ioredis";
 import { env } from "../../config/env.js";
 import type { PrismaClient, UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { verifyAgainstDummy, verifyPassword } from "../../shared/password.js";
+import { signsInWithPassword } from "../../shared/roles.js";
 import type { OtpRegistry } from "./otp-registry.js";
 
 const OTP_TTL_SECONDS = 300;
@@ -10,12 +12,19 @@ const RESEND_COOLDOWN_SECONDS = 60;
 const MAX_SENDS_PER_HOUR = 5;
 const MAX_VERIFY_ATTEMPTS = 5;
 
+const LOGIN_WINDOW_SECONDS = 900;
+const MAX_LOGIN_ATTEMPTS = 10;
+const MAX_IP_LOGIN_ATTEMPTS_PER_HOUR = 50;
+
 const keys = {
   otp: (phone: string) => `otp:${phone}`,
   attempts: (phone: string) => `otp:attempts:${phone}`,
   cooldown: (phone: string) => `otp:cooldown:${phone}`,
   sends: (phone: string) => `otp:sends:${phone}`,
   ipSends: (ip: string) => `otp:ip-sends:${ipBucket(ip)}`,
+  // Per email and network, so a stranger guessing passwords cannot lock the real person out.
+  login: (email: string, ip: string) => `login:attempts:${ipBucket(ip)}:${email}`,
+  ipLogin: (ip: string) => `login:ip-attempts:${ipBucket(ip)}`,
 };
 
 /**
@@ -44,7 +53,7 @@ type PendingOtp = { provider: string; reference: string };
 type AuthServiceDeps = {
   prisma: PrismaClient;
   redis: Redis;
-  otp: Pick<OtpRegistry, "forPhone" | "byName">;
+  otp: Pick<OtpRegistry, "sender" | "byName">;
   signToken: (payload: { sub: string; role: UserRole }) => string;
 };
 
@@ -62,10 +71,17 @@ function readPending(value: string | null): PendingOtp | null {
 
 export function createAuthService({ prisma, redis, otp, signToken }: AuthServiceDeps) {
   const invalidOtp = () => new AppError(401, "INVALID_OTP", "OTP is invalid or has expired");
+  const usePassword = () =>
+    new AppError(403, "PASSWORD_LOGIN_REQUIRED", "This account signs in to the dashboard with email and password.");
 
   /** `ip` is the client address; limits SMS spend from one network across many phone numbers. */
   async function sendOtp(phone: string, ip: string) {
-    const otpProvider = await otp.forPhone(phone);
+    const existing = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
+    if (existing && signsInWithPassword(existing.role)) {
+      throw usePassword();
+    }
+
+    const otpProvider = await otp.sender();
 
     const sends = await redis.incr(keys.sends(phone));
     if (sends === 1) {
@@ -153,11 +169,47 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       create: { phone },
       select: { id: true, phone: true, name: true, email: true, role: true },
     });
+    if (signsInWithPassword(user.role)) {
+      throw usePassword();
+    }
 
     const accessToken = signToken({ sub: user.id, role: user.role });
 
     return { accessToken, user };
   }
 
-  return { sendOtp, verifyOtp };
+  async function login(email: string, password: string, ip: string) {
+    // Counted before checking, so parallel guesses cannot slip past the limit.
+    const counted = await redis
+      .multi()
+      .incr(keys.login(email, ip))
+      .expire(keys.login(email, ip), LOGIN_WINDOW_SECONDS, "NX")
+      .incr(keys.ipLogin(ip))
+      .expire(keys.ipLogin(ip), 3600, "NX")
+      .exec();
+    const attempts = Number(counted?.[0]?.[1]);
+    const ipAttempts = Number(counted?.[2]?.[1]);
+    if (attempts > MAX_LOGIN_ATTEMPTS || ipAttempts > MAX_IP_LOGIN_ATTEMPTS_PER_HOUR) {
+      throw new AppError(429, "LOGIN_LIMIT_REACHED", "Too many sign-in attempts. Try again in 15 minutes.");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, phone: true, name: true, email: true, role: true, passwordHash: true },
+    });
+    const valid =
+      user?.passwordHash && signsInWithPassword(user.role)
+        ? await verifyPassword(password, user.passwordHash)
+        : await verifyAgainstDummy(password);
+    if (!user || !valid) {
+      throw new AppError(401, "INVALID_CREDENTIALS", "Email or password is incorrect");
+    }
+
+    await redis.multi().del(keys.login(email, ip)).decr(keys.ipLogin(ip)).exec();
+
+    const { passwordHash: _, ...profile } = user;
+    return { accessToken: signToken({ sub: user.id, role: user.role }), user: profile };
+  }
+
+  return { sendOtp, verifyOtp, login };
 }

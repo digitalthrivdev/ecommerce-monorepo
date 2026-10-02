@@ -15,8 +15,12 @@ model User {
   id    String   @id @default(cuid())
   phone String   @unique
   name  String?
-  email String?
+  // Stored lowercase. Admins and store staff sign in with it.
+  email String?  @unique
   role  UserRole @default(CUSTOMER)
+
+  // Set only for ADMIN and STORE_STAFF, who sign in with email and password instead of an OTP.
+  passwordHash String?
 
   // Set only for STORE_STAFF: the store they work at.
   storeId String?

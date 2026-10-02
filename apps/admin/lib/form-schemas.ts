@@ -57,6 +57,11 @@ export const optionalEmail = z
   .trim()
   .pipe(z.union([z.literal("").transform(() => null), z.email("Enter a valid email address").max(200, "Keep this under 200 characters")]));
 
+export const emailInput = z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address").max(200, "Keep this under 200 characters"));
+
+/** Same rule as the API. */
+export const passwordInput = z.string().min(8, "Use at least 8 characters").max(128, "Use at most 128 characters");
+
 /** Accepts spaces, dashes and brackets ("+91 98765-43210") and sends E.164 to the API. */
 export const phoneInput = z
   .string()

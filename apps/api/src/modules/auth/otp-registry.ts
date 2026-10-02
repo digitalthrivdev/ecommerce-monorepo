@@ -1,5 +1,5 @@
 import { env } from "../../config/env.js";
-import { UserRole, type PrismaClient } from "../../generated/prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client";
 import { mergeCredentials, summarizeCredentials, type Credentials } from "../../shared/credentials.js";
 import { AppError } from "../../shared/errors.js";
 import { canStoreSecrets, openSecret, sealSecret } from "../../shared/secret-box.js";
@@ -105,16 +105,11 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
     return name ? (providers.get(name)?.provider ?? null) : null;
   }
 
-  async function forPhone(phone: string) {
+  /** The provider for a new OTP. Without one, development writes codes to the log; production refuses. */
+  async function sender() {
     const provider = await active();
     if (provider) return provider;
     if (env.NODE_ENV !== "production") return logProvider;
-
-    const user = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
-    if (user?.role === UserRole.ADMIN) {
-      deps.log.warn("No SMS provider is set up; writing an admin's login OTP to the log");
-      return logProvider;
-    }
     throw new AppError(503, "OTP_NOT_CONFIGURED", "Sign-in by SMS is not available yet. Please try again later.");
   }
 
@@ -134,7 +129,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
       /** Set when OTP_PROVIDER in the environment overrides the dashboard choice. */
       environmentOverride: env.OTP_PROVIDER ?? null,
       /** Who can sign in while no provider is set up. */
-      fallback: env.NODE_ENV === "production" ? ("admins" as const) : ("everyone" as const),
+      fallback: env.NODE_ENV === "production" ? ("nobody" as const) : ("everyone" as const),
       providers: [...providers.values()].map(({ definition, provider, source, credentials, stored }) => ({
         name: definition.name,
         label: definition.label,
@@ -196,7 +191,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
     invalidate();
   }
 
-  return { forPhone, byName, adminView, assertSelectable, saveCredentials, removeCredentials, invalidate };
+  return { sender, byName, adminView, assertSelectable, saveCredentials, removeCredentials, invalidate };
 }
 
 export type OtpRegistry = ReturnType<typeof createOtpRegistry>;

@@ -7,11 +7,13 @@ import { z } from "zod";
 import { apiFailure, validationFailure } from "@/lib/action-errors";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
+  emailInput,
   formChecked,
   formText,
   idSchema,
   optionalPhoneInput,
   optionalText,
+  passwordInput,
   phoneInput,
   positiveDecimal,
   text,
@@ -93,6 +95,8 @@ export async function saveStore(formData: FormData): Promise<ActionResult> {
 const addStaffSchema = z.object({
   storeId: idSchema,
   phone: phoneInput,
+  email: emailInput,
+  password: passwordInput,
   name: text(100),
 });
 
@@ -100,26 +104,53 @@ export async function addStaff(formData: FormData): Promise<ActionResult> {
   const parsed = addStaffSchema.safeParse({
     storeId: formText(formData, "storeId"),
     phone: formText(formData, "phone"),
+    email: formText(formData, "email"),
+    password: formText(formData, "password"),
     name: formText(formData, "name"),
   });
   if (!parsed.success) return validationFailure(parsed.error);
 
-  const { storeId, phone, name } = parsed.data;
+  const { storeId, name, ...body } = parsed.data;
   let member: StaffMember;
   try {
     member = await apiFetch<StaffMember>(`/stores/${encodeURIComponent(storeId)}/staff`, {
       method: "POST",
-      body: { phone, ...(name && { name }) },
+      body: { ...body, ...(name && { name }) },
     });
   } catch (error) {
     if (error instanceof ApiError && error.status === 409) {
-      return { ok: false, error: error.message, fieldErrors: { phone: error.message } };
+      const field = error.code === "EMAIL_IN_USE" ? "email" : "phone";
+      return { ok: false, error: error.message, fieldErrors: { [field]: error.message } };
     }
     return apiFailure(error);
   }
 
   refresh();
-  return { ok: true, message: `${member.name ?? member.phone} can now sign in to the dashboard` };
+  return { ok: true, message: `${member.name ?? member.email} can now sign in with ${member.email}` };
+}
+
+const setStaffPasswordSchema = z.object({ storeId: idSchema, userId: idSchema, password: passwordInput });
+
+export async function setStaffPassword(formData: FormData): Promise<ActionResult> {
+  const parsed = setStaffPasswordSchema.safeParse({
+    storeId: formText(formData, "storeId"),
+    userId: formText(formData, "userId"),
+    password: formText(formData, "password"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  const { storeId, userId, password } = parsed.data;
+  try {
+    await apiFetch(`/stores/${encodeURIComponent(storeId)}/staff/${encodeURIComponent(userId)}/password`, {
+      method: "PUT",
+      body: { password },
+    });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Password set. Share it with them privately." };
 }
 
 const removeStaffSchema = z.object({ storeId: idSchema, userId: idSchema });

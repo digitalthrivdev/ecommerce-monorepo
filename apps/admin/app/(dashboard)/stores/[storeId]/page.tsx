@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Boxes, ExternalLink, ShoppingBag } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
-import { AddStaffDialog, RemoveStaffButton } from "@/components/stores/staff-controls";
+import { AddStaffDialog, RemoveStaffButton, SetStaffPasswordDialog } from "@/components/stores/staff-controls";
 import { StoreForm } from "@/components/stores/store-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,10 +107,16 @@ export default async function StorePage({ params }: PageProps<"/stores/[storeId]
                     {staff.items.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell>
-                          <div className="font-medium">{member.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{member.phone}</div>
+                          <div className="flex items-center gap-2 font-medium">
+                            {member.name ?? "—"}
+                            {!(member.email && member.hasPassword) && <Badge variant="outline">Cannot sign in</Badge>}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {member.email ?? "No email: add them again with an email"} · {member.phone}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
+                          {member.email && <SetStaffPasswordDialog storeId={store.id} member={{ ...member, email: member.email }} />}
                           <RemoveStaffButton storeId={store.id} member={member} />
                         </TableCell>
                       </TableRow>

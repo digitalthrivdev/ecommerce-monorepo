@@ -33,7 +33,14 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
   // Staff and partner names are managed by admins.
   app.patch("/me", { preHandler: requireCustomer }, async (request) => {
     const body = updateProfileBodySchema.parse(request.body);
-    return app.prisma.user.update({ where: { id: request.user.sub }, data: body, select: meSelect });
+    try {
+      return await app.prisma.user.update({ where: { id: request.user.sub }, data: body, select: meSelect });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new AppError(409, "EMAIL_IN_USE", "Another account already uses this email");
+      }
+      throw error;
+    }
   });
 
   app.get("/me/addresses", { preHandler: requireCustomer }, async (request) => {

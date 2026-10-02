@@ -12,3 +12,8 @@ const ROLE_WITH_ARTICLE: Record<UserRole, string> = {
 export function roleConflictError(role: UserRole) {
   return new AppError(409, "USER_HAS_OTHER_ROLE", `This phone number is already registered as ${ROLE_WITH_ARTICLE[role]}`);
 }
+
+/** Dashboard users sign in with email and password; customers and delivery partners with an OTP. */
+export function signsInWithPassword(role: UserRole) {
+  return role === UserRole.ADMIN || role === UserRole.STORE_STAFF;
+}
