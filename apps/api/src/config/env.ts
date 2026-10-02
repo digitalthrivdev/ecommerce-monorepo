@@ -63,7 +63,10 @@ const envSchema = z.object({
   PAYMENT_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3600).default(60),
 
   // "log" writes pushes to the API log instead of sending them (development only).
-  PUSH_PROVIDER: z.enum(["none", "log"]).default("log"),
+  PUSH_PROVIDER: z.enum(["none", "log", "expo"]).default("log"),
+
+  // Required by Expo only when "enhanced push security" is turned on for the project.
+  EXPO_ACCESS_TOKEN: z.string().trim().min(1).optional(),
 
   // 0 disables the background sender for order status notifications.
   NOTIFICATION_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(60).default(3),

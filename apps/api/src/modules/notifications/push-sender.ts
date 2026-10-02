@@ -1,6 +1,7 @@
 import type { FastifyBaseLogger } from "fastify";
 
 import { env } from "../../config/env.js";
+import { createExpoPushSender } from "./expo-push-sender.js";
 
 export type PushMessage = {
   token: string;
@@ -28,6 +29,8 @@ export function createPushSender(log: FastifyBaseLogger): PushSender | null {
           return { invalidTokens: [] };
         },
       };
+    case "expo":
+      return createExpoPushSender(log, env.EXPO_ACCESS_TOKEN);
     case "none":
       return null;
   }
