@@ -12,6 +12,7 @@
     "clean": "turbo clean"
   },
   "devDependencies": {
+    "eas-cli": "^24.8.0",
     "turbo": "latest"
   }
 }

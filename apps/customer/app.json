@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.groceryplatform.customer",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -35,7 +36,9 @@
           "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF",
-          "dark": { "backgroundColor": "#0F1012" }
+          "dark": {
+            "backgroundColor": "#0F1012"
+          }
         }
       ],
       "expo-image",
@@ -44,10 +47,24 @@
         {
           "locationWhenInUsePermission": "Your location is used to find the nearest store and fill in your delivery address."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#0C831F"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5517c901-44f4-464f-bd1b-5ca2bce8e4c9"
+      }
+    },
+    "owner": "folimah235"
   }
 }

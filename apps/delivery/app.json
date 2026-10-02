@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.groceryplatform.delivery",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -35,7 +36,9 @@
           "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF",
-          "dark": { "backgroundColor": "#0F1012" }
+          "dark": {
+            "backgroundColor": "#0F1012"
+          }
         }
       ],
       "expo-image",
@@ -44,10 +47,24 @@
         {
           "locationWhenInUsePermission": "Your location is shared with the store and the customer while you are online, so orders can be assigned and tracked."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#0C831F"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1f29c1db-2aac-4733-9466-a53f2135718d"
+      }
+    },
+    "owner": "folimah235"
   }
 }

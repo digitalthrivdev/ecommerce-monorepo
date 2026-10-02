@@ -1,9 +1,14 @@
 packages:
   - "apps/*"
   - "packages/*"
+# Expo apps need a single copy of each React Native / NativeWind package; isolated installs
+# duplicated them per peer-dependency set (https://docs.expo.dev/guides/monorepos/).
+nodeLinker: hoisted
 allowBuilds:
   '@prisma/engines': true
+  dtrace-provider: false
   esbuild: true
   prisma: true
+  protobufjs: false
   unrs-resolver: true
   workerd: true
