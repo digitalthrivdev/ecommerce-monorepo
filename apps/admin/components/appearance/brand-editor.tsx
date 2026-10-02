@@ -2,8 +2,9 @@
 
 import { ColorField } from "@/components/appearance/color-field";
 import { Button } from "@/components/ui/button";
+import { ImageField } from "@/components/image-field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -50,19 +51,14 @@ export function BrandEditor({ value, onChange, errors }: BrandEditorProps) {
               <Input id="appearance-name" value={value.appName} maxLength={50} onChange={(event) => onChange({ ...value, appName: event.target.value })} aria-invalid={Boolean(errors.appName)} />
               <FieldError>{errors.appName}</FieldError>
             </Field>
-            <Field data-invalid={Boolean(errors.logoUrl)}>
-              <FieldLabel htmlFor="appearance-logo">Logo URL</FieldLabel>
-              <Input
-                id="appearance-logo"
-                type="url"
-                placeholder="https://cdn.example.com/logo.png"
-                value={value.logoUrl ?? ""}
-                onChange={(event) => onChange({ ...value, logoUrl: event.target.value.trim() || null })}
-                aria-invalid={Boolean(errors.logoUrl)}
-              />
-              <FieldDescription>A square PNG or SVG works best. Leave empty to show the app name instead.</FieldDescription>
-              <FieldError>{errors.logoUrl}</FieldError>
-            </Field>
+            <ImageField
+              id="appearance-logo"
+              label="Logo"
+              value={value.logoUrl ?? ""}
+              onChange={(logoUrl) => onChange({ ...value, logoUrl: logoUrl.trim() || null })}
+              error={errors.logoUrl}
+              description="A square image with a transparent background works best. Leave empty to show the app name instead."
+            />
           </FieldGroup>
         </CardContent>
       </Card>

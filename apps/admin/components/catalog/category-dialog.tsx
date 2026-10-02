@@ -5,6 +5,7 @@ import { Loader2, Plus } from "lucide-react";
 
 import { saveCategory } from "@/app/(dashboard)/categories/actions";
 import { Button } from "@/components/ui/button";
+import { ImageField } from "@/components/image-field";
 import {
   Dialog,
   DialogClose,
@@ -64,11 +65,7 @@ export function CategoryDialog({ category }: { category?: Category }) {
               <FieldDescription>Used in links. Leave empty to generate it from the name.</FieldDescription>
               <FieldError>{fieldErrors.slug}</FieldError>
             </Field>
-            <Field data-invalid={Boolean(fieldErrors.imageUrl)}>
-              <FieldLabel htmlFor="category-image">Image URL</FieldLabel>
-              <Input id="category-image" name="imageUrl" type="url" defaultValue={category?.imageUrl ?? ""} placeholder="https://" aria-invalid={Boolean(fieldErrors.imageUrl)} />
-              <FieldError>{fieldErrors.imageUrl}</FieldError>
-            </Field>
+            <ImageField id="category-image" label="Image" name="imageUrl" defaultValue={category?.imageUrl ?? ""} error={fieldErrors.imageUrl} />
             <Field data-invalid={Boolean(fieldErrors.sortOrder)}>
               <FieldLabel htmlFor="category-sort">Sort order</FieldLabel>
               <Input id="category-sort" name="sortOrder" type="number" min={0} max={10000} step={1} defaultValue={category?.sortOrder ?? 0} aria-invalid={Boolean(fieldErrors.sortOrder)} />

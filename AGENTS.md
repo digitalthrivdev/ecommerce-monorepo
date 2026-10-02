@@ -208,7 +208,10 @@ payments/
 delivery/
 notifications/
 settings/
+uploads/
 ```
+
+Images are uploaded through `uploads/`, converted to WebP in two sizes, and stored on local disk (`UPLOADS_DIR`). In production Nginx serves them and the daily backup copies them. Do not add object storage unless a client needs more than one server.
 
 Infrastructure:
 

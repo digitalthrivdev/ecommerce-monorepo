@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, ChevronDown, GalleryHorizontal, LayoutGrid, Megapho
 import { ColorField } from "@/components/appearance/color-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ImageField } from "@/components/image-field";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -142,25 +143,15 @@ function BannerFields({
           </Button>
         </div>
       </div>
-      <div className="flex gap-3">
-        <div className="hidden aspect-[2/1] w-28 shrink-0 overflow-hidden rounded-md bg-muted sm:block">
-          {banner.imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
-            <img src={banner.imageUrl} alt="" className="size-full object-cover" />
-          )}
-        </div>
-        <div className="flex flex-1 flex-col gap-3">
-          <TextInput
-            label="Image URL"
-            type="url"
-            placeholder="https://cdn.example.com/banner.jpg"
-            value={banner.imageUrl}
-            onChange={(imageUrl) => onChange({ ...banner, imageUrl: imageUrl.trim() })}
-            error={at("imageUrl")}
-            description="Wide image, about 2:1 (e.g. 1200×600)."
-          />
-        </div>
-      </div>
+      <ImageField
+        id={`banner-image-${banner.id}`}
+        label="Image"
+        shape="wide"
+        value={banner.imageUrl}
+        onChange={(imageUrl) => onChange({ ...banner, imageUrl: imageUrl.trim() })}
+        error={at("imageUrl")}
+        description="Wide image, about 2:1 (e.g. 1200×600)."
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <TextInput label="Title (optional)" maxLength={60} value={banner.title ?? ""} onChange={(title) => onChange({ ...banner, title: title || null })} error={at("title")} />
         <TextInput label="Subtitle (optional)" maxLength={100} value={banner.subtitle ?? ""} onChange={(subtitle) => onChange({ ...banner, subtitle: subtitle || null })} error={at("subtitle")} />
@@ -303,10 +294,9 @@ function SectionFields({ section, onChange, categories, errors, prefix }: { sect
             <TextInput label="Title" maxLength={60} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
             <TextInput label="Subtitle (optional)" maxLength={100} value={section.subtitle ?? ""} onChange={(subtitle) => onChange({ ...section, subtitle: subtitle || null })} error={at("subtitle")} />
           </div>
-          <TextInput
-            label="Image URL (optional)"
-            type="url"
-            placeholder="https://cdn.example.com/offer.png"
+          <ImageField
+            id={`offer-image-${section.id}`}
+            label="Image (optional)"
             value={section.imageUrl ?? ""}
             onChange={(imageUrl) => onChange({ ...section, imageUrl: imageUrl.trim() || null })}
             error={at("imageUrl")}

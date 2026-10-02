@@ -5,6 +5,7 @@ import { Pressable, View } from "react-native";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
+import { smallImage } from "@/lib/images";
 import { openCategory } from "@/lib/navigation";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ function CategoryTile({ category }: { category: Category }) {
     <Pressable onPress={() => openCategory(category)} className="flex-1 items-center gap-1.5 active:opacity-70" accessibilityRole="button" accessibilityLabel={category.name}>
       <View className={cn("aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-tile", TILE_SURFACE[cardStyle])}>
         {category.imageUrl && !failed ? (
-          <Image source={{ uri: category.imageUrl }} style={{ width: "78%", height: "78%" }} contentFit="contain" onError={() => setFailed(true)} />
+          <Image source={{ uri: smallImage(category.imageUrl) }} style={{ width: "78%", height: "78%" }} contentFit="contain" onError={() => setFailed(true)} />
         ) : (
           <Text className="text-2xl font-extrabold text-primary">{category.name.charAt(0)}</Text>
         )}

@@ -67,6 +67,9 @@ services:
       PUBLIC_API_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}
       # Nginx is the only way in and overwrites X-Forwarded-For with the client address.
       TRUST_PROXY: "1"
+      UPLOADS_DIR: /repo/apps/api/uploads
+    volumes:
+      - uploads:/repo/apps/api/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,6 +103,8 @@ services:
       - ./nginx/templates:/etc/nginx/templates:ro
       - letsencrypt:/etc/letsencrypt
       - certbot_www:/var/www/certbot
+      # Uploaded images, served directly without going through the API.
+      - uploads:/srv/uploads:ro
     # Reloads every 6 hours to pick up renewed certificates.
     command: ["/bin/sh", "-c", "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
     depends_on:
@@ -115,7 +120,8 @@ services:
       - certbot_www:/var/www/certbot
     entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
 
-  # Daily database dump into ./backups, keeping BACKUP_KEEP_DAYS days. Copy them off this server too.
+  # Daily database dump and copy of new images into ./backups, keeping dumps BACKUP_KEEP_DAYS days.
+  # Copy them off this server too.
   backup:
     <<: *restart
     image: postgres:17-alpine
@@ -128,6 +134,7 @@ services:
     volumes:
       - ./backups:/backups
       - ./backup.sh:/usr/local/bin/backup.sh:ro
+      - uploads:/uploads:ro
     entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do /bin/sh /usr/local/bin/backup.sh; sleep 24h & wait $${!}; done"]
     depends_on:
       migrate:
@@ -138,3 +145,4 @@ volumes:
   redis_data:
   letsencrypt:
   certbot_www:
+  uploads:

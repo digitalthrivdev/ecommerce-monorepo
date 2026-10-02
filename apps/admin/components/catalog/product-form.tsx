@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 
 import { saveProduct } from "@/app/(dashboard)/products/actions";
 import { Button } from "@/components/ui/button";
+import { ImageField } from "@/components/image-field";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -63,11 +64,14 @@ export function ProductForm({ product, categories }: { product?: Product; catego
           <FieldError>{fieldErrors.description}</FieldError>
         </Field>
 
-        <Field data-invalid={invalid("imageUrl")}>
-          <FieldLabel htmlFor="product-image">Image URL</FieldLabel>
-          <Input id="product-image" name="imageUrl" type="url" defaultValue={product?.imageUrl ?? ""} placeholder="https://" aria-invalid={invalid("imageUrl")} />
-          <FieldError>{fieldErrors.imageUrl}</FieldError>
-        </Field>
+        <ImageField
+          id="product-image"
+          label="Image"
+          name="imageUrl"
+          defaultValue={product?.imageUrl ?? ""}
+          error={fieldErrors.imageUrl}
+          description="Upload a photo or paste a link. A square photo on a plain background looks best."
+        />
 
         <Field data-invalid={invalid("slug")}>
           <FieldLabel htmlFor="product-slug">Slug</FieldLabel>

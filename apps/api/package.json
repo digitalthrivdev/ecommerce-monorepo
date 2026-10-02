@@ -16,6 +16,8 @@
     "@fastify/env": "^7.0.0",
     "@fastify/helmet": "latest",
     "@fastify/jwt": "^10.2.2",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/static": "^10.1.5",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "dotenv": "^18.0.4",
@@ -23,6 +25,7 @@
     "fastify-plugin": "^6.0.0",
     "ioredis": "^6.0.0",
     "pg": "^8.23.0",
+    "sharp": "^0.35.5",
     "zod": "^4.6.5"
   },
   "devDependencies": {

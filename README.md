@@ -150,6 +150,20 @@ Admins configure providers in the dashboard under **Settings**:
 
 Keys saved in the dashboard are encrypted with `SECRETS_ENCRYPTION_KEY` and are never shown again. Keys set as environment variables take priority over them. `apps/api/.env.example` lists every setting.
 
+## Images
+
+Product, category, logo and banner images are uploaded in the dashboard. You can also paste a link to an image hosted elsewhere.
+
+- **Processing:** the API (`POST /images`, admins and store staff) converts each upload to WebP in two sizes, 1200 px and 400 px on the longest side. It also turns photos upright and removes their metadata. Uploads are limited to 10 MB in JPEG, PNG, WebP, AVIF or GIF.
+- **Storage:** files go on the server's disk in `UPLOADS_DIR`, named by their content. Uploading the same file twice stores it once.
+- **Serving:**
+  - Production: Nginx serves `/uploads/` directly, with a one-year cache.
+  - Development: the API serves it.
+  - The apps load the 400 px version in lists and the full size on detail screens.
+- **Backups:** the daily backup copies new images into `deploy/backups/uploads`.
+
+No object storage is needed: a catalog of a few thousand products takes a few hundred MB.
+
 ## Production deployment
 
 Each client gets its own server (or Compose project) running `deploy/compose.yml`, which contains:
@@ -158,7 +172,8 @@ Each client gets its own server (or Compose project) running `deploy/compose.yml
 - a one-off service that runs database migrations on every start;
 - the API and the dashboard;
 - Nginx with Let's Encrypt certificates that renew automatically;
-- a daily `pg_dump` backup kept for 14 days.
+- a volume for uploaded images, served by Nginx;
+- a daily `pg_dump` backup kept for 14 days, plus a copy of new images.
 
 Setup, in short:
 

@@ -38,6 +38,16 @@ server {
 
     client_max_body_size 2m;
 
+    # Uploaded images. File names change whenever the content does, so they can be cached for good.
+    location /uploads/ {
+        alias /srv/uploads/;
+        autoindex off;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff;
+        add_header Cross-Origin-Resource-Policy cross-origin;
+    }
+
     location / {
         proxy_pass http://api:4000;
     }
@@ -51,7 +61,8 @@ server {
     ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
 
-    client_max_body_size 5m;
+    # Image uploads (up to 10 MB) pass through the dashboard.
+    client_max_body_size 12m;
     add_header Strict-Transport-Security "max-age=31536000" always;
 
     location / {

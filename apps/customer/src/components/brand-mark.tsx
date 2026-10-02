@@ -3,6 +3,7 @@ import { useState } from "react";
 import { View } from "react-native";
 
 import { Text } from "@/components/ui/text";
+import { smallImage } from "@/lib/images";
 import { useSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export function BrandMark({ size = "sm", vertical = false, className, textClassN
     <View className={cn(vertical ? "items-center gap-3" : "flex-row items-center gap-2", className)}>
       {showLogo && (
         <Image
-          source={{ uri: branding.logoUrl! }}
+          source={{ uri: smallImage(branding.logoUrl!) }}
           style={{ width: logo, height: logo, borderRadius: size === "lg" ? 16 : 6 }}
           contentFit="contain"
           onError={() => setFailed(true)}

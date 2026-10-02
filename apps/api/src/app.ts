@@ -27,6 +27,7 @@ import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import staffRoutes from "./modules/stores/staff.routes.js";
 import storesRoutes from "./modules/stores/stores.routes.js";
+import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import customersRoutes from "./modules/users/customers.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 
@@ -83,6 +84,7 @@ export async function buildApp() {
   await app.register(homeRoutes, { prefix: "/home" });
   await app.register(notificationsRoutes, { prefix: "/notifications" });
   await app.register(dashboardRoutes, { prefix: "/dashboard" });
+  await app.register(uploadsRoutes);
 
   return app;
 }

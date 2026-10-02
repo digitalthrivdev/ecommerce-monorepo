@@ -25,6 +25,7 @@ type QueryValue = string | number | boolean | null | undefined;
 
 type ApiOptions = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  /** JSON, or FormData for file uploads. */
   body?: unknown;
   query?: Record<string, QueryValue>;
   /** Send the session token. An expired or rejected session redirects to sign-out. */
@@ -44,7 +45,8 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, a
   }
 
   const headers: Record<string, string> = { accept: "application/json" };
-  if (body !== undefined) {
+  const isForm = body instanceof FormData;
+  if (body !== undefined && !isForm) {
     headers["content-type"] = "application/json";
   }
   if (auth) {
@@ -60,7 +62,7 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, a
     response = await fetch(url, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       cache: "no-store",
     });
   } catch {

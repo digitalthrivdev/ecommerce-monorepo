@@ -17,6 +17,7 @@ import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { checkoutBlocker, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { formatMoney, formatPackSize } from "@/lib/format";
+import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
 import type { Cart, CartItem } from "@/lib/types";
@@ -34,7 +35,7 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
       <Pressable onPress={() => openProduct(item.productId)} className="size-16 items-center justify-center overflow-hidden rounded-md bg-tile active:opacity-80">
         <View className={cn("size-full items-center justify-center", blocked && "opacity-40")}>
           {item.imageUrl && !failed ? (
-            <Image source={{ uri: item.imageUrl }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
+            <Image source={{ uri: smallImage(item.imageUrl) }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
           ) : (
             <Text className="text-xl font-extrabold text-primary">{item.name.charAt(0)}</Text>
           )}

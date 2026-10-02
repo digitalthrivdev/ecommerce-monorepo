@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
+import { smallImage } from "@/lib/images";
 import { linkAction } from "@/lib/navigation";
 import type { OfferStripSection } from "@/lib/types";
 
@@ -29,7 +30,7 @@ export function OfferStrip({ section }: { section: OfferStripSection }) {
         )}
       </View>
       {section.imageUrl && !failed && (
-        <Image source={{ uri: section.imageUrl }} style={{ width: 56, height: 56 }} contentFit="contain" onError={() => setFailed(true)} />
+        <Image source={{ uri: smallImage(section.imageUrl) }} style={{ width: 56, height: 56 }} contentFit="contain" onError={() => setFailed(true)} />
       )}
       {onPress && <ChevronRight size={18} color={section.textColor} />}
     </Pressable>

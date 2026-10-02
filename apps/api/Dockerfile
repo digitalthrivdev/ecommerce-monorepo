@@ -22,6 +22,8 @@ FROM base AS runtime
 ENV NODE_ENV=production
 RUN pnpm install --frozen-lockfile --prod --filter @grocery/api --config.node-linker=isolated && pnpm store prune
 COPY --from=build /repo/apps/api/dist apps/api/dist
+# Owned by the API user, so a new uploads volume mounted here starts out writable.
+RUN mkdir -p apps/api/uploads && chown node:node apps/api/uploads
 WORKDIR /repo/apps/api
 USER node
 EXPOSE 4000

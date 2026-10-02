@@ -6,6 +6,7 @@ import { AddToCartButton } from "@/components/add-to-cart";
 import { Text } from "@/components/ui/text";
 import { useCardSurface } from "@/lib/app-theme";
 import { discountPercent, formatMoney, formatPackSize } from "@/lib/format";
+import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import type { StoreProduct } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
       <View className="aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-tile">
         <View className={cn("size-full items-center justify-center", soldOut && "opacity-40")}>
           {product.imageUrl && !failed ? (
-            <Image source={{ uri: product.imageUrl }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
+            <Image source={{ uri: smallImage(product.imageUrl) }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
           ) : (
             <Text className="text-3xl font-extrabold text-primary">{product.name.charAt(0)}</Text>
           )}

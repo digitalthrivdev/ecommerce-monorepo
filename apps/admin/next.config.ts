@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   // Dependencies are hoisted to the monorepo root, so trace files from there.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
   poweredByHeader: false,
+  experimental: {
+    // Image uploads go through a server action; the API accepts up to 10 MB. Nginx allows 12 MB.
+    serverActions: { bodySizeLimit: "11mb" },
+    proxyClientMaxBodySize: "11mb",
+  },
 };
 
 export default nextConfig;
