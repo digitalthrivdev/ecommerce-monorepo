@@ -266,6 +266,38 @@ export type PublicSettings = {
 };
 
 /** Editable platform settings (admin only). */
+/** One credential of a gateway. Secret values are never sent back; `hint` says one is saved. */
+export type PaymentGatewayField = {
+  key: string;
+  label: string;
+  secret: boolean;
+  /** Allowed values, for fields picked from a list. */
+  options: string[] | null;
+  value: string | null;
+  hint: string | null;
+};
+
+/** A gateway the platform supports and whether this deployment can use it. */
+export type PaymentGatewayOption = {
+  name: string;
+  label: string;
+  configured: boolean;
+  /** Test keys or sandbox account; null when not configured. */
+  testMode: boolean | null;
+  /** Where the keys come from. Server environment keys cannot be edited in the dashboard. */
+  source: "env" | "dashboard" | null;
+  /** False for the built-in test gateway. */
+  needsCredentials: boolean;
+  editable: boolean;
+  fields: PaymentGatewayField[];
+  /** Keys were saved but cannot be decrypted (PAYMENT_SECRETS_KEY changed); enter them again. */
+  savedKeysUnreadable: boolean;
+  /** Null when the API has no public URL configured. */
+  webhookUrl: string | null;
+  webhookEvents: string | null;
+  keysUpdatedAt: string | null;
+};
+
 export type PlatformSettings = {
   deliveryFee: string;
   freeDeliveryThreshold: string | null;
@@ -273,6 +305,11 @@ export type PlatformSettings = {
   deliveryPartnerFee: string;
   supportPhone: string | null;
   supportEmail: string | null;
+  /** Gateway new online payments use; null means cash on delivery only. */
+  paymentProvider: string | null;
+  paymentGateways: PaymentGatewayOption[];
+  /** False until PAYMENT_SECRETS_KEY is set on the server; gateway keys can then only come from its environment. */
+  canStoreGatewayKeys: boolean;
   /** Null until an admin first saves; the values are then the server defaults. */
   updatedById: string | null;
   updatedAt: string;

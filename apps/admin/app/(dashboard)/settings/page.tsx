@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
+import { GatewayKeys } from "@/components/settings/gateway-keys";
+import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
@@ -22,7 +24,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Charges, partner payouts and support contacts" />
+      <PageHeader title="Settings" description="Charges, online payments, partner payouts and support contacts" />
 
       <div className="grid items-start gap-4 p-4 md:p-6 xl:grid-cols-5">
         <Card className="xl:col-span-3">
@@ -39,29 +41,62 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Deployment</CardTitle>
-            <CardDescription>Set through environment variables for this client&apos;s deployment. Changing them needs a redeploy.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm">
-              {rows.map(([label, value]) => (
-                <div key={label} className="contents">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-4 text-sm text-muted-foreground">
-              The app name, logo, colours and home screen are edited on the{" "}
-              <Link href="/appearance" className="font-medium text-foreground underline-offset-4 hover:underline">
-                Appearance
-              </Link>{" "}
-              page.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4 xl:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Online payments</CardTitle>
+            <CardDescription>The gateway customers pay through in the app.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PaymentGatewayForm
+                key={`${settings.updatedAt}-${settings.paymentGateways.map((gateway) => `${gateway.name}:${gateway.configured}`).join()}`}
+                settings={settings}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Gateway keys</CardTitle>
+              <CardDescription>
+                API keys from each gateway&apos;s dashboard. They are stored encrypted, and secret keys are never shown
+                again after saving.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GatewayKeys
+                gateways={settings.paymentGateways}
+                activeGateway={settings.paymentProvider}
+                canStore={settings.canStoreGatewayKeys}
+                timezone={deployment.timezone}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Deployment</CardTitle>
+              <CardDescription>Set through environment variables for this client&apos;s deployment. Changing them needs a redeploy.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 text-sm">
+                {rows.map(([label, value]) => (
+                  <div key={label} className="contents">
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-4 text-sm text-muted-foreground">
+                The app name, logo, colours and home screen are edited on the{" "}
+                <Link href="/appearance" className="font-medium text-foreground underline-offset-4 hover:underline">
+                  Appearance
+                </Link>{" "}
+                page.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );
