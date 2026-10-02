@@ -80,9 +80,12 @@ function PaymentPending({ order }: { order: OrderDetail }) {
   );
 }
 
-function paymentText(order: OrderDetail) {
+function paymentText(order: OrderDetail, currency: string) {
   const status = order.payment?.status;
   if (order.paymentMethod === "COD") return status === "PAID" ? "Paid on delivery" : "Cash on delivery";
+  if (status === "PAID" && order.payment && Number(order.payment.refundedAmount) > 0) {
+    return `Paid online · ${formatMoney(order.payment.refundedAmount, currency)} refunded for unavailable items`;
+  }
   if (status === "PAID") return "Paid online";
   if (status === "REFUNDED") return "Refunded";
   return "Online payment not completed";
@@ -134,15 +137,25 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
         <Text className="text-base font-bold">
           {order.items.length} {order.items.length === 1 ? "item" : "items"} from {order.store.name}
         </Text>
-        {order.items.map((item) => (
-          <View key={item.productId} className="flex-row items-start justify-between gap-3">
-            <Text className="flex-1 text-sm" numberOfLines={2}>
-              <Text className="text-sm font-bold">{item.quantity} × </Text>
-              {item.productName}
-            </Text>
-            <Text className="text-sm font-semibold">{formatMoney(item.totalPrice, currency)}</Text>
-          </View>
-        ))}
+        {order.items.map((item) => {
+          const supplied = item.quantity - item.unavailableQuantity;
+          return (
+            <View key={item.id} className="flex-row items-start justify-between gap-3">
+              <View className="flex-1 gap-0.5">
+                <Text className={cn("text-sm", supplied === 0 && "text-muted-foreground line-through")} numberOfLines={2}>
+                  <Text className={cn("text-sm font-bold", supplied === 0 && "text-muted-foreground")}>{supplied || item.quantity} × </Text>
+                  {item.productName}
+                </Text>
+                {item.unavailableQuantity > 0 && (
+                  <Text className="text-xs font-semibold text-destructive">
+                    {supplied === 0 ? "Out of stock, not charged" : `${item.unavailableQuantity} out of stock, not charged`}
+                  </Text>
+                )}
+              </View>
+              <Text className={cn("text-sm font-semibold", supplied === 0 && "text-muted-foreground")}>{formatMoney(item.chargedTotal, currency)}</Text>
+            </View>
+          );
+        })}
       </Card>
 
       <BillDetails
@@ -151,7 +164,7 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
         footer={
           <View className="flex-row items-center gap-2 pt-1">
             <Icon as={Wallet} size={16} className="text-muted-foreground" />
-            <Text className="text-sm text-muted-foreground">{paymentText(order)}</Text>
+            <Text className="flex-1 text-sm text-muted-foreground">{paymentText(order, currency)}</Text>
           </View>
         }
       />

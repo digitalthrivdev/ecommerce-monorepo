@@ -163,7 +163,7 @@ export type OrderDetail = {
   status: OrderStatus;
   canCancel: boolean;
   paymentMethod: PaymentMethod;
-  payment: { status: PaymentStatus; amount: string; paidAt: string | null; refundedAt: string | null } | null;
+  payment: { status: PaymentStatus; amount: string; refundedAmount: string; paidAt: string | null; refundedAt: string | null } | null;
   /** Set while an online payment is awaited; the order is cancelled after it. */
   paymentExpiresAt: string | null;
   delivery: {
@@ -174,7 +174,17 @@ export type OrderDetail = {
     deliveredAt: string | null;
   } | null;
   store: { id: string; name: string; phone: string | null };
-  items: { productId: string; productName: string; quantity: number; unitPrice: string; totalPrice: string }[];
+  /** quantity and totalPrice are as ordered; the store could not supply unavailableQuantity units, which are not charged. */
+  items: {
+    id: string;
+    productId: string;
+    productName: string;
+    quantity: number;
+    unavailableQuantity: number;
+    unitPrice: string;
+    totalPrice: string;
+    chargedTotal: string;
+  }[];
   subtotal: string;
   deliveryFee: string;
   discount: string;
