@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { InventoryAdjustmentReason } from "../../generated/prisma/client";
 import { paginationQuerySchema } from "../../shared/schemas.js";
 
 const idSchema = z.string().trim().min(1).max(64);
@@ -11,7 +12,7 @@ export const storeParamsSchema = z.object({
 
 export const inventoryItemParamsSchema = z.object({
   storeId: idSchema,
-  productId: idSchema,
+  variantId: idSchema,
 });
 
 export const listInventoryQuerySchema = paginationQuerySchema.extend({
@@ -31,9 +32,26 @@ export const listInventoryQuerySchema = paginationQuerySchema.extend({
   stock: z.enum(["low", "out"]).optional(),
 });
 
+/** Reasons staff can give; ORDER_UNAVAILABLE is recorded by the system when picking. */
+const manualReasonSchema = z.enum([
+  InventoryAdjustmentReason.RESTOCK,
+  InventoryAdjustmentReason.CORRECTION,
+  InventoryAdjustmentReason.DAMAGE,
+]);
+
+const adjustmentDetails = {
+  reason: manualReasonSchema,
+  note: z
+    .string()
+    .trim()
+    .max(300)
+    .optional()
+    .transform((value) => value || undefined),
+};
+
 export const adjustInventoryBodySchema = z.union(
   [
-    z.object({ quantity: z.number().int().min(0).max(MAX_STOCK) }).strict(),
+    z.object({ quantity: z.number().int().min(0).max(MAX_STOCK), ...adjustmentDetails }).strict(),
     z
       .object({
         delta: z
@@ -42,11 +60,15 @@ export const adjustInventoryBodySchema = z.union(
           .min(-MAX_STOCK)
           .max(MAX_STOCK)
           .refine((value) => value !== 0, "Delta cannot be 0"),
+        ...adjustmentDetails,
       })
       .strict(),
   ],
-  { error: 'Provide either "quantity" (set stock) or "delta" (adjust stock), not both' },
+  { error: 'Provide either "quantity" (set stock) or "delta" (adjust stock), not both, and a reason' },
 );
+
+export const listAdjustmentsQuerySchema = paginationQuerySchema;
 
 export type ListInventoryQuery = z.infer<typeof listInventoryQuerySchema>;
 export type AdjustInventoryInput = z.infer<typeof adjustInventoryBodySchema>;
+export type ListAdjustmentsQuery = z.infer<typeof listAdjustmentsQuerySchema>;

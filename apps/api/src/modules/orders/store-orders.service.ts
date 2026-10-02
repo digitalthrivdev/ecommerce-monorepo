@@ -1,8 +1,10 @@
 import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
 import { lockOrder, transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
+import { includedTax } from "./tax.js";
 
 export const STORE_ACTIONS = {
   accept: { from: [OrderStatus.CONFIRMED], to: OrderStatus.STORE_ACCEPTED },
@@ -225,7 +227,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
 
       const order = await tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        select: { deliveryFee: true, discount: true, paymentMethod: true, items: true },
+        select: { orderNumber: true, deliveryFee: true, discount: true, paymentMethod: true, items: true },
       });
       const item = order.items.find((candidate) => candidate.id === itemId);
       if (!item) {
@@ -253,16 +255,31 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         new Prisma.Decimal(0),
       );
       const total = Prisma.Decimal.max(subtotal.plus(order.deliveryFee).minus(order.discount), 0);
+      const charged = item.quantity - item.unavailableQuantity - units;
+      const taxAmount = includedTax(item.unitPrice.mul(charged), item.gstRate);
+      const taxTotal = items.reduce(
+        (sum, candidate) => sum.plus(candidate.id === itemId ? taxAmount : candidate.taxAmount),
+        new Prisma.Decimal(0),
+      );
 
-      await tx.orderItem.update({ where: { id: itemId }, data: { unavailableQuantity: { increment: units } } });
-      await tx.order.update({ where: { id: orderId }, data: { subtotal, total } });
+      await tx.orderItem.update({
+        where: { id: itemId },
+        data: { unavailableQuantity: { increment: units }, taxAmount },
+      });
+      await tx.order.update({ where: { id: orderId }, data: { subtotal, total, taxTotal } });
       if (order.paymentMethod === PaymentMethod.COD) {
         await tx.payment.updateMany({ where: { orderId }, data: { amount: total } });
       }
-      await tx.inventory.updateMany({
-        where: { storeProduct: { storeId: locked.storeId, productId: item.productId } },
-        data: { quantity: 0 },
+      const storeProduct = await tx.storeProduct.findUnique({
+        where: { storeId_variantId: { storeId: locked.storeId, variantId: item.variantId } },
+        select: { id: true },
       });
+      if (storeProduct) {
+        await clearStockAsUnavailable(tx, storeProduct.id, {
+          note: `Order ${order.orderNumber}: ${units} × ${item.productName}${item.variantName ? ` (${item.variantName})` : ""} not found`,
+          changedById: actor.userId,
+        });
+      }
       // Same from and to status: an item change, not a step. Kept for the audit trail and the customer push.
       await tx.orderStatusHistory.create({
         data: {
@@ -270,7 +287,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
           fromStatus: locked.status,
           toStatus: locked.status,
           changedById: actor.userId,
-          note: `${units} × ${item.productName} unavailable`,
+          note: `${units} × ${item.productName}${item.variantName ? ` (${item.variantName})` : ""} unavailable`,
         },
       });
     });

@@ -7,7 +7,7 @@ A white-label quick-commerce grocery platform (a simplified Blinkit). One codeba
 ## Repository
 
 - `apps/api`: Fastify modular monolith (TypeScript, Prisma 7.10, PostgreSQL, Redis via ioredis, Zod).
-  - Modules live in `src/modules/`: auth, users, stores, categories, products, inventory, cart, orders, payments, delivery, notifications, settings, uploads.
+  - Modules live in `src/modules/`: auth, users, stores, categories, brands, products, inventory, cart, orders, payments, delivery, notifications, settings, uploads.
   - Infrastructure is in `src/infrastructure/` (database, redis) and Fastify plugins in `src/plugins/`.
 - `apps/admin`: Next.js 16 dashboard for admins and store staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
 - `apps/customer`, `apps/delivery`: Expo / React Native apps.
@@ -26,7 +26,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 **Do not build unless explicitly asked:**
 - microservices or a multi-vendor marketplace;
 - multi-store carts;
-- warehouse features: bins, batches, expiry, suppliers, procurement, purchase orders, stock transfers, barcodes;
+- warehouse features: bins, batches, expiry, suppliers, procurement, purchase orders, stock transfers, barcode scanning (a variant's barcode is just a searchable field);
 - route optimization, delivery batching, dispatch algorithms or a driver marketplace;
 - dynamic pricing, wallet, loyalty, referrals, recommendations or a complex coupon engine;
 - a custom map engine, chat, an analytics warehouse, or commissions and payouts.
@@ -36,9 +36,16 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 - **Store selection:** the nearest active store that serves the location and has every cart item in stock.
 - **Delivery assignment:** manual. A semi-automatic suggestion is fine.
 - **Live tracking:** partner locations go through Redis and realtime. Don't persist every GPS update; `DeliveryLocation` is only for useful history.
-- **Catalog:** `Product` is the global catalog entry, `StoreProduct` is one store's price and availability, and `Inventory` is a quantity per `StoreProduct`. Never duplicate products per store. Inventory is only a quantity.
-- **Cart:** a cart belongs to one store. Revalidate or clear it when the store changes.
-- **Order snapshots:** orders store item names and prices, and the delivery address (name, phone, address lines, landmark, city, state, postal code, latitude, longitude). Never read current product or address data to show an old order.
+- **Catalog:** `Product` is the global catalog entry (brand, category, tags, HSN/GST, compliance details). Its variants (`ProductVariant`: SKU, pack size, per-order limit) are the sellable units.
+  - Products may define up to 3 option axes (`ProductOption` / `ProductOptionValue`, e.g. Size × Flavour); each variant picks one value per axis. A product without options has exactly one default variant with an empty `name`.
+  - `ProductImage` belongs to the product, optionally to one variant.
+  - `StoreProduct` is one store's price and availability for a variant, and `Inventory` is a quantity per `StoreProduct`. Never duplicate products per store. Inventory is only a quantity.
+  - Manual stock changes need a reason (RESTOCK, CORRECTION, DAMAGE) and are logged in `InventoryAdjustment`, as are items staff mark unavailable.
+  - Categories are at most two levels deep; filtering by a category includes its sub-categories.
+- **Store hours:** `StoreHours` per weekday in the `TIMEZONE` env time zone. No rows means always open. Checkout is refused while the store is closed.
+- **Cart:** a cart belongs to one store and holds variants. Revalidate or clear it when the store changes. Quantity per item is capped by the variant's limit and `MAX_QUANTITY_PER_ITEM`.
+- **Order snapshots:** order items store the product and variant name, SKU, image, unit price, MRP, HSN, GST rate and included tax; orders store the tax total and the delivery address (name, phone, address lines, landmark, city, state, postal code, latitude, longitude). Never read current product or address data to show an old order.
+- **Tax:** prices include GST; the included tax is `amount × rate / (100 + rate)`. An invoice number (`INV/<financial year>/000001`) is assigned when the order is delivered.
 - **Order creation** is one transaction: validate the cart, store and stock; calculate prices; create the order and items; decrement stock; create the payment; clear the cart; write the first history entry. Never leave a partial order.
 - **Stock changes** are atomic (a conditional update inside a transaction), never read, check, then write.
 - **Payments:** COD and ONLINE. Provider fields stay generic (`provider`, `transactionId`, `providerOrderId`). Statuses: PENDING, PROCESSING, PAID, FAILED, REFUNDED.
@@ -111,3 +118,14 @@ Never upgrade to Prisma 8 or use Prisma 8 APIs; the project hit a 7/8 mismatch b
    - for database work: the Prisma steps above.
 4. Make logical commits with conventional messages (`feat(orders): …`).
 5. Report exactly what changed and what was verified.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->

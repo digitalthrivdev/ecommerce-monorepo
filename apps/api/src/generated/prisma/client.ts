@@ -55,15 +55,50 @@ export type Address = Prisma.AddressModel
  */
 export type Store = Prisma.StoreModel
 /**
+ * Model StoreHours
+ * 
+ */
+export type StoreHours = Prisma.StoreHoursModel
+/**
  * Model Category
  * 
  */
 export type Category = Prisma.CategoryModel
 /**
+ * Model Brand
+ * 
+ */
+export type Brand = Prisma.BrandModel
+/**
  * Model Product
  * 
  */
 export type Product = Prisma.ProductModel
+/**
+ * Model ProductOption
+ * 
+ */
+export type ProductOption = Prisma.ProductOptionModel
+/**
+ * Model ProductOptionValue
+ * 
+ */
+export type ProductOptionValue = Prisma.ProductOptionValueModel
+/**
+ * Model ProductVariant
+ * 
+ */
+export type ProductVariant = Prisma.ProductVariantModel
+/**
+ * Model ProductVariantOptionValue
+ * 
+ */
+export type ProductVariantOptionValue = Prisma.ProductVariantOptionValueModel
+/**
+ * Model ProductImage
+ * 
+ */
+export type ProductImage = Prisma.ProductImageModel
 /**
  * Model StoreProduct
  * 
@@ -74,6 +109,11 @@ export type StoreProduct = Prisma.StoreProductModel
  * 
  */
 export type Inventory = Prisma.InventoryModel
+/**
+ * Model InventoryAdjustment
+ * 
+ */
+export type InventoryAdjustment = Prisma.InventoryAdjustmentModel
 /**
  * Model Cart
  * 
@@ -94,6 +134,11 @@ export type Order = Prisma.OrderModel
  * 
  */
 export type OrderItem = Prisma.OrderItemModel
+/**
+ * Model InvoiceSequence
+ * 
+ */
+export type InvoiceSequence = Prisma.InvoiceSequenceModel
 /**
  * Model OrderStatusHistory
  * 

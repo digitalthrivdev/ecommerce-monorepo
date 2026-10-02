@@ -4,14 +4,20 @@ import { UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
 import {
+  addImageBodySchema,
   createProductBodySchema,
-  createStoreProductBodySchema,
+  createStoreVariantBodySchema,
   listProductsQuerySchema,
   listStoreProductsQuerySchema,
+  productImageParamsSchema,
+  reorderImagesBodySchema,
   storeParamsSchema,
   storeProductParamsSchema,
+  storeVariantParamsSchema,
+  updateImageBodySchema,
   updateProductBodySchema,
-  updateStoreProductBodySchema,
+  updateStoreVariantBodySchema,
+  variantsBodySchema,
 } from "./products.schemas.js";
 import { createProductsService } from "./products.service.js";
 import { createStoreProductsService } from "./store-products.service.js";
@@ -55,11 +61,39 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
     const body = updateProductBodySchema.parse(request.body);
     return productsService.updateProduct(id, body);
   });
+
+  app.put("/:id/variants", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const body = variantsBodySchema.parse(request.body);
+    return productsService.setVariants(id, body);
+  });
+
+  app.post("/:id/images", { preHandler: requireAdmin }, async (request, reply) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const body = addImageBodySchema.parse(request.body);
+    return reply.status(201).send(await productsService.addImage(id, body));
+  });
+
+  app.put("/:id/images/order", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const { imageIds } = reorderImagesBodySchema.parse(request.body);
+    return productsService.reorderImages(id, imageIds);
+  });
+
+  app.patch("/:id/images/:imageId", { preHandler: requireAdmin }, async (request) => {
+    const { id, imageId } = productImageParamsSchema.parse(request.params);
+    const body = updateImageBodySchema.parse(request.body);
+    return productsService.updateImage(id, imageId, body);
+  });
+
+  app.delete("/:id/images/:imageId", { preHandler: requireAdmin }, async (request) => {
+    const { id, imageId } = productImageParamsSchema.parse(request.params);
+    return productsService.deleteImage(id, imageId);
+  });
 };
 
 export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
   const storeProductsService = createStoreProductsService(app.prisma);
-  const requireAdmin = app.requireRole(UserRole.ADMIN);
 
   const canManage = async (request: FastifyRequest, storeId: string) =>
     (await app.tryAuthenticate(request)) && (await app.canManageStore(request, storeId));
@@ -83,22 +117,28 @@ export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
       canManage: await canManage(request, storeId),
     });
   });
+};
+
+/** A store's listing of each variant: price, MRP and whether it is offered. */
+export const storeVariantsRoutes: FastifyPluginAsync = async (app) => {
+  const storeProductsService = createStoreProductsService(app.prisma);
+  const requireAdmin = app.requireRole(UserRole.ADMIN);
 
   app.post("/", { preHandler: requireAdmin }, async (request, reply) => {
     const { storeId } = storeParamsSchema.parse(request.params);
-    const body = createStoreProductBodySchema.parse(request.body);
-    const storeProduct = await storeProductsService.createStoreProduct(storeId, body);
-    return reply.status(201).send(storeProduct);
+    const body = createStoreVariantBodySchema.parse(request.body);
+    const listing = await storeProductsService.createStoreVariant(storeId, body);
+    return reply.status(201).send(listing);
   });
 
-  app.patch("/:productId", { preHandler: app.requireStoreAccess }, async (request) => {
-    const { storeId, productId } = storeProductParamsSchema.parse(request.params);
-    const body = updateStoreProductBodySchema.parse(request.body);
+  app.patch("/:variantId", { preHandler: app.requireStoreAccess }, async (request) => {
+    const { storeId, variantId } = storeVariantParamsSchema.parse(request.params);
+    const body = updateStoreVariantBodySchema.parse(request.body);
 
     if (request.user.role !== UserRole.ADMIN && (body.sellingPrice !== undefined || body.mrp !== undefined)) {
       throw new AppError(403, "FORBIDDEN", "Only admins can change prices");
     }
 
-    return storeProductsService.updateStoreProduct(storeId, productId, body);
+    return storeProductsService.updateStoreVariant(storeId, variantId, body);
   });
 };

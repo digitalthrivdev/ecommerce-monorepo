@@ -51,7 +51,10 @@ const deliveryInclude = {
           longitude: true,
         },
       },
-      items: { select: { productName: true, quantity: true, unavailableQuantity: true }, orderBy: { createdAt: "asc" } },
+      items: {
+        select: { productName: true, variantName: true, quantity: true, unavailableQuantity: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   },
 } satisfies Prisma.DeliveryInclude;
@@ -101,8 +104,8 @@ function toPartnerView(delivery: DeliveryRow) {
         }
       : { name: order.customerName, city: order.city },
     // What is in the bag: units the store could not supply are left out.
-    items: order.items.flatMap(({ productName, quantity, unavailableQuantity }) =>
-      quantity > unavailableQuantity ? [{ productName, quantity: quantity - unavailableQuantity }] : [],
+    items: order.items.flatMap(({ productName, variantName, quantity, unavailableQuantity }) =>
+      quantity > unavailableQuantity ? [{ productName, variantName, quantity: quantity - unavailableQuantity }] : [],
     ),
     paymentMethod: order.paymentMethod,
     orderTotal: order.total.toFixed(2),

@@ -14,9 +14,12 @@ import { reserveStock } from "../inventory/inventory.service.js";
 import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
+import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
+import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
 import { transitionOrder } from "./order-status.js";
+import { includedTax } from "./tax.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
 export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
@@ -94,17 +97,28 @@ export function toDetailView(order: OrderDetail) {
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
+      variantId: item.variantId,
       productName: item.productName,
+      variantName: item.variantName,
+      sku: item.sku,
+      imageUrl: item.imageUrl,
       quantity: item.quantity,
       unavailableQuantity: item.unavailableQuantity,
       unitPrice: item.unitPrice.toFixed(2),
+      mrp: item.mrp?.toFixed(2) ?? null,
       totalPrice: item.totalPrice.toFixed(2),
       chargedTotal: item.unitPrice.mul(item.quantity - item.unavailableQuantity).toFixed(2),
+      hsnCode: item.hsnCode,
+      gstRate: item.gstRate?.toFixed(2) ?? null,
+      taxAmount: item.taxAmount.toFixed(2),
     })),
     subtotal: order.subtotal.toFixed(2),
     deliveryFee: order.deliveryFee.toFixed(2),
     discount: order.discount.toFixed(2),
     total: order.total.toFixed(2),
+    // GST included in the item prices.
+    taxTotal: order.taxTotal.toFixed(2),
+    invoiceNumber: order.invoiceNumber,
     deliveryAddress: {
       name: order.customerName,
       phone: order.customerPhone,
@@ -192,13 +206,42 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
 
         const cart = await tx.cart.findUniqueOrThrow({
           where: { id: cartRef.id },
-          include: { items: { include: { product: { select: { name: true } } } } },
+          include: {
+            items: {
+              include: {
+                variant: {
+                  select: {
+                    id: true,
+                    sku: true,
+                    name: true,
+                    unit: true,
+                    quantity: true,
+                    maxOrderQuantity: true,
+                    product: {
+                      select: {
+                        id: true,
+                        name: true,
+                        hsnCode: true,
+                        gstRate: true,
+                        images: { orderBy: imageOrder, select: { url: true, variantId: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            store: { select: { hours: { select: hoursSelect, orderBy: hoursOrder } } },
+          },
         });
 
         if (!cart.storeId || cart.items.length === 0) {
           throw new AppError(409, "CART_EMPTY", "Your cart is empty");
         }
         const storeId = cart.storeId;
+
+        if (!isStoreOpen(cart.store?.hours ?? [])) {
+          throw new AppError(409, "STORE_CLOSED", "The store is closed right now. Please order when it opens.");
+        }
 
         const address = await tx.address.findFirst({ where: { id: addressId, userId } });
 
@@ -223,36 +266,59 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         const storeProducts = await tx.storeProduct.findMany({
           where: {
             storeId,
-            productId: { in: cart.items.map((item) => item.productId) },
+            variantId: { in: cart.items.map((item) => item.variantId) },
             ...customerVisible,
           },
-          select: { id: true, productId: true, sellingPrice: true },
+          select: { id: true, variantId: true, sellingPrice: true, mrp: true },
         });
-        const byProductId = new Map(storeProducts.map((sp) => [sp.productId, sp]));
+        const byVariantId = new Map(storeProducts.map((sp) => [sp.variantId, sp]));
 
-        const unavailable = cart.items.filter((item) => !byProductId.has(item.productId));
+        const describe = (item: (typeof cart.items)[number]) => ({
+          productId: item.variant.product.id,
+          variantId: item.variantId,
+          name: item.variant.product.name,
+          variantLabel: variantLabel(item.variant),
+        });
+
+        const unavailable = cart.items.filter((item) => !byVariantId.has(item.variantId));
         if (unavailable.length > 0) {
+          throw new AppError(409, "CART_INVALID", "Some items in your cart are no longer available", unavailable.map(describe));
+        }
+
+        const overLimit = cart.items.filter((item) => item.quantity > maxOrderQuantity(item.variant));
+        if (overLimit.length > 0) {
           throw new AppError(
             409,
-            "CART_INVALID",
-            "Some items in your cart are no longer available",
-            unavailable.map((item) => ({ productId: item.productId, name: item.product.name })),
+            "QUANTITY_LIMIT",
+            "Some items are over the limit per order",
+            overLimit.map((item) => ({ ...describe(item), requested: item.quantity, maxQuantity: maxOrderQuantity(item.variant) })),
           );
         }
 
         const lines = cart.items.map((item) => {
-          const storeProduct = byProductId.get(item.productId)!;
+          const { variant } = item;
+          const storeProduct = byVariantId.get(item.variantId)!;
+          const totalPrice = storeProduct.sellingPrice.mul(item.quantity);
           return {
             storeProductId: storeProduct.id,
-            productId: item.productId,
-            productName: item.product.name,
+            productId: variant.product.id,
+            variantId: variant.id,
+            productName: variant.product.name,
+            variantName: variantLabel(variant),
+            sku: variant.sku,
+            imageUrl: imagesFor(variant.product.images, variant.id)[0]?.url ?? null,
+            mrp: storeProduct.mrp,
             quantity: item.quantity,
             unitPrice: storeProduct.sellingPrice,
-            totalPrice: storeProduct.sellingPrice.mul(item.quantity),
+            totalPrice,
+            hsnCode: variant.product.hsnCode,
+            gstRate: variant.product.gstRate,
+            taxAmount: includedTax(totalPrice, variant.product.gstRate),
           };
         });
 
         const subtotal = lines.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
+        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), new Prisma.Decimal(0));
         const charges = calculateCharges(subtotal, await getPlatformSettings(tx));
 
         if (!charges.meetsMinimum) {
@@ -275,7 +341,9 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
               "Some items do not have enough stock",
               error.details.map((shortage: { storeProductId: string; requested: number; available: number }) => ({
                 productId: byStoreProductId.get(shortage.storeProductId)?.productId,
+                variantId: byStoreProductId.get(shortage.storeProductId)?.variantId,
                 name: byStoreProductId.get(shortage.storeProductId)?.productName,
+                variantLabel: byStoreProductId.get(shortage.storeProductId)?.variantName,
                 requested: shortage.requested,
                 available: shortage.available,
               })),
@@ -297,6 +365,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             deliveryFee,
             discount,
             total,
+            taxTotal,
             paymentMethod,
             customerName: address.name,
             customerPhone: address.phone,
@@ -309,13 +378,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             latitude: address.latitude,
             longitude: address.longitude,
             items: {
-              create: lines.map(({ productId, productName, quantity, unitPrice, totalPrice }) => ({
-                productId,
-                productName,
-                quantity,
-                unitPrice,
-                totalPrice,
-              })),
+              create: lines.map(({ storeProductId: _storeProductId, ...line }) => line),
             },
             payment: { create: { method: paymentMethod, amount: total } },
             statusHistory: {

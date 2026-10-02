@@ -6,6 +6,7 @@ import {
   createStoreBodySchema,
   listStoresQuerySchema,
   serviceabilityQuerySchema,
+  storeHoursBodySchema,
   updateStoreBodySchema,
 } from "./stores.schemas.js";
 import { createStoresService } from "./stores.service.js";
@@ -47,6 +48,12 @@ const storesRoutes: FastifyPluginAsync = async (app) => {
     const { id } = idParamsSchema.parse(request.params);
     const body = updateStoreBodySchema.parse(request.body);
     return storesService.updateStore(id, body);
+  });
+
+  app.put("/:id/hours", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const { hours } = storeHoursBodySchema.parse(request.body);
+    return storesService.setStoreHours(id, hours);
   });
 };
 

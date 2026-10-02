@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-const idSchema = z.string().trim().min(1).max(64);
+import { MAX_QUANTITY_PER_ITEM } from "../products/catalog.js";
 
-export const MAX_QUANTITY_PER_ITEM = 50;
+const idSchema = z.string().trim().min(1).max(64);
 
 const quantitySchema = z.number().int().min(1).max(MAX_QUANTITY_PER_ITEM);
 
 export const addCartItemBodySchema = z.object({
   storeId: idSchema,
-  productId: idSchema,
+  variantId: idSchema,
   quantity: quantitySchema.default(1),
 });
 

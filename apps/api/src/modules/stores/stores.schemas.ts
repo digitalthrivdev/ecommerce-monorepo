@@ -40,5 +40,24 @@ export const serviceabilityQuerySchema = z.object({
   longitude: queryNumber(-180, 180),
 });
 
+const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must be "HH:mm" in 24-hour format');
+
+/** Weekly hours, at most one entry per day. Days left out are closed; an empty list means always open. */
+export const storeHoursBodySchema = z.object({
+  hours: z
+    .array(
+      z
+        .object({
+          dayOfWeek: z.number().int().min(0).max(6),
+          opensAt: timeSchema,
+          closesAt: timeSchema,
+        })
+        .refine((entry) => entry.opensAt !== entry.closesAt, "Opening and closing times must differ"),
+    )
+    .max(7)
+    .refine((hours) => new Set(hours.map((entry) => entry.dayOfWeek)).size === hours.length, "Each day can appear only once"),
+});
+
 export type CreateStoreInput = z.infer<typeof createStoreBodySchema>;
+export type StoreHoursInput = z.infer<typeof storeHoursBodySchema>["hours"];
 export type UpdateStoreInput = z.infer<typeof updateStoreBodySchema>;

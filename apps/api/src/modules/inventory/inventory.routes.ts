@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import {
   adjustInventoryBodySchema,
   inventoryItemParamsSchema,
+  listAdjustmentsQuerySchema,
   listInventoryQuerySchema,
   storeParamsSchema,
 } from "./inventory.schemas.js";
@@ -19,10 +20,16 @@ const inventoryRoutes: FastifyPluginAsync = async (app) => {
     return inventoryService.listInventory(storeId, query);
   });
 
-  app.patch("/:productId", async (request) => {
-    const { storeId, productId } = inventoryItemParamsSchema.parse(request.params);
+  app.patch("/:variantId", async (request) => {
+    const { storeId, variantId } = inventoryItemParamsSchema.parse(request.params);
     const body = adjustInventoryBodySchema.parse(request.body);
-    return inventoryService.adjustInventory(storeId, productId, body);
+    return inventoryService.adjustInventory(storeId, variantId, body, request.user.sub);
+  });
+
+  app.get("/:variantId/adjustments", async (request) => {
+    const { storeId, variantId } = inventoryItemParamsSchema.parse(request.params);
+    const query = listAdjustmentsQuerySchema.parse(request.query);
+    return inventoryService.listAdjustments(storeId, variantId, query);
   });
 };
 

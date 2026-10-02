@@ -27,6 +27,16 @@ export const StoreStatus = {
 export type StoreStatus = (typeof StoreStatus)[keyof typeof StoreStatus]
 
 
+export const InventoryAdjustmentReason = {
+  RESTOCK: 'RESTOCK',
+  CORRECTION: 'CORRECTION',
+  DAMAGE: 'DAMAGE',
+  ORDER_UNAVAILABLE: 'ORDER_UNAVAILABLE'
+} as const
+
+export type InventoryAdjustmentReason = (typeof InventoryAdjustmentReason)[keyof typeof InventoryAdjustmentReason]
+
+
 export const OrderStatus = {
   PENDING_PAYMENT: 'PENDING_PAYMENT',
   CONFIRMED: 'CONFIRMED',

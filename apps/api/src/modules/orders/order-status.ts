@@ -2,6 +2,7 @@ import { OrderStatus, Prisma } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { cancelOpenDelivery } from "../delivery/delivery-cleanup.js";
 import { releaseStock } from "../inventory/inventory.service.js";
+import { assignInvoiceNumber } from "./tax.js";
 
 type Tx = Prisma.TransactionClient;
 
@@ -34,19 +35,19 @@ type TransitionParams = {
 async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
   const items = await tx.orderItem.findMany({
     where: { orderId },
-    select: { productId: true, quantity: true, unavailableQuantity: true },
+    select: { variantId: true, quantity: true, unavailableQuantity: true },
   });
   const storeProducts = await tx.storeProduct.findMany({
-    where: { storeId, productId: { in: items.map((item) => item.productId) } },
-    select: { id: true, productId: true },
+    where: { storeId, variantId: { in: items.map((item) => item.variantId) } },
+    select: { id: true, variantId: true },
   });
-  const storeProductIdByProductId = new Map(storeProducts.map((sp) => [sp.productId, sp.id]));
+  const storeProductIdByVariantId = new Map(storeProducts.map((sp) => [sp.variantId, sp.id]));
 
   await releaseStock(
     tx,
     // Units marked unavailable were never on the shelf, so only the picked units go back.
     items.flatMap((item) => {
-      const storeProductId = storeProductIdByProductId.get(item.productId);
+      const storeProductId = storeProductIdByVariantId.get(item.variantId);
       const quantity = item.quantity - item.unavailableQuantity;
       return storeProductId && quantity > 0 ? [{ storeProductId, quantity }] : [];
     }),
@@ -104,6 +105,10 @@ export async function transitionOrder(tx: Tx, params: TransitionParams) {
   if (params.to === OrderStatus.CANCELLED) {
     await releaseOrderStock(tx, params.orderId, locked.storeId);
     await cancelOpenDelivery(tx, params.orderId);
+  }
+
+  if (params.to === OrderStatus.DELIVERED) {
+    await assignInvoiceNumber(tx, params.orderId);
   }
 
   await tx.order.update({ where: { id: params.orderId }, data: { status: params.to } });

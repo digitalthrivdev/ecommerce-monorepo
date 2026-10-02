@@ -1,6 +1,7 @@
 import { StoreStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import { customerVisible, storeProductInclude, toStoreProductView } from "../products/store-products.service.js";
+import { inCategory } from "../products/catalog.js";
+import { storeProductInclude, storeProductWhere, toStoreProductView } from "../products/store-products.service.js";
 import type { HomeSection } from "./appearance.schemas.js";
 import { getAppearance } from "./appearance.service.js";
 
@@ -37,16 +38,18 @@ export function createHomeService(prisma: PrismaClient) {
     }
   }
 
+  /** Products of the category (and its sub-categories) with at least one variant in stock at the store. */
   async function railProducts(storeId: string, categoryId: string, limit: number) {
-    const rows = await prisma.storeProduct.findMany({
+    const rows = await prisma.product.findMany({
       where: {
-        storeId,
-        ...customerVisible,
-        product: { ...customerVisible.product, categoryId },
-        inventory: { quantity: { gt: 0 } },
+        ...storeProductWhere(storeId, false),
+        ...inCategory(categoryId),
+        variants: {
+          some: { isActive: true, stores: { some: { storeId, isAvailable: true, inventory: { quantity: { gt: 0 } } } } },
+        },
       },
-      include: storeProductInclude,
-      orderBy: { product: { name: "asc" } },
+      include: storeProductInclude(storeId),
+      orderBy: { name: "asc" },
       take: limit,
     });
     return rows.map((row) => toStoreProductView(row, { includeStock: false }));
@@ -68,7 +71,7 @@ export function createHomeService(prisma: PrismaClient) {
       ids.length > 0 ? prisma.category.findMany({ where: { id: { in: ids }, isActive: true }, select: categorySelect }) : [],
       needsAllCategories
         ? prisma.category.findMany({
-            where: { isActive: true },
+            where: { isActive: true, parentId: null },
             select: categorySelect,
             orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
             take: ALL_CATEGORIES_LIMIT,
