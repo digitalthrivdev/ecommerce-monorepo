@@ -1,0 +1,16 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.code-review-graph
+deploy
+docker
+
+# Mobile apps are built with EAS, not Docker.
+apps/customer
+apps/delivery
