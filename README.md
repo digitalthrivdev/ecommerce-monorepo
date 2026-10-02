@@ -173,14 +173,33 @@ The full steps, plus backup and restore, are in `deploy/.env.example` and `deplo
 
 ## Mobile app builds
 
-Both Expo apps have EAS profiles (`development`, `preview`, `production`) in their `eas.json`. Point the build at the client's API:
+Both Expo apps have EAS profiles in their `eas.json`:
+
+- `development`: a dev client that loads code from your computer;
+- `preview`: a standalone APK to install directly on a phone;
+- `production`: the Play Store build.
+
+Each profile reads the EAS environment of the same name.
+
+Per-client settings are environment variables, read by each app's `app.config.js`. Set them per EAS environment with `eas env:create`, or in `.env` for local runs:
+
+| Variable | Example | Purpose |
+| --- | --- | --- |
+| `EXPO_PUBLIC_API_URL` | `https://api.example.com` | The client's API |
+| `APP_NAME` | `Moozy` | Name under the launcher icon |
+| `APP_ID` | `in.moozy.app` | Android package and iOS bundle ID; permanent once published |
+| `APP_SCHEME` | `moozy` | Deep link used to return from online payment |
+| `GOOGLE_SERVICES_JSON` | file variable | Firebase config for `APP_ID`, needed for Android push |
+| `EAS_PROJECT_ID`, `EXPO_OWNER`, `APP_SLUG` | | The client's own EAS project, if they have one |
+
+Colors, logo and the app name shown inside the app come from the dashboard settings at runtime, so they don't need a rebuild.
 
 ```bash
 cd apps/customer
-EXPO_PUBLIC_API_URL=https://api.example.com npx eas build --profile production --platform android
+npx eas build --profile preview --platform android
 ```
 
-Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Firebase files (`google-services.json`, `GoogleService-Info.plist`) are gitignored and must be provided per client.
+Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Firebase files (`google-services.json`, `GoogleService-Info.plist`) are gitignored and must be provided per client. If the Firebase file has no app for `APP_ID`, the build still works, but without push notifications.
 
 ## Security notes
 
