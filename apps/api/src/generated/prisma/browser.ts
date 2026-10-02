@@ -108,6 +108,11 @@ export type PlatformSettings = Prisma.PlatformSettingsModel
  */
 export type PaymentGatewayCredential = Prisma.PaymentGatewayCredentialModel
 /**
+ * Model OtpProviderCredential
+ * 
+ */
+export type OtpProviderCredential = Prisma.OtpProviderCredentialModel
+/**
  * Model AppAppearance
  * 
  */

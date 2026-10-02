@@ -69,9 +69,10 @@ const envSchema = z.object({
   // webhooks back to it. In development it defaults to the address the app called.
   PUBLIC_API_URL: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
 
-  // Encrypts payment gateway keys that admins enter in the dashboard. Without it, keys can only be
-  // set below. Changing it makes saved keys unreadable, so they must be entered again.
-  PAYMENT_SECRETS_KEY: optionalSecret.refine((value) => value === undefined || value.length >= 32, {
+  // Encrypts the payment gateway and SMS provider keys that admins enter in the dashboard. Without
+  // it, keys can only be set in this environment. Changing it makes saved keys unreadable, so they
+  // must be entered again.
+  SECRETS_ENCRYPTION_KEY: optionalSecret.refine((value) => value === undefined || value.length >= 32, {
     message: "Must be at least 32 characters, e.g. from `openssl rand -base64 32`",
   }),
 
@@ -90,6 +91,19 @@ const envSchema = z.object({
   // 0 disables the background check for unpaid orders and pending refunds.
   PAYMENT_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3600).default(60),
 
+  // Login OTP delivery. Normally admins choose the SMS provider in the dashboard; setting this
+  // overrides their choice (e.g. to recover access). "log" writes codes to the API log instead of
+  // sending them (development only).
+  OTP_PROVIDER: z.preprocess((value) => (value === "" ? undefined : value), z.enum(["log", "message-central"]).optional()),
+
+  // Message Central VerifyNow (https://www.messagecentral.com). The key is the Base64-encoded
+  // account password. Only phone numbers with this country code can sign in. Values set here take
+  // priority over the dashboard.
+  MESSAGE_CENTRAL_CUSTOMER_ID: optionalSecret,
+  MESSAGE_CENTRAL_KEY: optionalSecret,
+  MESSAGE_CENTRAL_COUNTRY_CODE: z.string().regex(/^[1-9]\d{0,3}$/, "Digits only, e.g. 91").default("91"),
+  MESSAGE_CENTRAL_EMAIL: optionalSecret,
+
   // "log" writes pushes to the API log instead of sending them (development only).
   PUSH_PROVIDER: z.enum(["none", "log", "expo"]).default("log"),
 
@@ -107,7 +121,16 @@ const envSchema = z.object({
 ).refine((value) => allOrNone([value.CASHFREE_APP_ID, value.CASHFREE_SECRET_KEY]), {
   message: "Set both CASHFREE_APP_ID and CASHFREE_SECRET_KEY, or neither",
   path: ["CASHFREE_APP_ID"],
-}).refine((value) => !(value.NODE_ENV === "production" && value.PUSH_PROVIDER === "log"), {
+}).refine((value) => !(value.NODE_ENV === "production" && value.OTP_PROVIDER === "log"), {
+  message: "OTP_PROVIDER=log is not allowed in production; configure an SMS provider",
+  path: ["OTP_PROVIDER"],
+}).refine((value) => allOrNone([value.MESSAGE_CENTRAL_CUSTOMER_ID, value.MESSAGE_CENTRAL_KEY]), {
+  message: "Set both MESSAGE_CENTRAL_CUSTOMER_ID and MESSAGE_CENTRAL_KEY, or neither",
+  path: ["MESSAGE_CENTRAL_CUSTOMER_ID"],
+}).refine(
+  (value) => value.OTP_PROVIDER !== "message-central" || value.MESSAGE_CENTRAL_CUSTOMER_ID,
+  { message: "OTP_PROVIDER=message-central needs MESSAGE_CENTRAL_CUSTOMER_ID and MESSAGE_CENTRAL_KEY", path: ["OTP_PROVIDER"] },
+).refine((value) => !(value.NODE_ENV === "production" && value.PUSH_PROVIDER === "log"), {
   message: "PUSH_PROVIDER=log is not allowed in production",
   path: ["PUSH_PROVIDER"],
 });

@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { GatewayKeys } from "@/components/settings/gateway-keys";
 import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { SmsProviderForm, SmsProviderKeys } from "@/components/settings/sms-provider-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
@@ -24,7 +25,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Charges, online payments, partner payouts and support contacts" />
+      <PageHeader title="Settings" description="Charges, online payments, SMS login, partner payouts and support contacts" />
 
       <div className="grid items-start gap-4 p-4 md:p-6 xl:grid-cols-5">
         <Card className="xl:col-span-3">
@@ -67,9 +68,35 @@ export default async function SettingsPage() {
               <GatewayKeys
                 gateways={settings.paymentGateways}
                 activeGateway={settings.paymentProvider}
-                canStore={settings.canStoreGatewayKeys}
+                canStore={settings.canStoreSecrets}
                 timezone={deployment.timezone}
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>SMS login</CardTitle>
+              <CardDescription>The provider that texts sign-in codes to customers, staff and partners.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SmsProviderForm
+                key={`${settings.updatedAt}-${settings.sms.providers.map((provider) => `${provider.name}:${provider.configured}`).join()}`}
+                sms={settings.sms}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>SMS provider keys</CardTitle>
+              <CardDescription>
+                Account details from each SMS provider. They are stored encrypted, and passwords are never shown again
+                after saving.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SmsProviderKeys sms={settings.sms} canStore={settings.canStoreSecrets} timezone={deployment.timezone} />
             </CardContent>
           </Card>
 

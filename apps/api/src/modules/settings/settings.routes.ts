@@ -3,11 +3,16 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { updateAppearanceBodySchema } from "./appearance.schemas.js";
 import { createAppearanceService } from "./appearance.service.js";
-import { gatewayParamsSchema, saveGatewayKeysBodySchema, updateSettingsBodySchema } from "./settings.schemas.js";
+import {
+  gatewayParamsSchema,
+  otpProviderParamsSchema,
+  saveGatewayKeysBodySchema,
+  updateSettingsBodySchema,
+} from "./settings.schemas.js";
 import { createSettingsService } from "./settings.service.js";
 
 const settingsRoutes: FastifyPluginAsync = async (app) => {
-  const settings = createSettingsService(app.prisma);
+  const settings = createSettingsService(app.prisma, app.otp);
   const appearance = createAppearanceService(app.prisma);
   const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };
 
@@ -30,6 +35,17 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
   app.delete("/payment-gateways/:gateway", adminOnly, async (request) => {
     const { gateway } = gatewayParamsSchema.parse(request.params);
     return settings.removeGatewayKeys(gateway);
+  });
+
+  app.put("/otp-providers/:provider", adminOnly, async (request) => {
+    const { provider } = otpProviderParamsSchema.parse(request.params);
+    const { credentials } = saveGatewayKeysBodySchema.parse(request.body);
+    return settings.saveOtpProviderKeys(provider, credentials, request.user.sub);
+  });
+
+  app.delete("/otp-providers/:provider", adminOnly, async (request) => {
+    const { provider } = otpProviderParamsSchema.parse(request.params);
+    return settings.removeOtpProviderKeys(provider);
   });
 
   app.get("/appearance", adminOnly, async () => appearance.getAdminAppearance());

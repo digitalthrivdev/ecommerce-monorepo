@@ -1,6 +1,8 @@
 import { env } from "../../config/env.js";
 import { PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { canStoreSecrets } from "../../shared/secret-box.js";
+import type { OtpRegistry } from "../auth/otp-registry.js";
 import {
   activePaymentProvider,
   getPaymentProvider,
@@ -8,7 +10,6 @@ import {
   removeGatewayCredentials,
   saveGatewayCredentials,
 } from "../payments/gateway-registry.js";
-import { canStoreSecrets } from "../payments/secret-box.js";
 import { getAppearance } from "./appearance.service.js";
 import type { UpdateSettingsInput } from "./settings.schemas.js";
 
@@ -59,7 +60,7 @@ export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSet
   };
 }
 
-async function toAdminView(prisma: PrismaClient, settings: PlatformSettings) {
+async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: PlatformSettings) {
   return {
     deliveryFee: settings.deliveryFee.toFixed(2),
     freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
@@ -69,13 +70,14 @@ async function toAdminView(prisma: PrismaClient, settings: PlatformSettings) {
     supportEmail: settings.supportEmail,
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
-    canStoreGatewayKeys: canStoreSecrets,
+    canStoreSecrets,
+    sms: await otp.adminView(),
     updatedById: settings.updatedById,
     updatedAt: settings.updatedAt,
   };
 }
 
-export function createSettingsService(prisma: PrismaClient) {
+export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
   async function getPublicSettings() {
     const [settings, { appearance }] = await Promise.all([getPlatformSettings(prisma), getAppearance(prisma)]);
 
@@ -107,7 +109,7 @@ export function createSettingsService(prisma: PrismaClient) {
   }
 
   async function getAdminSettings() {
-    return toAdminView(prisma, await getPlatformSettings(prisma));
+    return toAdminView(prisma, otp, await getPlatformSettings(prisma));
   }
 
   async function updateSettings(input: UpdateSettingsInput, adminId: string) {
@@ -116,13 +118,27 @@ export function createSettingsService(prisma: PrismaClient) {
         paymentProvider: input.paymentProvider,
       });
     }
+    if (input.otpProvider !== undefined) {
+      await otp.assertSelectable(input.otpProvider);
+    }
 
     await getPlatformSettings(prisma);
     const updated = await prisma.platformSettings.update({
       where: { id: SETTINGS_ID },
       data: { ...input, updatedById: adminId },
     });
-    return toAdminView(prisma, updated);
+    otp.invalidate();
+    return toAdminView(prisma, otp, updated);
+  }
+
+  async function saveOtpProviderKeys(provider: string, credentials: Record<string, string>, adminId: string) {
+    await otp.saveCredentials(provider, credentials, adminId);
+    return getAdminSettings();
+  }
+
+  async function removeOtpProviderKeys(provider: string) {
+    await otp.removeCredentials(provider);
+    return getAdminSettings();
   }
 
   async function saveGatewayKeys(gateway: string, credentials: Record<string, string>, adminId: string) {
@@ -136,5 +152,13 @@ export function createSettingsService(prisma: PrismaClient) {
     return getAdminSettings();
   }
 
-  return { getPublicSettings, getAdminSettings, updateSettings, saveGatewayKeys, removeGatewayKeys };
+  return {
+    getPublicSettings,
+    getAdminSettings,
+    updateSettings,
+    saveGatewayKeys,
+    removeGatewayKeys,
+    saveOtpProviderKeys,
+    removeOtpProviderKeys,
+  };
 }

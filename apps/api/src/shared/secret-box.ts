@@ -1,11 +1,11 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
-import { env } from "../../config/env.js";
+import { env } from "../config/env.js";
 
 const VERSION = "v1";
-const key = env.PAYMENT_SECRETS_KEY ? createHash("sha256").update(env.PAYMENT_SECRETS_KEY).digest() : null;
+const key = env.SECRETS_ENCRYPTION_KEY ? createHash("sha256").update(env.SECRETS_ENCRYPTION_KEY).digest() : null;
 
-/** True when PAYMENT_SECRETS_KEY is set, so secrets can be stored in the database. */
+/** True when SECRETS_ENCRYPTION_KEY is set, so secrets can be stored in the database. */
 export const canStoreSecrets = key !== null;
 
 /**
@@ -13,7 +13,7 @@ export const canStoreSecrets = key !== null;
  * one gateway cannot be copied into another's row.
  */
 export function sealSecret(plaintext: string, context: string) {
-  if (!key) throw new Error("PAYMENT_SECRETS_KEY is not set");
+  if (!key) throw new Error("SECRETS_ENCRYPTION_KEY is not set");
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv).setAAD(Buffer.from(context));
   const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);

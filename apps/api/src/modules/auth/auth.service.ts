@@ -1,10 +1,8 @@
-import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import type Redis from "ioredis";
 
-import { env } from "../../config/env.js";
 import type { PrismaClient, UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import type { OtpSender } from "./otp-sender.js";
+import type { OtpRegistry } from "./otp-registry.js";
 
 const OTP_TTL_SECONDS = 300;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -18,25 +16,34 @@ const keys = {
   sends: (phone: string) => `otp:sends:${phone}`,
 };
 
+/** What is kept in Redis between sending and verifying: never the code itself. */
+type PendingOtp = { provider: string; reference: string };
+
 type AuthServiceDeps = {
   prisma: PrismaClient;
   redis: Redis;
-  otpSender: OtpSender;
+  otp: Pick<OtpRegistry, "forPhone" | "byName">;
   signToken: (payload: { sub: string; role: UserRole }) => string;
 };
 
-function hashOtp(phone: string, otp: string) {
-  return createHmac("sha256", env.JWT_SECRET).update(`${phone}:${otp}`).digest("hex");
+function readPending(value: string | null): PendingOtp | null {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as Partial<PendingOtp>;
+    return typeof parsed.provider === "string" && typeof parsed.reference === "string"
+      ? { provider: parsed.provider, reference: parsed.reference }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
-function hashesMatch(a: string, b: string) {
-  const bufferA = Buffer.from(a, "hex");
-  const bufferB = Buffer.from(b, "hex");
-  return bufferA.length === bufferB.length && timingSafeEqual(bufferA, bufferB);
-}
+export function createAuthService({ prisma, redis, otp, signToken }: AuthServiceDeps) {
+  const invalidOtp = () => new AppError(401, "INVALID_OTP", "OTP is invalid or has expired");
 
-export function createAuthService({ prisma, redis, otpSender, signToken }: AuthServiceDeps) {
   async function sendOtp(phone: string) {
+    const otpProvider = await otp.forPhone(phone);
+
     const sends = await redis.incr(keys.sends(phone));
     if (sends === 1) {
       await redis.expire(keys.sends(phone), 3600);
@@ -60,40 +67,49 @@ export function createAuthService({ prisma, redis, otpSender, signToken }: AuthS
       );
     }
 
-    const otp = randomInt(0, 1_000_000).toString().padStart(6, "0");
+    let pending: PendingOtp;
+    try {
+      const { reference } = await otpProvider.start(phone);
+      pending = { provider: otpProvider.name, reference };
+    } catch (error) {
+      // Nothing was sent, so the customer may retry straight away.
+      await redis.multi().del(keys.cooldown(phone)).decr(keys.sends(phone)).exec();
+      throw error;
+    }
 
     await redis
       .multi()
-      .set(keys.otp(phone), hashOtp(phone, otp), "EX", OTP_TTL_SECONDS)
+      .set(keys.otp(phone), JSON.stringify(pending), "EX", OTP_TTL_SECONDS)
       .del(keys.attempts(phone))
       .exec();
-
-    await otpSender.send(phone, otp);
 
     return { expiresInSeconds: OTP_TTL_SECONDS };
   }
 
-  async function verifyOtp(phone: string, otp: string) {
-    const storedHash = await redis.get(keys.otp(phone));
-    if (!storedHash) {
-      throw new AppError(401, "INVALID_OTP", "OTP is invalid or has expired");
+  async function verifyOtp(phone: string, code: string) {
+    const pending = readPending(await redis.get(keys.otp(phone)));
+    const otpProvider = pending && (await otp.byName(pending.provider));
+    if (!pending || !otpProvider) {
+      throw invalidOtp();
     }
 
     const attempts = await redis.incr(keys.attempts(phone));
     if (attempts === 1) {
       await redis.expire(keys.attempts(phone), OTP_TTL_SECONDS);
     }
+    const tooManyAttempts = () =>
+      new AppError(429, "OTP_ATTEMPTS_EXCEEDED", "Too many incorrect attempts. Request a new OTP.");
     if (attempts > MAX_VERIFY_ATTEMPTS) {
       await redis.del(keys.otp(phone), keys.attempts(phone));
-      throw new AppError(
-        429,
-        "OTP_ATTEMPTS_EXCEEDED",
-        "Too many incorrect attempts. Request a new OTP.",
-      );
+      throw tooManyAttempts();
     }
 
-    if (!hashesMatch(storedHash, hashOtp(phone, otp))) {
-      throw new AppError(401, "INVALID_OTP", "OTP is invalid or has expired");
+    const result = await otpProvider.check({ phone, code, reference: pending.reference });
+    if (result !== "valid") {
+      if (result !== "invalid") {
+        await redis.del(keys.otp(phone), keys.attempts(phone));
+      }
+      throw result === "too-many-attempts" ? tooManyAttempts() : invalidOtp();
     }
 
     await redis.del(keys.otp(phone), keys.attempts(phone));

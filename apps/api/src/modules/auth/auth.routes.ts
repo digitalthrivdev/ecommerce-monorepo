@@ -2,13 +2,12 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { createAuthService } from "./auth.service.js";
 import { sendOtpBodySchema, verifyOtpBodySchema } from "./auth.schemas.js";
-import { createOtpSender } from "./otp-sender.js";
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   const authService = createAuthService({
     prisma: app.prisma,
     redis: app.redis,
-    otpSender: createOtpSender(app.log),
+    otp: app.otp,
     signToken: (payload) => app.jwt.sign(payload),
   });
 

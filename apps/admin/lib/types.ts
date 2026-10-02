@@ -265,37 +265,56 @@ export type PublicSettings = {
   timezone: string;
 };
 
-/** Editable platform settings (admin only). */
-/** One credential of a gateway. Secret values are never sent back; `hint` says one is saved. */
-export type PaymentGatewayField = {
+/** One credential of a gateway or SMS provider. Secret values are never sent back; `hint` says one is saved. */
+export type CredentialField = {
   key: string;
   label: string;
   secret: boolean;
   /** Allowed values, for fields picked from a list. */
   options: string[] | null;
+  optional: boolean;
+  help: string | null;
   value: string | null;
   hint: string | null;
 };
 
-/** A gateway the platform supports and whether this deployment can use it. */
-export type PaymentGatewayOption = {
+/** What the keys list needs from a payment gateway or SMS provider. */
+export type IntegrationKeys = {
   name: string;
   label: string;
   configured: boolean;
-  /** Test keys or sandbox account; null when not configured. */
-  testMode: boolean | null;
   /** Where the keys come from. Server environment keys cannot be edited in the dashboard. */
   source: "env" | "dashboard" | null;
+  editable: boolean;
+  fields: CredentialField[];
+  /** Keys were saved but cannot be decrypted (SECRETS_ENCRYPTION_KEY changed); enter them again. */
+  savedKeysUnreadable: boolean;
+  keysUpdatedAt: string | null;
+};
+
+export type OtpProviderOption = IntegrationKeys;
+
+export type SmsSettings = {
+  /** Provider chosen in the dashboard; null means none. */
+  selected: string | null;
+  /** Provider sending OTPs right now, or null when none is set up. */
+  active: string | null;
+  /** Set when OTP_PROVIDER on the server overrides the dashboard choice. */
+  environmentOverride: string | null;
+  /** Who can sign in while no provider is set up (their codes go to the server log). */
+  fallback: "admins" | "everyone";
+  providers: OtpProviderOption[];
+};
+
+/** A gateway the platform supports and whether this deployment can use it. */
+export type PaymentGatewayOption = IntegrationKeys & {
+  /** Test keys or sandbox account; null when not configured. */
+  testMode: boolean | null;
   /** False for the built-in test gateway. */
   needsCredentials: boolean;
-  editable: boolean;
-  fields: PaymentGatewayField[];
-  /** Keys were saved but cannot be decrypted (PAYMENT_SECRETS_KEY changed); enter them again. */
-  savedKeysUnreadable: boolean;
   /** Null when the API has no public URL configured. */
   webhookUrl: string | null;
   webhookEvents: string | null;
-  keysUpdatedAt: string | null;
 };
 
 export type PlatformSettings = {
@@ -308,8 +327,9 @@ export type PlatformSettings = {
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];
-  /** False until PAYMENT_SECRETS_KEY is set on the server; gateway keys can then only come from its environment. */
-  canStoreGatewayKeys: boolean;
+  /** False until SECRETS_ENCRYPTION_KEY is set on the server; keys can then only come from its environment. */
+  canStoreSecrets: boolean;
+  sms: SmsSettings;
   /** Null until an admin first saves; the values are then the server defaults. */
   updatedById: string | null;
   updatedAt: string;

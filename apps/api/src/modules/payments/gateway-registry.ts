@@ -1,8 +1,9 @@
 import { env } from "../../config/env.js";
 import type { PrismaClient } from "../../generated/prisma/client";
+import { mergeCredentials, summarizeCredentials, type Credentials } from "../../shared/credentials.js";
 import { AppError } from "../../shared/errors.js";
-import { GATEWAYS, type Credentials, type GatewayDefinition, type PaymentProvider } from "./payment-provider.js";
-import { canStoreSecrets, openSecret, sealSecret } from "./secret-box.js";
+import { canStoreSecrets, openSecret, sealSecret } from "../../shared/secret-box.js";
+import { GATEWAYS, type GatewayDefinition, type PaymentProvider } from "./payment-provider.js";
 
 /**
  * The gateways this deployment can use: credentials from the server environment take priority,
@@ -86,21 +87,6 @@ export function activePaymentProvider(prisma: PrismaClient, settings: { paymentP
   return getPaymentProvider(prisma, settings.paymentProvider);
 }
 
-/** Public ids in full; secrets only by their last characters, and not at all when short. */
-function summarize(definition: GatewayDefinition, credentials: Credentials | null) {
-  return definition.fields.map((field) => {
-    const value = credentials?.[field.key] ?? null;
-    return {
-      key: field.key,
-      label: field.label,
-      secret: field.secret,
-      options: field.options ?? null,
-      value: field.secret ? null : value,
-      hint: field.secret && value ? (value.length >= 12 ? `ends in ${value.slice(-4)}` : "saved") : null,
-    };
-  });
-}
-
 /** For the admin dashboard. Contains no secret values. */
 export async function paymentGatewayOptions(prisma: PrismaClient) {
   const gateways = await loadGateways(prisma);
@@ -112,7 +98,7 @@ export async function paymentGatewayOptions(prisma: PrismaClient) {
     source,
     needsCredentials: definition.fields.length > 0,
     editable: definition.fields.length > 0 && source !== "env" && canStoreSecrets,
-    fields: summarize(definition, credentials),
+    fields: summarizeCredentials(definition.fields, credentials),
     savedKeysUnreadable: stored !== null && !stored.readable,
     webhookUrl:
       definition.webhookEvents && env.PUBLIC_API_URL
@@ -146,17 +132,11 @@ export async function saveGatewayCredentials(
 ) {
   const definition = editableGateway(name);
   if (!canStoreSecrets) {
-    throw new AppError(409, "PAYMENT_SECRETS_KEY_MISSING", "Set PAYMENT_SECRETS_KEY on the server to save gateway keys here");
+    throw new AppError(409, "SECRETS_ENCRYPTION_KEY_MISSING", "Set SECRETS_ENCRYPTION_KEY on the server to save gateway keys here");
   }
 
   const saved = (await loadGateways(prisma)).get(name)?.credentials ?? null;
-  const merged = Object.fromEntries(
-    definition.fields.map((field) => {
-      const value = input[field.key]?.trim() ?? "";
-      return [field.key, field.secret && !value ? (saved?.[field.key] ?? "") : value];
-    }),
-  );
-  const credentials = definition.parse(merged);
+  const credentials = definition.parse(mergeCredentials(definition.fields, input, saved));
 
   if (!(await definition.create(credentials).checkCredentials())) {
     throw new AppError(400, "PAYMENT_GATEWAY_KEYS_REJECTED", `${definition.label} rejected these keys. Check them and try again.`);

@@ -830,7 +830,9 @@ HOME_SECTIONS
 
 Secrets remain environment variables.
 
-Exception: payment gateway keys (Razorpay, Cashfree, …) may also be entered by admins in the dashboard. They are stored AES-256-GCM encrypted with `PAYMENT_SECRETS_KEY` (an environment variable), are write-only (the API never returns them), and keys set in the environment take priority. Do not extend this to other secrets without an explicit decision.
+Exception: payment gateway keys (Razorpay, Cashfree, …) and SMS/OTP provider keys (Message Central, …) may also be entered by admins in the dashboard. They are stored AES-256-GCM encrypted with `SECRETS_ENCRYPTION_KEY` (an environment variable), are write-only (the API never returns them), and keys set in the environment take priority. Do not extend this to other secrets without an explicit decision.
+
+Until an SMS provider is set up, login OTPs are written to the API log: for everyone in development, and in production only for existing admins (so the first admin can sign in and configure SMS). `OTP_PROVIDER` in the environment overrides the dashboard choice for recovery.
 
 Public branding/configuration should be replaceable without modifying business logic.
 

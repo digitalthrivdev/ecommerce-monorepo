@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { env } from "../../config/env.js";
 import type { Prisma } from "../../generated/prisma/client";
+import type { CredentialField, Credentials } from "../../shared/credentials.js";
 import { createCashfreeProvider } from "./cashfree-provider.js";
 import { mockPaymentProvider } from "./mock-provider.js";
 import { createRazorpayProvider } from "./razorpay-provider.js";
@@ -72,11 +73,6 @@ export interface PaymentProvider {
   /** False when the gateway rejects the credentials. Used before saving keys entered by an admin. */
   checkCredentials(): Promise<boolean>;
 }
-
-/** One credential an admin enters. Secret values are write-only; others are shown back. */
-export type CredentialField = { key: string; label: string; secret: boolean; options?: readonly string[] };
-
-export type Credentials = Record<string, string>;
 
 export type GatewayDefinition = {
   name: string;

@@ -1,6 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import type { PrismaClient, UserRole } from "../generated/prisma/client";
 import type Redis from "ioredis";
+import type { OtpRegistry } from "../modules/auth/otp-registry.js";
 import type { NotificationsService } from "../modules/notifications/notifications.service.js";
 import type { PaymentsService } from "../modules/payments/payments.service.js";
 
@@ -9,6 +10,7 @@ declare module "fastify" {
     prisma: PrismaClient;
     redis: Redis;
     payments: PaymentsService;
+    otp: OtpRegistry;
     notifications: NotificationsService;
     authenticate: (request: FastifyRequest) => Promise<void>;
     tryAuthenticate: (request: FastifyRequest) => Promise<boolean>;

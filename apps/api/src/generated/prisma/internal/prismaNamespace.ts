@@ -415,6 +415,7 @@ export const ModelName = {
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
+  OtpProviderCredential: 'OtpProviderCredential',
   AppAppearance: 'AppAppearance',
   PushToken: 'PushToken'
 } as const
@@ -432,7 +433,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "category" | "product" | "storeProduct" | "inventory" | "cart" | "cartItem" | "order" | "orderItem" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "paymentGatewayCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "category" | "product" | "storeProduct" | "inventory" | "cart" | "cartItem" | "order" | "orderItem" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1768,6 +1769,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OtpProviderCredential: {
+      payload: Prisma.$OtpProviderCredentialPayload<ExtArgs>
+      fields: Prisma.OtpProviderCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OtpProviderCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OtpProviderCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.OtpProviderCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OtpProviderCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.OtpProviderCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.OtpProviderCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.OtpProviderCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OtpProviderCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.OtpProviderCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        update: {
+          args: Prisma.OtpProviderCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.OtpProviderCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OtpProviderCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OtpProviderCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.OtpProviderCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OtpProviderCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.OtpProviderCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOtpProviderCredential>
+        }
+        groupBy: {
+          args: Prisma.OtpProviderCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OtpProviderCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OtpProviderCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OtpProviderCredentialCountAggregateOutputType> | number
+        }
+      }
+    }
     AppAppearance: {
       payload: Prisma.$AppAppearancePayload<ExtArgs>
       fields: Prisma.AppAppearanceFieldRefs
@@ -2221,6 +2296,7 @@ export const PlatformSettingsScalarFieldEnum = {
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
   paymentProvider: 'paymentProvider',
+  otpProvider: 'otpProvider',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2238,6 +2314,17 @@ export const PaymentGatewayCredentialScalarFieldEnum = {
 } as const
 
 export type PaymentGatewayCredentialScalarFieldEnum = (typeof PaymentGatewayCredentialScalarFieldEnum)[keyof typeof PaymentGatewayCredentialScalarFieldEnum]
+
+
+export const OtpProviderCredentialScalarFieldEnum = {
+  provider: 'provider',
+  credentials: 'credentials',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OtpProviderCredentialScalarFieldEnum = (typeof OtpProviderCredentialScalarFieldEnum)[keyof typeof OtpProviderCredentialScalarFieldEnum]
 
 
 export const AppAppearanceScalarFieldEnum = {
@@ -2680,6 +2767,7 @@ export type GlobalOmitConfig = {
   deliveryLocation?: Prisma.DeliveryLocationOmit
   platformSettings?: Prisma.PlatformSettingsOmit
   paymentGatewayCredential?: Prisma.PaymentGatewayCredentialOmit
+  otpProviderCredential?: Prisma.OtpProviderCredentialOmit
   appAppearance?: Prisma.AppAppearanceOmit
   pushToken?: Prisma.PushTokenOmit
 }

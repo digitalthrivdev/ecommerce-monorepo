@@ -487,8 +487,12 @@ model PlatformSettings {
   supportEmail String?
 
   // Gateway new online payments use (e.g. "razorpay", "cashfree"); null means cash on delivery only.
-  // Credentials stay in the environment; only gateways configured there can be selected.
+  // Only gateways with working keys can be selected.
   paymentProvider String?
+
+  // SMS provider that sends login OTPs (e.g. "message-central"). Null means none is set up: OTPs go to
+  // the API log, in production for admins only. OTP_PROVIDER in the environment overrides this.
+  otpProvider String?
 
   updatedById String?
 
@@ -497,10 +501,23 @@ model PlatformSettings {
 }
 
 // Payment gateway keys entered by admins in the dashboard, one row per gateway. `credentials` is a
-// JSON object AES-256-GCM encrypted with PAYMENT_SECRETS_KEY; the API never returns it. Keys set
+// JSON object AES-256-GCM encrypted with SECRETS_ENCRYPTION_KEY; the API never returns it. Keys set
 // in the server environment take priority over these.
 model PaymentGatewayCredential {
   gateway String @id
+
+  credentials String
+
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// SMS provider keys entered by admins in the dashboard, one row per provider. Stored like
+// PaymentGatewayCredential: encrypted, never returned, and keys in the environment take priority.
+model OtpProviderCredential {
+  provider String @id
 
   credentials String
 

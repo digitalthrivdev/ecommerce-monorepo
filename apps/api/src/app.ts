@@ -5,6 +5,7 @@ import helmet from "@fastify/helmet";
 import authPlugin from "./plugins/auth.js";
 import errorHandlerPlugin from "./plugins/error-handler.js";
 import notificationsPlugin from "./plugins/notifications.js";
+import otpPlugin from "./plugins/otp.js";
 import paymentsPlugin from "./plugins/payments.js";
 import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
@@ -40,6 +41,7 @@ export async function buildApp() {
   await app.register(prismaPlugin);
   await app.register(redisPlugin);
   await app.register(authPlugin);
+  await app.register(otpPlugin);
   await app.register(paymentsPlugin);
   await app.register(notificationsPlugin);
 

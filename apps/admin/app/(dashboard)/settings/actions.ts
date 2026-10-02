@@ -40,43 +40,78 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
   return { ok: true, message: "Settings saved" };
 }
 
-const gatewayName = z.string().trim().min(1).max(32);
+const integrationName = z.string().trim().min(1).max(32);
 
-/** Field names come from the gateway's definition on the server, which validates them. */
-export async function saveGatewayKeys(formData: FormData): Promise<ActionResult> {
-  const gateway = gatewayName.safeParse(formText(formData, "gateway"));
-  if (!gateway.success) return { ok: false, error: "Unknown payment gateway" };
+/** Field names come from the gateway's or provider's definition on the server, which validates them. */
+async function saveKeys(path: string, formData: FormData, unknown: string, message: string): Promise<ActionResult> {
+  const name = integrationName.safeParse(formText(formData, "name"));
+  if (!name.success) return { ok: false, error: unknown };
 
   const credentials: Record<string, string> = {};
   for (const [key, value] of formData.entries()) {
-    if (key !== "gateway" && !key.startsWith("$") && typeof value === "string") credentials[key] = value;
+    if (key !== "name" && !key.startsWith("$") && typeof value === "string") credentials[key] = value;
   }
 
   try {
-    await apiFetch(`/settings/payment-gateways/${encodeURIComponent(gateway.data)}`, {
-      method: "PUT",
-      body: { credentials },
-    });
+    await apiFetch(`${path}/${encodeURIComponent(name.data)}`, { method: "PUT", body: { credentials } });
   } catch (error) {
     return apiFailure(error);
   }
 
   refresh();
-  return { ok: true, message: "Gateway keys saved" };
+  return { ok: true, message };
 }
 
-export async function removeGatewayKeys(input: { gateway: string }): Promise<ActionResult> {
-  const gateway = gatewayName.safeParse(input.gateway);
-  if (!gateway.success) return { ok: false, error: "Unknown payment gateway" };
+async function removeKeys(path: string, input: { name: string }, unknown: string, message: string): Promise<ActionResult> {
+  const name = integrationName.safeParse(input.name);
+  if (!name.success) return { ok: false, error: unknown };
 
   try {
-    await apiFetch(`/settings/payment-gateways/${encodeURIComponent(gateway.data)}`, { method: "DELETE" });
+    await apiFetch(`${path}/${encodeURIComponent(name.data)}`, { method: "DELETE" });
   } catch (error) {
     return apiFailure(error);
   }
 
   refresh();
-  return { ok: true, message: "Gateway keys removed" };
+  return { ok: true, message };
+}
+
+export async function saveGatewayKeys(formData: FormData): Promise<ActionResult> {
+  return saveKeys("/settings/payment-gateways", formData, "Unknown payment gateway", "Gateway keys saved");
+}
+
+export async function removeGatewayKeys(input: { name: string }): Promise<ActionResult> {
+  return removeKeys("/settings/payment-gateways", input, "Unknown payment gateway", "Gateway keys removed");
+}
+
+export async function saveOtpProviderKeys(formData: FormData): Promise<ActionResult> {
+  return saveKeys("/settings/otp-providers", formData, "Unknown SMS provider", "SMS provider keys saved");
+}
+
+export async function removeOtpProviderKeys(input: { name: string }): Promise<ActionResult> {
+  return removeKeys("/settings/otp-providers", input, "Unknown SMS provider", "SMS provider keys removed");
+}
+
+const otpProviderSchema = z.object({
+  otpProvider: z
+    .string()
+    .trim()
+    .max(32)
+    .transform((value) => value || null),
+});
+
+export async function updateOtpProvider(formData: FormData): Promise<ActionResult> {
+  const parsed = otpProviderSchema.safeParse({ otpProvider: formText(formData, "otpProvider") });
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  try {
+    await apiFetch("/settings/platform", { method: "PATCH", body: parsed.data });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: parsed.data.otpProvider ? "SMS provider updated" : "SMS provider turned off" };
 }
 
 const gatewaySchema = z.object({
