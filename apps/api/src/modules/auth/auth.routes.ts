@@ -13,7 +13,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/send-otp", async (request) => {
     const { phone } = sendOtpBodySchema.parse(request.body);
-    const result = await authService.sendOtp(phone);
+    const result = await authService.sendOtp(phone, request.ip);
     return { message: "OTP sent", ...result };
   });
 

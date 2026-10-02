@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 
+import { env } from "./config/env.js";
 import authPlugin from "./plugins/auth.js";
 import errorHandlerPlugin from "./plugins/error-handler.js";
 import notificationsPlugin from "./plugins/notifications.js";
@@ -32,6 +33,10 @@ import usersRoutes from "./modules/users/users.routes.js";
 export async function buildApp() {
   const app = Fastify({
     logger: true,
+    trustProxy:
+      typeof env.TRUST_PROXY === "number"
+        ? (_address: string, hop: number) => hop < (env.TRUST_PROXY as number)
+        : env.TRUST_PROXY,
   });
 
   await app.register(cors);

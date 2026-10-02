@@ -33,6 +33,19 @@ const envSchema = z.object({
 
   HOST: z.string().default("0.0.0.0"),
 
+  // Which proxies may set X-Forwarded-For, so the API sees the real client IP (used for rate
+  // limits): unset when clients connect directly, the number of proxy hops (e.g. 1 for one Nginx),
+  // or a comma-separated list of proxy IPs/CIDRs. Never "true" while the API port is reachable
+  // without the proxy, or clients could fake their IP.
+  TRUST_PROXY: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => (value === undefined ? false : /^\d+$/.test(value) ? Number(value) : value === "true" ? true : value)),
+  ),
+
   DATABASE_URL: z.string().url(),
 
   REDIS_URL: z.string().url(),
@@ -90,6 +103,10 @@ const envSchema = z.object({
 
   // 0 disables the background check for unpaid orders and pending refunds.
   PAYMENT_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3600).default(60),
+
+  // OTP sends allowed per client IP (IPv6: per /64) per hour, across all phone numbers. Mobile
+  // networks share one IP between many customers, so keep this generous.
+  OTP_SENDS_PER_IP_PER_HOUR: z.coerce.number().int().min(1).max(10_000).default(30),
 
   // Login OTP delivery. Normally admins choose the SMS provider in the dashboard; setting this
   // overrides their choice (e.g. to recover access). "log" writes codes to the API log instead of

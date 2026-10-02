@@ -5,10 +5,8 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 ## Before the first production launch
 
 - [ ] **Message Central go-live check.** Implemented from the VerifyNow guide but only tested against fake credentials. With a real account, add the keys under Settings → SMS provider keys, select it, and sign in with a real phone; confirm the token lifetime and whether `validateOtp` is GET or POST (both are handled).
-- [ ] **First production admin.** Admin accounts are only created by the development seed. Add a way to create the first admin on a fresh deployment (e.g. a one-off script); that admin then signs in with the OTP from the server log and sets up SMS.
 - [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `SECRETS_ENCRYPTION_KEY` set and webhooks registered (see `apps/api/.env.example`).
 - [ ] **Real push provider.** Implement `PushSender` (`apps/api/src/modules/notifications/push-sender.ts`) for Expo Push (or FCM/APNs), or deploy with `PUSH_PROVIDER=none` (no pushes).
-- [ ] **Per-IP rate limiting** on `POST /auth/send-otp` (per-phone limits already exist).
 - [ ] **Production deployment:** Docker images, production Compose file, Nginx, secrets, backups.
 
 ## Delivery

@@ -1,5 +1,6 @@
 import type Redis from "ioredis";
 
+import { env } from "../../config/env.js";
 import type { PrismaClient, UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import type { OtpRegistry } from "./otp-registry.js";
@@ -14,7 +15,28 @@ const keys = {
   attempts: (phone: string) => `otp:attempts:${phone}`,
   cooldown: (phone: string) => `otp:cooldown:${phone}`,
   sends: (phone: string) => `otp:sends:${phone}`,
+  ipSends: (ip: string) => `otp:ip-sends:${ipBucket(ip)}`,
 };
+
+/**
+ * IPv4 addresses as they are; IPv6 by /64, since one subscriber is usually given a whole /64.
+ * Mobile networks put many customers behind one IPv4 address, so the per-IP limit is generous.
+ */
+export function ipBucket(ip: string) {
+  const address = ip.split("%")[0]!.toLowerCase();
+  const v4 = address.match(/^(?:::ffff:)?(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (v4) return v4[1]!;
+  if (!address.includes(":")) return address;
+
+  const [head = "", tail] = address.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups = tail === undefined ? left : [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups
+    .slice(0, 4)
+    .map((group) => group.replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
+}
 
 /** What is kept in Redis between sending and verifying: never the code itself. */
 type PendingOtp = { provider: string; reference: string };
@@ -41,7 +63,8 @@ function readPending(value: string | null): PendingOtp | null {
 export function createAuthService({ prisma, redis, otp, signToken }: AuthServiceDeps) {
   const invalidOtp = () => new AppError(401, "INVALID_OTP", "OTP is invalid or has expired");
 
-  async function sendOtp(phone: string) {
+  /** `ip` is the client address; limits SMS spend from one network across many phone numbers. */
+  async function sendOtp(phone: string, ip: string) {
     const otpProvider = await otp.forPhone(phone);
 
     const sends = await redis.incr(keys.sends(phone));
@@ -67,13 +90,23 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       );
     }
 
+    // Counted only once the phone's own limits pass, so retries during a cooldown cost nothing.
+    const counted = await redis.multi().incr(keys.ipSends(ip)).expire(keys.ipSends(ip), 3600, "NX").exec();
+    const ipSends = Number(counted?.[0]?.[1]);
+    // Nothing was sent, so the customer may retry straight away.
+    const release = () => redis.multi().del(keys.cooldown(phone)).decr(keys.sends(phone)).decr(keys.ipSends(ip)).exec();
+
+    if (ipSends > env.OTP_SENDS_PER_IP_PER_HOUR) {
+      await release();
+      throw new AppError(429, "OTP_IP_LIMIT_REACHED", "Too many OTP requests from this network. Try again later.");
+    }
+
     let pending: PendingOtp;
     try {
       const { reference } = await otpProvider.start(phone);
       pending = { provider: otpProvider.name, reference };
     } catch (error) {
-      // Nothing was sent, so the customer may retry straight away.
-      await redis.multi().del(keys.cooldown(phone)).decr(keys.sends(phone)).exec();
+      await release();
       throw error;
     }
 
