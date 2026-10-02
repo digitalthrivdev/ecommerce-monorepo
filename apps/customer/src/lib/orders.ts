@@ -1,6 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 
-import { ApiError, apiFetch } from "./api";
+import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
 import type { OrderDetail, OrderStatus, OrderSummary, Paginated, PaymentMethod } from "./types";
 
@@ -52,32 +54,33 @@ export function useCancelOrder(id: string) {
   });
 }
 
-type PaymentSession = { provider: string; providerOrderId: string; amount: string; expiresAt: string; checkout: { payUrl?: string } };
-type MockCheckoutResult = { providerPaymentId: string; signature?: string; error?: string };
+type PaymentSession = { provider: string; testMode: boolean; amount: string; expiresAt: string; checkoutUrl: string };
+
+/** How checkout ended, as reported by the server when it sends the browser back to the app. */
+export type PaymentResult = "success" | "failed" | "cancelled" | "pending";
+
+const PAYMENT_RESULTS: readonly string[] = ["success", "failed", "cancelled", "pending"];
+
+/** Route the payment page returns to; see `app/(app)/payment-return.tsx`. */
+export const PAYMENT_RETURN_PATH = "payment-return";
 
 /**
- * Pays through the development mock provider: start the payment, let the mock checkout succeed or
- * fail, then have the server verify the signed result. A real provider's SDK replaces the middle step.
+ * Pays on the gateway's hosted checkout (Razorpay, Cashfree, …) in an in-app browser. The server
+ * verifies the payment and sends the browser back to the app; the order is then refetched, since
+ * the server's record, not the browser result, decides whether the order is paid.
  */
 export function usePayOnline(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (outcome: "success" | "failure") => {
-      const session = await apiFetch<PaymentSession>(`${orderPath(id)}/payment`, { method: "POST" });
-      if (session.provider !== "mock" || !session.checkout.payUrl) {
-        throw new ApiError(400, "PROVIDER_UNSUPPORTED", "Online payment isn't supported in this version of the app.");
-      }
-      const result = await apiFetch<MockCheckoutResult>(session.checkout.payUrl, {
-        method: "POST",
-        body: { providerOrderId: session.providerOrderId, outcome },
-      });
-      if (!result.signature) throw new ApiError(402, "PAYMENT_FAILED", result.error ?? "Payment failed. Please try again.");
-      return apiFetch<OrderDetail>(`${orderPath(id)}/payment/verify`, {
-        method: "POST",
-        body: { providerPaymentId: result.providerPaymentId, signature: result.signature },
-      });
+    mutationFn: async (): Promise<PaymentResult> => {
+      const returnUrl = Linking.createURL(PAYMENT_RETURN_PATH);
+      const session = await apiFetch<PaymentSession>(`${orderPath(id)}/payment`, { method: "POST", body: { returnUrl } });
+      // An ephemeral session skips iOS's "wants to sign in" prompt; checkout needs no saved cookies.
+      const result = await WebBrowser.openAuthSessionAsync(session.checkoutUrl, returnUrl, { preferEphemeralSession: true });
+      if (result.type !== "success") return "cancelled";
+      const status = Linking.parse(result.url).queryParams?.status;
+      return typeof status === "string" && PAYMENT_RESULTS.includes(status) ? (status as PaymentResult) : "pending";
     },
-    onSuccess: (order) => queryClient.setQueryData(orderKey(id), order),
     onSettled: () => Promise.all([queryClient.invalidateQueries({ queryKey: orderKey(id) }), queryClient.invalidateQueries({ queryKey: ORDERS_KEY })]),
   });
 }

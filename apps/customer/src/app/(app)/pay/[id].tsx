@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { CircleCheck, FlaskConical } from "lucide-react-native";
+import { CircleCheck, ShieldCheck } from "lucide-react-native";
 import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -12,9 +12,14 @@ import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { formatMoney, formatTime } from "@/lib/format";
-import { useOrder, usePayOnline } from "@/lib/orders";
+import { useOrder, usePayOnline, type PaymentResult } from "@/lib/orders";
 import { useSettings } from "@/lib/settings";
 import type { OrderDetail } from "@/lib/types";
+
+const RESULT_TEXT: Partial<Record<PaymentResult, { text: string; error: boolean }>> = {
+  failed: { text: "Payment failed. No money was taken. Please try again.", error: true },
+  pending: { text: "We're confirming your payment. This page updates as soon as it's done.", error: false },
+};
 
 function PaymentPanel({ order }: { order: OrderDetail }) {
   const { colors } = useAppTheme();
@@ -34,6 +39,8 @@ function PaymentPanel({ order }: { order: OrderDetail }) {
     );
   }
 
+  const result = pay.data ? RESULT_TEXT[pay.data] : undefined;
+
   return (
     <View className="flex-1 justify-between px-4 pb-4">
       <View className="items-center gap-1 py-10">
@@ -45,15 +52,13 @@ function PaymentPanel({ order }: { order: OrderDetail }) {
 
       <View className="gap-3">
         <View className="flex-row gap-2 rounded-lg bg-muted p-3">
-          <Icon as={FlaskConical} size={18} className="text-muted-foreground" />
-          <Text className="flex-1 text-xs text-muted-foreground">Test payment: this build uses a simulated payment provider. No money is charged.</Text>
+          <Icon as={ShieldCheck} size={18} className="text-muted-foreground" />
+          <Text className="flex-1 text-xs text-muted-foreground">You&apos;ll pay on our payment partner&apos;s secure page, then come back here.</Text>
         </View>
         {pay.error ? <Text className="text-center text-sm text-destructive">{errorMessage(pay.error)}</Text> : null}
-        <Button disabled={pay.isPending} onPress={() => pay.mutate("success", { onSuccess: () => router.back() })} className="h-12 rounded-lg">
+        {result ? <Text className={`text-center text-sm ${result.error ? "text-destructive" : "text-muted-foreground"}`}>{result.text}</Text> : null}
+        <Button disabled={pay.isPending} onPress={() => pay.mutate()} className="h-12 rounded-lg">
           {pay.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Pay {formatMoney(order.total, currency)}</Text>}
-        </Button>
-        <Button variant="outline" disabled={pay.isPending} onPress={() => pay.mutate("failure")} className="h-12 rounded-lg">
-          <Text className="font-semibold">Simulate a failed payment</Text>
         </Button>
       </View>
     </View>
