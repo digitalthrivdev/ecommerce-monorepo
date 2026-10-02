@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
-import { advanceOrder, assignPartner, cancelOrder } from "@/app/(dashboard)/orders/actions";
+import { advanceOrder, assignPartner, cancelOrder, markItemUnavailable } from "@/app/(dashboard)/orders/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -94,6 +94,75 @@ function CancelOrderDialog({ storeId, orderId, orderNumber }: Target & { orderNu
           <Button variant="destructive" disabled={pending || reason.trim().length === 0} onClick={submit}>
             {pending && <Loader2 className="animate-spin" />}
             Cancel order
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Per-item action while picking: removes units the store cannot find from the order. */
+export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
+  item: { id: string; productName: string; quantity: number; unavailableQuantity: number };
+}) {
+  const remaining = item.quantity - item.unavailableQuantity;
+  const [open, setOpen] = useState(false);
+  const [quantity, setQuantity] = useState(String(remaining));
+  const [pending, startTransition] = useTransition();
+
+  function submit() {
+    startTransition(async () => {
+      if (toastResult(await markItemUnavailable({ storeId, orderId, itemId: item.id, quantity: Number(quantity) }))) {
+        setOpen(false);
+      }
+    });
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setQuantity(String(remaining));
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          {ORDER_ACTION_LABELS["mark-unavailable"]}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{item.productName} unavailable?</DialogTitle>
+          <DialogDescription>
+            The units are removed from the bill. Online payments are refunded automatically and cash orders collect the
+            lower total. The product&apos;s stock is set to 0. This cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        {remaining > 1 && (
+          <Field>
+            <FieldLabel htmlFor="unavailable-quantity">How many are unavailable?</FieldLabel>
+            <Select value={quantity} onValueChange={setQuantity}>
+              <SelectTrigger id="unavailable-quantity" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: remaining }, (_, index) => remaining - index).map((count) => (
+                  <SelectItem key={count} value={String(count)}>
+                    {count === remaining ? `All ${count}` : `${count} of ${remaining}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Keep item</Button>
+          </DialogClose>
+          <Button variant="destructive" disabled={pending} onClick={submit}>
+            {pending && <Loader2 className="animate-spin" />}
+            {ORDER_ACTION_LABELS["mark-unavailable"]}
           </Button>
         </DialogFooter>
       </DialogContent>

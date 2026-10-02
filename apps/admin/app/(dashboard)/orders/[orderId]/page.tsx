@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
-import { OrderActions } from "@/components/orders/order-actions";
+import { MarkUnavailableDialog, OrderActions } from "@/components/orders/order-actions";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
   const [order, settings] = await Promise.all([getOrder(user, orderId), getPublicSettings()]);
 
   const canAssign = order.allowedActions.includes("assign") || order.allowedActions.includes("reassign");
+  const canMarkUnavailable = order.allowedActions.includes("mark-unavailable");
   const partners = canAssign
     ? await apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", {
         query: { status: "ONLINE", isActive: true, limit: 100 },
@@ -93,7 +94,10 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
             <Card>
               <CardHeader>
                 <CardTitle>Items</CardTitle>
-                <CardDescription>Prices as charged when the order was placed</CardDescription>
+                <CardDescription>
+                  Prices as charged when the order was placed
+                  {canMarkUnavailable && ". Mark items you cannot find before packing."}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -103,17 +107,35 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
+                      {canMarkUnavailable && <TableHead className="w-0" />}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {order.items.map((item) => (
-                      <TableRow key={item.productId}>
-                        <TableCell className="whitespace-normal">{item.productName}</TableCell>
-                        <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
-                        <TableCell className="text-right tabular-nums">{money(item.unitPrice)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{money(item.totalPrice)}</TableCell>
-                      </TableRow>
-                    ))}
+                    {order.items.map((item) => {
+                      const supplied = item.quantity - item.unavailableQuantity;
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell className="whitespace-normal">
+                            <span className={supplied === 0 ? "text-muted-foreground line-through" : undefined}>{item.productName}</span>
+                            {item.unavailableQuantity > 0 && (
+                              <Badge variant="outline" className="ml-2 text-destructive">
+                                {supplied === 0 ? "Unavailable" : `${item.unavailableQuantity} unavailable`}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {item.unavailableQuantity > 0 ? `${supplied} of ${item.quantity}` : item.quantity}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{money(item.unitPrice)}</TableCell>
+                          <TableCell className="text-right tabular-nums">{money(item.chargedTotal)}</TableCell>
+                          {canMarkUnavailable && (
+                            <TableCell className="text-right">
+                              {supplied > 0 && <MarkUnavailableDialog storeId={order.store.id} orderId={order.id} item={item} />}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
                 <Separator className="my-4" />
@@ -138,7 +160,9 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                     <li key={index} className="relative">
                       <span className="absolute -left-[25px] top-1.5 size-2.5 rounded-full border-2 border-background bg-primary" />
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="font-medium">{ORDER_STATUS_LABELS[entry.toStatus]}</span>
+                        <span className="font-medium">
+                          {entry.fromStatus === entry.toStatus ? "Item unavailable" : ORDER_STATUS_LABELS[entry.toStatus]}
+                        </span>
                         <span className="text-xs text-muted-foreground">{date(entry.createdAt)}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -211,7 +235,10 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                       </Row>
                       <Row label="Amount">{money(order.payment.amount)}</Row>
                       {order.payment.paidAt && <Row label="Paid">{date(order.payment.paidAt)}</Row>}
-                      {order.payment.refundedAt && <Row label="Refunded">{date(order.payment.refundedAt)}</Row>}
+                      {Number(order.payment.refundedAmount) > 0 && (
+                        <Row label="Refunded">{money(order.payment.refundedAmount)}</Row>
+                      )}
+                      {order.payment.refundedAt && <Row label="Last refund">{date(order.payment.refundedAt)}</Row>}
                     </>
                   )}
                 </dl>

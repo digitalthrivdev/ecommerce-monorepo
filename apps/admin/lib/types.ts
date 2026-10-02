@@ -39,7 +39,7 @@ export type DeliveryStatus = "PENDING" | "ASSIGNED" | "PICKED_UP" | "OUT_FOR_DEL
 export type DeliveryPartnerStatus = "OFFLINE" | "ONLINE" | "BUSY";
 
 export type StoreOrderAction = "accept" | "start-picking" | "pack" | "ready";
-export type OrderAction = StoreOrderAction | "assign" | "reassign" | "cancel";
+export type OrderAction = StoreOrderAction | "assign" | "reassign" | "cancel" | "mark-unavailable";
 
 export type OrderListItem = {
   id: string;
@@ -67,6 +67,7 @@ export type OrderDetail = {
   payment: {
     status: PaymentStatus;
     amount: string;
+    refundedAmount: string;
     paidAt: string | null;
     refundedAt: string | null;
   } | null;
@@ -79,7 +80,17 @@ export type OrderDetail = {
     deliveredAt: string | null;
   } | null;
   store: { id: string; name: string; phone: string | null };
-  items: Array<{ productId: string; productName: string; quantity: number; unitPrice: string; totalPrice: string }>;
+  /** quantity and totalPrice are as ordered; unavailableQuantity units are not charged. */
+  items: Array<{
+    id: string;
+    productId: string;
+    productName: string;
+    quantity: number;
+    unavailableQuantity: number;
+    unitPrice: string;
+    totalPrice: string;
+    chargedTotal: string;
+  }>;
   subtotal: string;
   deliveryFee: string;
   discount: string;

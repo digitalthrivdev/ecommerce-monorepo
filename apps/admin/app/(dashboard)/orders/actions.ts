@@ -17,6 +17,7 @@ const SUCCESS: Record<OrderAction, string> = {
   assign: "Delivery partner assigned",
   reassign: "Delivery partner reassigned",
   cancel: "Order cancelled",
+  "mark-unavailable": "Item marked unavailable",
 };
 
 /** The API authorises every call with the session token; these actions only validate shape. */
@@ -25,7 +26,7 @@ async function run(path: string, body: unknown, action: OrderAction): Promise<Ac
     await apiFetch(path, { method: "POST", body });
   } catch (error) {
     if (!(error instanceof ApiError)) throw error;
-    if (error.code === "INVALID_STATUS_TRANSITION") {
+    if (error.code === "INVALID_STATUS_TRANSITION" || error.code === "ORDER_ITEMS_LOCKED") {
       // Someone else changed the order first; show its current state.
       refresh();
       return { ok: false, error: "This order has already moved on. The page now shows its current status." };
@@ -58,6 +59,27 @@ export async function cancelOrder(input: { storeId: string; orderId: string; rea
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
   const { storeId, orderId, reason } = parsed.data;
   return run(orderPath(storeId, orderId, "cancel"), { reason }, "cancel");
+}
+
+const unavailableSchema = targetSchema.extend({
+  itemId: idSchema,
+  quantity: z.number().int().min(1),
+});
+
+export async function markItemUnavailable(input: {
+  storeId: string;
+  orderId: string;
+  itemId: string;
+  quantity: number;
+}): Promise<ActionResult> {
+  const parsed = unavailableSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Choose how many are unavailable" };
+  const { storeId, orderId, itemId, quantity } = parsed.data;
+  return run(
+    orderPath(storeId, orderId, `items/${encodeURIComponent(itemId)}/unavailable`),
+    { quantity },
+    "mark-unavailable",
+  );
 }
 
 const assignSchema = targetSchema.extend({

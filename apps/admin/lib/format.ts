@@ -83,6 +83,7 @@ export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   assign: "Assign partner",
   reassign: "Reassign partner",
   cancel: "Cancel order",
+  "mark-unavailable": "Mark unavailable",
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
