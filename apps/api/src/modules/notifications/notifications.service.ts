@@ -16,6 +16,7 @@ type ClaimedChange = {
   fromStatus: OrderStatus | null;
   toStatus: OrderStatus;
   changedById: string | null;
+  note: string | null;
   createdAt: Date;
 };
 
@@ -91,7 +92,7 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
         LIMIT ${BATCH_SIZE}
         FOR UPDATE SKIP LOCKED
       )
-      RETURNING id, "orderId", "fromStatus", "toStatus", "changedById", "createdAt"
+      RETURNING id, "orderId", "fromStatus", "toStatus", "changedById", note, "createdAt"
     `;
 
     const cutoff = Date.now() - MAX_AGE_MS;

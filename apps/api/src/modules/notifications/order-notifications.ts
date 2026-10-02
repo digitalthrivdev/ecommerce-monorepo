@@ -4,6 +4,7 @@ export type StatusChange = {
   fromStatus: OrderStatus | null;
   toStatus: OrderStatus;
   changedById: string | null;
+  note: string | null;
 };
 
 /** The order as it is when the notification is sent, which can be a few seconds after the change. */
@@ -31,6 +32,12 @@ export function orderNotifications(change: StatusChange, order: OrderContext): N
   const customer = (title: string, body: string) => ({ userId: order.userId, title, body, data });
   const partner = (title: string, body: string) =>
     order.partnerUserId && order.partnerUserId !== change.changedById ? [{ userId: order.partnerUserId, title, body, data }] : [];
+
+  // The status did not move: the store marked items unavailable, and the note names them.
+  if (change.fromStatus === change.toStatus) {
+    const refund = order.paymentMethod === PaymentMethod.ONLINE ? "You'll get a refund for them." : "You won't be charged for them.";
+    return [customer("Item unavailable", `${order.storeName}: ${change.note ?? "an item is unavailable"} in order ${order.orderNumber}. ${refund}`)];
+  }
 
   switch (change.toStatus) {
     case OrderStatus.CONFIRMED:
