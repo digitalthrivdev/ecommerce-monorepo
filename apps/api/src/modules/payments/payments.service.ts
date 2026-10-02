@@ -7,6 +7,7 @@ import {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  Prisma,
   type PrismaClient,
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
@@ -223,8 +224,9 @@ export function createPaymentsService(
   }
 
   /**
-   * Refunds a paid online payment whose order is cancelled. The payment row stays locked during the
-   * provider call so concurrent callers cannot refund twice.
+   * Refunds whatever a paid online payment holds beyond what the order now costs: everything once
+   * the order is cancelled, or the price of items the store could not supply. The payment row stays
+   * locked during the provider call so concurrent callers cannot refund twice.
    */
   async function refundOrderPayment(orderId: string) {
     const paymentProvider = requireProvider();
@@ -234,28 +236,40 @@ export function createPaymentsService(
         await tx.$queryRaw`SELECT id FROM "Payment" WHERE "orderId" = ${orderId} FOR UPDATE`;
         const payment = await tx.payment.findUnique({
           where: { orderId },
-          include: { order: { select: { status: true } } },
+          include: { order: { select: { status: true, total: true } } },
         });
 
         if (
           !payment ||
           payment.method !== PaymentMethod.ONLINE ||
           payment.status !== PaymentStatus.PAID ||
-          !payment.transactionId ||
-          payment.order.status !== OrderStatus.CANCELLED
+          !payment.transactionId
         ) {
+          return false;
+        }
+
+        const kept = payment.order.status === OrderStatus.CANCELLED ? new Prisma.Decimal(0) : payment.order.total;
+        const due = payment.amount.minus(payment.refundedAmount).minus(kept);
+        if (due.lte(0)) {
           return false;
         }
 
         const { providerRefundId } = await paymentProvider.refund({
           providerPaymentId: payment.transactionId,
-          amount: payment.amount,
-          idempotencyKey: payment.id,
+          amount: due,
+          // Stable across retries of the same refund, different for each later refund.
+          idempotencyKey: `${payment.id}:${payment.refundedAmount.toFixed(2)}`,
         });
 
+        const refundedAmount = payment.refundedAmount.plus(due);
         await tx.payment.update({
           where: { id: payment.id },
-          data: { status: PaymentStatus.REFUNDED, providerRefundId, refundedAt: new Date() },
+          data: {
+            refundedAmount,
+            status: refundedAmount.eq(payment.amount) ? PaymentStatus.REFUNDED : PaymentStatus.PAID,
+            providerRefundId,
+            refundedAt: new Date(),
+          },
         });
         return true;
       },
@@ -277,6 +291,11 @@ export function createPaymentsService(
       where: { orderId, method: PaymentMethod.ONLINE, status: { in: UNPAID_STATUSES } },
       data: { status: PaymentStatus.FAILED, failureReason: "Order cancelled before payment" },
     });
+    await refundSafely(orderId);
+  }
+
+  /** Call after items are removed from a paid order: refunds their price to online payments. */
+  async function settleReducedOrder(orderId: string) {
     await refundSafely(orderId);
   }
 
@@ -315,15 +334,13 @@ export function createPaymentsService(
       }
     }
 
-    const pendingRefunds = await prisma.payment.findMany({
-      where: {
-        method: PaymentMethod.ONLINE,
-        status: PaymentStatus.PAID,
-        order: { status: OrderStatus.CANCELLED },
-      },
-      take: SWEEP_BATCH_SIZE,
-      select: { orderId: true },
-    });
+    const pendingRefunds = await prisma.$queryRaw<{ orderId: string }[]>`
+      SELECT p."orderId" FROM "Payment" p
+      JOIN "Order" o ON o.id = p."orderId"
+      WHERE p.method = 'ONLINE' AND p.status = 'PAID'
+        AND (o.status = 'CANCELLED' OR p.amount - p."refundedAmount" > o.total)
+      LIMIT ${SWEEP_BATCH_SIZE}
+    `;
 
     let refunded = 0;
     for (const { orderId } of pendingRefunds) {
@@ -345,6 +362,7 @@ export function createPaymentsService(
     handleEvent,
     handleWebhook,
     settleCancelledOrder,
+    settleReducedOrder,
     sweep,
   };
 }

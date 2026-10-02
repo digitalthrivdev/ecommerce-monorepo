@@ -308,6 +308,9 @@ model OrderItem {
   unitPrice   Decimal @db.Decimal(10, 2)
   totalPrice  Decimal @db.Decimal(10, 2)
 
+  // Units the store could not find while picking; they are removed from the order total.
+  unavailableQuantity Int @default(0)
+
   createdAt DateTime @default(now())
 
   order   Order   @relation(fields: [orderId], references: [id])
@@ -348,7 +351,9 @@ model Payment {
   method PaymentMethod
   status PaymentStatus @default(PENDING)
 
-  amount Decimal @db.Decimal(10, 2)
+  amount         Decimal @db.Decimal(10, 2)
+  // Partial refunds (unavailable items) and the final refund on cancellation add up here.
+  refundedAmount Decimal @default(0) @db.Decimal(10, 2)
 
   provider         String?
   transactionId    String?

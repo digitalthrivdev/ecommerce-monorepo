@@ -1,7 +1,7 @@
-import { OrderStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import type { PaymentsService } from "../payments/payments.service.js";
-import { transitionOrder } from "./order-status.js";
+import { lockOrder, transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
 
 export const STORE_ACTIONS = {
@@ -20,6 +20,9 @@ const STORE_CANCELLABLE: OrderStatus[] = [
   OrderStatus.PACKED,
   OrderStatus.READY_FOR_PICKUP,
 ];
+
+/** Items can be marked unavailable until the order is packed. */
+const ITEMS_EDITABLE: OrderStatus[] = [OrderStatus.STORE_ACCEPTED, OrderStatus.PICKING];
 
 function hiddenStatuses(isAdmin: boolean) {
   return isAdmin ? [] : [OrderStatus.PENDING_PAYMENT];
@@ -41,6 +44,10 @@ function allowedActions(status: OrderStatus, isAdmin: boolean) {
   const actions: string[] = Object.entries(STORE_ACTIONS)
     .filter(([, action]) => (action.from as readonly OrderStatus[]).includes(status))
     .map(([name]) => name);
+
+  if (ITEMS_EDITABLE.includes(status)) {
+    actions.push("mark-unavailable");
+  }
 
   if (isAdmin && status === OrderStatus.READY_FOR_PICKUP) {
     actions.push("assign");
@@ -196,5 +203,82 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     return getOrder(storeId, orderId, actor);
   }
 
-  return { listOrders, getOrder, performAction, cancelOrder };
+  /**
+   * Removes units the store cannot find from the order. The bill is recalculated (the delivery fee
+   * is kept as charged), the product's stock is set to 0 because the shelf is empty, and online
+   * payments are refunded the difference. quantity defaults to every remaining unit of the item.
+   */
+  async function markItemUnavailable(
+    storeId: string,
+    orderId: string,
+    itemId: string,
+    quantity: number | undefined,
+    actor: Actor,
+  ) {
+    await prisma.$transaction(async (tx) => {
+      const locked = await lockOrder(tx, orderId, { storeId }, hiddenStatuses(actor.isAdmin));
+      if (!ITEMS_EDITABLE.includes(locked.status)) {
+        throw new AppError(409, "ORDER_ITEMS_LOCKED", "Items can only be marked unavailable before the order is packed", {
+          status: locked.status,
+        });
+      }
+
+      const order = await tx.order.findUniqueOrThrow({
+        where: { id: orderId },
+        select: { deliveryFee: true, discount: true, paymentMethod: true, items: true },
+      });
+      const item = order.items.find((candidate) => candidate.id === itemId);
+      if (!item) {
+        throw new AppError(404, "ORDER_ITEM_NOT_FOUND", "Item not found in this order");
+      }
+
+      const remaining = item.quantity - item.unavailableQuantity;
+      if (remaining === 0) {
+        throw new AppError(409, "ITEM_ALREADY_UNAVAILABLE", "This item is already marked unavailable");
+      }
+      const units = quantity ?? remaining;
+      if (units > remaining) {
+        throw new AppError(400, "INVALID_QUANTITY", `Only ${remaining} of this item ${remaining === 1 ? "is" : "are"} left to mark`);
+      }
+
+      const items = order.items.map((candidate) =>
+        candidate.id === itemId ? { ...candidate, unavailableQuantity: candidate.unavailableQuantity + units } : candidate,
+      );
+      if (items.every((candidate) => candidate.unavailableQuantity === candidate.quantity)) {
+        throw new AppError(409, "ORDER_WOULD_BE_EMPTY", "Every item would be unavailable. Cancel the order instead.");
+      }
+
+      const subtotal = items.reduce(
+        (sum, candidate) => sum.plus(candidate.unitPrice.mul(candidate.quantity - candidate.unavailableQuantity)),
+        new Prisma.Decimal(0),
+      );
+      const total = Prisma.Decimal.max(subtotal.plus(order.deliveryFee).minus(order.discount), 0);
+
+      await tx.orderItem.update({ where: { id: itemId }, data: { unavailableQuantity: { increment: units } } });
+      await tx.order.update({ where: { id: orderId }, data: { subtotal, total } });
+      if (order.paymentMethod === PaymentMethod.COD) {
+        await tx.payment.updateMany({ where: { orderId }, data: { amount: total } });
+      }
+      await tx.inventory.updateMany({
+        where: { storeProduct: { storeId: locked.storeId, productId: item.productId } },
+        data: { quantity: 0 },
+      });
+      // Same from and to status: an item change, not a step. Kept for the audit trail and the customer push.
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId,
+          fromStatus: locked.status,
+          toStatus: locked.status,
+          changedById: actor.userId,
+          note: `${units} × ${item.productName} unavailable`,
+        },
+      });
+    });
+
+    await payments.settleReducedOrder(orderId);
+
+    return getOrder(storeId, orderId, actor);
+  }
+
+  return { listOrders, getOrder, performAction, cancelOrder, markItemUnavailable };
 }

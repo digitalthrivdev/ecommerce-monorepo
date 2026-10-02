@@ -19,6 +19,13 @@ const cancelBodySchema = z.object({
   reason: z.string().trim().min(1).max(300),
 });
 
+const itemParamsSchema = orderParamsSchema.extend({ itemId: idSchema });
+
+/** Omit quantity to mark every remaining unit unavailable. */
+const unavailableBodySchema = z
+  .object({ quantity: z.number().int().min(1).max(10_000).optional() })
+  .default({});
+
 const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
   const storeOrdersService = createStoreOrdersService(app.prisma, app.payments);
   const deliveryService = createDeliveryService(app.prisma, app.redis);
@@ -53,6 +60,12 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
     const { storeId, orderId } = orderParamsSchema.parse(request.params);
     const { reason } = cancelBodySchema.parse(request.body);
     return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason);
+  });
+
+  app.post("/:orderId/items/:itemId/unavailable", async (request) => {
+    const { storeId, orderId, itemId } = itemParamsSchema.parse(request.params);
+    const { quantity } = unavailableBodySchema.parse(request.body ?? undefined);
+    return storeOrdersService.markItemUnavailable(storeId, orderId, itemId, quantity, actor(request));
   });
 
   const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };

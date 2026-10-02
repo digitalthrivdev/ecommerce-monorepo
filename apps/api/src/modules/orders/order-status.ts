@@ -34,7 +34,7 @@ type TransitionParams = {
 async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
   const items = await tx.orderItem.findMany({
     where: { orderId },
-    select: { productId: true, quantity: true },
+    select: { productId: true, quantity: true, unavailableQuantity: true },
   });
   const storeProducts = await tx.storeProduct.findMany({
     where: { storeId, productId: { in: items.map((item) => item.productId) } },
@@ -44,9 +44,11 @@ async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
 
   await releaseStock(
     tx,
+    // Units marked unavailable were never on the shelf, so only the picked units go back.
     items.flatMap((item) => {
       const storeProductId = storeProductIdByProductId.get(item.productId);
-      return storeProductId ? [{ storeProductId, quantity: item.quantity }] : [];
+      const quantity = item.quantity - item.unavailableQuantity;
+      return storeProductId && quantity > 0 ? [{ storeProductId, quantity }] : [];
     }),
   );
 }

@@ -260,6 +260,7 @@ export const OrderItemScalarFieldEnum = {
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   totalPrice: 'totalPrice',
+  unavailableQuantity: 'unavailableQuantity',
   createdAt: 'createdAt'
 } as const
 
@@ -286,6 +287,7 @@ export const PaymentScalarFieldEnum = {
   method: 'method',
   status: 'status',
   amount: 'amount',
+  refundedAmount: 'refundedAmount',
   provider: 'provider',
   transactionId: 'transactionId',
   providerOrderId: 'providerOrderId',

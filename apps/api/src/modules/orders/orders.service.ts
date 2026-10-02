@@ -40,7 +40,7 @@ function generateOrderNumber() {
 export const orderDetailInclude = {
   store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
-  payment: { select: { method: true, status: true, amount: true, paidAt: true, refundedAt: true } },
+  payment: { select: { method: true, status: true, amount: true, refundedAmount: true, paidAt: true, refundedAt: true } },
   delivery: {
     select: {
       id: true,
@@ -71,6 +71,7 @@ export function toDetailView(order: OrderDetail) {
     payment: order.payment && {
       status: order.payment.status,
       amount: order.payment.amount.toFixed(2),
+      refundedAmount: order.payment.refundedAmount.toFixed(2),
       paidAt: order.payment.paidAt,
       refundedAt: order.payment.refundedAt,
     },
@@ -88,12 +89,16 @@ export function toDetailView(order: OrderDetail) {
       deliveredAt: order.delivery.deliveredAt,
     },
     store: order.store,
+    // quantity and totalPrice are as ordered; the units the store could not supply are not charged.
     items: order.items.map((item) => ({
+      id: item.id,
       productId: item.productId,
       productName: item.productName,
       quantity: item.quantity,
+      unavailableQuantity: item.unavailableQuantity,
       unitPrice: item.unitPrice.toFixed(2),
       totalPrice: item.totalPrice.toFixed(2),
+      chargedTotal: item.unitPrice.mul(item.quantity - item.unavailableQuantity).toFixed(2),
     })),
     subtotal: order.subtotal.toFixed(2),
     deliveryFee: order.deliveryFee.toFixed(2),
