@@ -3,8 +3,10 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
+import { createDiscoveryService } from "./discovery.service.js";
 import {
   addImageBodySchema,
+  alsoBoughtQuerySchema,
   createProductBodySchema,
   createStoreVariantBodySchema,
   listProductsQuerySchema,
@@ -13,6 +15,7 @@ import {
   reorderImagesBodySchema,
   setPricesBodySchema,
   storeParamsSchema,
+  storeBrandsQuerySchema,
   storeProductParamsSchema,
   storeVariantParamsSchema,
   updateImageBodySchema,
@@ -101,6 +104,13 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
 
 export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
   const storeProductsService = createStoreProductsService(app.prisma);
+  const discovery = createDiscoveryService(app.prisma);
+
+  app.get("/also-bought", async (request) => {
+    const { storeId } = storeParamsSchema.parse(request.params);
+    const { productIds, limit } = alsoBoughtQuerySchema.parse(request.query);
+    return discovery.alsoBought(storeId, productIds, limit);
+  });
 
   const canManage = async (request: FastifyRequest, storeId: string) =>
     (await app.tryAuthenticate(request)) && (await app.canManageStore(request, storeId));
@@ -123,6 +133,17 @@ export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
     return storeProductsService.getStoreProduct(storeId, productId, {
       canManage: await canManage(request, storeId),
     });
+  });
+};
+
+/** Brands with something in stock at the store. */
+export const storeBrandsRoutes: FastifyPluginAsync = async (app) => {
+  const discovery = createDiscoveryService(app.prisma);
+
+  app.get("/", async (request) => {
+    const { storeId } = storeParamsSchema.parse(request.params);
+    const { categoryId, limit } = storeBrandsQuerySchema.parse(request.query);
+    return discovery.listStoreBrands(storeId, categoryId, limit);
   });
 };
 

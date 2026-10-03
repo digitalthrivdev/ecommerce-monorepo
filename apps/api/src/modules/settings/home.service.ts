@@ -1,6 +1,7 @@
 import { StoreStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { inCategory } from "../products/catalog.js";
+import { createDiscoveryService } from "../products/discovery.service.js";
 import { storeProductInclude, storeProductWhere, toStoreProductView } from "../products/store-products.service.js";
 import type { HomeSection } from "./appearance.schemas.js";
 import { getAppearance } from "./appearance.service.js";
@@ -11,6 +12,10 @@ type HomeCategory = Prisma.CategoryGetPayload<{ select: typeof categorySelect }>
 
 /** Cap for a grid that shows every active category. */
 const ALL_CATEGORIES_LIMIT = 100;
+/** Brands shown when the admin hasn't picked any. */
+const TOP_BRANDS_LIMIT = 12;
+/** Category deal tiles shown when the admin hasn't picked any. */
+const TOP_CATEGORY_DEALS_LIMIT = 12;
 
 type SectionLink = Extract<HomeSection, { type: "offer_strip" }>["link"];
 
@@ -19,18 +24,32 @@ function referencedCategoryIds(sections: HomeSection[]) {
   return sections.flatMap((section) => {
     switch (section.type) {
       case "category_grid":
+      case "category_deals":
         return section.categoryIds;
       case "product_rail":
         return [section.categoryId];
+      case "deals_rail":
+        return section.categoryId ? [section.categoryId] : [];
       case "banner_carousel":
         return section.banners.flatMap((banner) => linked(banner.link));
+      case "image_tiles":
+        return section.tiles.flatMap((tile) => linked(tile.link));
       case "offer_strip":
         return linked(section.link);
+      case "buy_again":
+      case "brand_rail":
+        return [];
     }
   });
 }
 
+/** Shows every top-level category: an empty category grid or category deals list. */
+const needsAllCategories = (section: HomeSection) =>
+  (section.type === "category_grid" || section.type === "category_deals") && section.categoryIds.length === 0;
+
 export function createHomeService(prisma: PrismaClient) {
+  const discovery = createDiscoveryService(prisma);
+
   async function assertActiveStore(storeId: string) {
     const store = await prisma.store.findFirst({ where: { id: storeId, status: StoreStatus.ACTIVE }, select: { id: true } });
     if (!store) {
@@ -55,21 +74,27 @@ export function createHomeService(prisma: PrismaClient) {
     return rows.map((row) => toStoreProductView(row, { includeStock: false }));
   }
 
+  /** The chosen brands (or the store's top brands) that are active and have something in stock at the store. */
+  function railBrands(storeId: string, brandIds: string[]) {
+    return brandIds.length === 0
+      ? discovery.storeBrands(storeId, { limit: TOP_BRANDS_LIMIT })
+      : discovery.storeBrands(storeId, { brandIds, limit: brandIds.length });
+  }
+
   /**
    * The admin's enabled home sections with their data filled in. Inactive or deleted categories are
    * dropped (links to them become plain), and sections left with nothing to show are omitted.
-   * Product rails depend on the store's stock, so they are only included when a store is given.
+   * Sections that depend on the store's stock are only included when a store is given.
    */
   async function getHomeFeed(storeId: string | undefined) {
     const [{ appearance }] = await Promise.all([getAppearance(prisma), storeId ? assertActiveStore(storeId) : undefined]);
     const sections = appearance.homeSections.filter((section) => section.enabled);
 
-    const needsAllCategories = sections.some((section) => section.type === "category_grid" && section.categoryIds.length === 0);
     const ids = [...new Set(referencedCategoryIds(sections))];
 
     const [referenced, allActive] = await Promise.all([
       ids.length > 0 ? prisma.category.findMany({ where: { id: { in: ids }, isActive: true }, select: categorySelect }) : [],
-      needsAllCategories
+      sections.some(needsAllCategories)
         ? prisma.category.findMany({
             where: { isActive: true, parentId: null },
             select: categorySelect,
@@ -111,6 +136,50 @@ export function createHomeService(prisma: PrismaClient) {
             if (products.length === 0) return null;
             return { id: section.id, type: section.type, title: section.title, category, products };
           }
+
+          case "deals_rail": {
+            const category = section.categoryId ? categories.get(section.categoryId) : null;
+            if (!storeId || category === undefined) return null;
+            const products = await discovery.dealProducts(storeId, category?.id ?? null, section.limit);
+            if (products.length === 0) return null;
+            return { id: section.id, type: section.type, title: section.title, category, products };
+          }
+
+          case "buy_again":
+            return storeId ? { id: section.id, type: section.type, title: section.title } : null;
+
+          case "brand_rail": {
+            if (!storeId) return null;
+            const brands = await railBrands(storeId, section.brandIds);
+            if (brands.length === 0) return null;
+            return { id: section.id, type: section.type, title: section.title, brands };
+          }
+
+          case "category_deals": {
+            if (!storeId) return null;
+            const candidates = section.categoryIds.length
+              ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
+              : allActive.slice(0, TOP_CATEGORY_DEALS_LIMIT);
+            const discounts = await discovery.categoryDiscounts(
+              storeId,
+              candidates.map((category) => category.id),
+            );
+            const shown = candidates.flatMap((category) => {
+              const maxDiscountPercent = discounts.get(category.id) ?? 0;
+              return maxDiscountPercent > 0 ? [{ ...category, maxDiscountPercent }] : [];
+            });
+            if (shown.length === 0) return null;
+            return { id: section.id, type: section.type, title: section.title, categories: shown };
+          }
+
+          case "image_tiles":
+            return {
+              id: section.id,
+              type: section.type,
+              title: section.title,
+              columns: section.columns,
+              tiles: section.tiles.map((tile) => ({ ...tile, link: resolveLink(tile.link) })),
+            };
 
           case "offer_strip":
             return {

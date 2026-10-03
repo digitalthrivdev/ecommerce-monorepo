@@ -165,6 +165,26 @@ export const listStoreProductsQuerySchema = paginationQuerySchema.extend({
   includeUnavailable: booleanQuery,
 });
 
+const idList = z
+  .string()
+  .transform((value) => [...new Set(value.split(",").map((id) => id.trim()).filter(Boolean))])
+  .pipe(z.array(idSchema).min(1, "Give at least one product id").max(30, "Give at most 30 product ids"));
+
+export const alsoBoughtQuerySchema = z.object({
+  productIds: idList,
+  limit: z.coerce.number().int().min(1).max(20).default(10),
+});
+
+export const storeBrandsQuerySchema = z.object({
+  categoryId: idSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const buyAgainQuerySchema = z.object({
+  storeId: idSchema,
+  limit: z.coerce.number().int().min(1).max(30).default(12),
+});
+
 export const createStoreVariantBodySchema = z.object({
   variantId: idSchema,
   sellingPrice: positiveDecimalSchema,

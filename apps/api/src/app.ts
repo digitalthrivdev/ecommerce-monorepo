@@ -23,7 +23,7 @@ import dashboardRoutes from "./modules/orders/dashboard.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
 import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
-import { productsRoutes, storeProductsRoutes, storeVariantsRoutes } from "./modules/products/products.routes.js";
+import { productsRoutes, storeBrandsRoutes, storeProductsRoutes, storeVariantsRoutes } from "./modules/products/products.routes.js";
 import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import staffRoutes from "./modules/stores/staff.routes.js";
@@ -72,6 +72,7 @@ export async function buildApp() {
   await app.register(brandsRoutes, { prefix: "/brands" });
   await app.register(productsRoutes, { prefix: "/products" });
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
+  await app.register(storeBrandsRoutes, { prefix: "/stores/:storeId/brands" });
   await app.register(storeVariantsRoutes, { prefix: "/stores/:storeId/variants" });
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });

@@ -62,8 +62,25 @@ function categoryReferences(sections: HomeSection[]) {
         );
       case "offer_strip":
         return section.link.type === "category" ? [{ path: at("link", "categoryId"), id: section.link.categoryId }] : [];
+      case "deals_rail":
+        return section.categoryId ? [{ path: at("categoryId"), id: section.categoryId }] : [];
+      case "category_deals":
+        return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
+      case "image_tiles":
+        return section.tiles.flatMap((tile, position) =>
+          tile.link.type === "category" ? [{ path: at("tiles", position, "link", "categoryId"), id: tile.link.categoryId }] : [],
+        );
+      case "buy_again":
+      case "brand_rail":
+        return [];
     }
   });
+}
+
+function brandReferences(sections: HomeSection[]) {
+  return sections.flatMap((section, index) =>
+    section.type === "brand_rail" ? section.brandIds.map((id, position) => ({ path: ["homeSections", index, "brandIds", position], id })) : [],
+  );
 }
 
 export function createAppearanceService(prisma: PrismaClient) {
@@ -91,9 +108,29 @@ export function createAppearanceService(prisma: PrismaClient) {
     }
   }
 
+  /** Like categories: inactive brands are allowed and hidden in the app; deleted ones are not. */
+  async function assertBrandsExist(sections: HomeSection[]) {
+    const references = brandReferences(sections);
+    if (references.length === 0) return;
+
+    const found = await prisma.brand.findMany({
+      where: { id: { in: [...new Set(references.map((reference) => reference.id))] } },
+      select: { id: true },
+    });
+    const existing = new Set(found.map((brand) => brand.id));
+    const missing = references.filter((reference) => !existing.has(reference.id));
+
+    if (missing.length > 0) {
+      throw new z.ZodError(
+        missing.map((reference) => ({ code: "custom" as const, path: reference.path, message: "This brand does not exist", input: reference.id })),
+      );
+    }
+  }
+
   async function updateAppearance(input: UpdateAppearanceInput, adminId: string) {
     if (input.homeSections) {
       await assertCategoriesExist(input.homeSections);
+      await assertBrandsExist(input.homeSections);
     }
 
     const { appearance } = await getAppearance(prisma);

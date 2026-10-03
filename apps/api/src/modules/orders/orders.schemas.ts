@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { OrderStatus, PaymentMethod } from "../../generated/prisma/client";
-import { paginationQuerySchema } from "../../shared/schemas.js";
+import { booleanQuery, paginationQuerySchema } from "../../shared/schemas.js";
 
 export const createOrderBodySchema = z.object({
   addressId: z.string().trim().min(1).max(64),
@@ -11,6 +11,8 @@ export const createOrderBodySchema = z.object({
 export const listOrdersQuerySchema = paginationQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(50).default(20),
   status: z.enum(OrderStatus).optional(),
+  /** Only orders not yet delivered or cancelled, including those awaiting payment. */
+  active: booleanQuery,
 });
 
 /** Store staff and admin order lists. */

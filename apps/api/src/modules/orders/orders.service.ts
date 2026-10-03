@@ -18,7 +18,7 @@ import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../produc
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
-import { transitionOrder } from "./order-status.js";
+import { ACTIVE_ORDER_STATUSES, transitionOrder } from "./order-status.js";
 import { includedTax } from "./tax.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
@@ -26,6 +26,8 @@ export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
   OrderStatus.PENDING_PAYMENT,
   OrderStatus.CONFIRMED,
 ];
+
+const CUSTOMER_OPEN_STATUSES: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, ...ACTIVE_ORDER_STATUSES];
 
 const OTP_VISIBLE_STATUSES: OrderStatus[] = [
   OrderStatus.ASSIGNED,
@@ -153,8 +155,11 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     return { ...view, deliveryOtp: showOtp ? deliveryOtp(order.delivery!.id) : null };
   }
 
-  async function listOrders(userId: string, { limit, offset, status }: ListOrdersQuery) {
-    const where: Prisma.OrderWhereInput = { userId, ...(status && { status }) };
+  async function listOrders(userId: string, { limit, offset, status, active }: ListOrdersQuery) {
+    const where: Prisma.OrderWhereInput = {
+      userId,
+      AND: [active ? { status: { in: CUSTOMER_OPEN_STATUSES } } : {}, status ? { status } : {}],
+    };
 
     const [orders, total] = await prisma.$transaction([
       prisma.order.findMany({

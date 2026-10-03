@@ -71,6 +71,14 @@ const bannerSchema = z.object({
   link: linkSchema,
 });
 
+const brandId = z.string().trim().min(1, "Choose a brand").max(64);
+
+const tileSchema = z.object({
+  id: itemId,
+  imageUrl,
+  link: linkSchema,
+});
+
 const sectionBase = { id: itemId, enabled: z.boolean() };
 
 export const homeSectionSchema = z.discriminatedUnion("type", [
@@ -104,6 +112,44 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     backgroundColor: hexColor,
     textColor: hexColor,
     link: linkSchema,
+  }),
+  z.object({
+    ...sectionBase,
+    /** In-stock products with the biggest discount off MRP. */
+    type: z.literal("deals_rail"),
+    title: label(40, "a title"),
+    /** Null takes deals from every category. */
+    categoryId: categoryId.nullable(),
+    limit: z.int().min(4, "Show at least 4 products").max(20, "Show at most 20 products"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** What the signed-in customer has ordered before; the app loads it for each customer. */
+    type: z.literal("buy_again"),
+    title: label(40, "a title"),
+  }),
+  z.object({
+    ...sectionBase,
+    type: z.literal("brand_rail"),
+    title: label(40, "a title"),
+    /** Empty shows the brands with the most products in stock at the customer's store. */
+    brandIds: z.array(brandId).max(20, "Choose at most 20 brands"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** Category tiles showing their biggest discount, e.g. "Up to 40% OFF". */
+    type: z.literal("category_deals"),
+    title: label(40, "a title"),
+    /** Empty uses every top-level category. Categories without a discount at the store are left out. */
+    categoryIds: z.array(categoryId).max(12, "Choose at most 12 categories"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** Small images side by side, each optionally opening a category. */
+    type: z.literal("image_tiles"),
+    title: optionalLabel(40),
+    columns: z.union([z.literal(2), z.literal(3)]),
+    tiles: z.array(tileSchema).min(2, "Add at least two tiles").max(9, "Use at most 9 tiles"),
   }),
 ]);
 

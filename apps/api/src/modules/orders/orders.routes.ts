@@ -4,6 +4,8 @@ import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { createTrackingService } from "../delivery/tracking.service.js";
 import { startPaymentBodySchema } from "../payments/payments.schemas.js";
+import { createDiscoveryService } from "../products/discovery.service.js";
+import { buyAgainQuerySchema } from "../products/products.schemas.js";
 import { publicBaseUrl } from "../payments/public-url.js";
 import { cancelOrderBodySchema, createOrderBodySchema, listOrdersQuerySchema } from "./orders.schemas.js";
 import { createOrdersService } from "./orders.service.js";
@@ -11,6 +13,7 @@ import { createOrdersService } from "./orders.service.js";
 const ordersRoutes: FastifyPluginAsync = async (app) => {
   const ordersService = createOrdersService(app.prisma, app.payments);
   const tracking = createTrackingService(app.prisma, app.redis);
+  const discovery = createDiscoveryService(app.prisma);
 
   app.addHook("preHandler", app.requireRole(UserRole.CUSTOMER));
 
@@ -23,6 +26,11 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/", async (request) => {
     const query = listOrdersQuerySchema.parse(request.query);
     return ordersService.listOrders(request.user.sub, query);
+  });
+
+  app.get("/buy-again", async (request) => {
+    const { storeId, limit } = buyAgainQuerySchema.parse(request.query);
+    return discovery.buyAgain(request.user.sub, storeId, limit);
   });
 
   app.get("/:id", async (request) => {
