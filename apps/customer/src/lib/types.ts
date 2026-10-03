@@ -303,12 +303,26 @@ export type BrandRailSection = { id: string; type: "brand_rail"; title: string; 
 
 export type CategoryDealsSection = { id: string; type: "category_deals"; title: string; categories: (Category & { maxDiscountPercent: number })[] };
 
+/** `columns` applies to the grid layout only. */
 export type ImageTilesSection = {
   id: string;
   type: "image_tiles";
   title: string | null;
+  layout: "grid" | "carousel";
   columns: 2 | 3;
-  tiles: { id: string; imageUrl: string; link: HomeLink }[];
+  tiles: { id: string; imageUrl: string; link: HomeLink; buttonLabel: string | null }[];
+};
+
+/** `category` is the parent; `categories` its sub-categories. */
+export type SubcategoryGridSection = { id: string; type: "subcategory_grid"; title: string; columns: 3 | 4; category: Category; categories: Category[] };
+
+/** A null icon means the category has no image; show its first letter. */
+export type CategoryTab = {
+  id: string;
+  label: string;
+  icon: { type: "preset"; name: string } | { type: "image"; url: string } | null;
+  badge: string | null;
+  category: Category;
 };
 
 export type HomeSection =
@@ -320,7 +334,8 @@ export type HomeSection =
   | BuyAgainSection
   | BrandRailSection
   | CategoryDealsSection
-  | ImageTilesSection;
+  | ImageTilesSection
+  | SubcategoryGridSection;
 
-/** `GET /home`: the admin's home sections, ready to render in order. */
-export type HomeFeed = { storeId: string | null; sections: HomeSection[] };
+/** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
+export type HomeFeed = { storeId: string | null; categoryTabs?: CategoryTab[]; sections: HomeSection[] };

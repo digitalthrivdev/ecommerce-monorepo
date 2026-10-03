@@ -12,6 +12,7 @@ import { CartBar } from "@/components/cart-bar";
 import { BrandMark } from "@/components/brand-mark";
 import { CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
+import { CategoryTabs } from "@/components/home/category-tabs";
 import { HomeSections } from "@/components/home/home-sections";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -58,19 +59,33 @@ function HomeHeader() {
   );
 }
 
+/** Sticks to the top with the category tabs under it. */
 function SearchBar() {
+  const { store } = useDeliveryLocation();
+  const feed = useHomeFeed(store?.id, { enabled: false });
+  const tabs = feed.data?.categoryTabs ?? [];
+
   return (
-    <View className="bg-highlight px-4 pb-3">
-      <Pressable
-        onPress={() => router.push("/search")}
-        className="h-12 flex-row items-center gap-2.5 rounded-lg border border-border bg-card px-3.5 active:opacity-80"
-        accessibilityRole="search"
-        accessibilityLabel="Search products"
-      >
-        <Icon as={Search} size={18} className="text-muted-foreground" />
-        <Text className="text-[15px] text-muted-foreground">Search for &quot;milk&quot;</Text>
-      </Pressable>
+    <View className={cn("bg-highlight", tabs.length === 0 && "pb-3")}>
+      <View className="px-4">
+        <SearchField />
+      </View>
+      <CategoryTabs tabs={tabs} />
     </View>
+  );
+}
+
+function SearchField() {
+  return (
+    <Pressable
+      onPress={() => router.push("/search")}
+      className="h-12 flex-row items-center gap-2.5 rounded-lg border border-border bg-card px-3.5 active:opacity-80"
+      accessibilityRole="search"
+      accessibilityLabel="Search products"
+    >
+      <Icon as={Search} size={18} className="text-muted-foreground" />
+      <Text className="text-[15px] text-muted-foreground">Search for &quot;milk&quot;</Text>
+    </Pressable>
   );
 }
 
