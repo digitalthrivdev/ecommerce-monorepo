@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
+import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,8 +72,8 @@ function EditKeysDialog<T extends IntegrationKeys>({
           <DialogHeader>
             <DialogTitle>{item.label} keys</DialogTitle>
             <DialogDescription>
-              Copy these from your {item.label} account. They are checked with {item.label} and stored encrypted;
-              secret values can be replaced but never shown again.
+              Copy these from your {item.label} account. We check them with {item.label} and store them safely;
+              secret values can be replaced but are never shown again.
             </DialogDescription>
           </DialogHeader>
           <input type="hidden" name="name" value={item.name} />
@@ -196,10 +196,10 @@ function RemoveKeysButton<T extends IntegrationKeys>({
 }
 
 function defaultStatus(item: IntegrationKeys) {
-  if (item.source === "env") return <Badge variant="secondary">Server environment</Badge>;
-  if (item.configured) return <Badge>Keys saved</Badge>;
-  if (item.savedKeysUnreadable) return <Badge variant="destructive">Enter keys again</Badge>;
-  return <Badge variant="outline">Not set</Badge>;
+  if (item.source === "env") return <Pill tone="blue">Set on server</Pill>;
+  if (item.configured) return <Pill tone="green">Added</Pill>;
+  if (item.savedKeysUnreadable) return <Pill tone="red">Enter keys again</Pill>;
+  return <Pill tone="gray">Not added</Pill>;
 }
 
 /** Keys for each payment gateway or SMS provider: add, edit (write-only secrets) and remove. */
@@ -227,9 +227,8 @@ export function IntegrationKeysList<T extends IntegrationKeys>({
     <div className="flex flex-col gap-4">
       {!canStore && (
         <p className="rounded-lg border p-3 text-sm text-muted-foreground">
-          To save keys here, set <code>SECRETS_ENCRYPTION_KEY</code> on the server (for example from{" "}
-          <code>openssl rand -base64 32</code>) and restart the API. Until then keys can only be set in the server
-          environment.
+          Keys can&apos;t be saved here yet. Ask your technical partner to set <code>SECRETS_ENCRYPTION_KEY</code> on
+          the server (for example from <code>openssl rand -base64 32</code>) and restart it.
         </p>
       )}
       <ul className="flex flex-col divide-y">
@@ -238,7 +237,7 @@ export function IntegrationKeysList<T extends IntegrationKeys>({
           return (
             <li key={item.name} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{item.label}</span>
+                <span className="font-semibold">{item.label}</span>
                 {status(item)}
                 <div className="ml-auto flex gap-1">
                   {item.source === "dashboard" && (
@@ -255,10 +254,10 @@ export function IntegrationKeysList<T extends IntegrationKeys>({
                 {item.savedKeysUnreadable
                   ? "The saved keys cannot be read, probably because SECRETS_ENCRYPTION_KEY changed. Add them again."
                   : item.source === "env"
-                    ? `Set in the server environment${publicId ? ` (${publicId})` : ""}. Change them there.`
+                    ? `Set on the server${publicId ? ` (${publicId})` : ""}. Change them there.`
                     : item.source === "dashboard"
                       ? `${publicId ?? "Keys saved"}${item.keysUpdatedAt ? ` · updated ${formatDateTime(item.keysUpdatedAt, timezone)}` : ""}`
-                      : "No keys yet."}
+                      : "Not added yet."}
               </p>
             </li>
           );

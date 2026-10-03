@@ -84,7 +84,7 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
             <TextField name="longitude" label="Longitude" defaultValue={store?.longitude} error={fieldErrors.longitude} inputMode="decimal" placeholder="77.6245" required />
             <TextField
               name="serviceRadiusKm"
-              label="Radius (km)"
+              label="Delivers up to (km)"
               defaultValue={store ? Number(store.serviceRadiusKm).toString() : "3"}
               error={fieldErrors.serviceRadiusKm}
               inputMode="decimal"
@@ -98,7 +98,7 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
           <FieldLabel htmlFor="store-active">Accepting orders</FieldLabel>
         </Field>
         <FieldDescription className="-mt-3">
-          Inactive stores are hidden from customers and take no new orders. Orders already placed can still be completed.
+          Switched-off stores are hidden from customers and take no new orders. Orders already placed can still be finished.
         </FieldDescription>
       </FieldGroup>
 

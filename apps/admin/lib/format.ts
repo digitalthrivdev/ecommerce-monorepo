@@ -43,70 +43,70 @@ export function formatNumber(value: number) {
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING_PAYMENT: "Awaiting payment",
+  PENDING_PAYMENT: "Waiting for payment",
   CONFIRMED: "New",
   STORE_ACCEPTED: "Accepted",
-  PICKING: "Picking",
+  PICKING: "Packing",
   PACKED: "Packed",
-  READY_FOR_PICKUP: "Ready for pickup",
-  ASSIGNED: "Assigned",
+  READY_FOR_PICKUP: "Ready for rider",
+  ASSIGNED: "Rider assigned",
   PICKED_UP: "Picked up",
-  OUT_FOR_DELIVERY: "Out for delivery",
+  OUT_FOR_DELIVERY: "On the way",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   COD: "Cash on delivery",
-  ONLINE: "Online",
+  ONLINE: "Online payment",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  PENDING: "Pending",
-  PROCESSING: "Processing",
+  PENDING: "Not paid yet",
+  PROCESSING: "Payment in progress",
   PAID: "Paid",
-  FAILED: "Failed",
+  FAILED: "Payment failed",
   REFUNDED: "Refunded",
 };
 
 export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
-  PENDING: "Pending",
-  ASSIGNED: "Assigned",
+  PENDING: "Waiting for rider",
+  ASSIGNED: "Rider assigned",
   PICKED_UP: "Picked up",
-  OUT_FOR_DELIVERY: "Out for delivery",
+  OUT_FOR_DELIVERY: "On the way",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
 };
 
 export const PARTNER_STATUS_LABELS: Record<DeliveryPartnerStatus, string> = {
-  ONLINE: "Online",
+  ONLINE: "Available",
   BUSY: "On a delivery",
-  OFFLINE: "Offline",
+  OFFLINE: "Off duty",
 };
 
 export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   accept: "Accept order",
-  "start-picking": "Start picking",
+  "start-picking": "Start packing",
   pack: "Mark packed",
-  ready: "Ready for pickup",
-  assign: "Assign partner",
-  reassign: "Reassign partner",
+  ready: "Ready for rider",
+  assign: "Assign rider",
+  reassign: "Change rider",
   cancel: "Cancel order",
-  "mark-unavailable": "Mark unavailable",
+  "mark-unavailable": "Item not found",
 };
 
 export const STOCK_REASON_LABELS: Record<StockChangeReason, string> = {
-  RESTOCK: "Restock",
-  CORRECTION: "Correction",
+  RESTOCK: "Received stock",
+  CORRECTION: "Count corrected",
   DAMAGE: "Damaged or expired",
-  ORDER_UNAVAILABLE: "Not found while picking",
+  ORDER_UNAVAILABLE: "Not found while packing",
 };
 
 export const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  ADMIN: "Admin",
-  STORE_STAFF: "Store staff",
+  ADMIN: "Owner / admin",
+  STORE_STAFF: "Shop staff",
   CUSTOMER: "Customer",
-  DELIVERY_PARTNER: "Delivery partner",
+  DELIVERY_PARTNER: "Rider",
 };

@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { updatePaymentGateway } from "@/app/(dashboard)/settings/actions";
-import { Badge } from "@/components/ui/badge";
+import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldSet, FieldTitle } from "@/components/ui/field";
 import { useFormAction } from "@/hooks/use-form-action";
@@ -20,40 +20,33 @@ export function PaymentGatewayForm({ settings }: { settings: PlatformSettings })
       value: gateway.name,
       title: gateway.label,
       description: !gateway.needsCredentials
-        ? "Charges nothing. Only available outside production."
+        ? "Pretend payments for trying things out. Not available on the live site."
         : gateway.configured
           ? gateway.source === "env"
-            ? "Keys set in the server environment."
-            : "Keys saved under Gateway keys."
+            ? "Keys set on the server."
+            : "Keys added in step 1."
           : gateway.editable
-            ? "Add its keys under Gateway keys first."
-            : "Not configured on the server.",
+            ? "Add its keys in step 1 first."
+            : "Not set up on the server.",
       badge: gateway.configured ? (
-        gateway.testMode ? <Badge variant="secondary">Test mode</Badge> : <Badge>Live</Badge>
+        gateway.testMode ? <Pill tone="amber">Test mode</Pill> : <Pill tone="green">Live</Pill>
       ) : (
-        <Badge variant="outline">Not configured</Badge>
+        <Pill tone="gray">No keys</Pill>
       ),
       disabled: !gateway.configured,
     })),
-    { value: "", title: "Off", description: "Customers can only pay cash on delivery." },
+    { value: "", title: "Cash on delivery only", description: "Turn online payments off." },
   ];
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      {settings.paymentProvider && !active?.configured && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-          The selected gateway ({active?.label ?? settings.paymentProvider}) has no working keys, so online payments
-          are off. Choose another gateway or add its keys again.
-        </p>
-      )}
-
       <FieldSet>
         <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment gateway">
           {options.map((option) => (
             <FieldLabel
               key={option.value || "off"}
               htmlFor={`gateway-${option.value || "off"}`}
-              className="has-checked:border-primary/30 has-checked:bg-primary/5 dark:has-checked:border-primary/20 dark:has-checked:bg-primary/10"
+              className="cursor-pointer has-checked:border-primary has-checked:bg-primary-soft"
             >
               <Field orientation="horizontal" data-disabled={option.disabled}>
                 <FieldContent>
@@ -70,7 +63,7 @@ export function PaymentGatewayForm({ settings }: { settings: PlatformSettings })
                   value={option.value}
                   defaultChecked={option.value === (active?.configured ? settings.paymentProvider : "")}
                   disabled={option.disabled}
-                  className="size-4 accent-primary"
+                  className="size-5 accent-primary"
                 />
               </Field>
             </FieldLabel>
@@ -80,13 +73,13 @@ export function PaymentGatewayForm({ settings }: { settings: PlatformSettings })
       </FieldSet>
 
       <p className="text-sm text-muted-foreground">
-        Payments already started stay on the gateway they began with, including their refunds.
+        Switching is safe: payments already started finish, and can be refunded, on the one they began with.
       </p>
 
       <div>
         <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="animate-spin" />}
-          Save online payments
+          Save choice
         </Button>
       </div>
     </form>

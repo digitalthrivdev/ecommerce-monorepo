@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Boxes, IndianRupee, PackageCheck, ShoppingBag, type LucideIcon } from "lucide-react";
 
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
 import { StoreFilter } from "@/components/store-filter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,7 +119,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                         <TableCell>{order.customerName}</TableCell>
                         {isAdmin && !storeId && <TableCell>{order.store.name}</TableCell>}
                         <TableCell>
-                          <OrderStatusBadge status={order.status} />
+                          <OrderStatusPill status={order.status} />
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="tabular-nums">{money(order.total)}</div>
@@ -154,7 +154,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
             {stats.partners && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Delivery partners</CardTitle>
+                  <CardTitle>Riders</CardTitle>
                   <CardDescription>Active partner accounts</CardDescription>
                 </CardHeader>
                 <CardContent>

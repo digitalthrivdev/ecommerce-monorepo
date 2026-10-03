@@ -64,7 +64,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
         <div className="flex flex-wrap items-center gap-2">
           <Form action="/products" className="flex gap-2">
             {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
-            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Name, brand, keyword or SKU" aria-label="Search products" className="w-64" />
+            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Product name, brand or code" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
               <Search />
             </Button>
@@ -113,10 +113,10 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                       <TableCell>{product.category.name}</TableCell>
                       <TableCell className="text-right tabular-nums">{product.variantCount}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", product.storeCount === 0 && "text-muted-foreground")}>
-                        {product.storeCount === 0 ? "Not listed" : product.storeCount}
+                        {product.storeCount === 0 ? "Not selling" : product.storeCount}
                       </TableCell>
                       <TableCell>
-                        {product.isActive ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}
+                        {product.isActive ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Switched off</Badge>}
                       </TableCell>
                     </TableRow>
                   ))}

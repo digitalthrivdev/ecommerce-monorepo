@@ -1,14 +1,12 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { refresh } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
-  formChecked,
-  formText,
   idSchema,
   optionalPositiveDecimal,
   optionalText,
@@ -16,8 +14,9 @@ import {
   slugInput,
   text,
 } from "@/lib/form-schemas";
+import type { DetailsDraft, PriceRow, StockRow } from "@/lib/product-editor";
 import type { ActionResult, ProductDetail } from "@/lib/types";
-import type { VariantsPayload } from "@/lib/variant-drafts";
+import { suggestSku, type VariantsPayload } from "@/lib/variant-drafts";
 
 const MAX_QUANTITY_PER_ITEM = 50;
 /** Select value for "no brand" and "not specified"; Radix Select cannot use an empty value. */
@@ -71,87 +70,217 @@ const productSchema = z.object({
   isActive: z.boolean(),
 });
 
-/** A new product starts with one variant; more are added in the variants editor. */
+const barcodeInput = optionalPattern(/^[0-9A-Za-z-]{4,32}$/, "Use 4 to 32 letters or digits");
+
+/** A new product starts with one variant; more sizes are added on the product page. */
 const firstVariantSchema = z.object({
-  sku: skuInput,
+  sku: z.union([z.literal(""), skuInput]),
+  barcode: barcodeInput,
   quantity: optionalPositiveDecimal("Enter a pack size like 1, 500 or 0.5"),
   unit: optionalText(20),
   maxOrderQuantity: optionalMaxPerOrder,
 });
 
-export async function saveProduct(formData: FormData): Promise<ActionResult> {
-  const id = formText(formData, "id") || undefined;
-  if (id && !idSchema.safeParse(id).success) return { ok: false, error: "Invalid request" };
-  const parsed = productSchema.safeParse({
-    categoryId: formText(formData, "categoryId"),
-    brandId: formText(formData, "brandId"),
-    name: formText(formData, "name"),
-    slug: formText(formData, "slug"),
-    description: formText(formData, "description"),
-    tags: formText(formData, "tags"),
-    isVeg: formText(formData, "isVeg"),
-    hsnCode: formText(formData, "hsnCode"),
-    gstRate: formText(formData, "gstRate"),
-    manufacturerName: formText(formData, "manufacturerName"),
-    manufacturerAddress: formText(formData, "manufacturerAddress"),
-    countryOfOrigin: formText(formData, "countryOfOrigin"),
-    fssaiLicense: formText(formData, "fssaiLicense"),
-    shelfLife: formText(formData, "shelfLife"),
-    ingredients: formText(formData, "ingredients"),
-    isActive: formChecked(formData, "isActive"),
+const priceRowSchema = z
+  .object({
+    storeId: idSchema,
+    variantId: z.string().max(64),
+    sellingPrice: positiveDecimal("Enter a price like 68 or 68.50"),
+    mrp: optionalPositiveDecimal("Enter the MRP like 70, or leave it empty"),
+    isAvailable: z.boolean(),
+  })
+  .refine((row) => row.mrp === null || Number(row.mrp) >= Number(row.sellingPrice), {
+    path: ["mrp"],
+    message: "MRP can't be lower than your price",
   });
-  const variant = id
-    ? null
-    : firstVariantSchema.safeParse({
-        sku: formText(formData, "sku"),
-        quantity: formText(formData, "quantity"),
-        unit: formText(formData, "unit"),
-        maxOrderQuantity: formText(formData, "maxOrderQuantity"),
-      });
-  if (!parsed.success || (variant && !variant.success)) {
-    const issues = [...(parsed.error?.issues ?? []), ...(variant?.error?.issues ?? [])];
-    return validationFailure(new z.ZodError(issues));
+
+const stockRowSchema = z.object({
+  storeId: idSchema,
+  variantId: z.string().max(64),
+  delta: z.number().int().min(-1_000_000).max(1_000_000),
+});
+
+const MAX_ROWS = 1000;
+const priceRowsSchema = z.array(priceRowSchema).max(MAX_ROWS);
+const stockRowsSchema = z.array(stockRowSchema).max(MAX_ROWS);
+
+type Failure = Extract<ActionResult, { ok: false }>;
+
+/** Prefixes a step's failure so people know which part did not save. */
+function partly(saved: string[], failure: Failure): Failure {
+  if (saved.length === 0) return failure;
+  return { ...failure, error: `${saved.join(" and ")} saved, but ${failure.error.charAt(0).toLowerCase()}${failure.error.slice(1)}` };
+}
+
+const stockPath = (row: { storeId: string; variantId: string }) =>
+  `/stores/${encodeURIComponent(row.storeId)}/inventory/${encodeURIComponent(row.variantId)}`;
+
+async function applyStock(rows: z.infer<typeof stockRowSchema>[], note: string) {
+  for (const row of rows.filter((candidate) => candidate.delta !== 0)) {
+    await apiFetch(stockPath(row), {
+      method: "PATCH",
+      body: { delta: row.delta, reason: row.delta > 0 ? "RESTOCK" : "CORRECTION", note },
+    });
+  }
+}
+
+function detailsBody(details: z.infer<typeof productSchema>) {
+  const { slug, ...data } = details;
+  return { ...data, ...(slug && { slug }) };
+}
+
+export type SaveProductInput = {
+  productId: string;
+  details?: DetailsDraft;
+  variants?: VariantsPayload;
+  prices?: PriceRow[];
+  stock?: StockRow[];
+};
+
+/**
+ * Saves everything changed on the product or size page in one go: sizes first (the step most
+ * likely to be refused, e.g. a code already in use), then details, prices and stock.
+ */
+export async function saveProductChanges(input: SaveProductInput): Promise<ActionResult> {
+  if (!idSchema.safeParse(input.productId).success) return { ok: false, error: "Invalid request" };
+  const productPath = `/products/${encodeURIComponent(input.productId)}`;
+
+  const details = input.details ? productSchema.safeParse(input.details) : null;
+  if (details && !details.success) return validationFailure(details.error);
+  const prices = priceRowsSchema.safeParse(input.prices ?? []);
+  const stock = stockRowsSchema.safeParse(input.stock ?? []);
+  if (!prices.success || !stock.success) return { ok: false, error: "Check the prices and stock" };
+
+  const saved: string[] = [];
+  const finish = (failure: Failure) => {
+    if (saved.length > 0) refresh();
+    return partly(saved, failure);
+  };
+
+  if (input.variants) {
+    try {
+      await apiFetch(`${productPath}/variants`, { method: "PUT", body: input.variants });
+      saved.push("Sizes");
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "SKU_TAKEN") {
+        return finish({ ok: false, error: "Sizes not saved: another product already uses one of these codes" });
+      }
+      const failure = apiFailure(error, undefined, { fullPaths: true });
+      return finish({ ...failure, error: `Sizes not saved: ${failure.error}` });
+    }
   }
 
-  const { slug, ...data } = parsed.data;
-  const body = {
-    ...data,
-    ...(slug && { slug }),
-    ...(variant?.success && { options: [], variants: [variant.data] }),
-  };
+  if (details?.success) {
+    try {
+      await apiFetch(productPath, { method: "PATCH", body: detailsBody(details.data) });
+      saved.push("Details");
+    } catch (error) {
+      return finish(apiFailure(error, { field: "slug", message: "Another product already uses this web address name" }));
+    }
+  }
+
+  if (prices.data.length > 0) {
+    try {
+      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: prices.data } });
+      saved.push("Prices");
+    } catch (error) {
+      const failure = apiFailure(error);
+      return finish({ ...failure, error: `Prices not saved: ${failure.error}` });
+    }
+  }
+
+  if (stock.data.length > 0) {
+    try {
+      await applyStock(stock.data, "Changed on the product page");
+      saved.push("Stock");
+    } catch (error) {
+      const failure = apiFailure(error);
+      return finish({ ...failure, error: `Stock not saved: ${failure.error}` });
+    }
+  }
+
+  refresh();
+  return { ok: true, message: saved.length ? "Saved" : "Nothing to save" };
+}
+
+export type CreateProductInput = {
+  details: DetailsDraft;
+  variant: { sku: string; barcode: string; quantity: string; unit: string; maxOrderQuantity: string };
+  /** Rows with an empty variantId; the new size's id is filled in here. */
+  prices: PriceRow[];
+  stock: StockRow[];
+  images: string[];
+};
+
+export type CreateProductResult =
+  | { ok: true; href: string; warning?: string }
+  | { ok: false; error: string; fieldErrors?: Record<string, string> };
+
+/** Creates the product with its first size, then its prices, starting stock and photos. */
+export async function createProduct(input: CreateProductInput): Promise<CreateProductResult> {
+  const details = productSchema.safeParse(input.details);
+  const variant = firstVariantSchema.safeParse(input.variant);
+  if (!details.success || !variant.success) {
+    return validationFailure(new z.ZodError([...(details.error?.issues ?? []), ...(variant.error?.issues ?? [])]));
+  }
+  const prices = priceRowsSchema.safeParse(input.prices);
+  const stock = stockRowsSchema.safeParse(input.stock);
+  const images = z.array(z.url().max(500)).max(20).safeParse(input.images);
+  if (!prices.success || !stock.success || !images.success) return { ok: false, error: "Check the price, stock and photos" };
+
+  const first = variant.data;
+  const autoSku = first.sku === "";
+  const generatedSku = suggestSku(details.data.name, [`${first.quantity ?? ""}${first.unit ?? ""}`]).slice(0, 57).replace(/-+$/, "") || "ITEM";
+  const request = (sku: string) =>
+    apiFetch<ProductDetail>("/products", {
+      method: "POST",
+      body: { ...detailsBody(details.data), options: [], variants: [{ ...first, sku: first.sku || sku }] },
+    });
 
   let product: ProductDetail;
   try {
-    product = await apiFetch<ProductDetail>(id ? `/products/${encodeURIComponent(id)}` : "/products", {
-      method: id ? "PATCH" : "POST",
-      body,
-    });
+    try {
+      product = await request(generatedSku);
+    } catch (error) {
+      if (!(autoSku && error instanceof ApiError && error.code === "SKU_TAKEN")) throw error;
+      product = await request(`${generatedSku}-${randomBytes(3).toString("hex").toUpperCase()}`);
+    }
   } catch (error) {
     if (error instanceof ApiError && error.code === "SKU_TAKEN") {
-      return { ok: false, error: error.message, fieldErrors: { sku: "Another variant already uses this SKU" } };
+      return { ok: false, error: error.message, fieldErrors: { sku: "Another product already uses this code" } };
     }
-    return apiFailure(error, { field: "slug", message: "Another product already uses this slug" });
+    return apiFailure(error, { field: "slug", message: "Another product already uses this web address name" });
   }
 
-  if (!id) {
-    redirect(`/products/${product.id}`);
+  const href = `/products/${product.id}`;
+  const variantId = product.variants[0]!.id;
+  const productPath = `/products/${encodeURIComponent(product.id)}`;
+  const problems: string[] = [];
+
+  if (prices.data.length > 0) {
+    try {
+      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: prices.data.map((row) => ({ ...row, variantId })) } });
+      await applyStock(
+        stock.data.map((row) => ({ ...row, variantId })),
+        "Starting stock",
+      );
+    } catch (error) {
+      if (!(error instanceof ApiError)) throw error;
+      problems.push(`the price or stock (${error.message})`);
+    }
   }
-  refresh();
-  return { ok: true, message: "Product updated" };
-}
 
-/** Replaces the product's options and variants; field errors are keyed by full path ("variants.2.sku"). */
-export async function saveVariants(productId: string, payload: VariantsPayload): Promise<ActionResult> {
-  if (!idSchema.safeParse(productId).success) return { ok: false, error: "Invalid request" };
-
-  try {
-    await apiFetch(`/products/${encodeURIComponent(productId)}/variants`, { method: "PUT", body: payload });
-  } catch (error) {
-    return apiFailure(error, undefined, { fullPaths: true });
+  for (const url of images.data) {
+    try {
+      await apiFetch(`${productPath}/images`, { method: "POST", body: { url, variantId: null } });
+    } catch (error) {
+      if (!(error instanceof ApiError)) throw error;
+      problems.push(`a photo (${error.message})`);
+      break;
+    }
   }
 
-  refresh();
-  return { ok: true, message: "Variants saved" };
+  return { ok: true, href, ...(problems.length > 0 && { warning: `Product saved, but ${problems.join(" and ")} could not be added. Set it below.` }) };
 }
 
 const imageTarget = z.object({ productId: idSchema, imageId: idSchema });
@@ -175,7 +304,7 @@ export async function addProductImage(input: { productId: string; url: string; v
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
 
   const { productId, ...body } = parsed.data;
-  return imageRequest(imagesPath(productId), { method: "POST", body }, "Image added");
+  return imageRequest(imagesPath(productId), { method: "POST", body }, "Photo added");
 }
 
 export async function setImageVariant(input: { productId: string; imageId: string; variantId: string | null }): Promise<ActionResult> {
@@ -186,7 +315,7 @@ export async function setImageVariant(input: { productId: string; imageId: strin
   return imageRequest(
     `${imagesPath(productId)}/${encodeURIComponent(imageId)}`,
     { method: "PATCH", body: { variantId } },
-    variantId ? "Image shown for the variant" : "Image shown for every variant",
+    variantId ? "Photo shown for that size" : "Photo shown for every size",
   );
 }
 
@@ -195,7 +324,7 @@ export async function deleteProductImage(input: { productId: string; imageId: st
   if (!parsed.success) return { ok: false, error: "Invalid request" };
 
   const { productId, imageId } = parsed.data;
-  return imageRequest(`${imagesPath(productId)}/${encodeURIComponent(imageId)}`, { method: "DELETE" }, "Image removed");
+  return imageRequest(`${imagesPath(productId)}/${encodeURIComponent(imageId)}`, { method: "DELETE" }, "Photo removed");
 }
 
 export async function reorderProductImages(input: { productId: string; imageIds: string[] }): Promise<ActionResult> {
@@ -203,50 +332,5 @@ export async function reorderProductImages(input: { productId: string; imageIds:
   if (!parsed.success) return { ok: false, error: "Invalid request" };
 
   const { productId, imageIds } = parsed.data;
-  return imageRequest(`${imagesPath(productId)}/order`, { method: "PUT", body: { imageIds } }, "Image order saved");
-}
-
-const listingSchema = z
-  .object({
-    storeId: idSchema,
-    variantId: idSchema,
-    mode: z.enum(["create", "update"]),
-    sellingPrice: positiveDecimal("Enter the selling price like 68 or 68.50"),
-    mrp: optionalPositiveDecimal("Enter the MRP like 70 or 70.50, or leave it empty"),
-    isAvailable: z.boolean(),
-  })
-  .refine((listing) => listing.mrp === null || Number(listing.mrp) >= Number(listing.sellingPrice), {
-    path: ["mrp"],
-    message: "MRP cannot be lower than the selling price",
-  });
-
-export async function saveListing(formData: FormData): Promise<ActionResult> {
-  const parsed = listingSchema.safeParse({
-    storeId: formText(formData, "storeId"),
-    variantId: formText(formData, "variantId"),
-    mode: formText(formData, "mode"),
-    sellingPrice: formText(formData, "sellingPrice"),
-    mrp: formText(formData, "mrp"),
-    isAvailable: formChecked(formData, "isAvailable"),
-  });
-  if (!parsed.success) return validationFailure(parsed.error);
-
-  const { storeId, variantId, mode, sellingPrice, mrp, isAvailable } = parsed.data;
-  const storePath = `/stores/${encodeURIComponent(storeId)}/variants`;
-
-  try {
-    if (mode === "create") {
-      await apiFetch(storePath, { method: "POST", body: { variantId, sellingPrice, mrp, isAvailable } });
-    } else {
-      await apiFetch(`${storePath}/${encodeURIComponent(variantId)}`, { method: "PATCH", body: { sellingPrice, mrp } });
-    }
-  } catch (error) {
-    if (error instanceof ApiError && error.code === "ALREADY_LISTED") {
-      return { ok: false, error: error.message, fieldErrors: { sellingPrice: "Already listed at this store" } };
-    }
-    return apiFailure(error);
-  }
-
-  refresh();
-  return { ok: true, message: mode === "create" ? "Listed at the store" : "Price updated" };
+  return imageRequest(`${imagesPath(productId)}/order`, { method: "PUT", body: { imageIds } }, "Photo order saved");
 }

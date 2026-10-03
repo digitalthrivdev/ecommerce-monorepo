@@ -42,13 +42,13 @@ export function PartnerForm({ partner }: { partner: DeliveryPartner }) {
         </div>
         <Field orientation="horizontal" data-invalid={invalid("isActive")}>
           <Switch id="partner-active" name="isActive" defaultChecked={partner.isActive} aria-invalid={invalid("isActive")} />
-          <FieldLabel htmlFor="partner-active">Active</FieldLabel>
+          <FieldLabel htmlFor="partner-active">Can take orders</FieldLabel>
         </Field>
         {fieldErrors.isActive ? (
           <FieldError className="-mt-3">{fieldErrors.isActive}</FieldError>
         ) : (
           <FieldDescription className="-mt-3">
-            Deactivated partners cannot use the delivery app or be assigned orders. Their history is kept.
+            Switched-off riders cannot use the rider app or get orders. Their past deliveries are kept.
           </FieldDescription>
         )}
       </FieldGroup>

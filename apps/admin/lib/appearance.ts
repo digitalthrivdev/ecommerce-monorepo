@@ -34,6 +34,22 @@ export function contrastRatio(foreground: string, background: string) {
   return (light + 0.05) / (dark + 0.05);
 }
 
+/** Mixes a hex colour towards black by `amount` (0–1). */
+function darken(hex: string, amount: number) {
+  const channel = (offset: number) => Math.round(Number.parseInt(hex.slice(offset, offset + 2), 16) * (1 - amount));
+  return `#${[1, 3, 5].map((offset) => channel(offset).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** The colour, darkened just enough to read as normal-size text on `background` (WCAG AA, 4.5:1). */
+export function readableOn(hex: string, background = "#FFFFFF") {
+  if (!isHexColor(hex)) return hex;
+  for (let amount = 0; amount <= 1; amount += 0.05) {
+    const candidate = darken(hex, amount);
+    if ((contrastRatio(candidate, background) ?? 0) >= 4.5) return candidate;
+  }
+  return "#000000";
+}
+
 export const newId = () => crypto.randomUUID();
 
 export function newSection(type: HomeSectionType, categories: Category[], colors: Colors): HomeSection {

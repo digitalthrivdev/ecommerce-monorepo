@@ -203,14 +203,14 @@ function AssignPartnerDialog({ storeId, orderId, mode, partners }: Target & {
         </DialogHeader>
         {partners.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No delivery partners are online right now. Partners appear here when they go online in the delivery app.
+            No riders are free right now. Riders show up here when they go online in the rider app.
           </p>
         ) : (
           <Field>
             <FieldLabel htmlFor="partner">Online partners</FieldLabel>
             <Select value={partnerId} onValueChange={setPartnerId}>
               <SelectTrigger id="partner" className="w-full">
-                <SelectValue placeholder="Choose a delivery partner" />
+                <SelectValue placeholder="Choose a rider" />
               </SelectTrigger>
               <SelectContent>
                 {partners.map((partner) => (

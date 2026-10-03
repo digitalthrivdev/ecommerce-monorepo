@@ -115,7 +115,7 @@ export const variantLabel = (options: OptionDraft[], variant: VariantDraft) =>
 type Result = Draft | string;
 
 const checkSize = (draft: Draft): Result =>
-  draft.variants.length > MAX_VARIANTS ? `A product can have at most ${MAX_VARIANTS} variants` : draft;
+  draft.variants.length > MAX_VARIANTS ? `A product can have at most ${MAX_VARIANTS} sizes` : draft;
 
 /** Adds a value and a variant for each new combination it makes. */
 export function addOptionValue(draft: Draft, optionKey: string, value: string, slug: string): Result {
@@ -139,7 +139,7 @@ export function removeOptionValue(draft: Draft, optionKey: string, value: string
   const option = draft.options.find((candidate) => candidate.key === optionKey);
   if (!option || option.values.length <= 1) return "An option needs at least one value; remove the option instead";
   const variants = draft.variants.filter((variant) => variant.values[optionKey] !== value);
-  if (variants.length === 0) return "A product needs at least one variant";
+  if (variants.length === 0) return "A product needs at least one size";
   return {
     options: draft.options.map((candidate) =>
       candidate.key === optionKey ? { ...candidate, values: candidate.values.filter((existing) => existing !== value) } : candidate,
@@ -191,6 +191,6 @@ export function addMissingCombinations(draft: Draft, slug: string): Result {
 }
 
 export function removeVariant(draft: Draft, key: string): Result {
-  if (draft.variants.length <= 1) return "A product needs at least one variant";
+  if (draft.variants.length <= 1) return "A product needs at least one size";
   return { ...draft, variants: draft.variants.filter((variant) => variant.key !== key) };
 }

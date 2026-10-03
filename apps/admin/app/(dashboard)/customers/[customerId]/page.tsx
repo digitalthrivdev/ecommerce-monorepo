@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -92,19 +91,12 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
   return (
     <>
       <PageHeader
+        back={{ href: "/customers", label: "Customers" }}
         title={customer.name ?? customer.phone}
         description={[customer.name && customer.phone, customer.email].filter(Boolean).join(" · ") || undefined}
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link href="/customers">
-              <ArrowLeft />
-              Customers
-            </Link>
-          </Button>
-        </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Stat label="Orders" value={String(stats.orders)} hint={stats.cancelled > 0 ? `${stats.cancelled} cancelled` : undefined} />
@@ -148,7 +140,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
                           </div>
                         </TableCell>
                         <TableCell>
-                          <OrderStatusBadge status={order.status} />
+                          <OrderStatusPill status={order.status} />
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{order.itemCount}</TableCell>
                         <TableCell className="text-right">

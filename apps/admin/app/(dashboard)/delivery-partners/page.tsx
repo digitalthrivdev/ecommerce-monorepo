@@ -18,7 +18,7 @@ import { requireAdmin } from "@/lib/dal";
 import { formatTimeAgo, ORDER_STATUS_LABELS } from "@/lib/format";
 import type { DeliveryPartnerStatus, PartnerList } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Delivery partners" };
+export const metadata: Metadata = { title: "Riders" };
 
 const PAGE_SIZE = 25;
 
@@ -30,7 +30,7 @@ const TABS: Tab[] = [
   { id: "online", label: "Available", status: "ONLINE", isActive: true },
   { id: "busy", label: "On a delivery", status: "BUSY", isActive: true },
   { id: "offline", label: "Offline", status: "OFFLINE", isActive: true },
-  { id: "inactive", label: "Deactivated", isActive: false },
+  { id: "inactive", label: "Switched off", isActive: false },
 ];
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -60,7 +60,7 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
   return (
     <>
       <AutoRefresh seconds={30} />
-      <PageHeader title="Delivery partners" description="Who is available, who is out on a delivery, and who is offline" actions={<AddPartnerDialog />} />
+      <PageHeader title="Riders" description="Who is free, who is out on a delivery, and who is off duty" actions={<AddPartnerDialog />} />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -96,7 +96,7 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
           <CardContent>
             {partners.items.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                {q ? `No partners match “${q}”.` : partners.counts.all === 0 ? "No delivery partners yet. Add one to start assigning orders." : "No partners here right now."}
+                {q ? `No riders match “${q}”.` : partners.counts.all === 0 ? "No riders yet. Add one so you can send out orders." : "No riders here right now."}
               </p>
             ) : (
               <Table>

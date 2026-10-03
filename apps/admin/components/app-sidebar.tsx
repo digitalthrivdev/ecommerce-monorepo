@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTheme } from "next-themes";
 import {
   Award,
   Bike,
   Boxes,
   ChevronsUpDown,
-  LayoutDashboard,
+  House,
   LogOut,
+  Menu,
   Monitor,
   Moon,
   Package,
@@ -52,50 +53,48 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { ROLE_LABELS } from "@/lib/format";
 import type { DashboardRole, DashboardUser } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: LucideIcon;
-  roles: readonly DashboardRole[];
-  /** Screens that are not built yet are shown disabled. */
-  ready?: boolean;
-};
+type NavItem = { title: string; href: string; icon: LucideIcon; roles: readonly DashboardRole[] };
 
 const BOTH: readonly DashboardRole[] = ["ADMIN", "STORE_STAFF"];
 const ADMIN: readonly DashboardRole[] = ["ADMIN"];
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
-    label: "Operations",
+    label: "Today",
     items: [
-      { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: BOTH, ready: true },
-      { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH, ready: true },
-      { title: "Inventory", href: "/inventory", icon: Boxes, roles: BOTH, ready: true },
-      { title: "Delivery partners", href: "/delivery-partners", icon: Bike, roles: ADMIN, ready: true },
+      { title: "Home", href: "/", icon: House, roles: BOTH },
+      { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH },
+      { title: "Stock", href: "/inventory", icon: Boxes, roles: BOTH },
+      { title: "Riders", href: "/delivery-partners", icon: Bike, roles: ADMIN },
     ],
   },
   {
-    label: "Catalog",
+    label: "Products",
     items: [
-      { title: "Products", href: "/products", icon: Package, roles: ADMIN, ready: true },
-      { title: "Categories", href: "/categories", icon: Tags, roles: ADMIN, ready: true },
-      { title: "Brands", href: "/brands", icon: Award, roles: ADMIN, ready: true },
-      { title: "Stores", href: "/stores", icon: Store, roles: ADMIN, ready: true },
+      { title: "Products", href: "/products", icon: Package, roles: ADMIN },
+      { title: "Categories", href: "/categories", icon: Tags, roles: ADMIN },
+      { title: "Brands", href: "/brands", icon: Award, roles: ADMIN },
     ],
   },
   {
-    label: "Administration",
+    label: "Shop setup",
     items: [
-      { title: "Customers", href: "/customers", icon: Users, roles: ADMIN, ready: true },
-      { title: "Appearance", href: "/appearance", icon: Palette, roles: ADMIN, ready: true },
-      { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN, ready: true },
+      { title: "Stores", href: "/stores", icon: Store, roles: ADMIN },
+      { title: "Customers", href: "/customers", icon: Users, roles: ADMIN },
+      { title: "Appearance", href: "/appearance", icon: Palette, roles: ADMIN },
+      { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN },
     ],
   },
 ];
+
+const isActivePath = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
 function initials(user: DashboardUser) {
   const source = user.name?.trim() || user.phone.slice(-2);
@@ -106,36 +105,58 @@ function initials(user: DashboardUser) {
     .join("");
 }
 
-export function AppSidebar({ user, appName }: { user: DashboardUser; appName: string }) {
+type Brand = { appName: string; logoUrl: string | null };
+
+function BrandMark({ brand, subtitle }: { brand: Brand; subtitle: string }) {
+  const [logoFailed, setLogoFailed] = useState(false);
+  const logo = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    // A logo that failed before hydration never fires onError.
+    if (logo.current?.complete && logo.current.naturalWidth === 0) setLogoFailed(true);
+  }, []);
+  return (
+    <>
+      <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+        {brand.logoUrl && !logoFailed ? (
+          // Logos are uploaded through the dashboard or linked from anywhere, so next/image's host list can't cover them.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img ref={logo} src={brand.logoUrl} alt="" onError={() => setLogoFailed(true)} className="size-full bg-white object-contain p-0.5" />
+        ) : (
+          <span className="text-base font-bold">{brand.appName.charAt(0).toUpperCase()}</span>
+        )}
+      </div>
+      <div className="grid flex-1 text-left leading-tight">
+        <span className="truncate text-[15px] font-bold">{brand.appName}</span>
+        <span className="truncate text-xs text-muted-foreground">{subtitle}</span>
+      </div>
+    </>
+  );
+}
+
+type AppSidebarProps = { user: DashboardUser; brand: Brand; newOrders: number };
+
+export function AppSidebar({ user, brand, newOrders }: AppSidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [signingOut, startSignOut] = useTransition();
-
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+  const closeOnMobile = () => isMobile && setOpenMobile(false);
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="px-3 pt-4 pb-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <ShoppingBag className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{appName}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.role === "STORE_STAFF" ? user.store?.name : "Admin dashboard"}
-                  </span>
-                </div>
+            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+              <Link href="/" onClick={closeOnMobile}>
+                <BrandMark brand={brand} subtitle={user.role === "STORE_STAFF" ? (user.store?.name ?? "") : "Owner dashboard"} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-1">
         {NAV_GROUPS.map((group) => {
           const items = group.items.filter((item) => item.roles.includes(user.role));
           if (items.length === 0) return null;
@@ -144,24 +165,20 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
             <SidebarGroup key={group.label}>
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {items.map((item) => (
                     <SidebarMenuItem key={item.href}>
-                      {item.ready ? (
-                        <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={item.title}>
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      ) : (
-                        <>
-                          <SidebarMenuButton disabled tooltip={`${item.title} (coming soon)`}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </SidebarMenuButton>
-                          <SidebarMenuBadge className="text-muted-foreground">Soon</SidebarMenuBadge>
-                        </>
+                      <SidebarMenuButton asChild isActive={isActivePath(pathname, item.href)} tooltip={item.title}>
+                        <Link href={item.href} onClick={closeOnMobile}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.href === "/orders" && newOrders > 0 && (
+                        <SidebarMenuBadge className="rounded-full bg-primary px-1.5 text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-active/menu-button:text-primary-foreground">
+                          {newOrders}
+                          <span className="sr-only"> new</span>
+                        </SidebarMenuBadge>
                       )}
                     </SidebarMenuItem>
                   ))}
@@ -172,17 +189,17 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
         })}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
-                  <Avatar className="size-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg">{initials(user)}</AvatarFallback>
+                  <Avatar className="size-9 rounded-lg">
+                    <AvatarFallback className="rounded-lg bg-primary-soft font-semibold text-primary-ink">{initials(user)}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name ?? user.phone}</span>
+                    <span className="truncate font-semibold">{user.name ?? user.phone}</span>
                     <span className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
@@ -191,7 +208,7 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
               <DropdownMenuContent side="top" align="start" className="w-(--radix-dropdown-menu-trigger-width) min-w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="grid text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name ?? "Unnamed user"}</span>
+                    <span className="truncate font-medium">{user.name ?? "No name set"}</span>
                     <span className="truncate text-xs text-muted-foreground">{user.phone}</span>
                   </div>
                 </DropdownMenuLabel>
@@ -199,7 +216,7 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Sun />
-                    Theme
+                    Light or dark
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
@@ -210,7 +227,7 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
                         <Moon /> Dark
                       </DropdownMenuRadioItem>
                       <DropdownMenuRadioItem value="system">
-                        <Monitor /> System
+                        <Monitor /> Same as device
                       </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
@@ -227,5 +244,55 @@ export function AppSidebar({ user, appName }: { user: DashboardUser; appName: st
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+const STAFF_TABS = [
+  { title: "Home", href: "/", icon: House },
+  { title: "Orders", href: "/orders", icon: ShoppingBag },
+  { title: "Stock", href: "/inventory", icon: Boxes },
+] as const;
+
+/** Bottom tabs for shop staff on phones; "More" opens the full menu (theme, sign out). */
+export function StaffTabBar({ newOrders }: { newOrders: number }) {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  return (
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_8px_rgb(0_0_0/0.04)] md:hidden"
+    >
+      {STAFF_TABS.map((tab) => {
+        const active = isActivePath(pathname, tab.href);
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold",
+              active ? "text-primary-ink" : "text-muted-foreground",
+            )}
+          >
+            <tab.icon className="size-6" aria-hidden />
+            {tab.title}
+            {tab.href === "/orders" && newOrders > 0 && (
+              <span className="absolute top-2 left-1/2 ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] text-primary-foreground">
+                {newOrders}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => setOpenMobile(true)}
+        className="flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground"
+      >
+        <Menu className="size-6" aria-hidden />
+        More
+      </button>
+    </nav>
   );
 }

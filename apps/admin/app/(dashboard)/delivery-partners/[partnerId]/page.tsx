@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
@@ -16,7 +16,7 @@ import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { DELIVERY_STATUS_LABELS, formatDateTime, formatMoney, formatTimeAgo, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import type { DeliveryPartnerDetails, Paginated, PartnerDelivery } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Delivery partner" };
+export const metadata: Metadata = { title: "Rider" };
 
 const PAGE_SIZE = 20;
 
@@ -63,20 +63,15 @@ export default async function PartnerPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <PageHeader
+        back={{ href: "/delivery-partners", label: "Riders" }}
         title={partner.name ?? partner.phone}
         description={[partner.phone, vehicle].filter(Boolean).join(" · ")}
-        actions={<PartnerStatusBadge partner={partner} />}
+        status={<PartnerStatusBadge partner={partner} />}
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link href="/delivery-partners">
-              <ArrowLeft />
-              Delivery partners
-            </Link>
-          </Button>
-          <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             {partner.activeDelivery && (
               <Button asChild variant="outline" size="sm">
                 <Link href={`/orders/${partner.activeDelivery.orderId}`}>

@@ -14,8 +14,8 @@ const SUCCESS: Record<OrderAction, string> = {
   "start-picking": "Picking started",
   pack: "Order marked as packed",
   ready: "Order is ready for pickup",
-  assign: "Delivery partner assigned",
-  reassign: "Delivery partner reassigned",
+  assign: "Rider assigned",
+  reassign: "Rider changed",
   cancel: "Order cancelled",
   "mark-unavailable": "Item marked unavailable",
 };
@@ -94,7 +94,7 @@ export async function assignPartner(input: {
   mode: "assign" | "reassign";
 }): Promise<ActionResult> {
   const parsed = assignSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Choose a delivery partner" };
+  if (!parsed.success) return { ok: false, error: "Choose a rider" };
   const { storeId, orderId, partnerId, mode } = parsed.data;
   return run(orderPath(storeId, orderId, mode), { partnerId }, mode);
 }

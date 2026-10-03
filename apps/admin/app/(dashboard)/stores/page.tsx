@@ -81,7 +81,7 @@ export default async function StoresPage() {
                         <CountLink href={`/orders?storeId=${store.id}`} count={store.activeOrderCount} />
                       </TableCell>
                       <TableCell>
-                        {store.status === "ACTIVE" ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}
+                        {store.status === "ACTIVE" ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Switched off</Badge>}
                       </TableCell>
                     </TableRow>
                   ))}

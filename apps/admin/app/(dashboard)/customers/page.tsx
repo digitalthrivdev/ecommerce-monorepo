@@ -3,7 +3,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
                             <Link href={`/orders/${customer.lastOrder.id}`} className="underline-offset-4 hover:underline">
                               {customer.lastOrder.orderNumber}
                             </Link>
-                            <OrderStatusBadge status={customer.lastOrder.status} />
+                            <OrderStatusPill status={customer.lastOrder.status} />
                             <span className="w-full text-xs text-muted-foreground">
                               {formatMoney(customer.lastOrder.total, settings.currency)} · {formatTimeAgo(customer.lastOrder.createdAt)}
                             </span>

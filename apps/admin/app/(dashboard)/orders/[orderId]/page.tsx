@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, MapPin, Phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { MarkUnavailableDialog, OrderActions } from "@/components/orders/order-actions";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,8 +61,15 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
     <>
       {isOpen && <AutoRefresh seconds={30} />}
       <PageHeader
+        back={{ href: "/orders", label: "Orders" }}
         title={`Order ${order.orderNumber}`}
-        description={[order.store.name, `placed ${date(order.createdAt)}`, order.invoiceNumber && `invoice ${order.invoiceNumber}`]
+        status={<OrderStatusPill status={order.status} size="md" />}
+        description={[
+          order.store.name,
+          `placed ${date(order.createdAt)}`,
+          order.invoiceNumber && `bill ${order.invoiceNumber}`,
+          order.paymentExpiresAt && `payment due by ${date(order.paymentExpiresAt)}`,
+        ]
           .filter(Boolean)
           .join(" · ")}
         actions={
@@ -78,19 +84,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link href="/orders">
-              <ArrowLeft />
-              Orders
-            </Link>
-          </Button>
-          <OrderStatusBadge status={order.status} />
-          {order.paymentExpiresAt && (
-            <span className="text-sm text-muted-foreground">Payment due by {date(order.paymentExpiresAt)}</span>
-          )}
-        </div>
-
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="flex flex-col gap-4 lg:col-span-2">
             <Card>
@@ -98,7 +91,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 <CardTitle>Items</CardTitle>
                 <CardDescription>
                   Prices as charged when the order was placed
-                  {canMarkUnavailable && ". Mark items you cannot find before packing."}
+                  {canMarkUnavailable && ". If you can't find an item, tap Item not found."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -121,11 +114,11 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                             <span className={supplied === 0 ? "text-muted-foreground line-through" : undefined}>{item.productName}</span>
                             {item.unavailableQuantity > 0 && (
                               <Badge variant="outline" className="ml-2 text-destructive">
-                                {supplied === 0 ? "Unavailable" : `${item.unavailableQuantity} unavailable`}
+                                {supplied === 0 ? "Not found" : `${item.unavailableQuantity} not found`}
                               </Badge>
                             )}
                             <div className="text-xs text-muted-foreground">
-                              {[item.variantName, item.sku].filter(Boolean).join(" · ")}
+                              {item.variantName}
                             </div>
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
@@ -171,7 +164,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                       <span className="absolute -left-[25px] top-1.5 size-2.5 rounded-full border-2 border-background bg-primary" />
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-medium">
-                          {entry.fromStatus === entry.toStatus ? "Item unavailable" : ORDER_STATUS_LABELS[entry.toStatus]}
+                          {entry.fromStatus === entry.toStatus ? "Item not found" : ORDER_STATUS_LABELS[entry.toStatus]}
                         </span>
                         <span className="text-xs text-muted-foreground">{date(entry.createdAt)}</span>
                       </div>
@@ -265,7 +258,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                     <Row label="Status">{DELIVERY_STATUS_LABELS[order.delivery.status]}</Row>
                     {order.delivery.partner && (
                       <>
-                        <Row label="Partner">{order.delivery.partner.name ?? "Unnamed partner"}</Row>
+                        <Row label="Rider">{order.delivery.partner.name ?? "No name"}</Row>
                         <Row label="Phone">
                           <a href={`tel:${order.delivery.partner.phone}`} className="hover:underline">
                             {order.delivery.partner.phone}
@@ -285,8 +278,8 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     {order.status === "READY_FOR_PICKUP"
-                      ? "Ready for pickup. Waiting for a delivery partner to be assigned."
-                      : "A delivery partner is assigned once the order is ready for pickup."}
+                      ? "Packed and waiting for a rider."
+                      : "A rider is chosen once the order is packed."}
                   </p>
                 )}
               </CardContent>

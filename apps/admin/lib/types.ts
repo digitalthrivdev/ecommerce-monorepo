@@ -351,6 +351,7 @@ export type CustomerOrder = {
 export type PublicSettings = {
   appName: string;
   branding: { logoUrl: string | null; primaryColor: string; secondaryColor: string };
+  theme: AppearanceTheme;
   currency: string;
   timezone: string;
 };

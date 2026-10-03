@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { updatePlatformSettings } from "@/app/(dashboard)/settings/actions";
+import { Panel, Section } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useFormAction } from "@/hooks/use-form-action";
+import { formatMoney } from "@/lib/format";
 import type { PlatformSettings } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type TextFieldProps = {
   name: string;
@@ -15,82 +19,138 @@ type TextFieldProps = {
   defaultValue?: string | null;
   error?: string;
   description?: string;
-} & Omit<React.ComponentProps<typeof Input>, "name" | "defaultValue">;
+  /** Shown inside the box on the left, e.g. "₹". */
+  prefix?: string;
+} & Omit<React.ComponentProps<typeof Input>, "name" | "defaultValue" | "prefix">;
 
-function TextField({ name, label, defaultValue, error, description, ...props }: TextFieldProps) {
+function TextField({ name, label, defaultValue, error, description, prefix, className, ...props }: TextFieldProps) {
   const id = `settings-${name}`;
   return (
     <Field data-invalid={Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Input id={id} name={name} defaultValue={defaultValue ?? ""} aria-invalid={Boolean(error)} {...props} />
+      <div className="relative">
+        {prefix && (
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">{prefix}</span>
+        )}
+        <Input
+          id={id}
+          name={name}
+          defaultValue={defaultValue ?? ""}
+          aria-invalid={Boolean(error)}
+          className={cn(prefix && "pl-8", className)}
+          {...props}
+        />
+      </div>
       {description && <FieldDescription>{description}</FieldDescription>}
       <FieldError>{error}</FieldError>
     </Field>
   );
 }
 
+function currencySymbol(currency: string) {
+  try {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency }).formatToParts(0).find((part) => part.type === "currency")?.value ?? currency;
+  } catch {
+    return currency;
+  }
+}
+
+const isAmount = (value: string) => /^\d+(\.\d{1,2})?$/.test(value.trim());
+
+/** "Orders under ₹199 pay ₹25 delivery. …" from what is typed right now. */
+function ChargesSummary({ values, currency }: { values: Record<"deliveryFee" | "freeDeliveryThreshold" | "minOrderValue", string>; currency: string }) {
+  const money = (value: string) => formatMoney(value.trim(), currency);
+  const parts: string[] = [];
+  if (isAmount(values.minOrderValue) && Number(values.minOrderValue) > 0) {
+    parts.push(`Customers must order at least ${money(values.minOrderValue)}.`);
+  }
+  if (isAmount(values.deliveryFee)) {
+    if (Number(values.deliveryFee) === 0) parts.push("Delivery is always free.");
+    else if (isAmount(values.freeDeliveryThreshold)) {
+      parts.push(`Orders under ${money(values.freeDeliveryThreshold)} pay ${money(values.deliveryFee)} for delivery; bigger orders get free delivery.`);
+    } else parts.push(`Every order pays ${money(values.deliveryFee)} for delivery.`);
+  }
+  if (parts.length === 0) return null;
+  return <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm">{parts.join(" ")}</p>;
+}
+
 export function SettingsForm({ settings, currency }: { settings: PlatformSettings; currency: string }) {
   const { pending, fieldErrors, onSubmit } = useFormAction(updatePlatformSettings);
-  const amount = { inputMode: "decimal", maxLength: 11 } as const;
+  const symbol = currencySymbol(currency);
+  const amount = { inputMode: "decimal", maxLength: 11, prefix: symbol } as const;
+  const [charges, setCharges] = useState({
+    deliveryFee: settings.deliveryFee,
+    freeDeliveryThreshold: settings.freeDeliveryThreshold ?? "",
+    minOrderValue: settings.minOrderValue,
+  });
+  const track = (name: keyof typeof charges) => ({
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => setCharges((current) => ({ ...current, [name]: event.target.value })),
+  });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <FieldGroup>
-        <FieldSet>
-          <FieldLegend>Customer charges</FieldLegend>
-          <FieldDescription>New carts and orders use these. Placed orders keep the charges they were placed with.</FieldDescription>
+    <form onSubmit={onSubmit} className="flex flex-col gap-8">
+      <Section title="What customers pay" hint="New orders use these. Orders already placed keep their old charges.">
+        <Panel className="p-5">
           <FieldGroup>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 name="deliveryFee"
-                label={`Delivery fee (${currency})`}
+                label="Delivery charge"
                 defaultValue={settings.deliveryFee}
                 error={fieldErrors.deliveryFee}
-                description="Charged on orders below the free delivery amount."
+                description="Use 0 for always-free delivery."
                 required
                 {...amount}
+                {...track("deliveryFee")}
               />
               <TextField
                 name="freeDeliveryThreshold"
-                label={`Free delivery from (${currency})`}
+                label="Free delivery on orders above"
                 defaultValue={settings.freeDeliveryThreshold}
                 error={fieldErrors.freeDeliveryThreshold}
-                description="Subtotal at which delivery becomes free. Leave empty to always charge."
+                description="Leave empty to always charge delivery."
                 {...amount}
+                {...track("freeDeliveryThreshold")}
               />
             </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
+                name="minOrderValue"
+                label="Smallest order allowed"
+                defaultValue={settings.minOrderValue}
+                error={fieldErrors.minOrderValue}
+                description="Use 0 to allow any order size."
+                required
+                {...amount}
+                {...track("minOrderValue")}
+              />
+            </div>
+            <ChargesSummary values={charges} currency={currency} />
+          </FieldGroup>
+        </Panel>
+      </Section>
+
+      <Section title="What riders earn" hint="Paid for each delivered order. Past deliveries keep their old amount.">
+        <Panel className="p-5">
+          <div className="grid gap-5 sm:grid-cols-2">
             <TextField
-              name="minOrderValue"
-              label={`Minimum order value (${currency})`}
-              defaultValue={settings.minOrderValue}
-              error={fieldErrors.minOrderValue}
-              description="Customers cannot check out below this subtotal. Use 0 for no minimum."
+              name="deliveryPartnerFee"
+              label="Pay per delivery"
+              defaultValue={settings.deliveryPartnerFee}
+              error={fieldErrors.deliveryPartnerFee}
               required
               {...amount}
             />
-          </FieldGroup>
-        </FieldSet>
+          </div>
+        </Panel>
+      </Section>
 
-        <FieldSet>
-          <FieldLegend>Delivery partners</FieldLegend>
-          <TextField
-            name="deliveryPartnerFee"
-            label={`Payout per delivery (${currency})`}
-            defaultValue={settings.deliveryPartnerFee}
-            error={fieldErrors.deliveryPartnerFee}
-            description="What a partner earns for each delivered order. Deliveries completed earlier keep their old amount."
-            required
-            {...amount}
-          />
-        </FieldSet>
-
-        <FieldSet>
-          <FieldLegend>Customer support</FieldLegend>
-          <FieldDescription>Shown to customers in the app. Both are optional.</FieldDescription>
-          <div className="grid gap-4 sm:grid-cols-2">
+      <Section title="Customer help line" hint="Shown in the customer app so people can reach you. Both are optional.">
+        <Panel className="p-5">
+          <div className="grid gap-5 sm:grid-cols-2">
             <TextField
               name="supportPhone"
-              label="Phone"
+              label="Phone number"
               type="tel"
               defaultValue={settings.supportPhone}
               error={fieldErrors.supportPhone}
@@ -103,16 +163,16 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
               defaultValue={settings.supportEmail}
               error={fieldErrors.supportEmail}
               maxLength={200}
-              placeholder="support@example.com"
+              placeholder="help@yourshop.com"
             />
           </div>
-        </FieldSet>
-      </FieldGroup>
+        </Panel>
+      </Section>
 
-      <div>
-        <Button type="submit" disabled={pending}>
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+        <Button type="submit" size="lg" disabled={pending}>
           {pending && <Loader2 className="animate-spin" />}
-          Save settings
+          Save shop rules
         </Button>
       </div>
     </form>

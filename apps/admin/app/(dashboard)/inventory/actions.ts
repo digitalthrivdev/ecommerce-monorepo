@@ -70,7 +70,7 @@ export async function setAvailability(input: z.input<typeof availabilitySchema>)
   return patch(
     variantPath("variants", storeId, variantId),
     { isAvailable },
-    isAvailable ? "Available to customers" : "Hidden from customers",
+    isAvailable ? "Now selling" : "Not selling now",
   );
 }
 

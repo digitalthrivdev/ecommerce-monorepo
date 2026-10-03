@@ -8,9 +8,9 @@ export default function PartnerNotFound() {
     <>
       <PageHeader title="Partner not found" />
       <div className="flex flex-col items-start gap-3 p-4 md:p-6">
-        <p className="text-sm text-muted-foreground">This delivery partner does not exist.</p>
+        <p className="text-sm text-muted-foreground">This rider does not exist.</p>
         <Button asChild variant="outline">
-          <Link href="/delivery-partners">Back to delivery partners</Link>
+          <Link href="/delivery-partners">Back to riders</Link>
         </Button>
       </div>
     </>

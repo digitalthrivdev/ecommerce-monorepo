@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Boxes, ExternalLink, ShoppingBag } from "lucide-react";
+import { Boxes, ExternalLink, ShoppingBag } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { Pill } from "@/components/status-pill";
 import { AddStaffDialog, RemoveStaffButton, SetStaffPasswordDialog } from "@/components/stores/staff-controls";
 import { StoreForm } from "@/components/stores/store-form";
 import { StoreHoursForm } from "@/components/stores/store-hours-form";
@@ -40,26 +41,25 @@ export default async function StorePage({ params }: PageProps<"/stores/[storeId]
   return (
     <>
       <PageHeader
+        back={{ href: "/stores", label: "Stores" }}
         title={store.name}
         description={`${store.code} · ${store.city}`}
-        actions={
+        status={
           store.status === "ACTIVE" ? (
-            <Badge variant={store.isOpen ? "secondary" : "outline"}>{store.isOpen ? "Open now" : "Closed now"}</Badge>
+            <Pill tone={store.isOpen ? "green" : "gray"} size="md">
+              {store.isOpen ? "Open now" : "Closed now"}
+            </Pill>
           ) : (
-            <Badge variant="outline">Inactive</Badge>
+            <Pill tone="red" size="md">
+              Switched off
+            </Pill>
           )
         }
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="-ml-2">
-            <Link href="/stores">
-              <ArrowLeft />
-              Stores
-            </Link>
-          </Button>
-          <div className="ml-auto flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href={`/orders?storeId=${store.id}`}>
                 <ShoppingBag />

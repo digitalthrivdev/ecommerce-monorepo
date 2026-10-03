@@ -18,7 +18,7 @@ import { formatDateTime, productTitle } from "@/lib/format";
 import type { InventoryList, Paginated, Store } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Inventory" };
+export const metadata: Metadata = { title: "Stock" };
 
 const PAGE_SIZE = 50;
 
@@ -26,7 +26,7 @@ const TABS = [
   { id: "all", label: "All products", query: {} },
   { id: "low", label: "Low stock", query: { stock: "low" } },
   { id: "out", label: "Out of stock", query: { stock: "out" } },
-  { id: "unavailable", label: "Hidden", query: { isAvailable: false } },
+  { id: "unavailable", label: "Not selling", query: { isAvailable: false } },
 ] as const;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -61,7 +61,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
   if (!store) {
     return (
       <>
-        <PageHeader title="Inventory" />
+        <PageHeader title="Stock" />
         <p className="p-6 text-sm text-muted-foreground">Create a store before managing inventory.</p>
       </>
     );
@@ -88,7 +88,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
   return (
     <>
       <PageHeader
-        title="Inventory"
+        title="Stock"
         description={`Stock and availability at ${store.name}`}
         actions={stores && stores.items.length > 1 && <StoreFilter stores={stores.items} allowAll={false} value={store.id} />}
       />
@@ -108,7 +108,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
           <Form action="/inventory" className="flex gap-2">
             {isAdmin && <input type="hidden" name="storeId" value={store.id} />}
             {tab.id !== "all" && <input type="hidden" name="tab" value={tab.id} />}
-            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Name, brand, SKU or barcode" aria-label="Search products" className="w-64" />
+            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Product name, brand or code" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
               <Search />
             </Button>
@@ -148,7 +148,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                           {!item.productIsActive ? (
                             <Badge variant="outline">Removed from catalog</Badge>
                           ) : (
-                            !item.variantIsActive && <Badge variant="outline">Variant inactive</Badge>
+                            !item.variantIsActive && <Badge variant="outline">Size switched off</Badge>
                           )}
                         </div>
                       </TableCell>
@@ -194,7 +194,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
             {tab.id === "low" && `Available products with ${inventory.lowStockThreshold} or fewer in stock. `}
-            {tab.id === "unavailable" && "Hidden products are not shown to customers. "}
+            {tab.id === "unavailable" && "Customers can't see or buy these. "}
             {inventory.total > 0 && `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, inventory.total)} of ${inventory.total}`}
           </span>
           {inventory.total > PAGE_SIZE && (

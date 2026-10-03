@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { AdvanceOrderButton } from "@/components/orders/order-actions";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { StoreFilter } from "@/components/store-filter";
@@ -173,7 +173,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                       </TableCell>
                       {showStore && <TableCell>{order.store.name}</TableCell>}
                       <TableCell>
-                        <OrderStatusBadge status={order.status} />
+                        <OrderStatusPill status={order.status} />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="tabular-nums">{formatMoney(order.total, settings.currency)}</div>

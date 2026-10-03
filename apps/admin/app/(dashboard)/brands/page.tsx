@@ -61,7 +61,7 @@ export default async function BrandsPage() {
                           {brand.productCount ?? 0}
                         </Link>
                       </TableCell>
-                      <TableCell>{brand.isActive ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}</TableCell>
+                      <TableCell>{brand.isActive ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Switched off</Badge>}</TableCell>
                       <TableCell className="text-right">
                         <BrandDialog brand={brand} />
                       </TableCell>

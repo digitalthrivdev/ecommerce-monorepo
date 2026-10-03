@@ -41,7 +41,7 @@ export function AddPartnerDialog() {
       <DialogContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Add delivery partner</DialogTitle>
+            <DialogTitle>Add rider</DialogTitle>
             <DialogDescription>They sign in to the delivery app with an OTP sent to this phone.</DialogDescription>
           </DialogHeader>
           <FieldGroup>

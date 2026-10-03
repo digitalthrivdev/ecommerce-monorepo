@@ -3,7 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { removeOtpProviderKeys, saveOtpProviderKeys, updateOtpProvider } from "@/app/(dashboard)/settings/actions";
-import { Badge } from "@/components/ui/badge";
+import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldSet, FieldTitle } from "@/components/ui/field";
 import { useFormAction } from "@/hooks/use-form-action";
@@ -24,51 +24,34 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
       title: provider.label,
       description: provider.configured
         ? provider.source === "env"
-          ? "Keys set in the server environment."
-          : "Keys saved under SMS provider keys."
+          ? "Details set on the server."
+          : "Details added in step 1."
         : provider.editable
-          ? "Add its keys under SMS provider keys first."
-          : "Not configured on the server.",
-      badge: provider.configured ? <Badge>Ready</Badge> : <Badge variant="outline">Not configured</Badge>,
+          ? "Add its details in step 1 first."
+          : "Not set up on the server.",
+      badge: provider.configured ? <Pill tone="green">Ready</Pill> : <Pill tone="gray">No details</Pill>,
       disabled: locked || !provider.configured,
     })),
     {
       value: "",
-      title: "None",
+      title: "Don't send texts",
       description:
         sms.fallback === "nobody"
-          ? "No SMS is sent, so customers and delivery partners cannot sign in."
-          : "Codes are written to the API log instead of being sent. Fine for development.",
+          ? "Nobody gets a code, so customers and riders cannot sign in."
+          : "Codes go to the server log instead. Only for testing.",
       disabled: locked,
     },
   ];
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      {locked ? (
-        <p className="rounded-lg border p-3 text-sm text-muted-foreground">
-          OTP_PROVIDER={sms.environmentOverride} is set in the server environment, so the choice below is ignored.
-          Remove it there to choose here.
-        </p>
-      ) : (
-        !sms.active &&
-        sms.fallback === "nobody" && (
-          <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-            {sms.selected && !selected?.configured
-              ? `The selected provider (${selected?.label ?? sms.selected}) has no working keys, so customers cannot sign in.`
-              : "No SMS provider is set up, so customers cannot sign in."}{" "}
-            Add keys and choose a provider.
-          </p>
-        )
-      )}
-
       <FieldSet>
         <div className="flex flex-col gap-3" role="radiogroup" aria-label="SMS provider">
           {options.map((option) => (
             <FieldLabel
               key={option.value || "none"}
               htmlFor={`sms-${option.value || "none"}`}
-              className="has-checked:border-primary/30 has-checked:bg-primary/5 dark:has-checked:border-primary/20 dark:has-checked:bg-primary/10"
+              className="cursor-pointer has-checked:border-primary has-checked:bg-primary-soft"
             >
               <Field orientation="horizontal" data-disabled={option.disabled}>
                 <FieldContent>
@@ -85,7 +68,7 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
                   value={option.value}
                   defaultChecked={option.value === (selected?.configured ? sms.selected : "")}
                   disabled={option.disabled}
-                  className="size-4 accent-primary"
+                  className="size-5 accent-primary"
                 />
               </Field>
             </FieldLabel>
@@ -95,13 +78,13 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
       </FieldSet>
 
       <p className="text-sm text-muted-foreground">
-        Codes already sent can still be used after a switch, as long as the old provider keeps its keys.
+        Switching is safe: codes already sent still work.
       </p>
 
       <div>
         <Button type="submit" disabled={pending || locked}>
           {pending && <Loader2 className="animate-spin" />}
-          Save SMS provider
+          Save choice
         </Button>
       </div>
     </form>
