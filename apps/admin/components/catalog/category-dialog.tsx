@@ -18,13 +18,25 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useFormAction } from "@/hooks/use-form-action";
 import type { Category } from "@/lib/types";
 
-export function CategoryDialog({ category }: { category?: Category }) {
+const NONE = "none";
+
+/** `parents` are the top-level categories a category can be placed under. */
+export function CategoryDialog({ category, parents, defaultParentId }: {
+  category?: Category;
+  parents: Category[];
+  /** Preselected parent for a new sub-category. */
+  defaultParentId?: string;
+}) {
   const [open, setOpen] = useState(false);
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(saveCategory, () => setOpen(false));
+  const parentChoices = parents.filter((parent) => parent.id !== category?.id);
+  // Two levels only: a category with sub-categories stays top-level.
+  const canHaveParent = !category || category.childCount === 0;
 
   return (
     <Dialog
@@ -39,6 +51,11 @@ export function CategoryDialog({ category }: { category?: Category }) {
           <Button variant="outline" size="sm">
             Edit
           </Button>
+        ) : defaultParentId ? (
+          <Button variant="ghost" size="sm">
+            <Plus />
+            Sub-category
+          </Button>
         ) : (
           <Button>
             <Plus />
@@ -49,7 +66,7 @@ export function CategoryDialog({ category }: { category?: Category }) {
       <DialogContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>{category ? `Edit ${category.name}` : "New category"}</DialogTitle>
+            <DialogTitle>{category ? `Edit ${category.name}` : defaultParentId ? "New sub-category" : "New category"}</DialogTitle>
             <DialogDescription>Categories group products in the customer app.</DialogDescription>
           </DialogHeader>
           {category && <input type="hidden" name="id" value={category.id} />}
@@ -58,6 +75,28 @@ export function CategoryDialog({ category }: { category?: Category }) {
               <FieldLabel htmlFor="category-name">Name</FieldLabel>
               <Input id="category-name" name="name" defaultValue={category?.name} maxLength={100} required aria-invalid={Boolean(fieldErrors.name)} />
               <FieldError>{fieldErrors.name}</FieldError>
+            </Field>
+            <Field data-invalid={Boolean(fieldErrors.parentId)}>
+              <FieldLabel htmlFor="category-parent">Parent category</FieldLabel>
+              <Select name="parentId" defaultValue={category?.parentId ?? defaultParentId ?? NONE} disabled={!canHaveParent}>
+                <SelectTrigger id="category-parent" className="w-full" aria-invalid={Boolean(fieldErrors.parentId)}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>None (top-level)</SelectItem>
+                  {parentChoices.map((parent) => (
+                    <SelectItem key={parent.id} value={parent.id}>
+                      {parent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                {canHaveParent
+                  ? "Sub-categories appear inside their parent in the customer app."
+                  : "This category has sub-categories, so it stays top-level."}
+              </FieldDescription>
+              <FieldError>{fieldErrors.parentId}</FieldError>
             </Field>
             <Field data-invalid={Boolean(fieldErrors.slug)}>
               <FieldLabel htmlFor="category-slug">Slug</FieldLabel>

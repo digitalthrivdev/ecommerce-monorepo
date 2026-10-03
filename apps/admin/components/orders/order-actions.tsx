@@ -18,7 +18,7 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ORDER_ACTION_LABELS } from "@/lib/format";
+import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
 import type { DeliveryPartner, OrderAction, StoreOrderAction } from "@/lib/types";
 
@@ -103,7 +103,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber }: Target & { orderNu
 
 /** Per-item action while picking: removes units the store cannot find from the order. */
 export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
-  item: { id: string; productName: string; quantity: number; unavailableQuantity: number };
+  item: { id: string; productName: string; variantName: string; quantity: number; unavailableQuantity: number };
 }) {
   const remaining = item.quantity - item.unavailableQuantity;
   const [open, setOpen] = useState(false);
@@ -133,10 +133,10 @@ export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{item.productName} unavailable?</DialogTitle>
+          <DialogTitle>{productTitle(item.productName, item.variantName)} unavailable?</DialogTitle>
           <DialogDescription>
             The units are removed from the bill. Online payments are refunded automatically and cash orders collect the
-            lower total. The product&apos;s stock is set to 0. This cannot be undone.
+            lower total. This variant&apos;s stock at the store is set to 0. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
         {remaining > 1 && (

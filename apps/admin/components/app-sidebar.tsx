@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTransition } from "react";
 import { useTheme } from "next-themes";
 import {
+  Award,
   Bike,
   Boxes,
   ChevronsUpDown,
@@ -82,6 +83,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Products", href: "/products", icon: Package, roles: ADMIN, ready: true },
       { title: "Categories", href: "/categories", icon: Tags, roles: ADMIN, ready: true },
+      { title: "Brands", href: "/brands", icon: Award, roles: ADMIN, ready: true },
       { title: "Stores", href: "/stores", icon: Store, roles: ADMIN, ready: true },
     ],
   },

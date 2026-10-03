@@ -3,7 +3,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
-import { AvailabilitySwitch, StockAdjustDialog } from "@/components/inventory/inventory-controls";
+import { AvailabilitySwitch, StockAdjustDialog, StockHistoryDialog } from "@/components/inventory/inventory-controls";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { StoreFilter } from "@/components/store-filter";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
-import { formatDateTime, formatPackSize } from "@/lib/format";
+import { formatDateTime, productTitle } from "@/lib/format";
 import type { InventoryList, Paginated, Store } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +108,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
           <Form action="/inventory" className="flex gap-2">
             {isAdmin && <input type="hidden" name="storeId" value={store.id} />}
             {tab.id !== "all" && <input type="hidden" name="tab" value={tab.id} />}
-            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Search products" aria-label="Search products" className="w-64" />
+            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Name, brand, SKU or barcode" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
               <Search />
             </Button>
@@ -139,10 +139,17 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                   {inventory.items.map((item) => (
                     <TableRow key={item.storeProductId} className={cn(!item.isAvailable && "text-muted-foreground")}>
                       <TableCell className="whitespace-normal">
-                        <div className="font-medium">{item.name}</div>
+                        <div className="font-medium">
+                          {item.name}
+                          {item.variantLabel && <span className="font-normal text-muted-foreground"> · {item.variantLabel}</span>}
+                        </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {formatPackSize(item.packQuantity, item.unit)}
-                          {!item.productIsActive && <Badge variant="outline">Removed from catalog</Badge>}
+                          {item.sku}
+                          {!item.productIsActive ? (
+                            <Badge variant="outline">Removed from catalog</Badge>
+                          ) : (
+                            !item.variantIsActive && <Badge variant="outline">Variant inactive</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>{item.category.name}</TableCell>
@@ -150,13 +157,31 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                         <StockCell quantity={item.stockQuantity} threshold={inventory.lowStockThreshold} />
                       </TableCell>
                       <TableCell>
-                        <AvailabilitySwitch storeId={store.id} productId={item.productId} productName={item.name} isAvailable={item.isAvailable} />
+                        <AvailabilitySwitch
+                          storeId={store.id}
+                          variantId={item.variantId}
+                          title={productTitle(item.name, item.variantLabel)}
+                          isAvailable={item.isAvailable}
+                        />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {item.stockUpdatedAt ? formatDateTime(item.stockUpdatedAt, settings.timezone) : "Never"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <StockAdjustDialog storeId={store.id} productId={item.productId} productName={item.name} currentStock={item.stockQuantity} />
+                        <div className="flex items-center justify-end gap-1">
+                          <StockHistoryDialog
+                            storeId={store.id}
+                            variantId={item.variantId}
+                            title={productTitle(item.name, item.variantLabel)}
+                            timezone={settings.timezone}
+                          />
+                          <StockAdjustDialog
+                            storeId={store.id}
+                            variantId={item.variantId}
+                            title={productTitle(item.name, item.variantLabel)}
+                            currentStock={item.stockQuantity}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

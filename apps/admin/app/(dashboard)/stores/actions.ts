@@ -92,6 +92,35 @@ export async function saveStore(formData: FormData): Promise<ActionResult> {
   return { ok: true, message: "Store updated" };
 }
 
+const timeInput = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time like 07:00");
+
+const storeHoursSchema = z.object({
+  storeId: idSchema,
+  hours: z
+    .array(
+      z
+        .object({ dayOfWeek: z.number().int().min(0).max(6), opensAt: timeInput, closesAt: timeInput })
+        .refine((entry) => entry.opensAt !== entry.closesAt, "Opening and closing times must differ"),
+    )
+    .max(7),
+});
+
+/** An empty list means the store is always open. */
+export async function saveStoreHours(input: z.input<typeof storeHoursSchema>): Promise<ActionResult> {
+  const parsed = storeHoursSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
+
+  const { storeId, hours } = parsed.data;
+  try {
+    await apiFetch(`/stores/${encodeURIComponent(storeId)}/hours`, { method: "PUT", body: { hours } });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: hours.length === 0 ? "Store is open at all times" : "Opening hours saved" };
+}
+
 const addStaffSchema = z.object({
   storeId: idSchema,
   phone: phoneInput,

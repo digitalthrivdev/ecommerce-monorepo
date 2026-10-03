@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { ImageIcon, Plus, Search } from "lucide-react";
 
 import { CategoryFilter } from "@/components/category-filter";
 import { PageHeader } from "@/components/page-header";
@@ -13,8 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { requireAdmin } from "@/lib/dal";
-import { formatPackSize } from "@/lib/format";
-import type { Category, Paginated, Product } from "@/lib/types";
+import type { Category, Paginated, ProductListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Products" };
@@ -30,10 +29,10 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
   const [products, categories] = await Promise.all([
-    apiFetch<Paginated<Product>>("/products", {
+    apiFetch<Paginated<ProductListItem>>("/products", {
       query: { includeInactive: true, search: q, categoryId, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
     }),
-    apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 100 } }),
+    apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
   ]);
 
   const href = (nextPage: number) => {
@@ -65,7 +64,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
         <div className="flex flex-wrap items-center gap-2">
           <Form action="/products" className="flex gap-2">
             {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
-            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Search products" aria-label="Search products" className="w-64" />
+            <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Name, brand, keyword or SKU" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
               <Search />
             </Button>
@@ -85,6 +84,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Variants</TableHead>
                     <TableHead className="text-right">Stores</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
@@ -93,12 +93,25 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                   {products.items.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell className="whitespace-normal">
-                        <Link href={`/products/${product.id}`} className="font-medium underline-offset-4 hover:underline">
-                          {product.name}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">{formatPackSize(product.quantity, product.unit)}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-muted-foreground">
+                            {product.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element -- uploaded or admin-entered URLs from any host
+                              <img src={product.imageUrl} alt="" className="size-full object-cover" />
+                            ) : (
+                              <ImageIcon className="size-4" />
+                            )}
+                          </div>
+                          <div>
+                            <Link href={`/products/${product.id}`} className="font-medium underline-offset-4 hover:underline">
+                              {product.name}
+                            </Link>
+                            {product.brand && <div className="text-xs text-muted-foreground">{product.brand.name}</div>}
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>{product.category.name}</TableCell>
+                      <TableCell className="text-right tabular-nums">{product.variantCount}</TableCell>
                       <TableCell className={cn("text-right tabular-nums", product.storeCount === 0 && "text-muted-foreground")}>
                         {product.storeCount === 0 ? "Not listed" : product.storeCount}
                       </TableCell>

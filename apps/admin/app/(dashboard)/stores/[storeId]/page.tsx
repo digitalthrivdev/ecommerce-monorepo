@@ -6,12 +6,13 @@ import { ArrowLeft, Boxes, ExternalLink, ShoppingBag } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AddStaffDialog, RemoveStaffButton, SetStaffPasswordDialog } from "@/components/stores/staff-controls";
 import { StoreForm } from "@/components/stores/store-form";
+import { StoreHoursForm } from "@/components/stores/store-hours-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, apiFetch } from "@/lib/api";
-import { requireAdmin } from "@/lib/dal";
+import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import type { StaffMember, StoreDetails } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Store" };
@@ -30,7 +31,10 @@ export default async function StorePage({ params }: PageProps<"/stores/[storeId]
   const { storeId } = await params;
   const store = await getStore(storeId);
 
-  const staff = await apiFetch<{ items: StaffMember[] }>(`/stores/${encodeURIComponent(store.id)}/staff`);
+  const [staff, settings] = await Promise.all([
+    apiFetch<{ items: StaffMember[] }>(`/stores/${encodeURIComponent(store.id)}/staff`),
+    getPublicSettings(),
+  ]);
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${Number(store.latitude)},${Number(store.longitude)}`;
 
   return (
@@ -38,7 +42,13 @@ export default async function StorePage({ params }: PageProps<"/stores/[storeId]
       <PageHeader
         title={store.name}
         description={`${store.code} · ${store.city}`}
-        actions={store.status === "ACTIVE" ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}
+        actions={
+          store.status === "ACTIVE" ? (
+            <Badge variant={store.isOpen ? "secondary" : "outline"}>{store.isOpen ? "Open now" : "Closed now"}</Badge>
+          ) : (
+            <Badge variant="outline">Inactive</Badge>
+          )
+        }
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
@@ -82,50 +92,62 @@ export default async function StorePage({ params }: PageProps<"/stores/[storeId]
             </CardContent>
           </Card>
 
-          <Card id="staff" className="scroll-mt-20 xl:col-span-2">
-            <CardHeader>
-              <CardTitle>Staff</CardTitle>
-              <CardDescription>Staff see only this store&apos;s orders and inventory.</CardDescription>
-              <CardAction>
-                <AddStaffDialog storeId={store.id} storeName={store.name} />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              {staff.items.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">No staff yet. Add someone to accept and pack orders.</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="text-right">
-                        <span className="sr-only">Actions</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {staff.items.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2 font-medium">
-                            {member.name ?? "—"}
-                            {!(member.email && member.hasPassword) && <Badge variant="outline">Cannot sign in</Badge>}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {member.email ?? "No email: add them again with an email"} · {member.phone}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {member.email && <SetStaffPasswordDialog storeId={store.id} member={{ ...member, email: member.email }} />}
-                          <RemoveStaffButton storeId={store.id} member={member} />
-                        </TableCell>
+          <div className="flex flex-col gap-4 xl:col-span-2">
+            <Card id="staff" className="scroll-mt-20">
+              <CardHeader>
+                <CardTitle>Staff</CardTitle>
+                <CardDescription>Staff see only this store&apos;s orders and inventory.</CardDescription>
+                <CardAction>
+                  <AddStaffDialog storeId={store.id} storeName={store.name} />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                {staff.items.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">No staff yet. Add someone to accept and pack orders.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right">
+                          <span className="sr-only">Actions</span>
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {staff.items.map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2 font-medium">
+                              {member.name ?? "—"}
+                              {!(member.email && member.hasPassword) && <Badge variant="outline">Cannot sign in</Badge>}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {member.email ?? "No email: add them again with an email"} · {member.phone}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {member.email && <SetStaffPasswordDialog storeId={store.id} member={{ ...member, email: member.email }} />}
+                            <RemoveStaffButton storeId={store.id} member={member} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card id="hours" className="scroll-mt-20">
+              <CardHeader>
+                <CardTitle>Opening hours</CardTitle>
+                <CardDescription>When customers can order from this store.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StoreHoursForm key={JSON.stringify(store.hours)} storeId={store.id} hours={store.hours} timezone={settings.timezone} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </>

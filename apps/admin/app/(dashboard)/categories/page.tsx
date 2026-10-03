@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CornerDownRight } from "lucide-react";
 
 import { CategoryDialog } from "@/components/catalog/category-dialog";
 import { PageHeader } from "@/components/page-header";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
+import { categoryTree } from "@/lib/categories";
 import { requireAdmin } from "@/lib/dal";
 import type { Category, Paginated } from "@/lib/types";
 
@@ -14,11 +16,42 @@ export const metadata: Metadata = { title: "Categories" };
 
 export default async function CategoriesPage() {
   await requireAdmin();
-  const categories = await apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 100 } });
+  const categories = await apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } });
+  const tree = categoryTree(categories.items);
+  const parents = categories.items.filter((category) => !category.parentId);
+
+  const row = (category: Category, depth: number) => (
+    <TableRow key={category.id}>
+      <TableCell className="font-medium">
+        <span className={depth ? "flex items-center gap-2 pl-4 font-normal" : undefined}>
+          {depth > 0 && <CornerDownRight className="size-3.5 text-muted-foreground" />}
+          {category.name}
+        </span>
+      </TableCell>
+      <TableCell className="text-muted-foreground">{category.slug}</TableCell>
+      <TableCell className="text-right tabular-nums">
+        <Link href={`/products?categoryId=${category.id}`} className="underline-offset-4 hover:underline">
+          {category.productCount ?? 0}
+        </Link>
+      </TableCell>
+      <TableCell className="text-right tabular-nums">{category.sortOrder}</TableCell>
+      <TableCell>{category.isActive ? <Badge variant="secondary">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}</TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-1">
+          {depth === 0 && <CategoryDialog parents={parents} defaultParentId={category.id} />}
+          <CategoryDialog category={category} parents={parents} />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 
   return (
     <>
-      <PageHeader title="Categories" description="How products are grouped in the customer app" actions={<CategoryDialog />} />
+      <PageHeader
+        title="Categories"
+        description="How products are grouped in the customer app. Categories can have one level of sub-categories."
+        actions={<CategoryDialog parents={parents} />}
+      />
 
       <div className="p-4 md:p-6">
         <Card>
@@ -39,26 +72,7 @@ export default async function CategoriesPage() {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {categories.items.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{category.slug}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <Link href={`/products?categoryId=${category.id}`} className="underline-offset-4 hover:underline">
-                          {category.productCount ?? 0}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{category.sortOrder}</TableCell>
-                      <TableCell>
-                        {category.isActive ? <Badge variant="secondary">Visible</Badge> : <Badge variant="outline">Hidden</Badge>}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <CategoryDialog category={category} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                <TableBody>{tree.flatMap((root) => [row(root, 0), ...root.children.map((child) => row(child, 1))])}</TableBody>
               </Table>
             )}
           </CardContent>

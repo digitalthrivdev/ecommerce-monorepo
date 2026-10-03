@@ -13,7 +13,7 @@ export default async function AppearancePage() {
   await requireAdmin();
   const [appearance, categories, deployment] = await Promise.all([
     apiFetch<AdminAppearance>("/settings/appearance"),
-    apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 100 } }),
+    apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
     getPublicSettings(),
   ]);
 

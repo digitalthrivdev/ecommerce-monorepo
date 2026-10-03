@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { formChecked, formText, idSchema, optionalUrl, slugInput, text } from "@/lib/form-schemas";
 import type { ActionResult } from "@/lib/types";
 
@@ -12,6 +12,11 @@ const categorySchema = z.object({
   id: idSchema.optional(),
   name: text(100).min(1, "Enter a name"),
   slug: slugInput,
+  parentId: z
+    .string()
+    .trim()
+    .max(64)
+    .transform((value) => (value && value !== "none" ? value : null)),
   imageUrl: optionalUrl,
   sortOrder: z.coerce.number({ error: "Enter a whole number" }).int("Enter a whole number").min(0, "Enter 0 or more").max(10_000),
   isActive: z.boolean(),
@@ -22,6 +27,7 @@ export async function saveCategory(formData: FormData): Promise<ActionResult> {
     id: formText(formData, "id") || undefined,
     name: formText(formData, "name"),
     slug: formText(formData, "slug"),
+    parentId: formText(formData, "parentId"),
     imageUrl: formText(formData, "imageUrl"),
     sortOrder: formText(formData, "sortOrder") || "0",
     isActive: formChecked(formData, "isActive"),
@@ -34,6 +40,9 @@ export async function saveCategory(formData: FormData): Promise<ActionResult> {
   try {
     await apiFetch(id ? `/categories/${encodeURIComponent(id)}` : "/categories", { method: id ? "PATCH" : "POST", body });
   } catch (error) {
+    if (error instanceof ApiError && error.code === "INVALID_PARENT") {
+      return { ok: false, error: error.message, fieldErrors: { parentId: error.message } };
+    }
     return apiFailure(error, { field: "slug", message: "Another category already uses this slug" });
   }
 

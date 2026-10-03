@@ -19,11 +19,15 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useFormAction } from "@/hooks/use-form-action";
-import type { ProductListing } from "@/lib/types";
+import type { Listing, Store } from "@/lib/types";
 
-export function ListingDialog({ productId, productName, store, listing }: ProductListing & {
-  productId: string;
-  productName: string;
+/** Lists one variant at a store, or edits its price there. */
+export function ListingDialog({ variantId, title, store, listing }: {
+  variantId: string;
+  /** Product name with the variant label. */
+  title: string;
+  store: Store;
+  listing: Listing | null;
 }) {
   const [open, setOpen] = useState(false);
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(saveListing, () => setOpen(false));
@@ -47,11 +51,11 @@ export function ListingDialog({ productId, productName, store, listing }: Produc
           <DialogHeader>
             <DialogTitle>{listing ? "Edit price" : "List at store"}</DialogTitle>
             <DialogDescription>
-              {productName} at {store.name}
+              {title} at {store.name}
             </DialogDescription>
           </DialogHeader>
           <input type="hidden" name="storeId" value={store.id} />
-          <input type="hidden" name="productId" value={productId} />
+          <input type="hidden" name="variantId" value={variantId} />
           <input type="hidden" name="mode" value={mode} />
           <FieldGroup>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -66,7 +70,7 @@ export function ListingDialog({ productId, productName, store, listing }: Produc
                 <FieldError>{fieldErrors.mrp}</FieldError>
               </Field>
             </div>
-            <FieldDescription>MRP is optional and cannot be lower than the selling price.</FieldDescription>
+            <FieldDescription>Prices include GST. MRP is optional and cannot be lower than the selling price.</FieldDescription>
             {!listing && (
               <>
                 <Field orientation="horizontal">
@@ -85,7 +89,7 @@ export function ListingDialog({ productId, productName, store, listing }: Produc
             </DialogClose>
             <Button type="submit" disabled={pending}>
               {pending && <Loader2 className="animate-spin" />}
-              {listing ? "Save price" : "List product"}
+              {listing ? "Save price" : "List at store"}
             </Button>
           </DialogFooter>
         </form>

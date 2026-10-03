@@ -63,7 +63,9 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
       {isOpen && <AutoRefresh seconds={30} />}
       <PageHeader
         title={`Order ${order.orderNumber}`}
-        description={`${order.store.name} · placed ${date(order.createdAt)}`}
+        description={[order.store.name, `placed ${date(order.createdAt)}`, order.invoiceNumber && `invoice ${order.invoiceNumber}`]
+          .filter(Boolean)
+          .join(" · ")}
         actions={
           <OrderActions
             storeId={order.store.id}
@@ -122,6 +124,9 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                                 {supplied === 0 ? "Unavailable" : `${item.unavailableQuantity} unavailable`}
                               </Badge>
                             )}
+                            <div className="text-xs text-muted-foreground">
+                              {[item.variantName, item.sku].filter(Boolean).join(" · ")}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {item.unavailableQuantity > 0 ? `${supplied} of ${item.quantity}` : item.quantity}
@@ -146,6 +151,11 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                   <Row label="Total">
                     <span className="font-semibold">{money(order.total)}</span>
                   </Row>
+                  {Number(order.taxTotal) > 0 && (
+                    <Row label="Includes GST">
+                      <span className="text-muted-foreground">{money(order.taxTotal)}</span>
+                    </Row>
+                  )}
                 </dl>
               </CardContent>
             </Card>

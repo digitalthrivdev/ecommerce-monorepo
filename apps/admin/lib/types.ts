@@ -84,17 +84,31 @@ export type OrderDetail = {
   items: Array<{
     id: string;
     productId: string;
+    variantId: string;
     productName: string;
+    /** Empty for products without variants. */
+    variantName: string;
+    sku: string | null;
+    imageUrl: string | null;
     quantity: number;
     unavailableQuantity: number;
     unitPrice: string;
+    mrp: string | null;
     totalPrice: string;
     chargedTotal: string;
+    hsnCode: string | null;
+    gstRate: string | null;
+    /** GST included in the charged total. */
+    taxAmount: string;
   }>;
   subtotal: string;
   deliveryFee: string;
   discount: string;
   total: string;
+  /** GST included in the total. */
+  taxTotal: string;
+  /** Assigned when the order is delivered. */
+  invoiceNumber: string | null;
   deliveryAddress: {
     name: string;
     phone: string;
@@ -120,56 +134,132 @@ export type OrderDetail = {
 
 export type Category = {
   id: string;
+  /** Null for top-level categories. Categories are at most two levels deep. */
+  parentId: string | null;
   name: string;
   slug: string;
   imageUrl: string | null;
   isActive: boolean;
   sortOrder: number;
+  childCount: number;
   /** Admin listings only. */
   productCount?: number;
 };
 
-export type Product = {
+export type Brand = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  isActive: boolean;
+  /** Admin listings only. */
+  productCount?: number;
+};
+
+type CategorySummary = { id: string; name: string; slug: string; parentId: string | null };
+type BrandSummary = { id: string; name: string; slug: string };
+
+type ProductFields = {
   id: string;
   categoryId: string;
+  brandId: string | null;
   name: string;
   slug: string;
   description: string | null;
-  imageUrl: string | null;
-  unit: string | null;
-  quantity: string | null;
+  tags: string[];
+  hsnCode: string | null;
+  gstRate: string | null;
+  isVeg: boolean | null;
+  manufacturerName: string | null;
+  manufacturerAddress: string | null;
+  countryOfOrigin: string | null;
+  fssaiLicense: string | null;
+  shelfLife: string | null;
+  ingredients: string | null;
   isActive: boolean;
-  category: { id: string; name: string; slug: string };
+  category: CategorySummary;
+  brand: BrandSummary | null;
+};
+
+export type ProductListItem = ProductFields & {
+  /** First image shared by all variants. */
+  imageUrl: string | null;
+  variantCount: number;
   /** Admin listings only. */
   storeCount?: number;
 };
 
-export type ProductListing = {
-  store: Store;
-  listing: {
-    storeProductId: string;
-    sellingPrice: string;
-    mrp: string | null;
-    isAvailable: boolean;
-    stockQuantity: number;
-  } | null;
+export type ProductOption = { id: string; name: string; values: Array<{ id: string; value: string }> };
+
+export type ProductVariant = {
+  id: string;
+  sku: string;
+  barcode: string | null;
+  /** Option values joined ("Fruit & Nut · 60 g"); empty for the default variant of a product without options. */
+  name: string;
+  unit: string | null;
+  quantity: string | null;
+  maxOrderQuantity: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  /** Name, or pack size when there is no name. */
+  label: string;
+  /** One value per option, in the order of `options`. */
+  optionValues: Array<string | null>;
+};
+
+export type ProductImage = { id: string; url: string; altText: string | null; variantId: string | null };
+
+export type ProductDetail = ProductFields & {
+  options: ProductOption[];
+  variants: ProductVariant[];
+  images: ProductImage[];
+};
+
+export type Listing = {
+  storeProductId: string;
+  sellingPrice: string;
+  mrp: string | null;
+  isAvailable: boolean;
+  stockQuantity: number;
+};
+
+export type ProductListings = {
+  variants: Array<{ id: string; sku: string; name: string; label: string; isActive: boolean }>;
+  /** Every store, with the listing of each variant there (null where it is not listed). */
+  items: Array<{ store: Store; listings: Array<{ variantId: string; listing: Listing | null }> }>;
 };
 
 export type InventoryItem = {
   productId: string;
+  variantId: string;
   storeProductId: string;
   name: string;
+  variantLabel: string;
+  sku: string;
+  barcode: string | null;
   slug: string;
-  unit: string | null;
-  packQuantity: string | null;
   category: { id: string; name: string };
   isAvailable: boolean;
   productIsActive: boolean;
+  variantIsActive: boolean;
   stockQuantity: number;
   stockUpdatedAt: string | null;
 };
 
 export type InventoryList = Paginated<InventoryItem> & { lowStockThreshold: number };
+
+export type StockChangeReason = "RESTOCK" | "CORRECTION" | "DAMAGE" | "ORDER_UNAVAILABLE";
+
+export type StockChange = {
+  id: string;
+  delta: number;
+  quantityAfter: number;
+  reason: StockChangeReason;
+  note: string | null;
+  createdAt: string;
+  changedBy: { id: string; name: string | null } | null;
+};
 
 export type DeliveryPartner = {
   id: string;
@@ -398,11 +488,17 @@ export type StoreDetails = Store & {
   latitude: string;
   longitude: string;
   serviceRadiusKm: string;
+  /** Weekly hours in the deployment time zone; empty means always open. */
+  hours: StoreHours[];
+  isOpen: boolean;
   createdAt: string;
   staffCount: number;
   productCount: number;
   activeOrderCount: number;
 };
+
+/** dayOfWeek 0 is Sunday. Times are "HH:mm"; a closing time earlier than the opening time runs past midnight. */
+export type StoreHours = { dayOfWeek: number; opensAt: string; closesAt: string };
 
 export type StaffMember = {
   id: string;

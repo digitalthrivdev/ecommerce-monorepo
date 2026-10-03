@@ -1,4 +1,13 @@
-import type { DeliveryPartnerStatus, DeliveryStatus, OrderAction, OrderStatus, PaymentMethod, PaymentStatus, UserRole } from "./types";
+import type {
+  DeliveryPartnerStatus,
+  DeliveryStatus,
+  OrderAction,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  StockChangeReason,
+  UserRole,
+} from "./types";
 
 const LOCALE = "en-IN";
 
@@ -14,9 +23,9 @@ export function formatDateTime(value: string | Date, timeZone: string) {
   }).format(new Date(value));
 }
 
-/** "500 g", "1 L"; null when the product has no pack size. */
-export function formatPackSize(quantity: string | null, unit: string | null) {
-  return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;
+/** "Amul Taaza Toned Milk (1 L)"; just the name for a product without variants. */
+export function productTitle(name: string, variantLabel: string | null | undefined) {
+  return variantLabel ? `${name} (${variantLabel})` : name;
 }
 
 /** "just now", "4 min ago", "2 hr ago". */
@@ -85,6 +94,15 @@ export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   cancel: "Cancel order",
   "mark-unavailable": "Mark unavailable",
 };
+
+export const STOCK_REASON_LABELS: Record<StockChangeReason, string> = {
+  RESTOCK: "Restock",
+  CORRECTION: "Correction",
+  DAMAGE: "Damaged or expired",
+  ORDER_UNAVAILABLE: "Not found while picking",
+};
+
+export const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Admin",
