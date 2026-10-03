@@ -23,6 +23,10 @@ export function formatDateTime(value: string | Date, timeZone: string) {
   }).format(new Date(value));
 }
 
+export function formatTime(value: string | Date, timeZone: string) {
+  return new Intl.DateTimeFormat(LOCALE, { timeStyle: "short", timeZone }).format(new Date(value));
+}
+
 /** "Amul Taaza Toned Milk (1 L)"; just the name for a product without variants. */
 export function productTitle(name: string, variantLabel: string | null | undefined) {
   return variantLabel ? `${name} (${variantLabel})` : name;

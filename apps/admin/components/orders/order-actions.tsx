@@ -1,9 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { Ban, Loader2, MoreHorizontal, Printer } from "lucide-react";
 
 import { advanceOrder, assignPartner, cancelOrder, markItemUnavailable } from "@/app/(dashboard)/orders/actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,60 +26,107 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
-import type { DeliveryPartner, OrderAction, StoreOrderAction } from "@/lib/types";
-
-const ADVANCE_ACTIONS: readonly StoreOrderAction[] = ["accept", "start-picking", "pack", "ready"];
-
-const isAdvance = (action: OrderAction): action is StoreOrderAction =>
-  (ADVANCE_ACTIONS as readonly string[]).includes(action);
+import { nextStep } from "@/lib/order-flow";
+import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
+import type { DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type Target = { storeId: string; orderId: string };
 
-/** The next store workflow step, used inline in the orders table. */
-export function AdvanceOrderButton({ storeId, orderId, allowedActions, size = "sm" }: Target & {
+/**
+ * The one main button for the order's next step. With `packItemIds`, "Packed – ready" asks first
+ * when some items on the checklist aren't ticked.
+ */
+export function NextStepButton({
+  storeId,
+  orderId,
+  status,
+  allowedActions,
+  packItemIds,
+  size = "lg",
+  className,
+}: Target & {
+  status: OrderStatus;
   allowedActions: OrderAction[];
-  size?: "sm" | "default";
+  packItemIds?: string[];
+  size?: "default" | "lg";
+  className?: string;
 }) {
   const [pending, startTransition] = useTransition();
-  const action = allowedActions.find(isAdvance);
-  if (!action) return null;
+  const [confirming, setConfirming] = useState(false);
+  const { ticked } = usePackingTicks(orderId);
+  const step = nextStep(status, allowedActions);
+  if (!step) return null;
+
+  const unticked = step.action === "pack-ready" && packItemIds ? packItemIds.filter((id) => !ticked.has(id)).length : 0;
+
+  function go() {
+    setConfirming(false);
+    startTransition(async () => {
+      if (toastResult(await advanceOrder({ storeId, orderId, action: step!.action })) && step!.action === "pack-ready") {
+        clearPackingTicks(orderId);
+      }
+    });
+  }
 
   return (
-    <Button
-      size={size}
-      disabled={pending}
-      onClick={() => startTransition(async () => void toastResult(await advanceOrder({ storeId, orderId, action })))}
-    >
-      {pending && <Loader2 className="animate-spin" />}
-      {ORDER_ACTION_LABELS[action]}
-    </Button>
+    <>
+      <Button size={size} disabled={pending} className={className} onClick={() => (unticked > 0 ? setConfirming(true) : go())}>
+        {pending && <Loader2 className="animate-spin" />}
+        {step.label}
+      </Button>
+      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {unticked} {unticked === 1 ? "item isn't" : "items aren't"} ticked. Mark ready anyway?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tick each item as you put it in the bag. If something isn&apos;t on the shelf, use Item not found so the
+              customer isn&apos;t charged for it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction onClick={go}>Mark ready</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
-function CancelOrderDialog({ storeId, orderId, orderNumber }: Target & { orderNumber: string }) {
-  const [open, setOpen] = useState(false);
+function CancelOrderDialog({ storeId, orderId, orderNumber, open, onOpenChange }: Target & {
+  orderNumber: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
 
   function submit() {
     startTransition(async () => {
       if (toastResult(await cancelOrder({ storeId, orderId, reason }))) {
-        setOpen(false);
+        onOpenChange(false);
         setReason("");
       }
     });
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="destructive">{ORDER_ACTION_LABELS.cancel}</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Cancel order {orderNumber}?</DialogTitle>
@@ -101,9 +159,54 @@ function CancelOrderDialog({ storeId, orderId, orderNumber }: Target & { orderNu
   );
 }
 
-/** Per-item action while picking: removes units the store cannot find from the order. */
-export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
+/** Less common actions, kept away from the main button so Cancel isn't tapped by mistake. */
+export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel }: Target & { orderNumber: string; canCancel: boolean }) {
+  const [cancelling, setCancelling] = useState(false);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="lg" className="px-3">
+            <MoreHorizontal />
+            More
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`/print/orders/${orderId}`} target="_blank">
+              <Printer />
+              Print packing slip
+            </Link>
+          </DropdownMenuItem>
+          {canCancel && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={() => setCancelling(true)}>
+                <Ban />
+                {ORDER_ACTION_LABELS.cancel}
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {canCancel && (
+        <CancelOrderDialog
+          storeId={storeId}
+          orderId={orderId}
+          orderNumber={orderNumber}
+          open={cancelling}
+          onOpenChange={setCancelling}
+        />
+      )}
+    </>
+  );
+}
+
+/** Per-item action while packing: removes units the store cannot find from the order. */
+export function MarkUnavailableDialog({ storeId, orderId, item, className }: Target & {
   item: { id: string; productName: string; variantName: string; quantity: number; unavailableQuantity: number };
+  className?: string;
 }) {
   const remaining = item.quantity - item.unavailableQuantity;
   const [open, setOpen] = useState(false);
@@ -127,21 +230,21 @@ export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className={className}>
           {ORDER_ACTION_LABELS["mark-unavailable"]}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{productTitle(item.productName, item.variantName)} unavailable?</DialogTitle>
+          <DialogTitle>{productTitle(item.productName, item.variantName)} not found?</DialogTitle>
           <DialogDescription>
             The units are removed from the bill. Online payments are refunded automatically and cash orders collect the
-            lower total. This variant&apos;s stock at the store is set to 0. This cannot be undone.
+            lower total. This size&apos;s stock at the store is set to 0. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
         {remaining > 1 && (
           <Field>
-            <FieldLabel htmlFor="unavailable-quantity">How many are unavailable?</FieldLabel>
+            <FieldLabel htmlFor="unavailable-quantity">How many can&apos;t you find?</FieldLabel>
             <Select value={quantity} onValueChange={setQuantity}>
               <SelectTrigger id="unavailable-quantity" className="w-full">
                 <SelectValue />
@@ -162,7 +265,7 @@ export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
           </DialogClose>
           <Button variant="destructive" disabled={pending} onClick={submit}>
             {pending && <Loader2 className="animate-spin" />}
-            {ORDER_ACTION_LABELS["mark-unavailable"]}
+            Remove from order
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -170,64 +273,85 @@ export function MarkUnavailableDialog({ storeId, orderId, item }: Target & {
   );
 }
 
-function AssignPartnerDialog({ storeId, orderId, mode, partners }: Target & {
-  mode: "assign" | "reassign";
+function PartnerSelect({ id, partners, value, onChange }: {
+  id: string;
   partners: DeliveryPartner[];
+  value: string;
+  onChange: (value: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger id={id} className="w-full">
+        <SelectValue placeholder="Choose a rider" />
+      </SelectTrigger>
+      <SelectContent>
+        {partners.map((partner) => (
+          <SelectItem key={partner.id} value={partner.id}>
+            {partner.name ?? partner.phone}
+            {partner.vehicleNumber && ` · ${partner.vehicleNumber}`}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+const NO_RIDERS = "No riders are free right now. Riders show up here when they go online in the rider app.";
+
+function useAssign({ storeId, orderId, mode }: Target & { mode: "assign" | "reassign" }) {
   const [partnerId, setPartnerId] = useState("");
   const [pending, startTransition] = useTransition();
 
-  function submit() {
+  function submit(onDone?: () => void) {
     startTransition(async () => {
       if (toastResult(await assignPartner({ storeId, orderId, partnerId, mode }))) {
-        setOpen(false);
         setPartnerId("");
+        onDone?.();
       }
     });
   }
 
+  return { partnerId, setPartnerId, pending, submit };
+}
+
+/** "Assign rider" on a board ticket. */
+export function AssignPartnerDialog({ storeId, orderId, mode, partners, className }: Target & {
+  mode: "assign" | "reassign";
+  partners: DeliveryPartner[];
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode });
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={mode === "assign" ? "default" : "outline"}>{ORDER_ACTION_LABELS[mode]}</Button>
+        <Button size="lg" variant={mode === "assign" ? "default" : "outline"} className={className}>
+          {ORDER_ACTION_LABELS[mode]}
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{ORDER_ACTION_LABELS[mode]}</DialogTitle>
           <DialogDescription>
             {mode === "assign"
-              ? "The partner gets the delivery in their app and can accept or decline it."
-              : "The current partner is released and the delivery moves to the new partner."}
+              ? "The rider gets the delivery in their app and can accept or decline it."
+              : "The current rider is released and the delivery moves to the new rider."}
           </DialogDescription>
         </DialogHeader>
         {partners.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No riders are free right now. Riders show up here when they go online in the rider app.
-          </p>
+          <p className="text-sm text-muted-foreground">{NO_RIDERS}</p>
         ) : (
           <Field>
-            <FieldLabel htmlFor="partner">Online partners</FieldLabel>
-            <Select value={partnerId} onValueChange={setPartnerId}>
-              <SelectTrigger id="partner" className="w-full">
-                <SelectValue placeholder="Choose a rider" />
-              </SelectTrigger>
-              <SelectContent>
-                {partners.map((partner) => (
-                  <SelectItem key={partner.id} value={partner.id}>
-                    {partner.name ?? partner.phone}
-                    {partner.vehicleNumber && ` · ${partner.vehicleNumber}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FieldLabel htmlFor={`partner-${orderId}`}>Online riders</FieldLabel>
+            <PartnerSelect id={`partner-${orderId}`} partners={partners} value={partnerId} onChange={setPartnerId} />
           </Field>
         )}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
           </DialogClose>
-          <Button disabled={pending || !partnerId} onClick={submit}>
+          <Button disabled={pending || !partnerId} onClick={() => submit(() => setOpen(false))}>
             {pending && <Loader2 className="animate-spin" />}
             {ORDER_ACTION_LABELS[mode]}
           </Button>
@@ -237,18 +361,30 @@ function AssignPartnerDialog({ storeId, orderId, mode, partners }: Target & {
   );
 }
 
-export function OrderActions({ storeId, orderId, orderNumber, allowedActions, partners }: Target & {
-  orderNumber: string;
-  allowedActions: OrderAction[];
-  partners: DeliveryPartner[] | null;
+/** Choosing a rider right on the order page. */
+export function RiderPicker({ storeId, orderId, mode, partners, className }: Target & {
+  mode: "assign" | "reassign";
+  partners: DeliveryPartner[];
+  className?: string;
 }) {
-  const assignMode = allowedActions.includes("assign") ? "assign" : allowedActions.includes("reassign") ? "reassign" : null;
+  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode });
+
+  if (partners.length === 0) {
+    return <p className={cn("text-sm text-muted-foreground", className)}>{NO_RIDERS}</p>;
+  }
 
   return (
-    <>
-      {allowedActions.includes("cancel") && <CancelOrderDialog storeId={storeId} orderId={orderId} orderNumber={orderNumber} />}
-      {assignMode && <AssignPartnerDialog storeId={storeId} orderId={orderId} mode={assignMode} partners={partners ?? []} />}
-      <AdvanceOrderButton storeId={storeId} orderId={orderId} allowedActions={allowedActions} size="default" />
-    </>
+    <div className={cn("flex flex-col gap-2", className)}>
+      <FieldLabel htmlFor="rider-picker">{mode === "assign" ? "Choose a rider" : "Change to another rider"}</FieldLabel>
+      <PartnerSelect id="rider-picker" partners={partners} value={partnerId} onChange={setPartnerId} />
+      <Button
+        variant={mode === "assign" ? "default" : "outline"}
+        disabled={pending || !partnerId}
+        onClick={() => submit()}
+      >
+        {pending && <Loader2 className="animate-spin" />}
+        {ORDER_ACTION_LABELS[mode]}
+      </Button>
+    </div>
   );
 }

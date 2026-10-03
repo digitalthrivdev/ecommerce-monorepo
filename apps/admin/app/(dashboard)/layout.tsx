@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 import { AppSidebar, StaffTabBar } from "@/components/app-sidebar";
+import { NewOrderAlert } from "@/components/orders/new-order-alert";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { listOrders } from "@/lib/orders";
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
       />
       <SidebarInset className={cn("bg-background", isStaff && "pb-20 md:pb-0")}>{children}</SidebarInset>
       {isStaff && <StaffTabBar newOrders={newOrders} />}
+      <NewOrderAlert initialCount={newOrders} staff={isStaff} />
     </SidebarProvider>
   );
 }

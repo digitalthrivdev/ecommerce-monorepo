@@ -4,6 +4,8 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { ApiError, apiFetch } from "@/lib/api";
+import { getCurrentUser } from "@/lib/dal";
+import { listOrders } from "@/lib/orders";
 import type { ActionResult, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
@@ -41,13 +43,43 @@ function orderPath(storeId: string, orderId: string, action: string) {
   return `/stores/${encodeURIComponent(storeId)}/orders/${encodeURIComponent(orderId)}/${action}`;
 }
 
-const advanceSchema = targetSchema.extend({ action: z.enum(["accept", "start-picking", "pack", "ready"]) });
+const advanceSchema = targetSchema.extend({ action: z.enum(["accept", "start-picking", "pack", "ready", "pack-ready"]) });
 
 export async function advanceOrder(input: { storeId: string; orderId: string; action: string }): Promise<ActionResult> {
   const parsed = advanceSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };
   const { storeId, orderId, action } = parsed.data;
+  if (action === "pack-ready") {
+    const packed = await run(orderPath(storeId, orderId, "pack"), {}, "pack");
+    if (!packed.ok) return packed;
+    const ready = await run(orderPath(storeId, orderId, "ready"), {}, "ready");
+    return ready.ok ? { ok: true, message: "Packed and ready for a rider" } : ready;
+  }
   return run(orderPath(storeId, orderId, action), {}, action);
+}
+
+export type NewOrdersSnapshot = {
+  count: number;
+  latest: { id: string; orderNumber: string; customerName: string; total: string; itemCount: number } | null;
+};
+
+/** Polled by the new-order alert. */
+export async function getNewOrders(): Promise<NewOrdersSnapshot> {
+  const user = await getCurrentUser();
+  const orders = await listOrders(user, { status: ["CONFIRMED"], sort: "newest", limit: 1, offset: 0 });
+  const latest = orders.items[0];
+  return {
+    count: orders.total,
+    latest: latest
+      ? {
+          id: latest.id,
+          orderNumber: latest.orderNumber,
+          customerName: latest.customerName,
+          total: latest.total,
+          itemCount: latest.itemCount,
+        }
+      : null,
+  };
 }
 
 const cancelSchema = targetSchema.extend({

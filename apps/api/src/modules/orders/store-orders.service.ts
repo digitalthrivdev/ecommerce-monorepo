@@ -115,6 +115,9 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
           createdAt: true,
           store: { select: { id: true, name: true } },
           _count: { select: { items: true } },
+          // Enough recent entries to skip "item not found" notes, which do not change the status.
+          statusHistory: { orderBy: { createdAt: "desc" }, take: 5, select: { fromStatus: true, toStatus: true, createdAt: true } },
+          delivery: { select: { partner: { select: { user: { select: { name: true, phone: true } } } } } },
         },
       }),
       prisma.order.count({ where }),
@@ -122,10 +125,14 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     ]);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, statusHistory, delivery, ...order }) => ({
         ...order,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
+        /** When the order reached its current status, for "waiting 8 min" timers. */
+        statusChangedAt:
+          statusHistory.find((entry) => entry.toStatus === order.status && entry.fromStatus !== entry.toStatus)?.createdAt ?? order.createdAt,
+        rider: delivery?.partner ? { name: delivery.partner.user.name, phone: delivery.partner.user.phone } : null,
         allowedActions: allowedActions(order.status, actor.isAdmin),
       })),
       total,

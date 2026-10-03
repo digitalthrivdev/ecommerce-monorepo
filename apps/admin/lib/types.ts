@@ -52,6 +52,9 @@ export type OrderListItem = {
   createdAt: string;
   store: { id: string; name: string };
   itemCount: number;
+  /** When the order reached its current status. */
+  statusChangedAt: string;
+  rider: { name: string | null; phone: string } | null;
   allowedActions: OrderAction[];
 };
 
