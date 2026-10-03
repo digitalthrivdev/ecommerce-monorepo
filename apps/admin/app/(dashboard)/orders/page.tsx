@@ -77,7 +77,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
   const needsRiders = view === "board" && orders.items.some((order) => order.allowedActions.includes("assign"));
   const partners = needsRiders
     ? await apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", {
-        query: { status: "ONLINE", isActive: true, limit: 100 },
+        query: { isActive: true, limit: 100 },
       })
     : null;
 

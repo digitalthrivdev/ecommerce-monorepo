@@ -285,18 +285,27 @@ function PartnerSelect({ id, partners, value, onChange }: {
         <SelectValue placeholder="Choose a rider" />
       </SelectTrigger>
       <SelectContent>
-        {partners.map((partner) => (
-          <SelectItem key={partner.id} value={partner.id}>
-            {partner.name ?? partner.phone}
-            {partner.vehicleNumber && ` · ${partner.vehicleNumber}`}
-          </SelectItem>
-        ))}
+        {[...partners]
+          .sort((a, b) => Number(b.status === "ONLINE") - Number(a.status === "ONLINE"))
+          .map((partner) => (
+            <SelectItem key={partner.id} value={partner.id} disabled={partner.status !== "ONLINE"}>
+              {partner.name ?? partner.phone}
+              {partner.vehicleNumber && ` · ${partner.vehicleNumber}`}
+              {partner.status === "BUSY" &&
+                ` · Busy${partner.activeDelivery ? ` with ${partner.activeDelivery.orderNumber}` : ""}`}
+              {partner.status === "OFFLINE" && " · Offline"}
+            </SelectItem>
+          ))}
       </SelectContent>
     </Select>
   );
 }
 
-const NO_RIDERS = "No riders are free right now. Riders show up here when they go online in the rider app.";
+function noRidersText(partners: DeliveryPartner[]) {
+  if (partners.length === 0) return "No riders yet. Add one on the Riders page.";
+  if (partners.some((partner) => partner.status === "ONLINE")) return null;
+  return "No rider is free right now. Busy riders become free when they finish or decline their delivery; offline riders need to go online in the rider app.";
+}
 
 function useAssign({ storeId, orderId, mode }: Target & { mode: "assign" | "reassign" }) {
   const [partnerId, setPartnerId] = useState("");
@@ -339,14 +348,13 @@ export function AssignPartnerDialog({ storeId, orderId, mode, partners, classNam
               : "The current rider is released and the delivery moves to the new rider."}
           </DialogDescription>
         </DialogHeader>
-        {partners.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{NO_RIDERS}</p>
-        ) : (
+        {partners.length > 0 && (
           <Field>
-            <FieldLabel htmlFor={`partner-${orderId}`}>Online riders</FieldLabel>
+            <FieldLabel htmlFor={`partner-${orderId}`}>Rider</FieldLabel>
             <PartnerSelect id={`partner-${orderId}`} partners={partners} value={partnerId} onChange={setPartnerId} />
           </Field>
         )}
+        {noRidersText(partners) && <p className="text-sm text-muted-foreground">{noRidersText(partners)}</p>}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
@@ -369,14 +377,16 @@ export function RiderPicker({ storeId, orderId, mode, partners, className }: Tar
 }) {
   const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode });
 
+  const hint = noRidersText(partners);
   if (partners.length === 0) {
-    return <p className={cn("text-sm text-muted-foreground", className)}>{NO_RIDERS}</p>;
+    return <p className={cn("text-sm text-muted-foreground", className)}>{hint}</p>;
   }
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <FieldLabel htmlFor="rider-picker">{mode === "assign" ? "Choose a rider" : "Change to another rider"}</FieldLabel>
       <PartnerSelect id="rider-picker" partners={partners} value={partnerId} onChange={setPartnerId} />
+      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
       <Button
         variant={mode === "assign" ? "default" : "outline"}
         disabled={pending || !partnerId}

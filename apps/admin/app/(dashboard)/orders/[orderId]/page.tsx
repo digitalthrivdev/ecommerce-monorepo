@@ -48,7 +48,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
       : null;
   const partners = assignMode
     ? await apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", {
-        query: { status: "ONLINE", isActive: true, limit: 100 },
+        query: { isActive: true, limit: 100 },
       })
     : null;
 
