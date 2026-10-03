@@ -85,6 +85,7 @@ const priceRowSchema = z
   .object({
     storeId: idSchema,
     variantId: z.string().max(64),
+    sku: z.string().max(64).optional(),
     sellingPrice: positiveDecimal("Enter a price like 68 or 68.50"),
     mrp: optionalPositiveDecimal("Enter the MRP like 70, or leave it empty"),
     isAvailable: z.boolean(),
@@ -97,6 +98,7 @@ const priceRowSchema = z
 const stockRowSchema = z.object({
   storeId: idSchema,
   variantId: z.string().max(64),
+  sku: z.string().max(64).optional(),
   delta: z.number().int().min(-1_000_000).max(1_000_000),
 });
 
@@ -157,9 +159,11 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
     return partly(saved, failure);
   };
 
+  let idBySku = new Map<string, string>();
   if (input.variants) {
     try {
-      await apiFetch(`${productPath}/variants`, { method: "PUT", body: input.variants });
+      const product = await apiFetch<ProductDetail>(`${productPath}/variants`, { method: "PUT", body: input.variants });
+      idBySku = new Map(product.variants.map((variant) => [variant.sku, variant.id]));
       saved.push("Sizes");
     } catch (error) {
       if (error instanceof ApiError && error.code === "SKU_TAKEN") {
@@ -179,9 +183,17 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
     }
   }
 
-  if (prices.data.length > 0) {
+  // Rows of sizes added in this save get their new ids from the product code.
+  const resolve = <T extends { variantId: string; sku?: string }>(rows: T[]) =>
+    rows
+      .map(({ sku, ...row }) => ({ ...row, variantId: row.variantId || idBySku.get(sku?.trim().toUpperCase() ?? "") || "" }))
+      .filter((row) => row.variantId !== "");
+  const priceData = resolve(prices.data);
+  const stockData = resolve(stock.data);
+
+  if (priceData.length > 0) {
     try {
-      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: prices.data } });
+      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: priceData } });
       saved.push("Prices");
     } catch (error) {
       const failure = apiFailure(error);
@@ -189,9 +201,9 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
     }
   }
 
-  if (stock.data.length > 0) {
+  if (stockData.length > 0) {
     try {
-      await applyStock(stock.data, "Changed on the product page");
+      await applyStock(stockData, "Changed on the product page");
       saved.push("Stock");
     } catch (error) {
       const failure = apiFailure(error);

@@ -1,49 +1,71 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { ImageIcon, Plus, Search } from "lucide-react";
+import { ImageIcon, Plus, Search, X } from "lucide-react";
 
 import { CategoryFilter } from "@/components/category-filter";
 import { PageHeader } from "@/components/page-header";
+import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
-import { Badge } from "@/components/ui/badge";
+import { ParamSelect } from "@/components/param-select";
+import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { requireAdmin } from "@/lib/dal";
-import type { Category, Paginated, ProductListItem } from "@/lib/types";
+import type { Brand, Category, Paginated, ProductListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Products" };
 
 const PAGE_SIZE = 50;
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+const oneOf = <T extends string>(value: string | undefined, allowed: readonly T[]) => (allowed as readonly string[]).includes(value ?? "") ? (value as T) : undefined;
+
+const STATUSES = ["active", "hidden"] as const;
+const SELLING = ["yes", "no"] as const;
 
 export default async function ProductsPage({ searchParams }: PageProps<"/products">) {
   await requireAdmin();
   const params = await searchParams;
   const q = first(params.q)?.trim().slice(0, 100) || undefined;
   const categoryId = first(params.categoryId) || undefined;
+  const brandId = first(params.brandId) || undefined;
+  const status = oneOf(first(params.status), STATUSES);
+  const selling = oneOf(first(params.selling), SELLING);
+  const outOfStock = first(params.stock) === "out";
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, brands] = await Promise.all([
     apiFetch<Paginated<ProductListItem>>("/products", {
-      query: { includeInactive: true, search: q, categoryId, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
+      query: {
+        includeInactive: true,
+        search: q,
+        categoryId,
+        brandId,
+        status,
+        selling,
+        outOfStock: outOfStock || undefined,
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
+      },
     }),
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
+    apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
   ]);
 
-  const href = (nextPage: number) => {
+  const current = { q, categoryId, brandId, status, selling, stock: outOfStock ? "out" : undefined };
+  const href = (changes: Partial<typeof current> & { page?: number }) => {
     const next = new URLSearchParams();
-    if (q) next.set("q", q);
-    if (categoryId) next.set("categoryId", categoryId);
-    if (nextPage > 1) next.set("page", String(nextPage));
+    for (const [key, value] of Object.entries({ ...current, ...changes, page: undefined })) if (value) next.set(key, String(value));
+    if (changes.page && changes.page > 1) next.set("page", String(changes.page));
     const query = next.toString();
     return query ? `/products?${query}` : "/products";
   };
   const lastPage = Math.max(1, Math.ceil(products.total / PAGE_SIZE));
+  const filtered = Boolean(q || categoryId || brandId || selling || outOfStock);
 
   return (
     <>
@@ -61,22 +83,56 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
+        <PageTabs
+          label="Show products"
+          active={status ?? "all"}
+          tabs={[
+            { id: "all", label: "All", href: href({ status: undefined }) },
+            { id: "active", label: "In the app", href: href({ status: "active" }) },
+            { id: "hidden", label: "Hidden", href: href({ status: "hidden" }) },
+          ]}
+        />
+
         <div className="flex flex-wrap items-center gap-2">
           <Form action="/products" className="flex gap-2">
-            {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
+            {Object.entries(current).map(([key, value]) => key !== "q" && value && <input key={key} type="hidden" name={key} value={value} />)}
             <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Product name, brand or code" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
               <Search />
             </Button>
           </Form>
           <CategoryFilter categories={categories.items} />
+          <ParamSelect
+            param="brandId"
+            label="Filter by brand"
+            allLabel="All brands"
+            options={brands.items.map((brand) => ({ value: brand.id, label: brand.name }))}
+          />
+          <ParamSelect
+            param="selling"
+            label="Filter by selling"
+            allLabel="Selling or not"
+            options={[
+              { value: "yes", label: "Selling at a store" },
+              { value: "no", label: "Not selling anywhere" },
+            ]}
+          />
+          <ParamSelect param="stock" label="Filter by stock" allLabel="Any stock" options={[{ value: "out", label: "Out of stock somewhere" }]} />
+          {filtered && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={status ? `/products?status=${status}` : "/products"}>
+                <X />
+                Clear filters
+              </Link>
+            </Button>
+          )}
         </div>
 
         <Card>
           <CardContent>
             {products.items.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                {q || categoryId ? "No products match these filters." : "No products yet."}
+                {filtered || status ? "No products match these filters." : "No products yet."}
               </p>
             ) : (
               <Table>
@@ -84,7 +140,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Variants</TableHead>
+                    <TableHead className="text-right">Sizes</TableHead>
                     <TableHead className="text-right">Stores</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
@@ -115,9 +171,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                       <TableCell className={cn("text-right tabular-nums", product.storeCount === 0 && "text-muted-foreground")}>
                         {product.storeCount === 0 ? "Not selling" : product.storeCount}
                       </TableCell>
-                      <TableCell>
-                        {product.isActive ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Switched off</Badge>}
-                      </TableCell>
+                      <TableCell>{product.isActive ? <Pill tone="green">In the app</Pill> : <Pill tone="gray">Hidden</Pill>}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -126,14 +180,14 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
           </CardContent>
         </Card>
 
-        {products.total > PAGE_SIZE && (
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, products.total)} of {products.total}
-            </span>
-            <PaginationLinks page={page} lastPage={lastPage} href={href} />
-          </div>
-        )}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {products.total === 0
+              ? ""
+              : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, products.total)} of ${products.total} ${products.total === 1 ? "product" : "products"}`}
+          </span>
+          {products.total > PAGE_SIZE && <PaginationLinks page={page} lastPage={lastPage} href={(nextPage) => href({ page: nextPage })} />}
+        </div>
       </div>
     </>
   );

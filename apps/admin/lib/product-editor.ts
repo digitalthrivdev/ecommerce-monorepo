@@ -1,4 +1,5 @@
 import type { Listing, ProductDetail, ProductListings, Store } from "./types";
+import type { Draft, VariantDraft } from "./variant-drafts";
 
 /** Text fields of the product form, as typed. */
 export type DetailsDraft = {
@@ -109,8 +110,46 @@ export function priceDraftsFromListings(listings: ProductListings): Record<strin
   );
 }
 
-export type PriceRow = { storeId: string; variantId: string; sellingPrice: string; mrp: string; isAvailable: boolean };
-export type StockRow = { storeId: string; variantId: string; delta: number };
+/**
+ * Starting price of a new size: the price, MRP and selling switches of `source`, with no stock.
+ * Nothing is listed until the size is saved.
+ */
+export function copyPriceDraft(source: PriceDraft | undefined, stores: Store[]): PriceDraft {
+  const empty = priceDraftFor(stores, () => null);
+  if (!source) return empty;
+  return {
+    same: source.same,
+    price: source.price,
+    mrp: source.mrp,
+    stores: Object.fromEntries(
+      stores.map((store) => {
+        const row = source.stores[store.id];
+        return [store.id, { ...empty.stores[store.id]!, price: row?.price ?? "", mrp: row?.mrp ?? "", selling: row?.selling ?? true }];
+      }),
+    ),
+  };
+}
+
+/** The size sharing the most option values with `target`, earliest first on a tie. */
+export function closestVariant(draft: Draft, target: VariantDraft, eligible: (variant: VariantDraft) => boolean) {
+  let best: VariantDraft | undefined;
+  let bestScore = -1;
+  for (const variant of draft.variants) {
+    if (variant.key === target.key || !eligible(variant)) continue;
+    const score = draft.options.filter((option) => variant.values[option.key] === target.values[option.key]).length;
+    if (score > bestScore) {
+      best = variant;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/**
+ * `variantId` is empty for a size not saved yet; `sku` then finds it once it is.
+ */
+export type PriceRow = { storeId: string; variantId: string; sku?: string; sellingPrice: string; mrp: string; isAvailable: boolean };
+export type StockRow = { storeId: string; variantId: string; sku?: string; delta: number };
 
 const PRICE_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
 
@@ -163,6 +202,15 @@ export function priceRows(variantId: string, draft: PriceDraft, stores: Store[])
     }
   }
   return { rows, stock, errors };
+}
+
+/** Lowest–highest price a size will have once saved, as typed. */
+export function draftPriceRange(draft: PriceDraft | undefined) {
+  if (!draft) return null;
+  const typed = draft.same ? [draft.price] : Object.values(draft.stores).map((row) => row.price);
+  const prices = typed.filter((price) => PRICE_PATTERN.test(price.trim()) && Number(price) > 0).map(Number);
+  if (prices.length === 0) return null;
+  return { min: Math.min(...prices), max: Math.max(...prices) };
 }
 
 /** Lowest–highest price of a size across stores, for summaries. */

@@ -21,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { categoryOptions } from "@/lib/categories";
 import { productTitle } from "@/lib/format";
 import {
+  closestVariant,
+  copyPriceDraft,
   detailsFromProduct,
   NONE,
   priceDraftFor,
@@ -188,33 +190,38 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [initial] = useState(() => {
-    const prices = listings ? priceDraftsFromListings(listings) : {};
-    const singleId = product && product.options.length === 0 ? product.variants[0]?.id : undefined;
-    return {
-      details: detailsFromProduct(product),
-      draft: product ? draftFromProduct(product) : emptyDraft(),
-      prices,
-      singleId,
-      price: (singleId && prices[singleId]) || priceDraftFor(stores, () => null),
-    };
+    const draft = product ? draftFromProduct(product) : emptyDraft();
+    const loaded = listings ? priceDraftsFromListings(listings) : {};
+    const prices = Object.fromEntries(draft.variants.map((variant) => [variant.key, loaded[variant.key] ?? priceDraftFor(stores, () => null)]));
+    return { details: detailsFromProduct(product), draft, prices };
   });
   const [details, setDetails] = useState<DetailsDraft>(initial.details);
   const [draft, setDraft] = useState<Draft>(initial.draft);
-  const [price, setPrice] = useState<PriceDraft>(initial.price);
+  /** Price and stock of every size, keyed by variant key (the id once saved). */
+  const [prices, setPrices] = useState<Record<string, PriceDraft>>(initial.prices);
   const [newImages, setNewImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const creating = !product;
   const first = draft.variants[0]!;
-  /** Price and stock sit on this page while the product has one size; with more, each size has its own page. */
-  const showPricing = draft.options.length === 0 && (creating || initial.singleId !== undefined);
-  const priceVariantId = initial.singleId ?? "new";
+  /** With one size, its price and stock sit on this page; with more, they are in the sizes list. */
+  const showPricing = draft.options.length === 0;
 
+  const priceChanged = (variant: VariantDraft) => {
+    const was = initial.prices[variant.key];
+    const now = prices[variant.key];
+    return {
+      price: Boolean(was && now && !same(pricePart(now), pricePart(was))),
+      stock: Boolean(was && now && !same(stockPart(now), stockPart(was))),
+    };
+  };
   const detailsDirty = !same(details, initial.details);
   const variantsDirty = !same(toPayload(draft), toPayload(initial.draft));
-  const priceDirty = showPricing && !same(pricePart(price), pricePart(initial.price));
-  const stockDirty = showPricing && !same(stockPart(price), stockPart(initial.price));
-  const dirty = detailsDirty || variantsDirty || priceDirty || stockDirty || newImages.length > 0;
+  const pricesDirty = draft.variants.some((variant) => {
+    const changed = priceChanged(variant);
+    return changed.price || changed.stock;
+  });
+  const dirty = detailsDirty || variantsDirty || pricesDirty || newImages.length > 0;
 
   const set = (changes: Partial<DetailsDraft>) => setDetails((current) => ({ ...current, ...changes }));
   const field = (name: keyof Omit<DetailsDraft, "isActive">) => ({
@@ -225,34 +232,62 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
   });
   const updateFirst = (changes: Partial<VariantDraft>) => setDraft({ ...draft, variants: [{ ...first, ...changes }, ...draft.variants.slice(1)] });
 
+  /** New sizes start with the price of the closest size, so nobody has to type every price. */
+  function changeDraft(next: Draft) {
+    const missing = next.variants.filter((variant) => !prices[variant.key]);
+    if (missing.length > 0) {
+      const filled = { ...prices };
+      for (const variant of missing) {
+        const source = closestVariant(next, variant, (candidate) => Boolean(prices[candidate.key]));
+        filled[variant.key] = copyPriceDraft(source && prices[source.key], stores);
+      }
+      setPrices(filled);
+    }
+    setDraft(next);
+  }
+
   function discard() {
     setDetails(initial.details);
     setDraft(initial.draft);
-    setPrice(initial.price);
+    setPrices(initial.prices);
     setNewImages([]);
     setErrors({});
   }
 
+  /** Price and stock rows of every changed or new size, or null after showing what to fix. */
   function checkPrices(): { prices: PriceRow[]; stock: StockRow[] } | null {
-    const result = priceRows(priceVariantId, price, stores);
-    if (Object.keys(result.errors).length > 0) {
-      setErrors(result.errors);
+    const rows: PriceRow[] = [];
+    const stock: StockRow[] = [];
+    const problems: Record<string, string> = {};
+    for (const variant of draft.variants) {
+      const pd = prices[variant.key];
+      const changed = priceChanged(variant);
+      const isNew = !variant.id;
+      if (!pd || (!isNew && !changed.price && !changed.stock)) continue;
+      const result = priceRows(variant.key, pd, stores);
+      Object.assign(problems, result.errors);
+      const ref = isNew ? { variantId: "", sku: variant.sku.trim().toUpperCase() } : { variantId: variant.key };
+      if (isNew || changed.price) rows.push(...result.rows.map((row) => ({ ...row, ...ref })));
+      stock.push(...result.stock.map((row) => ({ ...row, ...ref })));
+    }
+    if (Object.keys(problems).length > 0) {
+      setErrors(problems);
       toast.error("Check the highlighted boxes");
       return null;
     }
-    return { prices: result.rows, stock: result.stock };
+    return { prices: rows, stock };
   }
 
   function save() {
+    const checked = checkPrices();
+    if (!checked) return;
     if (creating) {
-      const checked = checkPrices();
-      if (!checked) return;
       startTransition(async () => {
         const result = await createProduct({
           details,
           variant: { sku: first.sku, barcode: first.barcode, quantity: first.quantity, unit: first.unit, maxOrderQuantity: first.maxOrderQuantity },
-          prices: checked.prices.map((row) => ({ ...row, variantId: "" })),
-          stock: checked.stock.map((row) => ({ ...row, variantId: "" })),
+          prices: checked.prices,
+          stock: checked.stock,
           images: newImages,
         });
         if (!result.ok) {
@@ -271,21 +306,13 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
       return;
     }
 
-    let prices: PriceRow[] | undefined;
-    let stock: StockRow[] | undefined;
-    if (priceDirty || stockDirty) {
-      const checked = checkPrices();
-      if (!checked) return;
-      prices = priceDirty ? checked.prices : undefined;
-      stock = checked.stock;
-    }
     startTransition(async () => {
       const result = await saveProductChanges({
         productId: product.id,
         details: detailsDirty ? details : undefined,
         variants: variantsDirty ? toPayload(draft) : undefined,
-        prices,
-        stock,
+        prices: checked.prices,
+        stock: checked.stock,
       });
       if (result.ok) {
         setErrors({});
@@ -343,23 +370,30 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
             {product ? <ImagesManager product={product} /> : <DraftImages urls={newImages} onChange={setNewImages} />}
           </Block>
 
-          {showPricing && (
+          {showPricing && prices[first.key] && (
             <>
-              <PricingCard variantId={priceVariantId} stores={stores} draft={price} onChange={setPrice} errors={errors} currency={currency} />
-              <StockCard
-                variantId={priceVariantId}
+              <PricingCard
+                variantId={first.key}
                 stores={stores}
-                draft={price}
-                onChange={setPrice}
+                draft={prices[first.key]!}
+                onChange={(next) => setPrices({ ...prices, [first.key]: next })}
+                errors={errors}
+                currency={currency}
+              />
+              <StockCard
+                variantId={first.key}
+                stores={stores}
+                draft={prices[first.key]!}
+                onChange={(next) => setPrices({ ...prices, [first.key]: next })}
                 errors={errors}
                 codes={<CodeFields variant={first} onChange={updateFirst} errors={errors} errorPrefix="variants.0" creating={creating} />}
                 history={
-                  product && initial.singleId
+                  product && first.id
                     ? (storeId) => (
                         <StockHistoryDialog
                           storeId={storeId}
-                          variantId={initial.singleId!}
-                          title={productTitle(product.name, product.variants[0]?.label ?? "")}
+                          variantId={first.id!}
+                          title={productTitle(product.name, product.variants.find((variant) => variant.id === first.id)?.label ?? "")}
                           timezone={timezone}
                         />
                       )
@@ -369,18 +403,18 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
             </>
           )}
 
-          {showPricing && stores.length === 0 && (
-            <p className="text-sm text-muted-foreground">Add a store on the Stores page to set a price and stock.</p>
-          )}
+          {stores.length === 0 && <p className="text-sm text-muted-foreground">Add a store on the Stores page to set a price and stock.</p>}
 
           <VariantsCard
             productId={product?.id}
             slug={details.slug || product?.slug || details.name}
             images={product?.images ?? []}
             draft={draft}
-            onChange={setDraft}
+            onChange={changeDraft}
             errors={errors}
-            priceDrafts={initial.prices}
+            stores={stores}
+            prices={prices}
+            onPricesChange={setPrices}
             currency={currency}
           />
 
