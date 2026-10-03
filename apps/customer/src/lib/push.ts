@@ -1,8 +1,8 @@
 import { isRunningInExpoGo } from "expo";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { useEffect } from "react";
-import { Platform } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { AppState, Linking, Platform } from "react-native";
 
 import { apiFetch } from "./api";
 import { queryClient } from "./query-client";
@@ -62,6 +62,51 @@ async function register(Notifications: NotificationsModule) {
     body: { token, platform: Platform.OS === "ios" ? "IOS" : "ANDROID" },
   });
   registeredToken = token;
+}
+
+/**
+ * Whether order notifications are blocked on this device (rechecked when the app returns to the
+ * foreground), and a way to turn them on: the system prompt while it can still be shown, the app's
+ * settings page after that.
+ */
+export function useNotificationsBlocked() {
+  const [blocked, setBlocked] = useState(false);
+
+  const check = useCallback(() => {
+    if (!PUSH_SUPPORTED) return;
+    loadNotifications()
+      .then(async (Notifications) => {
+        const { status } = await Notifications.getPermissionsAsync();
+        setBlocked(status !== "granted");
+        // Allowed in the system settings since launch, so this device isn't registered yet.
+        if (status === "granted" && !registeredToken) await register(Notifications);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    check();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") check();
+    });
+    return () => subscription.remove();
+  }, [check]);
+
+  const enable = useCallback(async () => {
+    const Notifications = await loadNotifications();
+    let { status, canAskAgain } = await Notifications.getPermissionsAsync();
+    if (status !== "granted" && canAskAgain) ({ status } = await Notifications.requestPermissionsAsync());
+    if (status !== "granted") {
+      await Linking.openSettings();
+      return;
+    }
+    setBlocked(false);
+    await register(Notifications).catch((error: unknown) => {
+      if (__DEV__) console.warn("Push notification setup failed", error);
+    });
+  }, []);
+
+  return { blocked, enable };
 }
 
 /** Best effort, so this device stops getting the account's notifications. Call while still signed in. */

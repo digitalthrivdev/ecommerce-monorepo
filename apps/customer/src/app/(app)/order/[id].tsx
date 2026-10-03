@@ -1,10 +1,11 @@
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { CircleCheck, CircleX, KeyRound, MapPin, Phone, Wallet } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { ArrowLeft, Bell, Bike, Check, CircleCheck, CircleX, Headset, KeyRound, MapPin, Phone, ShoppingBag, Wallet, type LucideIcon } from "lucide-react-native";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ActivityIndicator, Alert, Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BillDetails } from "@/components/bill-details";
+import { BillDetails, mrpTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -14,48 +15,136 @@ import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { formatDateTime, formatMoney, formatTime } from "@/lib/format";
-import { ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder } from "@/lib/orders";
+import { smallImage } from "@/lib/images";
+import { isOrderFinished, ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder, useOrderTracking } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
+import { useNotificationsBlocked } from "@/lib/push";
 import { useSettings } from "@/lib/settings";
-import type { OrderDetail } from "@/lib/types";
+import type { OrderDetail, OrderTracking } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const PLACED_SCREEN_MS = 1800;
 
 function Card({ children, className }: { children: ReactNode; className?: string }) {
   const surface = useCardSurface();
   return <View className={cn("mx-4 gap-3 rounded-lg p-4", surface, className)}>{children}</View>;
 }
 
-function StatusCard({ order, placed }: { order: OrderDetail; placed: boolean }) {
-  const step = orderStep(order.status);
+type InfoCardProps = { icon: LucideIcon; title: string; detail?: string; right?: ReactNode; action?: { label: string; onPress: () => void }; children?: ReactNode };
+
+/** Icon, title and detail, with an optional link-style action along the bottom. */
+function InfoCard({ icon, title, detail, right, action, children }: InfoCardProps) {
+  const surface = useCardSurface();
+  return (
+    <View className={cn("mx-4 overflow-hidden rounded-lg", surface)}>
+      <View className="gap-3 p-4">
+        <View className="flex-row items-center gap-3">
+          <View className="size-11 items-center justify-center rounded-full bg-muted">
+            <Icon as={icon} size={20} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-bold">{title}</Text>
+            {detail ? <Text className="text-xs text-muted-foreground">{detail}</Text> : null}
+          </View>
+          {right}
+        </View>
+        {children}
+      </View>
+      {action && (
+        <Pressable onPress={action.onPress} className="items-center border-t border-border py-3 active:bg-accent">
+          <Text className="text-sm font-bold text-primary">{action.label}</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+/** Being prepared or delivered: shown with the tracking header. */
+const isLive = (order: OrderDetail) => !isOrderFinished(order.status) && order.status !== "PENDING_PAYMENT";
+
+function TrackingHeader({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
+  const insets = useSafeAreaInsets();
   const text = ORDER_STATUS_TEXT[order.status];
-  const cancelled = order.status === "CANCELLED";
-  const justPlaced = placed && step === 0;
+  const eta = tracking?.etaMinutes ?? null;
+
+  return (
+    <View className="bg-primary px-2 pb-4" style={{ paddingTop: insets.top + 4 }}>
+      <FocusStatusBar onPrimary />
+      <View className="flex-row items-center">
+        <Pressable
+          onPress={() => router.back()}
+          className="size-11 items-center justify-center rounded-full bg-primary-foreground/15 active:opacity-70"
+          accessibilityLabel="Back"
+          hitSlop={8}
+        >
+          <Icon as={ArrowLeft} size={22} className="text-primary-foreground" />
+        </Pressable>
+        <View className="flex-1 items-center px-2">
+          {eta !== null ? (
+            <>
+              <Text className="text-sm font-semibold text-primary-foreground">{text.title}</Text>
+              <Text className="text-2xl font-extrabold text-primary-foreground">
+                Arriving in {eta} {eta === 1 ? "minute" : "minutes"}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text className="text-2xl font-extrabold text-primary-foreground">{text.title}</Text>
+              <Text className="text-center text-sm font-semibold text-primary-foreground" numberOfLines={2}>
+                {text.detail}
+              </Text>
+            </>
+          )}
+        </View>
+        <View className="size-11" />
+      </View>
+    </View>
+  );
+}
+
+function StepsCard({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
+  const step = orderStep(order.status);
+  if (step === null) return null;
+  const distance = tracking?.distanceKm ?? null;
 
   return (
     <Card>
-      <View className="flex-row items-center gap-3">
-        {cancelled ? <Icon as={CircleX} size={30} className="text-destructive" /> : step !== null && <Icon as={CircleCheck} size={30} className="text-primary" />}
-        <View className="flex-1">
-          <Text className="text-lg font-extrabold">{justPlaced ? "Order placed!" : text.title}</Text>
-          <Text className="text-sm text-muted-foreground">{justPlaced ? `Thanks! ${order.store.name} will start packing it soon.` : text.detail}</Text>
+      <View className="gap-1.5">
+        <View className="flex-row gap-1">
+          {ORDER_STEPS.map((label, index) => (
+            <View key={label} className={cn("h-1.5 flex-1 rounded-full", index <= step ? "bg-primary" : "bg-muted")} />
+          ))}
+        </View>
+        <View className="flex-row">
+          {ORDER_STEPS.map((label, index) => (
+            <Text key={label} className={cn("flex-1 text-center text-[10px]", index === step ? "font-bold text-primary" : "text-muted-foreground")}>
+              {label}
+            </Text>
+          ))}
         </View>
       </View>
-      {step !== null && (
-        <View className="gap-1.5">
-          <View className="flex-row gap-1">
-            {ORDER_STEPS.map((label, index) => (
-              <View key={label} className={cn("h-1.5 flex-1 rounded-full", index <= step ? "bg-primary" : "bg-muted")} />
-            ))}
-          </View>
-          <View className="flex-row">
-            {ORDER_STEPS.map((label, index) => (
-              <Text key={label} className={cn("flex-1 text-center text-[10px]", index === step ? "font-bold text-primary" : "text-muted-foreground")}>
-                {label}
-              </Text>
-            ))}
-          </View>
-        </View>
+      {distance !== null && (
+        <Text className="text-xs text-muted-foreground">
+          Your delivery partner is {distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`} from you.
+        </Text>
       )}
+    </Card>
+  );
+}
+
+/** Delivered, cancelled or awaiting payment. */
+function StatusCard({ order }: { order: OrderDetail }) {
+  const text = ORDER_STATUS_TEXT[order.status];
+  const cancelled = order.status === "CANCELLED";
+  const deliveredAt = order.status === "DELIVERED" ? order.delivery?.deliveredAt : null;
+
+  return (
+    <Card className="flex-row items-center">
+      {cancelled ? <Icon as={CircleX} size={30} className="text-destructive" /> : <Icon as={CircleCheck} size={30} className="text-primary" />}
+      <View className="flex-1">
+        <Text className="text-lg font-extrabold">{text.title}</Text>
+        <Text className="text-sm text-muted-foreground">{deliveredAt ? `Delivered at ${formatTime(deliveredAt)}. ${text.detail}` : text.detail}</Text>
+      </View>
     </Card>
   );
 }
@@ -91,11 +180,76 @@ function paymentText(order: OrderDetail, currency: string) {
   return "Online payment not completed";
 }
 
-function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
+function NotificationsCard() {
+  const { blocked, enable } = useNotificationsBlocked();
+  if (!blocked) return null;
+  return (
+    <InfoCard
+      icon={Bell}
+      title="Want to stay up to date?"
+      detail="Turn on notifications so we can tell you when your order is packed and on its way."
+      action={{ label: "Turn on notifications", onPress: () => enable().catch(() => {}) }}
+    />
+  );
+}
+
+function HelpCard({ order }: { order: OrderDetail }) {
+  const { support } = useSettings();
+  const phone = support.phone ?? order.store.phone;
+  if (phone) {
+    return <InfoCard icon={Headset} title="Need help?" detail="Call us about any issue with your order." action={{ label: "Call support", onPress: () => Linking.openURL(`tel:${phone}`) }} />;
+  }
+  if (support.email) {
+    return (
+      <InfoCard
+        icon={Headset}
+        title="Need help?"
+        detail="Email us about any issue with your order."
+        action={{ label: "Email support", onPress: () => Linking.openURL(`mailto:${support.email}?subject=${encodeURIComponent(`Order ${order.orderNumber}`)}`) }}
+      />
+    );
+  }
+  return null;
+}
+
+function OrderItemRow({ item, currency }: { item: OrderDetail["items"][number]; currency: string }) {
+  const [failed, setFailed] = useState(false);
+  const supplied = item.quantity - item.unavailableQuantity;
+
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className={cn("size-12 items-center justify-center overflow-hidden rounded-md bg-tile", supplied === 0 && "opacity-40")}>
+        {item.imageUrl && !failed ? (
+          <Image source={{ uri: smallImage(item.imageUrl) }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
+        ) : (
+          <Text className="text-base font-extrabold text-primary">{item.productName.charAt(0)}</Text>
+        )}
+      </View>
+      <View className="flex-1 gap-0.5">
+        <Text className={cn("text-sm", supplied === 0 && "text-muted-foreground line-through")} numberOfLines={2}>
+          {item.productName}
+        </Text>
+        <Text className="text-xs text-muted-foreground">
+          {[item.variantName, `× ${supplied || item.quantity}`].filter(Boolean).join(" ")}
+        </Text>
+        {item.unavailableQuantity > 0 && (
+          <Text className="text-xs font-semibold text-destructive">
+            {supplied === 0 ? "Out of stock, not charged" : `${item.unavailableQuantity} out of stock, not charged`}
+          </Text>
+        )}
+      </View>
+      <Text className={cn("text-sm font-semibold", supplied === 0 && "text-muted-foreground")}>{formatMoney(item.chargedTotal, currency)}</Text>
+    </View>
+  );
+}
+
+function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
   const { currency } = useSettings();
   const cancel = useCancelOrder(order.id);
   const partner = order.delivery?.partner;
   const address = order.deliveryAddress;
+  const live = isLive(order);
+  const chargedLines = order.items.map((item) => ({ mrp: item.mrp, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
 
   const confirmCancel = () =>
     Alert.alert("Cancel order?", order.payment?.status === "PAID" ? "Your payment will be refunded." : "This can't be undone.", [
@@ -105,7 +259,7 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
 
   return (
     <>
-      <StatusCard order={order} placed={placed} />
+      {live ? <StepsCard order={order} tracking={tracking} /> : <StatusCard order={order} />}
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
 
@@ -120,47 +274,45 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
         </Card>
       )}
 
-      {partner && (
-        <Card className="flex-row items-center">
-          <View className="flex-1">
-            <Text className="text-sm font-bold">{partner.name ?? "Delivery partner"}</Text>
-            <Text className="text-xs text-muted-foreground">{[partner.vehicleType, partner.vehicleNumber].filter(Boolean).join(" · ") || "Your delivery partner"}</Text>
-          </View>
-          <Button variant="outline" size="sm" onPress={() => Linking.openURL(`tel:${partner.phone}`)} className="h-9 rounded-md">
-            <Icon as={Phone} size={16} />
-            <Text className="font-semibold">Call</Text>
-          </Button>
-        </Card>
-      )}
+      {partner && live ? (
+        <InfoCard
+          icon={Bike}
+          title={partner.name ?? "Your delivery partner"}
+          detail={[partner.vehicleType, partner.vehicleNumber].filter(Boolean).join(" · ") || "Your delivery partner"}
+          right={
+            <Button variant="outline" size="sm" onPress={() => Linking.openURL(`tel:${partner.phone}`)} className="h-9 rounded-md">
+              <Icon as={Phone} size={16} />
+              <Text className="font-semibold">Call</Text>
+            </Button>
+          }
+        />
+      ) : live ? (
+        <InfoCard icon={Bike} title="We'll assign a delivery partner as soon as your order is packed" />
+      ) : null}
 
-      <Card>
-        <Text className="text-base font-bold">
-          {order.items.length} {order.items.length === 1 ? "item" : "items"} from {order.store.name}
-        </Text>
-        {order.items.map((item) => {
-          const supplied = item.quantity - item.unavailableQuantity;
-          return (
-            <View key={item.id} className="flex-row items-start justify-between gap-3">
-              <View className="flex-1 gap-0.5">
-                <Text className={cn("text-sm", supplied === 0 && "text-muted-foreground line-through")} numberOfLines={2}>
-                  <Text className={cn("text-sm font-bold", supplied === 0 && "text-muted-foreground")}>{supplied || item.quantity} × </Text>
-                  {item.productName}
-                </Text>
-                {item.variantName ? <Text className="text-xs text-muted-foreground">{item.variantName}</Text> : null}
-                {item.unavailableQuantity > 0 && (
-                  <Text className="text-xs font-semibold text-destructive">
-                    {supplied === 0 ? "Out of stock, not charged" : `${item.unavailableQuantity} out of stock, not charged`}
-                  </Text>
-                )}
-              </View>
-              <Text className={cn("text-sm font-semibold", supplied === 0 && "text-muted-foreground")}>{formatMoney(item.chargedTotal, currency)}</Text>
-            </View>
-          );
-        })}
-      </Card>
+      {!isOrderFinished(order.status) && <NotificationsCard />}
+
+      <InfoCard icon={MapPin} title="Your delivery details">
+        <View className="gap-0.5">
+          <Text className="text-sm font-semibold">Delivering to {address.name}</Text>
+          <Text className="text-sm text-muted-foreground">
+            {[address.addressLine1, address.addressLine2, address.landmark, address.city, address.postalCode].filter(Boolean).join(", ")}
+          </Text>
+          <Text className="text-xs text-muted-foreground">{formatPhone(address.phone)}</Text>
+        </View>
+      </InfoCard>
+
+      <HelpCard order={order} />
+
+      <InfoCard icon={ShoppingBag} title="Order summary" detail={`Order ${order.orderNumber} · ${order.store.name}`}>
+        {order.items.map((item) => (
+          <OrderItemRow key={item.id} item={item} currency={currency} />
+        ))}
+      </InfoCard>
 
       <BillDetails
         bill={order}
+        itemsMrp={mrpTotal(chargedLines)}
         totalLabel="Total"
         footer={
           <View className="flex-row items-center gap-2 pt-1">
@@ -170,21 +322,7 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
         }
       />
 
-      <Card>
-        <View className="flex-row gap-3">
-          <Icon as={MapPin} size={20} className="mt-0.5 text-primary" />
-          <View className="flex-1 gap-0.5">
-            <Text className="text-sm font-bold">Delivering to {address.name}</Text>
-            <Text className="text-sm text-muted-foreground">
-              {[address.addressLine1, address.addressLine2, address.landmark, address.city, address.postalCode].filter(Boolean).join(", ")}
-            </Text>
-            <Text className="text-xs text-muted-foreground">{formatPhone(address.phone)}</Text>
-          </View>
-        </View>
-      </Card>
-
       <View className="gap-0.5 px-5">
-        <Text className="text-xs text-muted-foreground">Order {order.orderNumber}</Text>
         <Text className="text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</Text>
         {order.invoiceNumber && <Text className="text-xs text-muted-foreground">Invoice {order.invoiceNumber}</Text>}
       </View>
@@ -198,36 +336,74 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
   );
 }
 
+/** Full-screen confirmation shown for a moment after a cash order is placed. */
+function PlacedScreen({ order, onDone }: { order: OrderDetail; onDone: () => void }) {
+  const [opacity] = useState(() => new Animated.Value(1));
+  const address = order.deliveryAddress;
+
+  useEffect(() => {
+    const animation = Animated.sequence([Animated.delay(PLACED_SCREEN_MS), Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true })]);
+    animation.start(({ finished }) => {
+      if (finished) onDone();
+    });
+    return () => animation.stop();
+  }, [opacity, onDone]);
+
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, { opacity, zIndex: 10 }]}>
+      <Pressable onPress={onDone} className="flex-1 items-center justify-center gap-3 bg-background px-8" accessibilityLabel="Continue to order">
+        <View className="size-28 items-center justify-center rounded-full bg-primary">
+          <Icon as={Check} size={56} className="text-primary-foreground" />
+        </View>
+        <Text className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Order placed</Text>
+        <Text className="text-center text-2xl font-extrabold">Delivering to {address.name}</Text>
+        <Text className="text-center text-sm text-muted-foreground">{[address.addressLine1, address.addressLine2, address.city].filter(Boolean).join(", ")}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 export default function OrderScreen() {
   const { id, placed } = useLocalSearchParams<{ id: string; placed?: string }>();
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const order = useOrder(id);
+  const tracking = useOrderTracking(id, order.data?.status);
   const [refreshing, setRefreshing] = useState(false);
+  const [showPlaced, setShowPlaced] = useState(placed === "1");
+  const hidePlaced = useCallback(() => setShowPlaced(false), []);
+  const live = order.data ? isLive(order.data) : false;
 
   async function refresh() {
     setRefreshing(true);
-    await order.refetch();
+    await Promise.all([order.refetch(), live ? tracking.refetch() : null]);
     setRefreshing(false);
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <FocusStatusBar />
-      <ScreenHeader title="Order details" />
+    <View className="flex-1 bg-background">
+      {live && order.data ? (
+        <TrackingHeader order={order.data} tracking={tracking.data} />
+      ) : (
+        <View style={{ paddingTop: insets.top }}>
+          <FocusStatusBar />
+          <ScreenHeader title="Order details" />
+        </View>
+      )}
       {order.data ? (
         <ScrollView
-          contentContainerClassName="gap-4 pt-1"
+          contentContainerClassName="gap-4 pt-4"
           contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         >
-          <OrderBody order={order.data} placed={placed === "1"} />
+          <OrderBody order={order.data} tracking={tracking.data} />
         </ScrollView>
       ) : order.isPending ? (
         <ActivityIndicator color={colors.primary} className="py-12" />
       ) : (
         <QueryError error={order.error} onRetry={() => order.refetch()} />
       )}
+      {showPlaced && order.data && order.data.status !== "PENDING_PAYMENT" && <PlacedScreen order={order.data} onDone={hidePlaced} />}
     </View>
   );
 }

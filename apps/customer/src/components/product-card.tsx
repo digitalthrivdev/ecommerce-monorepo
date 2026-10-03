@@ -35,37 +35,29 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
             <Text className="text-3xl font-extrabold text-primary">{product.name.charAt(0)}</Text>
           )}
         </View>
-        {discount && !soldOut && (
-          <View className="absolute left-0 top-0 rounded-br-md bg-primary px-1.5 py-0.5">
-            <Text className="text-[10px] font-extrabold text-primary-foreground">{discount}% OFF</Text>
-          </View>
-        )}
         {soldOut && (
           <View className="absolute rounded-md bg-foreground/80 px-2 py-1">
             <Text className="text-[11px] font-bold text-background">Out of stock</Text>
           </View>
         )}
-        {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute right-1 top-1" />}
+        {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute bottom-1 right-1" />}
       </View>
-      <Text className="min-h-9 text-[13px] font-semibold leading-tight" numberOfLines={2}>
-        {product.name}
-      </Text>
-      <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-        {variant.label || " "}
-      </Text>
-      <View className="mt-auto flex-row items-end justify-between gap-1">
-        <View className="shrink">
-          <Text className="text-sm font-extrabold" numberOfLines={1}>
-            {formatMoney(variant.sellingPrice, currency)}
-          </Text>
-          {discount && (
-            <Text className="text-xs text-muted-foreground line-through" numberOfLines={1}>
-              {formatMoney(variant.mrp!, currency)}
-            </Text>
-          )}
-        </View>
+      <View className="flex-row items-start justify-between gap-1">
+        <Text className="mt-1.5 shrink text-xs font-medium text-muted-foreground" numberOfLines={1}>
+          {variant.label}
+        </Text>
         <ProductCartControl product={product} variant={variant} />
       </View>
+      <View>
+        <View className="flex-row flex-wrap items-baseline gap-x-1.5">
+          <Text className="text-[15px] font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
+          {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.mrp!, currency)}</Text>}
+        </View>
+        {discount && <Text className="text-[11px] font-bold text-primary">{discount}% OFF on MRP</Text>}
+      </View>
+      <Text className="text-[13px] font-semibold leading-tight" numberOfLines={2}>
+        {product.name}
+      </Text>
     </Pressable>
   );
 }

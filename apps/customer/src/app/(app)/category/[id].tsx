@@ -84,8 +84,8 @@ export default function CategoryScreen() {
         }
       />
       {tops.length > 1 && top && <CategoryChips chips={tops} selectedId={top.id} />}
-      {top && children.length > 0 && <CategoryChips key={top.id} chips={[{ id: top.id, name: "All" }, ...children]} selectedId={id} small />}
-      {store ? <ProductList key={id} query={products} emptyText="No products in this category yet." /> : <StoreRequired />}
+      {top && children.length > 0 && <CategoryChips key={`chips-${top.id}`} chips={[{ id: top.id, name: "All" }, ...children]} selectedId={id} small />}
+      {store ? <ProductList key={`products-${id}`} query={products} emptyText="No products in this category yet." /> : <StoreRequired />}
       <CartBar />
     </View>
   );

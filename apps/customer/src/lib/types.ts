@@ -91,13 +91,18 @@ export type StoreVariant = {
   maxOrderQuantity: number;
 };
 
+export type BrandSummary = { id: string; name: string; slug: string; logoUrl: string | null };
+
+/** `GET /stores/:storeId/brands`: brands with something in stock at the store. */
+export type StoreBrand = BrandSummary & { productCount: number };
+
 /** A product as sold by one store, with the variants it lists. */
 export type StoreProduct = {
   productId: string;
   name: string;
   slug: string;
   category: { id: string; name: string; slug: string; parentId: string | null };
-  brand: { id: string; name: string; slug: string } | null;
+  brand: BrandSummary | null;
   isVeg: boolean | null;
   imageUrl: string | null;
   variants: StoreVariant[];
@@ -256,6 +261,14 @@ export type OrderDetail = {
   deliveryOtp: string | null;
 };
 
+/** `GET /orders/:id/tracking`. */
+export type OrderTracking = {
+  orderStatus: OrderStatus;
+  trackable: boolean;
+  distanceKm: number | null;
+  etaMinutes: number | null;
+};
+
 export type HomeLink = { type: "none" } | { type: "category"; category: Category };
 
 export type BannerCarouselSection = {
@@ -280,7 +293,34 @@ export type OfferStripSection = {
   link: HomeLink;
 };
 
-export type HomeSection = BannerCarouselSection | CategoryGridSection | ProductRailSection | OfferStripSection;
+/** `category` is null when deals come from every category. */
+export type DealsRailSection = { id: string; type: "deals_rail"; title: string; category: Category | null; products: StoreProduct[] };
+
+/** The app loads the signed-in customer's products itself. */
+export type BuyAgainSection = { id: string; type: "buy_again"; title: string };
+
+export type BrandRailSection = { id: string; type: "brand_rail"; title: string; brands: StoreBrand[] };
+
+export type CategoryDealsSection = { id: string; type: "category_deals"; title: string; categories: (Category & { maxDiscountPercent: number })[] };
+
+export type ImageTilesSection = {
+  id: string;
+  type: "image_tiles";
+  title: string | null;
+  columns: 2 | 3;
+  tiles: { id: string; imageUrl: string; link: HomeLink }[];
+};
+
+export type HomeSection =
+  | BannerCarouselSection
+  | CategoryGridSection
+  | ProductRailSection
+  | OfferStripSection
+  | DealsRailSection
+  | BuyAgainSection
+  | BrandRailSection
+  | CategoryDealsSection
+  | ImageTilesSection;
 
 /** `GET /home`: the admin's home sections, ready to render in order. */
 export type HomeFeed = { storeId: string | null; sections: HomeSection[] };

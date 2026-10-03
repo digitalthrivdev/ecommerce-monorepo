@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ActiveOrderBar } from "@/components/active-order-bar";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { CartBar } from "@/components/cart-bar";
 import { BrandMark } from "@/components/brand-mark";
@@ -199,6 +200,7 @@ export default function HomeScreen() {
           <HomeContent />
         </View>
       </ScrollView>
+      <ActiveOrderBar />
       <CartBar inset={false} />
     </View>
   );

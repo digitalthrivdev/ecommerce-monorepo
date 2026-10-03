@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { OrderDetail, OrderStatus, OrderSummary, Paginated, PaymentMethod } from "./types";
+import type { OrderDetail, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -25,6 +25,28 @@ export function useOrders() {
   });
 }
 
+/** Orders still in progress, newest first. Polls while there are any, so the list empties once they finish. */
+export function useActiveOrders() {
+  return useQuery({
+    queryKey: [...ORDERS_KEY, "active"],
+    queryFn: () => apiFetch<Paginated<OrderSummary>>("/orders", { query: { active: true, limit: 5 } }),
+    staleTime: 10_000,
+    refetchInterval: (query) => (query.state.data?.total ? LIVE_REFRESH_MS : false),
+  });
+}
+
+export const buyAgainKey = (storeId: string | null) => [...ORDERS_KEY, "buy-again", storeId] as const;
+
+/** Products from the customer's past orders that are in stock at the store, most often ordered first. */
+export function useBuyAgain(storeId: string | undefined) {
+  return useQuery({
+    queryKey: buyAgainKey(storeId ?? null),
+    queryFn: () => apiFetch<{ items: StoreProduct[] }>("/orders/buy-again", { query: { storeId, limit: 12 } }),
+    staleTime: 5 * 60_000,
+    enabled: Boolean(storeId),
+  });
+}
+
 /** Polls for status changes until the order is delivered or cancelled. */
 export function useOrder(id: string) {
   return useQuery({
@@ -32,6 +54,19 @@ export function useOrder(id: string) {
     queryFn: () => apiFetch<OrderDetail>(orderPath(id)),
     staleTime: 10_000,
     refetchInterval: (query) => (query.state.data && isOrderFinished(query.state.data.status) ? false : LIVE_REFRESH_MS),
+  });
+}
+
+const TRACKABLE: OrderStatus[] = ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"];
+
+/** The partner's distance and arrival estimate while the order is with them; both are null until their location is known. */
+export function useOrderTracking(id: string, status: OrderStatus | undefined) {
+  return useQuery({
+    queryKey: [...orderKey(id), "tracking"],
+    queryFn: () => apiFetch<OrderTracking>(`${orderPath(id)}/tracking`),
+    enabled: status !== undefined && TRACKABLE.includes(status),
+    staleTime: 10_000,
+    refetchInterval: LIVE_REFRESH_MS,
   });
 }
 

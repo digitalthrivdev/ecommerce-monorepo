@@ -11,12 +11,12 @@ function isDarkColor(hex: string) {
 
 /**
  * Status bar for the focused screen only, so tabs that stay mounted do not fight over it.
- * `onHighlight` screens draw their header in the admin's highlight colour.
+ * `onHighlight` and `onPrimary` screens draw their header in the admin's highlight or primary colour.
  */
-export function FocusStatusBar({ onHighlight = false }: { onHighlight?: boolean }) {
+export function FocusStatusBar({ onHighlight = false, onPrimary = false }: { onHighlight?: boolean; onPrimary?: boolean }) {
   const focused = useIsFocused();
   const { scheme, colors } = useAppTheme();
   if (!focused) return null;
-  const darkContent = onHighlight ? isDarkColor(colors.onAccent) : scheme === "light";
+  const darkContent = onPrimary ? isDarkColor(colors.onPrimary) : onHighlight ? isDarkColor(colors.onAccent) : scheme === "light";
   return <StatusBar style={darkContent ? "dark" : "light"} />;
 }

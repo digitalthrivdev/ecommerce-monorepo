@@ -1,7 +1,11 @@
 import { View } from "react-native";
 
+import { BrandRow } from "@/components/brand-row";
 import { CategoryGrid } from "@/components/category-grid";
 import { BannerCarousel } from "@/components/home/banner-carousel";
+import { BuyAgainRail } from "@/components/home/buy-again-rail";
+import { CategoryDeals } from "@/components/home/category-deals";
+import { ImageTiles } from "@/components/home/image-tiles";
 import { OfferStrip } from "@/components/home/offer-strip";
 import { ProductRail } from "@/components/home/product-rail";
 import { Text } from "@/components/ui/text";
@@ -19,9 +23,18 @@ function Section({ section }: { section: HomeSection }) {
         </View>
       );
     case "product_rail":
+    case "deals_rail":
       return <ProductRail section={section} />;
     case "offer_strip":
       return <OfferStrip section={section} />;
+    case "buy_again":
+      return <BuyAgainRail section={section} />;
+    case "brand_rail":
+      return <BrandRow title={section.title} brands={section.brands} />;
+    case "category_deals":
+      return <CategoryDeals section={section} />;
+    case "image_tiles":
+      return <ImageTiles section={section} />;
   }
 }
 
