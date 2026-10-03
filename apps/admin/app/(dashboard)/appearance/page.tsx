@@ -5,15 +5,16 @@ import { PageHeader } from "@/components/page-header";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
-import type { AdminAppearance, Category, Paginated } from "@/lib/types";
+import type { AdminAppearance, Brand, Category, Paginated } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Appearance" };
 
 export default async function AppearancePage() {
   await requireAdmin();
-  const [appearance, categories, deployment] = await Promise.all([
+  const [appearance, categories, brands, deployment] = await Promise.all([
     apiFetch<AdminAppearance>("/settings/appearance"),
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
+    apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
     getPublicSettings(),
   ]);
 
@@ -28,7 +29,7 @@ export default async function AppearancePage() {
         }
       />
       <div className="p-4 md:p-6">
-        <AppearanceEditor key={appearance.updatedAt ?? "defaults"} initial={appearance} categories={categories.items} />
+        <AppearanceEditor key={appearance.updatedAt ?? "defaults"} initial={appearance} categories={categories.items} brands={brands.items} />
       </div>
     </>
   );

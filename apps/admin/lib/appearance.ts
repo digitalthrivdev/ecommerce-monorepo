@@ -15,6 +15,11 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   category_grid: { name: "Category grid", description: "Tiles that open a category" },
   product_rail: { name: "Product rail", description: "A horizontal row of products from a category" },
   offer_strip: { name: "Offer strip", description: "A coloured call-out, e.g. free delivery" },
+  deals_rail: { name: "Top deals", description: "Products with the biggest discount off MRP" },
+  buy_again: { name: "Buy again", description: "What each customer has ordered before" },
+  brand_rail: { name: "Brands", description: "A row of brand logos that open the brand's products" },
+  category_deals: { name: "Category deals", description: "Category tiles showing \"Up to X% OFF\"" },
+  image_tiles: { name: "Image tiles", description: "2 or 3 small images side by side" },
 };
 
 export const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
@@ -74,6 +79,26 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
         textColor: colors.onAccent,
         link: { type: "none" },
       };
+    case "deals_rail":
+      return { id, type, enabled: true, title: "Top deals", categoryId: null, limit: 10 };
+    case "buy_again":
+      return { id, type, enabled: true, title: "Buy again" };
+    case "brand_rail":
+      return { id, type, enabled: true, title: "Top brands", brandIds: [] };
+    case "category_deals":
+      return { id, type, enabled: true, title: "Mega price drops", categoryIds: [] };
+    case "image_tiles":
+      return {
+        id,
+        type,
+        enabled: true,
+        title: null,
+        columns: 2,
+        tiles: [
+          { id: newId(), imageUrl: "", link: { type: "none" } },
+          { id: newId(), imageUrl: "", link: { type: "none" } },
+        ],
+      };
   }
 }
 
@@ -83,6 +108,7 @@ const FIELD_NAMES: Record<string, string> = {
   imageUrl: "Image URL",
   categoryId: "Category",
   categoryIds: "Categories",
+  brandIds: "Brands",
   backgroundColor: "Background colour",
   textColor: "Text colour",
 };
@@ -98,6 +124,7 @@ export function describeErrorPath(path: string) {
     else if (part === "theme" || part === "colors") continue;
     else if (part === "announcement") labels.push("Announcement");
     else if (part === "banners") labels.push(`Banner ${Number(next) + 1}`);
+    else if (part === "tiles") labels.push(`Tile ${Number(next) + 1}`);
     else if (/^\d+$/.test(part)) {
       if (parts[index - 1] === "homeSections") labels.push(`Section ${Number(part) + 1}`);
     } else labels.push(FIELD_NAMES[part] ?? part.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));

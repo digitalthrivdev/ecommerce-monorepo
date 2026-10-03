@@ -456,7 +456,14 @@ export type HomeSection =
       backgroundColor: string;
       textColor: string;
       link: AppearanceLink;
-    };
+    }
+  | { id: string; enabled: boolean; type: "deals_rail"; title: string; categoryId: string | null; limit: number }
+  | { id: string; enabled: boolean; type: "buy_again"; title: string }
+  | { id: string; enabled: boolean; type: "brand_rail"; title: string; brandIds: string[] }
+  | { id: string; enabled: boolean; type: "category_deals"; title: string; categoryIds: string[] }
+  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; columns: 2 | 3; tiles: HomeTile[] };
+
+export type HomeTile = { id: string; imageUrl: string; link: AppearanceLink };
 
 export type HomeSectionType = HomeSection["type"];
 

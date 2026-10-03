@@ -1,6 +1,22 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronDown, GalleryHorizontal, LayoutGrid, Megaphone, Plus, Rows3, Trash2, type LucideIcon } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Award,
+  BadgePercent,
+  ChevronDown,
+  GalleryHorizontal,
+  Grid2x2,
+  LayoutGrid,
+  Megaphone,
+  Plus,
+  RotateCcw,
+  Rows3,
+  Tags,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
 
 import { ColorField } from "@/components/appearance/color-field";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +29,24 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { newId, newSection, SECTION_LABELS } from "@/lib/appearance";
-import type { Appearance, AppearanceLink, Category, HomeBanner, HomeSection, HomeSectionType } from "@/lib/types";
+import type { Appearance, AppearanceLink, Brand, Category, HomeBanner, HomeSection, HomeSectionType, HomeTile } from "@/lib/types";
 
 const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
   banner_carousel: GalleryHorizontal,
   category_grid: LayoutGrid,
   product_rail: Rows3,
   offer_strip: Megaphone,
+  deals_rail: BadgePercent,
+  buy_again: RotateCcw,
+  brand_rail: Award,
+  category_deals: Tags,
+  image_tiles: Grid2x2,
 };
 
 const MAX_SECTIONS = 20;
 const MAX_BANNERS = 10;
+const MAX_TILES = 9;
+const ALL_CATEGORIES = "all";
 
 type Errors = Record<string, string>;
 
@@ -105,6 +128,127 @@ function LinkSelect({ link, onChange, categories, error }: { link: AppearanceLin
   );
 }
 
+type PickerOption = { id: string; name: string; isActive: boolean };
+
+/** Optional "use all" switch plus a checklist that keeps the order items were ticked in. */
+function OrderedPicker({
+  id,
+  allLabel,
+  description,
+  options,
+  selected,
+  defaultSelection,
+  onChange,
+  error,
+}: {
+  id: string;
+  allLabel: string;
+  description: string;
+  options: PickerOption[];
+  selected: string[];
+  defaultSelection: number;
+  onChange: (ids: string[]) => void;
+  error?: string;
+}) {
+  const chooseAll = selected.length === 0;
+  return (
+    <>
+      <Field orientation="horizontal">
+        <Switch
+          id={id}
+          checked={chooseAll}
+          onCheckedChange={(all) =>
+            onChange(all ? [] : options.filter((option) => option.isActive).slice(0, defaultSelection).map((option) => option.id))
+          }
+        />
+        <FieldLabel htmlFor={id}>{allLabel}</FieldLabel>
+      </Field>
+      {!chooseAll && (
+        <Field data-invalid={Boolean(error)}>
+          <FieldDescription>{description}</FieldDescription>
+          <div className="grid gap-1 sm:grid-cols-2">
+            {options.map((option) => {
+              const position = selected.indexOf(option.id);
+              const checked = position >= 0;
+              return (
+                <label key={option.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50">
+                  <input
+                    type="checkbox"
+                    className="accent-primary"
+                    checked={checked}
+                    onChange={() => onChange(checked ? selected.filter((item) => item !== option.id) : [...selected, option.id])}
+                  />
+                  <span className="flex-1">
+                    {option.name}
+                    {!option.isActive && <span className="text-muted-foreground"> (hidden)</span>}
+                  </span>
+                  {checked && <Badge variant="secondary">{position + 1}</Badge>}
+                </label>
+              );
+            })}
+          </div>
+          <FieldError>{error}</FieldError>
+        </Field>
+      )}
+    </>
+  );
+}
+
+function TileFields({
+  tile,
+  index,
+  count,
+  onChange,
+  onMove,
+  onRemove,
+  categories,
+  errors,
+  prefix,
+}: {
+  tile: HomeTile;
+  index: number;
+  count: number;
+  onChange: (tile: HomeTile) => void;
+  onMove: (to: number) => void;
+  onRemove: () => void;
+  categories: Category[];
+  errors: Errors;
+  prefix: string;
+}) {
+  const at = (field: string) => errors[`${prefix}.${field}`];
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border p-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">Tile {index + 1}</span>
+        <div className="ml-auto flex gap-1">
+          <Button type="button" variant="ghost" size="icon-sm" disabled={index === 0} onClick={() => onMove(index - 1)} aria-label="Move tile up">
+            <ArrowUp />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" disabled={index === count - 1} onClick={() => onMove(index + 1)} aria-label="Move tile down">
+            <ArrowDown />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" disabled={count <= 2} onClick={onRemove} aria-label="Remove tile">
+            <Trash2 />
+          </Button>
+        </div>
+      </div>
+      <ImageField
+        id={`tile-image-${tile.id}`}
+        label="Image"
+        value={tile.imageUrl}
+        onChange={(imageUrl) => onChange({ ...tile, imageUrl: imageUrl.trim() })}
+        error={at("imageUrl")}
+        description="Square image (e.g. 600×600). Put any text inside the image."
+      />
+      <LinkSelect link={tile.link} onChange={(link) => onChange({ ...tile, link })} categories={categories} error={at("link.categoryId")} />
+    </div>
+  );
+}
+
+function firstNestedError(errors: Errors, prefix: string) {
+  return Object.entries(errors).find(([key]) => key.startsWith(`${prefix}.`))?.[1];
+}
+
 function BannerFields({
   banner,
   index,
@@ -161,7 +305,21 @@ function BannerFields({
   );
 }
 
-function SectionFields({ section, onChange, categories, errors, prefix }: { section: HomeSection; onChange: (section: HomeSection) => void; categories: Category[]; errors: Errors; prefix: string }) {
+function SectionFields({
+  section,
+  onChange,
+  categories,
+  brands,
+  errors,
+  prefix,
+}: {
+  section: HomeSection;
+  onChange: (section: HomeSection) => void;
+  categories: Category[];
+  brands: Brand[];
+  errors: Errors;
+  prefix: string;
+}) {
   const at = (field: string) => errors[`${prefix}.${field}`];
 
   switch (section.type) {
@@ -201,8 +359,7 @@ function SectionFields({ section, onChange, categories, errors, prefix }: { sect
         </FieldGroup>
       );
 
-    case "category_grid": {
-      const chooseAll = section.categoryIds.length === 0;
+    case "category_grid":
       return (
         <FieldGroup>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -220,51 +377,18 @@ function SectionFields({ section, onChange, categories, errors, prefix }: { sect
               </Select>
             </Field>
           </div>
-          <Field orientation="horizontal">
-            <Switch
-              id={`${section.id}-all`}
-              checked={chooseAll}
-              onCheckedChange={(all) =>
-                onChange({ ...section, categoryIds: all ? [] : categories.filter((category) => category.isActive).slice(0, 8).map((category) => category.id) })
-              }
-            />
-            <FieldLabel htmlFor={`${section.id}-all`}>Show every active category</FieldLabel>
-          </Field>
-          {!chooseAll && (
-            <Field data-invalid={Boolean(at("categoryIds"))}>
-              <FieldDescription>Tick the categories to show, in the order you tick them.</FieldDescription>
-              <div className="grid gap-1 sm:grid-cols-2">
-                {categories.map((category) => {
-                  const position = section.categoryIds.indexOf(category.id);
-                  const checked = position >= 0;
-                  return (
-                    <label key={category.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50">
-                      <input
-                        type="checkbox"
-                        className="accent-primary"
-                        checked={checked}
-                        onChange={() =>
-                          onChange({
-                            ...section,
-                            categoryIds: checked ? section.categoryIds.filter((id) => id !== category.id) : [...section.categoryIds, category.id],
-                          })
-                        }
-                      />
-                      <span className="flex-1">
-                        {category.name}
-                        {!category.isActive && <span className="text-muted-foreground"> (hidden)</span>}
-                      </span>
-                      {checked && <Badge variant="secondary">{position + 1}</Badge>}
-                    </label>
-                  );
-                })}
-              </div>
-              <FieldError>{at("categoryIds") ?? Object.entries(errors).find(([key]) => key.startsWith(`${prefix}.categoryIds.`))?.[1]}</FieldError>
-            </Field>
-          )}
+          <OrderedPicker
+            id={`${section.id}-all`}
+            allLabel="Show every active category"
+            description="Tick the categories to show, in the order you tick them."
+            options={categories}
+            selected={section.categoryIds}
+            defaultSelection={8}
+            onChange={(categoryIds) => onChange({ ...section, categoryIds })}
+            error={at("categoryIds") ?? firstNestedError(errors, `${prefix}.categoryIds`)}
+          />
         </FieldGroup>
       );
-    }
 
     case "product_rail":
       return (
@@ -315,11 +439,149 @@ function SectionFields({ section, onChange, categories, errors, prefix }: { sect
           <LinkSelect link={section.link} onChange={(link) => onChange({ ...section, link })} categories={categories} error={at("link.categoryId")} />
         </FieldGroup>
       );
+
+    case "deals_rail":
+      return (
+        <FieldGroup>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+            <Field data-invalid={Boolean(at("categoryId"))}>
+              <FieldLabel>Deals from</FieldLabel>
+              <Select
+                value={section.categoryId ?? ALL_CATEGORIES}
+                onValueChange={(value) => onChange({ ...section, categoryId: value === ALL_CATEGORIES ? null : value })}
+              >
+                <SelectTrigger className="w-full" aria-invalid={Boolean(at("categoryId"))}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                      {!category.isActive && " (hidden)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{at("categoryId")}</FieldError>
+            </Field>
+          </div>
+          <TextInput
+            label="How many products"
+            type="number"
+            min={4}
+            max={20}
+            value={String(section.limit)}
+            onChange={(limit) => onChange({ ...section, limit: Number.parseInt(limit, 10) || 0 })}
+            error={at("limit")}
+            description="The biggest discounts off MRP among products in stock at the customer's store."
+            className="w-28"
+          />
+        </FieldGroup>
+      );
+
+    case "buy_again":
+      return (
+        <FieldGroup>
+          <TextInput
+            label="Title"
+            maxLength={40}
+            value={section.title}
+            onChange={(title) => onChange({ ...section, title })}
+            error={at("title")}
+            description="Each signed-in customer sees products from their past orders that are in stock. Hidden for new customers."
+          />
+        </FieldGroup>
+      );
+
+    case "brand_rail":
+      return (
+        <FieldGroup>
+          <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+          <OrderedPicker
+            id={`${section.id}-all`}
+            allLabel="Show the brands with the most products in stock"
+            description="Tick the brands to show, in the order you tick them. Brands with nothing in stock are skipped."
+            options={brands}
+            selected={section.brandIds}
+            defaultSelection={8}
+            onChange={(brandIds) => onChange({ ...section, brandIds })}
+            error={at("brandIds") ?? firstNestedError(errors, `${prefix}.brandIds`)}
+          />
+          {brands.length === 0 && <FieldDescription>No brands yet. Add them on the Brands page.</FieldDescription>}
+        </FieldGroup>
+      );
+
+    case "category_deals":
+      return (
+        <FieldGroup>
+          <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+          <OrderedPicker
+            id={`${section.id}-all`}
+            allLabel="Use every main category"
+            description="Tick the categories to show, in the order you tick them. Categories with no discount are skipped."
+            options={categories}
+            selected={section.categoryIds}
+            defaultSelection={6}
+            onChange={(categoryIds) => onChange({ ...section, categoryIds })}
+            error={at("categoryIds") ?? firstNestedError(errors, `${prefix}.categoryIds`)}
+          />
+        </FieldGroup>
+      );
+
+    case "image_tiles":
+      return (
+        <FieldGroup>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <TextInput label="Title (optional)" maxLength={40} value={section.title ?? ""} onChange={(title) => onChange({ ...section, title: title || null })} error={at("title")} />
+            <Field>
+              <FieldLabel>Tiles per row</FieldLabel>
+              <Select value={String(section.columns)} onValueChange={(columns) => onChange({ ...section, columns: Number(columns) as 2 | 3 })}>
+                <SelectTrigger className="w-full sm:w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+          {section.tiles.map((tile, index) => (
+            <TileFields
+              key={tile.id}
+              tile={tile}
+              index={index}
+              count={section.tiles.length}
+              categories={categories}
+              errors={errors}
+              prefix={`${prefix}.tiles.${index}`}
+              onChange={(next) => onChange({ ...section, tiles: section.tiles.map((item, position) => (position === index ? next : item)) })}
+              onMove={(to) => onChange({ ...section, tiles: move(section.tiles, index, to) })}
+              onRemove={() => onChange({ ...section, tiles: section.tiles.filter((_, position) => position !== index) })}
+            />
+          ))}
+          {at("tiles") && <FieldError>{at("tiles")}</FieldError>}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start"
+            disabled={section.tiles.length >= MAX_TILES}
+            onClick={() => onChange({ ...section, tiles: [...section.tiles, { id: newId(), imageUrl: "", link: { type: "none" } }] })}
+          >
+            <Plus />
+            Add tile
+          </Button>
+        </FieldGroup>
+      );
   }
 }
 
 function sectionSummary(section: HomeSection, categories: Category[]) {
   const categoryName = (id: string) => categories.find((category) => category.id === id)?.name ?? "No category";
+  const count = (ids: string[], [one, many]: [string, string], all: string) => (ids.length ? `${ids.length} ${ids.length === 1 ? one : many}` : all);
   switch (section.type) {
     case "banner_carousel":
       return `${section.banners.length} banner${section.banners.length === 1 ? "" : "s"}`;
@@ -328,7 +590,16 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
     case "product_rail":
       return `${section.title} · ${categoryName(section.categoryId)}`;
     case "offer_strip":
+    case "buy_again":
       return section.title;
+    case "deals_rail":
+      return `${section.title} · ${section.categoryId ? categoryName(section.categoryId) : "All categories"}`;
+    case "brand_rail":
+      return `${section.title} · ${count(section.brandIds, ["brand", "brands"], "Top brands")}`;
+    case "category_deals":
+      return `${section.title} · ${count(section.categoryIds, ["category", "categories"], "Main categories")}`;
+    case "image_tiles":
+      return section.title ?? `${section.tiles.length} tiles`;
   }
 }
 
@@ -336,12 +607,13 @@ type HomeEditorProps = {
   value: Appearance;
   onChange: (next: Appearance) => void;
   categories: Category[];
+  brands: Brand[];
   errors: Errors;
   expanded: string | null;
   onExpand: (id: string | null) => void;
 };
 
-export function HomeEditor({ value, onChange, categories, errors, expanded, onExpand }: HomeEditorProps) {
+export function HomeEditor({ value, onChange, categories, brands, errors, expanded, onExpand }: HomeEditorProps) {
   const sections = value.homeSections;
   const setSections = (homeSections: HomeSection[]) => onChange({ ...value, homeSections });
 
@@ -413,6 +685,7 @@ export function HomeEditor({ value, onChange, categories, errors, expanded, onEx
                 <SectionFields
                   section={section}
                   categories={categories}
+                  brands={brands}
                   errors={errors}
                   prefix={prefix}
                   onChange={(next) => setSections(sections.map((item) => (item.id === section.id ? next : item)))}

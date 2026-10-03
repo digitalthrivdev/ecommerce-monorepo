@@ -3,7 +3,7 @@
 import { Search, ShoppingBasket, UserRound } from "lucide-react";
 import type { CSSProperties } from "react";
 
-import type { Appearance, Category, HomeSection } from "@/lib/types";
+import type { Appearance, Brand, Category, HomeSection } from "@/lib/types";
 
 type Palette = { background: string; surface: string; border: string; text: string; muted: string; placeholder: string };
 
@@ -22,7 +22,52 @@ function cardStyle(appearance: Appearance, palette: Palette, dark: boolean): CSS
   }
 }
 
-function SectionPreview({ section, appearance, categories, palette, dark }: { section: HomeSection; appearance: Appearance; categories: Category[]; palette: Palette; dark: boolean }) {
+const PLACEHOLDER_BRANDS = ["A", "B", "C", "D"].map((letter) => ({ id: letter, name: `Brand ${letter}`, logoUrl: null }));
+
+function ProductRailPreview({ card, appearance, palette, dark, deals }: { card: CSSProperties; appearance: Appearance; palette: Palette; dark: boolean; deals?: boolean }) {
+  const { radius, colors } = appearance.theme;
+  return (
+    <div className="flex gap-2 overflow-hidden px-3">
+      {[0, 1, 2].map((index) => (
+        <div key={index} className="flex w-[92px] shrink-0 flex-col gap-1 p-1.5" style={card}>
+          <div className="aspect-square" style={{ borderRadius: Math.max(radius - 4, 0), backgroundColor: palette.placeholder }} />
+          <span className="w-fit rounded px-1 text-[8px] font-semibold" style={{ backgroundColor: palette.placeholder, color: palette.muted }}>8 MINS</span>
+          <div className="h-2 w-4/5 rounded" style={{ backgroundColor: palette.placeholder }} />
+          {deals ? (
+            <span className="text-[8px] font-bold" style={{ color: colors.primary }}>{[35, 28, 20][index]}% OFF on MRP</span>
+          ) : (
+            <div className="h-2 w-1/2 rounded" style={{ backgroundColor: palette.placeholder }} />
+          )}
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-[10px] font-bold" style={{ color: palette.text }}>₹{48 + index * 21}</span>
+            <span
+              className="px-2 py-0.5 text-[9px] font-bold"
+              style={{ borderRadius: Math.min(radius, 8), border: `1px solid ${colors.primary}`, color: colors.primary, backgroundColor: dark ? "transparent" : `${colors.primary}0F` }}
+            >
+              ADD
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionPreview({
+  section,
+  appearance,
+  categories,
+  brands,
+  palette,
+  dark,
+}: {
+  section: HomeSection;
+  appearance: Appearance;
+  categories: Category[];
+  brands: Brand[];
+  palette: Palette;
+  dark: boolean;
+}) {
   const { radius, colors } = appearance.theme;
   const card = cardStyle(appearance, palette, dark);
   const title = (text: string | null) => (text ? <p className="px-3 pb-2 text-[13px] font-bold" style={{ color: palette.text }}>{text}</p> : null);
@@ -83,25 +128,88 @@ function SectionPreview({ section, appearance, categories, palette, dark }: { se
     }
 
     case "product_rail":
+    case "buy_again":
+      return (
+        <div>
+          {title(section.title)}
+          <ProductRailPreview card={card} appearance={appearance} palette={palette} dark={dark} />
+        </div>
+      );
+
+    case "deals_rail":
+      return (
+        <div>
+          {title(section.title)}
+          <ProductRailPreview card={card} appearance={appearance} palette={palette} dark={dark} deals />
+        </div>
+      );
+
+    case "brand_rail": {
+      const shown = section.brandIds.length
+        ? section.brandIds.map((id) => brands.find((brand) => brand.id === id)).filter((brand): brand is Brand => Boolean(brand))
+        : brands.filter((brand) => brand.isActive);
       return (
         <div>
           {title(section.title)}
           <div className="flex gap-2 overflow-hidden px-3">
-            {[0, 1, 2].map((index) => (
-              <div key={index} className="flex w-[92px] shrink-0 flex-col gap-1 p-1.5" style={card}>
-                <div className="aspect-square" style={{ borderRadius: Math.max(radius - 4, 0), backgroundColor: palette.placeholder }} />
-                <span className="w-fit rounded px-1 text-[8px] font-semibold" style={{ backgroundColor: palette.placeholder, color: palette.muted }}>8 MINS</span>
-                <div className="h-2 w-4/5 rounded" style={{ backgroundColor: palette.placeholder }} />
-                <div className="h-2 w-1/2 rounded" style={{ backgroundColor: palette.placeholder }} />
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-[10px] font-bold" style={{ color: palette.text }}>₹{48 + index * 21}</span>
-                  <span
-                    className="px-2 py-0.5 text-[9px] font-bold"
-                    style={{ borderRadius: Math.min(radius, 8), border: `1px solid ${colors.primary}`, color: colors.primary, backgroundColor: dark ? "transparent" : `${colors.primary}0F` }}
-                  >
-                    ADD
-                  </span>
+            {(shown.length ? shown : PLACEHOLDER_BRANDS).slice(0, 5).map((brand) => (
+              <div key={brand.id} className="flex w-[52px] shrink-0 flex-col items-center gap-1">
+                <div className="flex size-[52px] items-center justify-center overflow-hidden" style={card}>
+                  {brand.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+                    <img src={brand.logoUrl} alt="" className="size-4/5 object-contain" />
+                  ) : (
+                    <span className="text-sm font-bold" style={{ color: colors.primary }}>{brand.name.charAt(0)}</span>
+                  )}
                 </div>
+                <p className="w-full truncate text-center text-[9px] font-medium" style={{ color: palette.text }}>{brand.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "category_deals": {
+      const shown = section.categoryIds.length
+        ? section.categoryIds.map((id) => categories.find((category) => category.id === id)).filter((category): category is Category => Boolean(category))
+        : categories.filter((category) => category.isActive && !category.parentId);
+      return (
+        <div>
+          {title(section.title)}
+          <div className="flex gap-2 overflow-hidden px-3">
+            {shown.slice(0, 4).map((category, index) => (
+              <div key={category.id} className="flex w-[76px] shrink-0 flex-col overflow-hidden" style={card}>
+                <span className="self-start rounded-br px-1.5 py-0.5 text-[8px] font-extrabold" style={{ backgroundColor: colors.primary, color: colors.onPrimary }}>
+                  UP TO {[40, 25, 30, 15][index % 4]}% OFF
+                </span>
+                <div className="flex aspect-square items-center justify-center p-2">
+                  {category.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+                    <img src={category.imageUrl} alt="" className="size-full object-contain" />
+                  ) : (
+                    <span className="text-base font-bold" style={{ color: colors.primary }}>{category.name.charAt(0)}</span>
+                  )}
+                </div>
+                <p className="line-clamp-2 px-1.5 pb-1.5 text-[9px] leading-tight font-semibold" style={{ color: palette.text }}>{category.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "image_tiles":
+      return (
+        <div>
+          {title(section.title)}
+          <div className="grid gap-2 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
+            {section.tiles.map((tile) => (
+              <div key={tile.id} className="aspect-square overflow-hidden" style={{ borderRadius: radius, backgroundColor: palette.placeholder }}>
+                {tile.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+                  <img src={tile.imageUrl} alt="" className="size-full object-cover" />
+                )}
               </div>
             ))}
           </div>
@@ -126,9 +234,9 @@ function SectionPreview({ section, appearance, categories, palette, dark }: { se
   }
 }
 
-type PhonePreviewProps = { appearance: Appearance; categories: Category[]; dark: boolean };
+type PhonePreviewProps = { appearance: Appearance; categories: Category[]; brands: Brand[]; dark: boolean };
 
-export function PhonePreview({ appearance, categories, dark }: PhonePreviewProps) {
+export function PhonePreview({ appearance, categories, brands, dark }: PhonePreviewProps) {
   const palette = dark ? DARK : LIGHT;
   const { colors, radius } = appearance.theme;
   const { announcement } = appearance;
@@ -180,7 +288,7 @@ export function PhonePreview({ appearance, categories, dark }: PhonePreviewProps
             {sections.length === 0 ? (
               <p className="px-6 py-10 text-center text-[11px]" style={{ color: palette.muted }}>No visible sections on the home screen.</p>
             ) : (
-              sections.map((section) => <SectionPreview key={section.id} section={section} appearance={appearance} categories={categories} palette={palette} dark={dark} />)
+              sections.map((section) => <SectionPreview key={section.id} section={section} appearance={appearance} categories={categories} brands={brands} palette={palette} dark={dark} />)
             )}
           </div>
         </div>

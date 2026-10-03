@@ -12,15 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFormAction } from "@/hooks/use-form-action";
 import { describeErrorPath } from "@/lib/appearance";
-import type { AdminAppearance, Appearance, Category } from "@/lib/types";
+import type { AdminAppearance, Appearance, Brand, Category } from "@/lib/types";
 
 function toConfig({ appName, logoUrl, theme, announcement, homeSections }: Appearance): Appearance {
   return { appName, logoUrl, theme, announcement, homeSections };
 }
 
-type AppearanceEditorProps = { initial: AdminAppearance; categories: Category[] };
+type AppearanceEditorProps = { initial: AdminAppearance; categories: Category[]; brands: Brand[] };
 
-export function AppearanceEditor({ initial, categories }: AppearanceEditorProps) {
+export function AppearanceEditor({ initial, categories, brands }: AppearanceEditorProps) {
   const [saved] = useState(() => toConfig(initial));
   const [draft, setDraft] = useState(saved);
   const [tab, setTab] = useState("brand");
@@ -73,7 +73,7 @@ export function AppearanceEditor({ initial, categories }: AppearanceEditorProps)
             <BrandEditor value={draft} onChange={setDraft} errors={fieldErrors} />
           </TabsContent>
           <TabsContent value="home" className="mt-2">
-            <HomeEditor value={draft} onChange={setDraft} categories={categories} errors={fieldErrors} expanded={expanded} onExpand={setExpanded} />
+            <HomeEditor value={draft} onChange={setDraft} categories={categories} brands={brands} errors={fieldErrors} expanded={expanded} onExpand={setExpanded} />
           </TabsContent>
         </Tabs>
 
@@ -110,7 +110,7 @@ export function AppearanceEditor({ initial, categories }: AppearanceEditorProps)
             <span className="text-xs text-muted-foreground">{scheme === "dark" ? "Dark" : "Light"} mode</span>
           )}
         </div>
-        <PhonePreview appearance={draft} categories={categories} dark={dark} />
+        <PhonePreview appearance={draft} categories={categories} brands={brands} dark={dark} />
         <p className="text-center text-xs text-muted-foreground">Product cards show placeholders; the app fills them from each store&apos;s stock.</p>
       </aside>
     </div>
