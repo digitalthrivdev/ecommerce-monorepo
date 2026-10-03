@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { ChevronDown, LocateFixed, MapPinOff, Search, UserRound } from "lucide-react-native";
+import { ChevronDown, Clock, LocateFixed, MapPinOff, Search, UserRound } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,6 +21,9 @@ import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { useDeliveryLocation, useLocateMe } from "@/lib/delivery-location";
 import { useHomeFeed } from "@/lib/queries";
+import { useSettings } from "@/lib/settings";
+import { closedText } from "@/lib/store-hours";
+import type { Store } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const openLocationPicker = () => router.push("/location");
@@ -126,6 +129,19 @@ function NotServiceable({ summary }: { summary: string }) {
   );
 }
 
+function StoreClosed({ store }: { store: Store }) {
+  const { timezone } = useSettings();
+  return (
+    <View className="mx-4 flex-row items-center gap-3 rounded-lg border border-border bg-muted p-3">
+      <Icon as={Clock} size={20} className="text-muted-foreground" />
+      <View className="flex-1">
+        <Text className="text-sm font-bold">{closedText(store, timezone)}</Text>
+        <Text className="text-xs text-muted-foreground">You can browse and fill your cart now, and check out once it opens.</Text>
+      </View>
+    </View>
+  );
+}
+
 function HomeContent() {
   const { location, ready, serviceability, store } = useDeliveryLocation();
   const checkingStore = location !== null && serviceability.isPending;
@@ -141,6 +157,7 @@ function HomeContent() {
   return (
     <View className="gap-6">
       {!location && <LocationPrompt />}
+      {store && !store.isOpen && <StoreClosed store={store} />}
       {feed.isPending ? (
         <HomeSkeleton />
       ) : feed.isError ? (

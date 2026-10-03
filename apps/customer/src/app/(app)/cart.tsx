@@ -16,23 +16,32 @@ import { Text } from "@/components/ui/text";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { checkoutBlocker, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
 import { useDeliveryLocation } from "@/lib/delivery-location";
-import { formatMoney, formatPackSize } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
+import { closedText } from "@/lib/store-hours";
 import type { Cart, CartItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function CartLine({ item, currency }: { item: CartItem; currency: string }) {
   const { setQuantity } = useCartActions();
   const [failed, setFailed] = useState(false);
-  const packSize = formatPackSize(item.packQuantity, item.unit);
   const blockedText = item.issue === "UNAVAILABLE" ? "No longer sold at this store" : item.issue === "OUT_OF_STOCK" ? "Out of stock" : null;
   const blocked = blockedText !== null;
+  const fix =
+    item.issue === "INSUFFICIENT_STOCK"
+      ? { text: `Only ${item.availableQuantity} left`, quantity: item.availableQuantity ?? 0 }
+      : item.issue === "QUANTITY_LIMIT"
+        ? { text: `Max ${item.maxQuantity} per order`, quantity: item.maxQuantity }
+        : null;
 
   return (
     <View className="flex-row gap-3 py-3">
-      <Pressable onPress={() => openProduct(item.productId)} className="size-16 items-center justify-center overflow-hidden rounded-md bg-tile active:opacity-80">
+      <Pressable
+        onPress={() => openProduct(item.productId, item.variantId)}
+        className="size-16 items-center justify-center overflow-hidden rounded-md bg-tile active:opacity-80"
+      >
         <View className={cn("size-full items-center justify-center", blocked && "opacity-40")}>
           {item.imageUrl && !failed ? (
             <Image source={{ uri: smallImage(item.imageUrl) }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
@@ -46,7 +55,7 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
         <Text className="text-sm font-semibold leading-tight" numberOfLines={2}>
           {item.name}
         </Text>
-        {packSize && <Text className="text-xs text-muted-foreground">{packSize}</Text>}
+        {item.variantLabel ? <Text className="text-xs text-muted-foreground">{item.variantLabel}</Text> : null}
         {item.unitPrice && (
           <View className="flex-row items-baseline gap-1.5">
             <Text className="text-[13px] font-bold">{formatMoney(item.unitPrice, currency)}</Text>
@@ -54,11 +63,11 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
           </View>
         )}
         {blockedText && <Text className="text-xs font-semibold text-destructive">{blockedText}</Text>}
-        {item.issue === "INSUFFICIENT_STOCK" && (
+        {fix && (
           <View className="flex-row flex-wrap items-center gap-x-2">
-            <Text className="text-xs font-semibold text-destructive">Only {item.availableQuantity} left</Text>
-            <Pressable onPress={() => setQuantity(item.productId, item.availableQuantity ?? 0)} hitSlop={6}>
-              <Text className="text-xs font-bold text-primary">Update to {item.availableQuantity}</Text>
+            <Text className="text-xs font-semibold text-destructive">{fix.text}</Text>
+            <Pressable onPress={() => setQuantity(item.variantId, fix.quantity)} hitSlop={6}>
+              <Text className="text-xs font-bold text-primary">Update to {fix.quantity}</Text>
             </Pressable>
           </View>
         )}
@@ -66,11 +75,11 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
 
       <View className="items-end justify-between gap-2">
         {blocked ? (
-          <Button variant="outline" size="sm" onPress={() => setQuantity(item.productId, 0)} className="h-8 rounded-md">
+          <Button variant="outline" size="sm" onPress={() => setQuantity(item.variantId, 0)} className="h-8 rounded-md">
             <Text className="text-xs font-bold">Remove</Text>
           </Button>
         ) : (
-          <QuantityStepper quantity={item.quantity} onChange={(next) => setQuantity(item.productId, next)} />
+          <QuantityStepper quantity={item.quantity} max={item.maxQuantity} onChange={(next) => setQuantity(item.variantId, next)} />
         )}
         {item.lineTotal && !blocked && <Text className="text-sm font-extrabold">{formatMoney(item.lineTotal, currency)}</Text>}
       </View>
@@ -108,13 +117,15 @@ function EmptyCart() {
 function CartContent({ cart }: { cart: Cart }) {
   const insets = useSafeAreaInsets();
   const surface = useCardSurface();
-  const { currency } = useSettings();
+  const settings = useSettings();
+  const { currency } = settings;
   const { location, store } = useDeliveryLocation();
   const { clear } = useCartActions();
   const updating = useCartUpdating();
   const items = visibleItems(cart);
-  const blocker = checkoutBlocker(cart, store?.id, currency);
+  const blocker = checkoutBlocker(cart, store, settings);
   const otherStore = store && cart.store && cart.store.id !== store.id ? cart.store : null;
+  const closed = store && !otherStore && !cart.storeIsOpen ? closedText(store, settings.timezone) : null;
 
   return (
     <>
@@ -134,6 +145,8 @@ function CartContent({ cart }: { cart: Cart }) {
           >
             These items are from {otherStore.name}, which doesn&apos;t deliver to {location?.label ?? "your location"}. Clear the cart to shop from your nearest store.
           </Notice>
+        ) : closed ? (
+          <Notice>{closed} You can keep adding items and check out once it opens.</Notice>
         ) : null}
 
         <Pressable onPress={() => router.push("/location")} className={cn("mx-4 flex-row items-center gap-3 rounded-lg p-3 active:opacity-80", surface)}>
@@ -154,7 +167,7 @@ function CartContent({ cart }: { cart: Cart }) {
         <View className={cn("mx-4 rounded-lg px-3", surface)}>
           {cart.store && <Text className="pt-3 text-xs font-semibold uppercase text-muted-foreground">From {cart.store.name}</Text>}
           {items.map((item, index) => (
-            <View key={item.productId} className={cn(index > 0 && "border-t border-border")}>
+            <View key={item.variantId} className={cn(index > 0 && "border-t border-border")}>
               <CartLine item={item} currency={currency} />
             </View>
           ))}

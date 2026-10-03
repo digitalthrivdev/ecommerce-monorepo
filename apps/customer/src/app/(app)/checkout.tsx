@@ -22,21 +22,27 @@ import { useSettings } from "@/lib/settings";
 import type { PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const CART_CHANGED_ERRORS = ["CART_EMPTY", "CART_INVALID", "INSUFFICIENT_STOCK", "MIN_ORDER_NOT_MET"];
+const CART_CHANGED_ERRORS = ["CART_EMPTY", "CART_INVALID", "INSUFFICIENT_STOCK", "QUANTITY_LIMIT", "MIN_ORDER_NOT_MET"];
 
-type Shortage = { name?: string; available?: number };
+type CartProblem = { name?: string; variantLabel?: string; available?: number; maxQuantity?: number };
 
 function cartChangeMessage(error: ApiError) {
   if (!Array.isArray(error.details)) return error.message;
-  const lines = (error.details as Shortage[]).map((item) =>
-    item.available === undefined ? `${item.name}: no longer available` : `${item.name}: only ${item.available} left`,
-  );
+  const lines = (error.details as CartProblem[]).map((item) => {
+    const name = item.variantLabel ? `${item.name} (${item.variantLabel})` : item.name;
+    if (item.maxQuantity !== undefined) return `${name}: at most ${item.maxQuantity} per order`;
+    return item.available === undefined ? `${name}: no longer available` : `${name}: only ${item.available} left`;
+  });
   return `${error.message}\n\n${lines.join("\n")}`;
 }
 
 function showOrderError(error: unknown) {
   if (error instanceof ApiError && CART_CHANGED_ERRORS.includes(error.code)) {
     Alert.alert("Your cart has changed", cartChangeMessage(error), [{ text: "Review cart", onPress: () => router.back() }]);
+    return;
+  }
+  if (error instanceof ApiError && error.code === "STORE_CLOSED") {
+    Alert.alert("Store closed", error.message);
     return;
   }
   Alert.alert("Couldn't place your order", errorMessage(error));
@@ -78,7 +84,8 @@ function PaymentOption({ icon, title, detail, selected, onPress }: { icon: Lucid
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
-  const { currency, payments } = useSettings();
+  const settings = useSettings();
+  const { currency, payments } = settings;
   const cart = useCart().data;
   const updating = useCartUpdating();
   const addresses = useAddresses();
@@ -88,7 +95,7 @@ export default function CheckoutScreen() {
 
   const address = location?.kind === "address" ? addresses.data?.find((saved) => saved.id === location.addressId) : undefined;
   const items = cart ? visibleItems(cart) : [];
-  const blocker = !cart || items.length === 0 ? "Your cart is empty." : !address ? "Choose a saved address for delivery." : checkoutBlocker(cart, store?.id, currency);
+  const blocker = !cart || items.length === 0 ? "Your cart is empty." : !address ? "Choose a saved address for delivery." : checkoutBlocker(cart, store, settings);
   const changeAddress = () => router.push("/location");
 
   function submit() {
@@ -164,10 +171,11 @@ export default function CheckoutScreen() {
         {cart && items.length > 0 && (
           <Section title={`${items.length} ${items.length === 1 ? "item" : "items"}${cart.store ? ` from ${cart.store.name}` : ""}`}>
             {items.map((item) => (
-              <View key={item.productId} className="flex-row items-start justify-between gap-3">
+              <View key={item.variantId} className="flex-row items-start justify-between gap-3">
                 <Text className="flex-1 text-sm" numberOfLines={2}>
                   <Text className="text-sm font-bold">{item.quantity} × </Text>
                   {item.name}
+                  {item.variantLabel ? <Text className="text-sm text-muted-foreground"> · {item.variantLabel}</Text> : null}
                 </Text>
                 {item.lineTotal && <Text className="text-sm font-semibold">{formatMoney(item.lineTotal, currency)}</Text>}
               </View>

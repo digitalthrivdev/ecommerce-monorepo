@@ -22,11 +22,6 @@ export function formatTime(iso: string) {
   return new Intl.DateTimeFormat(LOCALE, { hour: "numeric", minute: "2-digit" }).format(new Date(iso));
 }
 
-/** "500 g", "1 L"; null when the product has no pack size. */
-export function formatPackSize(quantity: string | null, unit: string | null) {
-  return [quantity && Number(quantity).toString(), unit].filter(Boolean).join(" ") || null;
-}
-
 /** How far `amount` is below `target`, as a decimal string. Display only. */
 export function shortfall(target: string, amount: string) {
   return (Math.max(0, Math.round(Number(target) * 100) - Math.round(Number(amount) * 100)) / 100).toFixed(2);

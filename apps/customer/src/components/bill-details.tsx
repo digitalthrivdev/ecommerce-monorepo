@@ -7,7 +7,8 @@ import { formatMoney } from "@/lib/format";
 import { useSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
-type Bill = { subtotal: string; deliveryFee: string; discount: string; total: string; amountToFreeDelivery?: string | null };
+/** `taxTotal` is the GST already included in the item prices. */
+type Bill = { subtotal: string; deliveryFee: string; discount: string; total: string; taxTotal?: string; amountToFreeDelivery?: string | null };
 
 type BillDetailsProps = {
   bill: Bill;
@@ -39,6 +40,9 @@ export function BillDetails({ bill, totalLabel = "To pay", stale = false, footer
       {Number(bill.discount) > 0 && <BillRow label="Discount" value={`−${formatMoney(bill.discount, currency)}`} />}
       <View className="h-px bg-border" />
       <BillRow label={totalLabel} value={formatMoney(bill.total, currency)} strong />
+      {bill.taxTotal && Number(bill.taxTotal) > 0 ? (
+        <Text className="-mt-1.5 text-xs text-muted-foreground">Includes {formatMoney(bill.taxTotal, currency)} GST</Text>
+      ) : null}
       {bill.amountToFreeDelivery && !free && (
         <Text className="text-xs font-semibold text-primary">Add {formatMoney(bill.amountToFreeDelivery, currency)} more for free delivery</Text>
       )}

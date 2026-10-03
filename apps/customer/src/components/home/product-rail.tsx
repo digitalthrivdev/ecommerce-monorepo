@@ -24,7 +24,7 @@ export function ProductRail({ section }: { section: ProductRailSection }) {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4 pb-1">
         {section.products.map((product) => (
-          <ProductCard key={product.storeProductId} product={product} currency={currency} className="w-36" />
+          <ProductCard key={product.productId} product={product} currency={currency} className="w-36" />
         ))}
       </ScrollView>
     </View>

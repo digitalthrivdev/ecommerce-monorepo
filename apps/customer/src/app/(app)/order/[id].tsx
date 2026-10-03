@@ -146,6 +146,7 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
                   <Text className={cn("text-sm font-bold", supplied === 0 && "text-muted-foreground")}>{supplied || item.quantity} × </Text>
                   {item.productName}
                 </Text>
+                {item.variantName ? <Text className="text-xs text-muted-foreground">{item.variantName}</Text> : null}
                 {item.unavailableQuantity > 0 && (
                   <Text className="text-xs font-semibold text-destructive">
                     {supplied === 0 ? "Out of stock, not charged" : `${item.unavailableQuantity} out of stock, not charged`}
@@ -185,6 +186,7 @@ function OrderBody({ order, placed }: { order: OrderDetail; placed: boolean }) {
       <View className="gap-0.5 px-5">
         <Text className="text-xs text-muted-foreground">Order {order.orderNumber}</Text>
         <Text className="text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</Text>
+        {order.invoiceNumber && <Text className="text-xs text-muted-foreground">Invoice {order.invoiceNumber}</Text>}
       </View>
 
       {order.canCancel && (

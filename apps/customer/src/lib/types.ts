@@ -27,7 +27,8 @@ export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER"
 
 export type User = { id: string; phone: string; name: string | null; email: string | null; role: UserRole };
 
-export type Category = { id: string; name: string; slug: string; imageUrl: string | null; sortOrder: number };
+/** `parentId` is set on sub-categories; `childCount` counts a category's sub-categories. */
+export type Category = { id: string; name: string; slug: string; imageUrl: string | null; sortOrder: number; parentId: string | null; childCount: number };
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 
@@ -63,41 +64,80 @@ export type Store = {
   latitude: string;
   longitude: string;
   serviceRadiusKm: string;
+  /** Weekly hours in the deployment's time zone; days 0–6 start on Sunday. Empty means always open. */
+  hours: OpeningHours[];
+  isOpen: boolean;
 };
+
+/** Times are "HH:MM"; a close time earlier than the open time runs past midnight. */
+export type OpeningHours = { dayOfWeek: number; opensAt: string; closesAt: string };
 
 /** `GET /stores/serviceability`: the nearest active store whose radius covers the point. */
 export type Serviceability = { serviceable: boolean; distanceKm: number | null; store: Store | null };
 
-/** A product as sold by one store. Money values are decimal strings. */
-export type StoreProduct = {
-  productId: string;
+/** One pack or option of a product, as sold by one store. Money values are decimal strings. */
+export type StoreVariant = {
+  variantId: string;
   storeProductId: string;
+  /** "Red / Large", or the pack size ("500 g") when the variant has no name. */
+  label: string;
   name: string;
-  slug: string;
-  description: string | null;
-  imageUrl: string | null;
   unit: string | null;
   quantity: string | null;
-  category: { id: string; name: string; slug: string };
+  imageUrl: string | null;
   sellingPrice: string;
   mrp: string | null;
-  isAvailable: boolean;
   inStock: boolean;
+  maxOrderQuantity: number;
+};
+
+/** A product as sold by one store, with the variants it lists. */
+export type StoreProduct = {
+  productId: string;
+  name: string;
+  slug: string;
+  category: { id: string; name: string; slug: string; parentId: string | null };
+  brand: { id: string; name: string; slug: string } | null;
+  isVeg: boolean | null;
+  imageUrl: string | null;
+  variants: StoreVariant[];
+};
+
+export type ProductImage = { id: string; url: string; altText: string | null; variantId: string | null };
+
+export type ProductOption = { id: string; name: string; values: { id: string; value: string }[] };
+
+/** `GET /stores/:storeId/products/:productId`. */
+export type StoreProductDetail = Omit<StoreProduct, "variants"> & {
+  description: string | null;
+  manufacturerName: string | null;
+  manufacturerAddress: string | null;
+  countryOfOrigin: string | null;
+  fssaiLicense: string | null;
+  shelfLife: string | null;
+  ingredients: string | null;
+  images: ProductImage[];
+  options: ProductOption[];
+  variants: (StoreVariant & { optionValueIds: string[] })[];
 };
 
 /** Why a cart line can't be ordered as it is. */
-export type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK";
+export type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK" | "QUANTITY_LIMIT";
 
-/** Prices are null when the store no longer sells the product. */
+/** Prices are null when the store no longer sells the variant. */
 export type CartItem = {
   id: string;
   productId: string;
+  variantId: string;
   name: string;
+  variantLabel: string;
   slug: string;
   imageUrl: string | null;
   unit: string | null;
   packQuantity: string | null;
   quantity: number;
+  /** Most of this variant one order can have. */
+  maxQuantity: number;
   unitPrice: string | null;
   mrp: string | null;
   lineTotal: string | null;
@@ -120,6 +160,8 @@ export type CartBill = {
 export type Cart = {
   id: string | null;
   store: { id: string; name: string; code: string; status: string } | null;
+  /** False while the store is outside its opening hours; checkout waits until it opens. */
+  storeIsOpen: boolean;
   items: CartItem[];
   itemCount: number;
   subtotal: string;
@@ -178,10 +220,15 @@ export type OrderDetail = {
   items: {
     id: string;
     productId: string;
+    variantId: string;
     productName: string;
+    /** Empty for a product sold in a single, unnamed variant. */
+    variantName: string;
+    imageUrl: string | null;
     quantity: number;
     unavailableQuantity: number;
     unitPrice: string;
+    mrp: string | null;
     totalPrice: string;
     chargedTotal: string;
   }[];
@@ -189,6 +236,10 @@ export type OrderDetail = {
   deliveryFee: string;
   discount: string;
   total: string;
+  /** GST included in the item prices. */
+  taxTotal: string;
+  /** Assigned once the order is delivered. */
+  invoiceNumber: string | null;
   deliveryAddress: {
     name: string;
     phone: string;

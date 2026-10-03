@@ -7,6 +7,7 @@ import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
+import { topLevelCategories } from "@/lib/catalog";
 import { useCategories } from "@/lib/queries";
 
 export default function CategoriesScreen() {
@@ -27,7 +28,7 @@ export default function CategoriesScreen() {
         ) : categories.isError ? (
           <QueryError error={categories.error} onRetry={() => categories.refetch()} />
         ) : (
-          <CategoryGrid categories={categories.data.items} />
+          <CategoryGrid categories={topLevelCategories(categories.data.items)} />
         )}
       </ScrollView>
       <CartBar inset={false} />

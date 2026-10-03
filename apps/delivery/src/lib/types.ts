@@ -78,7 +78,8 @@ export type PartnerDelivery = {
     latitude?: string | null;
     longitude?: string | null;
   };
-  items: { productName: string; quantity: number }[];
+  /** `variantName` is the pack or option, e.g. "500 g" or "Red / Large"; it can be empty. */
+  items: { productName: string; variantName: string; quantity: number }[];
   paymentMethod: "COD" | "ONLINE";
   orderTotal: string;
   cashToCollect: string;

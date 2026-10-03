@@ -244,6 +244,7 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
           <Text key={index} className="text-sm">
             <Text className="text-sm font-bold">{item.quantity} × </Text>
             {item.productName}
+            {item.variantName ? <Text className="text-sm text-muted-foreground"> · {item.variantName}</Text> : null}
           </Text>
         ))}
         <View className="h-px bg-border" />

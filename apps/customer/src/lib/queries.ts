@@ -1,14 +1,16 @@
 import { useInfiniteQuery, useQuery, useQueryClient, type InfiniteData, type QueryClient } from "@tanstack/react-query";
 
 import { apiFetch } from "./api";
-import type { Category, HomeFeed, Paginated, StoreProduct } from "./types";
+import { detailPlaceholder } from "./catalog";
+import type { Category, HomeFeed, Paginated, StoreProduct, StoreProductDetail } from "./types";
 
 const PRODUCTS_PAGE_SIZE = 30;
 
+/** Every active category, top-level and sub-categories alike. */
 export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
-    queryFn: () => apiFetch<Paginated<Category>>("/categories", { query: { limit: 100 } }),
+    queryFn: () => apiFetch<Paginated<Category>>("/categories", { query: { limit: 200 } }),
     staleTime: 10 * 60_000,
   });
 }
@@ -23,7 +25,10 @@ export function useHomeFeed(storeId: string | undefined, { enabled = true }: { e
   });
 }
 
-/** A store's products, newest page last. Includes out-of-stock items so customers can see them. */
+/**
+ * A store's products, newest page last. Includes out-of-stock items so customers can see them.
+ * A top-level category includes its sub-categories' products.
+ */
 export function useStoreProducts(storeId: string | undefined, filter: { categoryId?: string; search?: string }, { enabled = true }: { enabled?: boolean } = {}) {
   return useInfiniteQuery({
     queryKey: ["store-products", storeId ?? null, filter.categoryId ?? null, filter.search ?? null],
@@ -51,8 +56,11 @@ export function useStoreProduct(storeId: string | undefined, productId: string) 
   const queryClient = useQueryClient();
   return useQuery({
     queryKey: ["store-product", storeId ?? null, productId],
-    queryFn: () => apiFetch<StoreProduct>(`/stores/${encodeURIComponent(storeId!)}/products/${encodeURIComponent(productId)}`),
-    placeholderData: () => (storeId ? cachedProduct(queryClient, storeId, productId) : undefined),
+    queryFn: () => apiFetch<StoreProductDetail>(`/stores/${encodeURIComponent(storeId!)}/products/${encodeURIComponent(productId)}`),
+    placeholderData: () => {
+      const cached = storeId ? cachedProduct(queryClient, storeId, productId) : undefined;
+      return cached && detailPlaceholder(cached);
+    },
     enabled: Boolean(storeId),
   });
 }

@@ -11,12 +11,15 @@ import { ScreenHeader } from "@/components/screen-header";
 import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { subCategories, topLevelCategories } from "@/lib/catalog";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { useCategories, useStoreProducts } from "@/lib/queries";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function CategoryChips({ categories, selectedId }: { categories: Category[]; selectedId: string }) {
+type Chip = { id: string; name: string };
+
+function CategoryChips({ chips, selectedId, small = false }: { chips: Chip[]; selectedId: string; small?: boolean }) {
   const scrollRef = useRef<ScrollView>(null);
   const offsets = useRef(new Map<string, number>());
 
@@ -27,24 +30,35 @@ function CategoryChips({ categories, selectedId }: { categories: Category[]; sel
 
   return (
     <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 pb-3" className="grow-0">
-      {categories.map((category) => {
-        const selected = category.id === selectedId;
+      {chips.map((chip) => {
+        const selected = chip.id === selectedId;
         return (
           <Pressable
-            key={category.id}
+            key={chip.id}
             onLayout={(event) => {
-              offsets.current.set(category.id, event.nativeEvent.layout.x);
+              offsets.current.set(chip.id, event.nativeEvent.layout.x);
               if (selected) scrollRef.current?.scrollTo({ x: Math.max(0, event.nativeEvent.layout.x - 16), animated: false });
             }}
-            onPress={() => router.setParams({ id: category.id, name: category.name })}
-            className={cn("rounded-full border px-4 py-2", selected ? "border-primary bg-primary" : "border-border bg-card active:bg-accent")}
+            onPress={() => router.setParams({ id: chip.id, name: chip.name })}
+            className={cn(
+              "rounded-full border",
+              small ? "px-3 py-1.5" : "px-4 py-2",
+              selected ? (small ? "border-primary bg-primary/10" : "border-primary bg-primary") : "border-border bg-card active:bg-accent",
+            )}
           >
-            <Text className={cn("text-sm font-semibold", selected && "text-primary-foreground")}>{category.name}</Text>
+            <Text className={cn("font-semibold", small ? "text-xs" : "text-sm", selected && (small ? "text-primary" : "text-primary-foreground"))}>{chip.name}</Text>
           </Pressable>
         );
       })}
     </ScrollView>
   );
+}
+
+/** The top-level category and its sub-categories around the one being viewed. */
+function categoryContext(categories: Category[], id: string) {
+  const current = categories.find((category) => category.id === id);
+  const top = current?.parentId ? categories.find((category) => category.id === current.parentId) : current;
+  return { current, top, children: top ? subCategories(categories, top.id) : [] };
 }
 
 export default function CategoryScreen() {
@@ -53,7 +67,10 @@ export default function CategoryScreen() {
   const { store } = useDeliveryLocation();
   const categories = useCategories();
   const products = useStoreProducts(store?.id, { categoryId: id });
-  const title = categories.data?.items.find((category) => category.id === id)?.name ?? name ?? "Products";
+  const all = categories.data?.items ?? [];
+  const tops = topLevelCategories(all);
+  const { current, top, children } = categoryContext(all, id);
+  const title = top?.name ?? current?.name ?? name ?? "Products";
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -66,7 +83,8 @@ export default function CategoryScreen() {
           </Pressable>
         }
       />
-      {categories.data && categories.data.items.length > 1 && <CategoryChips categories={categories.data.items} selectedId={id} />}
+      {tops.length > 1 && top && <CategoryChips chips={tops} selectedId={top.id} />}
+      {top && children.length > 0 && <CategoryChips key={top.id} chips={[{ id: top.id, name: "All" }, ...children]} selectedId={id} small />}
       {store ? <ProductList key={id} query={products} emptyText="No products in this category yet." /> : <StoreRequired />}
       <CartBar />
     </View>

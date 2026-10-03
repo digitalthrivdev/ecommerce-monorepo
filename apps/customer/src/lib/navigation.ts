@@ -6,8 +6,9 @@ export function openCategory(category: { id: string; name: string }) {
   router.push({ pathname: "/category/[id]", params: { id: category.id, name: category.name } });
 }
 
-export function openProduct(productId: string) {
-  router.push({ pathname: "/product/[id]", params: { id: productId } });
+/** `variantId` picks the variant the page opens on. */
+export function openProduct(productId: string, variantId?: string | null) {
+  router.push({ pathname: "/product/[id]", params: variantId ? { id: productId, variant: variantId } : { id: productId } });
 }
 
 /** Where a banner or offer goes; plain ones are not tappable. */

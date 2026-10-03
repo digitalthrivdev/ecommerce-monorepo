@@ -12,6 +12,7 @@ import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
+import { topLevelCategories } from "@/lib/catalog";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { useCategories, useStoreProducts } from "@/lib/queries";
 
@@ -69,7 +70,7 @@ export default function SearchScreen() {
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerClassName="pb-8">
           <Text className="px-4 pb-3 pt-2 text-lg font-extrabold">Browse categories</Text>
-          {categories.data ? <CategoryGrid categories={categories.data.items} /> : <CategoryGridSkeleton />}
+          {categories.data ? <CategoryGrid categories={topLevelCategories(categories.data.items)} /> : <CategoryGridSkeleton />}
         </ScrollView>
       )}
       <CartBar />

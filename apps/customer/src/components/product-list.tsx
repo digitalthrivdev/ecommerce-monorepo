@@ -26,7 +26,7 @@ export function ProductList({ query, emptyText, header }: ProductListProps) {
   return (
     <FlatList
       data={products}
-      keyExtractor={(product) => product.storeProductId}
+      keyExtractor={(product) => product.productId}
       numColumns={COLUMNS}
       columnWrapperStyle={{ gap: GAP, paddingHorizontal: SIDE_PADDING }}
       contentContainerStyle={{ gap: GAP, paddingTop: 4, paddingBottom: 32 }}

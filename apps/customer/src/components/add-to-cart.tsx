@@ -3,8 +3,7 @@ import { Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { MAX_QUANTITY_PER_ITEM, useCartActions, useCartQuantity } from "@/lib/cart";
-import type { StoreProduct } from "@/lib/types";
+import { MAX_QUANTITY_PER_ITEM, useCartActions, useCartQuantity, type Sellable } from "@/lib/cart";
 import { cn } from "@/lib/utils";
 
 type Size = "sm" | "lg";
@@ -13,10 +12,11 @@ const BOX: Record<Size, string> = { sm: "h-8 w-[74px]", lg: "h-11 w-32" };
 const LABEL: Record<Size, string> = { sm: "text-sm", lg: "text-base" };
 const ICON_SIZE: Record<Size, number> = { sm: 14, lg: 18 };
 
-type QuantityStepperProps = { quantity: number; onChange: (quantity: number) => void; size?: Size };
+type QuantityStepperProps = { quantity: number; onChange: (quantity: number) => void; max?: number; size?: Size; onIncrease?: () => void };
 
-export function QuantityStepper({ quantity, onChange, size = "sm" }: QuantityStepperProps) {
-  const atMax = quantity >= MAX_QUANTITY_PER_ITEM;
+/** `onIncrease` replaces adding one, for steppers that open a picker instead. */
+export function QuantityStepper({ quantity, onChange, max = MAX_QUANTITY_PER_ITEM, size = "sm", onIncrease }: QuantityStepperProps) {
+  const atMax = !onIncrease && quantity >= max;
 
   return (
     <View className={cn("flex-row items-center rounded-md bg-primary", BOX[size])}>
@@ -25,7 +25,7 @@ export function QuantityStepper({ quantity, onChange, size = "sm" }: QuantitySte
       </Pressable>
       <Text className={cn("min-w-5 text-center font-extrabold text-primary-foreground", LABEL[size])}>{quantity}</Text>
       <Pressable
-        onPress={() => onChange(quantity + 1)}
+        onPress={onIncrease ?? (() => onChange(quantity + 1))}
         disabled={atMax}
         className={cn("h-full flex-1 items-center justify-center active:opacity-60", atMax && "opacity-40")}
         accessibilityLabel="Add one"
@@ -37,23 +37,43 @@ export function QuantityStepper({ quantity, onChange, size = "sm" }: QuantitySte
   );
 }
 
-/** "ADD" until the product is in the cart, then a quantity stepper. */
-export function AddToCartButton({ product, size = "sm" }: { product: StoreProduct; size?: Size }) {
-  const quantity = useCartQuantity(product.productId);
+type AddButtonProps = { onPress: () => void; disabled: boolean; accessibilityLabel: string; size?: Size };
+
+export function AddButton({ onPress, disabled, accessibilityLabel, size = "sm" }: AddButtonProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      className={cn("items-center justify-center rounded-md border border-primary bg-card active:bg-accent", BOX[size], disabled && "border-border opacity-50")}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Text className={cn("font-extrabold text-primary", LABEL[size], disabled && "text-muted-foreground")}>ADD</Text>
+    </Pressable>
+  );
+}
+
+/** "ADD" until the variant is in the cart, then a quantity stepper. */
+export function AddToCartButton({ product, variant, size = "sm" }: Sellable & { size?: Size }) {
+  const quantity = useCartQuantity(variant.variantId);
   const { add, setQuantity } = useCartActions();
 
   if (quantity > 0) {
-    return <QuantityStepper quantity={quantity} onChange={(next) => setQuantity(product.productId, next, product)} size={size} />;
+    return (
+      <QuantityStepper
+        quantity={quantity}
+        max={variant.maxOrderQuantity}
+        onChange={(next) => setQuantity(variant.variantId, next, { product, variant })}
+        size={size}
+      />
+    );
   }
 
   return (
-    <Pressable
-      onPress={() => add(product)}
-      disabled={!product.inStock}
-      className={cn("items-center justify-center rounded-md border border-primary bg-card active:bg-accent", BOX[size], !product.inStock && "border-border opacity-50")}
-      accessibilityLabel={`Add ${product.name} to cart`}
-    >
-      <Text className={cn("font-extrabold text-primary", LABEL[size], !product.inStock && "text-muted-foreground")}>ADD</Text>
-    </Pressable>
+    <AddButton
+      onPress={() => add({ product, variant })}
+      disabled={!variant.inStock}
+      accessibilityLabel={`Add ${product.name}${variant.label ? `, ${variant.label},` : ""} to cart`}
+      size={size}
+    />
   );
 }
