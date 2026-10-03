@@ -1,4 +1,4 @@
-import type { AppearanceTheme, Category, HomeSection, HomeSectionType } from "./types";
+import type { AppearanceTheme, Category, HomeSection, HomeSectionType, HomeTile } from "./types";
 
 type Colors = AppearanceTheme["colors"];
 
@@ -19,7 +19,8 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   buy_again: { name: "Buy again", description: "What each customer has ordered before" },
   brand_rail: { name: "Brands", description: "A row of brand logos that open the brand's products" },
   category_deals: { name: "Category deals", description: "Category tiles showing \"Up to X% OFF\"" },
-  image_tiles: { name: "Image tiles", description: "2 or 3 small images side by side" },
+  image_tiles: { name: "Image tiles", description: "Images in a grid, or a carousel with buttons" },
+  subcategory_grid: { name: "Sub-category grid", description: "The sub-categories of one category, e.g. Hair, Skin & Face" },
 };
 
 export const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
@@ -93,14 +94,18 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
         type,
         enabled: true,
         title: null,
+        layout: "grid",
         columns: 2,
-        tiles: [
-          { id: newId(), imageUrl: "", link: { type: "none" } },
-          { id: newId(), imageUrl: "", link: { type: "none" } },
-        ],
+        tiles: [newTile(), newTile()],
       };
+    case "subcategory_grid": {
+      const parent = categories.find((category) => category.isActive && category.childCount > 0) ?? categories.find((category) => category.isActive);
+      return { id, type, enabled: true, title: null, categoryId: parent?.id ?? "", columns: 4, limit: 8 };
+    }
   }
 }
+
+export const newTile = (): HomeTile => ({ id: newId(), imageUrl: "", link: { type: "none" }, buttonLabel: null });
 
 const FIELD_NAMES: Record<string, string> = {
   appName: "App name",
@@ -109,6 +114,8 @@ const FIELD_NAMES: Record<string, string> = {
   categoryId: "Category",
   categoryIds: "Categories",
   brandIds: "Brands",
+  buttonLabel: "Button text",
+  url: "Icon image URL",
   backgroundColor: "Background colour",
   textColor: "Text colour",
 };
@@ -121,6 +128,8 @@ export function describeErrorPath(path: string) {
     const part = parts[index]!;
     const next = parts[index + 1];
     if (part === "homeSections") labels.push("Home screen");
+    else if (part === "categoryTabs") labels.push("Category tabs");
+    else if (part === "tabs") labels.push(next === undefined ? "Tabs" : `Tab ${Number(next) + 1}`);
     else if (part === "theme" || part === "colors") continue;
     else if (part === "announcement") labels.push("Announcement");
     else if (part === "banners") labels.push(`Banner ${Number(next) + 1}`);

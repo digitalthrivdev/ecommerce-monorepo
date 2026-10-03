@@ -8,6 +8,7 @@ import {
   ChevronDown,
   GalleryHorizontal,
   Grid2x2,
+  LayoutDashboard,
   LayoutGrid,
   Megaphone,
   Plus,
@@ -18,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { CategoryTabsEditor } from "@/components/appearance/category-tabs-editor";
 import { ColorField } from "@/components/appearance/color-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,8 +30,9 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { newId, newSection, SECTION_LABELS } from "@/lib/appearance";
+import { newId, newSection, newTile, SECTION_LABELS } from "@/lib/appearance";
 import type { Appearance, AppearanceLink, Brand, Category, HomeBanner, HomeSection, HomeSectionType, HomeTile } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
   banner_carousel: GalleryHorizontal,
@@ -41,6 +44,7 @@ const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
   brand_rail: Award,
   category_deals: Tags,
   image_tiles: Grid2x2,
+  subcategory_grid: LayoutDashboard,
 };
 
 const MAX_SECTIONS = 20;
@@ -198,6 +202,7 @@ function TileFields({
   tile,
   index,
   count,
+  carousel,
   onChange,
   onMove,
   onRemove,
@@ -208,6 +213,7 @@ function TileFields({
   tile: HomeTile;
   index: number;
   count: number;
+  carousel: boolean;
   onChange: (tile: HomeTile) => void;
   onMove: (to: number) => void;
   onRemove: () => void;
@@ -238,9 +244,22 @@ function TileFields({
         value={tile.imageUrl}
         onChange={(imageUrl) => onChange({ ...tile, imageUrl: imageUrl.trim() })}
         error={at("imageUrl")}
-        description="Square image (e.g. 600×600). Put any text inside the image."
+        description={carousel ? "Portrait image, about 4:5 (e.g. 800×1000). Put any text inside the image." : "Square image (e.g. 600×600). Put any text inside the image."}
       />
-      <LinkSelect link={tile.link} onChange={(link) => onChange({ ...tile, link })} categories={categories} error={at("link.categoryId")} />
+      <div className={cn("grid gap-3", carousel && "sm:grid-cols-2")}>
+        <LinkSelect link={tile.link} onChange={(link) => onChange({ ...tile, link })} categories={categories} error={at("link.categoryId")} />
+        {carousel && (
+          <TextInput
+            label="Button text (optional)"
+            maxLength={20}
+            placeholder="Shop now"
+            value={tile.buttonLabel ?? ""}
+            onChange={(buttonLabel) => onChange({ ...tile, buttonLabel: buttonLabel || null })}
+            error={at("buttonLabel")}
+            description={tile.link.type === "none" ? "Choose where the tile goes for the button to show." : undefined}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -533,27 +552,45 @@ function SectionFields({
     case "image_tiles":
       return (
         <FieldGroup>
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
             <TextInput label="Title (optional)" maxLength={40} value={section.title ?? ""} onChange={(title) => onChange({ ...section, title: title || null })} error={at("title")} />
             <Field>
-              <FieldLabel>Tiles per row</FieldLabel>
-              <Select value={String(section.columns)} onValueChange={(columns) => onChange({ ...section, columns: Number(columns) as 2 | 3 })}>
-                <SelectTrigger className="w-full sm:w-28">
+              <FieldLabel>Layout</FieldLabel>
+              <Select value={section.layout} onValueChange={(layout) => onChange({ ...section, layout: layout as "grid" | "carousel" })}>
+                <SelectTrigger className="w-full sm:w-36">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="grid">Grid</SelectItem>
+                  <SelectItem value="carousel">Carousel</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
+            {section.layout === "grid" && (
+              <Field>
+                <FieldLabel>Tiles per row</FieldLabel>
+                <Select value={String(section.columns)} onValueChange={(columns) => onChange({ ...section, columns: Number(columns) as 2 | 3 })}>
+                  <SelectTrigger className="w-full sm:w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
           </div>
+          {section.layout === "carousel" && (
+            <FieldDescription>One large tile in the middle with the next and previous ones peeking in at the sides. Each tile can show a button.</FieldDescription>
+          )}
           {section.tiles.map((tile, index) => (
             <TileFields
               key={tile.id}
               tile={tile}
               index={index}
               count={section.tiles.length}
+              carousel={section.layout === "carousel"}
               categories={categories}
               errors={errors}
               prefix={`${prefix}.tiles.${index}`}
@@ -569,13 +606,67 @@ function SectionFields({
             size="sm"
             className="self-start"
             disabled={section.tiles.length >= MAX_TILES}
-            onClick={() => onChange({ ...section, tiles: [...section.tiles, { id: newId(), imageUrl: "", link: { type: "none" } }] })}
+            onClick={() => onChange({ ...section, tiles: [...section.tiles, newTile()] })}
           >
             <Plus />
             Add tile
           </Button>
         </FieldGroup>
       );
+
+    case "subcategory_grid": {
+      const parents = categories.filter((category) => !category.parentId);
+      const parent = categories.find((category) => category.id === section.categoryId);
+      return (
+        <FieldGroup>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CategorySelect
+              label="Show the sub-categories of"
+              value={section.categoryId}
+              onChange={(categoryId) => onChange({ ...section, categoryId })}
+              categories={parents}
+              error={at("categoryId")}
+            />
+            <TextInput
+              label="Title (optional)"
+              maxLength={40}
+              placeholder={parent?.name ?? "Category name"}
+              value={section.title ?? ""}
+              onChange={(title) => onChange({ ...section, title: title || null })}
+              error={at("title")}
+            />
+          </div>
+          {parent && parent.childCount === 0 && (
+            <FieldDescription>{parent.name} has no sub-categories yet, so this section stays hidden in the app.</FieldDescription>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <Field className="w-fit">
+              <FieldLabel>Tiles per row</FieldLabel>
+              <Select value={String(section.columns)} onValueChange={(columns) => onChange({ ...section, columns: Number(columns) as 3 | 4 })}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <TextInput
+              label="Show at most"
+              type="number"
+              min={3}
+              max={12}
+              value={String(section.limit)}
+              onChange={(limit) => onChange({ ...section, limit: Number.parseInt(limit, 10) || 0 })}
+              error={at("limit")}
+              className="w-28"
+            />
+          </div>
+          <FieldDescription>Uses each sub-category&apos;s image, in the order set on the Categories page. &quot;See all&quot; opens {parent?.name ?? "the category"}.</FieldDescription>
+        </FieldGroup>
+      );
+    }
   }
 }
 
@@ -599,7 +690,9 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
     case "category_deals":
       return `${section.title} · ${count(section.categoryIds, ["category", "categories"], "Main categories")}`;
     case "image_tiles":
-      return section.title ?? `${section.tiles.length} tiles`;
+      return `${section.title ?? `${section.tiles.length} tiles`} · ${section.layout === "carousel" ? "Carousel" : "Grid"}`;
+    case "subcategory_grid":
+      return section.title ?? categoryName(section.categoryId);
   }
 }
 
@@ -625,6 +718,8 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
 
   return (
     <div className="flex flex-col gap-3">
+      <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} />
+      <p className="mt-2 text-sm font-medium">Sections</p>
       {sections.length === 0 && (
         <Card>
           <CardContent>

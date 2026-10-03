@@ -3,7 +3,9 @@
 import { Search, ShoppingBasket, UserRound } from "lucide-react";
 import type { CSSProperties } from "react";
 
+import { TAB_ICONS } from "@/lib/tab-icons";
 import type { Appearance, Brand, Category, HomeSection } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type Palette = { background: string; surface: string; border: string; text: string; muted: string; placeholder: string };
 
@@ -20,6 +22,44 @@ function cardStyle(appearance: Appearance, palette: Palette, dark: boolean): CSS
     case "flat":
       return { borderRadius: radius, backgroundColor: dark ? palette.surface : palette.placeholder };
   }
+}
+
+function TabsPreview({ appearance, categories }: { appearance: Appearance; categories: Category[] }) {
+  const { onAccent } = appearance.theme.colors;
+  const tabs = appearance.categoryTabs.tabs.flatMap((tab) => {
+    const category = categories.find((item) => item.id === tab.categoryId);
+    return category ? [{ tab, category }] : [];
+  });
+  const tabClass = "relative flex w-[46px] shrink-0 flex-col items-center gap-0.5 pt-2 pb-1.5";
+  return (
+    <div className="-mx-3 mt-1 flex gap-1 overflow-hidden px-2" style={{ color: onAccent }}>
+      <div className={tabClass}>
+        <ShoppingBasket className="size-4" />
+        <span className="text-[9px] font-bold">All</span>
+        <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full" style={{ backgroundColor: onAccent }} />
+      </div>
+      {tabs.map(({ tab, category }) => {
+        const Preset = tab.icon.type === "preset" ? TAB_ICONS[tab.icon.name] : undefined;
+        const imageUrl = tab.icon.type === "image" ? tab.icon.url : tab.icon.type === "category" ? category.imageUrl : null;
+        return (
+          <div key={tab.id} className={cn(tabClass, "opacity-80")}>
+            {tab.badge && (
+              <span className="absolute -top-0.5 right-0 rounded-full bg-red-600 px-1 text-[7px] leading-3 font-bold text-white">{tab.badge}</span>
+            )}
+            {Preset ? (
+              <Preset className="size-4" />
+            ) : imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+              <img src={imageUrl} alt="" className="size-4 object-contain" />
+            ) : (
+              <span className="flex size-4 items-center justify-center text-[11px] font-bold">{category.name.charAt(0)}</span>
+            )}
+            <span className="w-full truncate text-center text-[9px] font-medium">{tab.label ?? category.name}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 const PLACEHOLDER_BRANDS = ["A", "B", "C", "D"].map((letter) => ({ id: letter, name: `Brand ${letter}`, logoUrl: null }));
@@ -199,7 +239,72 @@ function SectionPreview({
       );
     }
 
+    case "subcategory_grid": {
+      const parent = categories.find((category) => category.id === section.categoryId);
+      const children = categories.filter((category) => category.parentId === section.categoryId).slice(0, section.limit);
+      if (!parent) return null;
+      return (
+        <div>
+          <div className="flex items-center justify-between px-3 pb-2">
+            <p className="text-[13px] font-bold" style={{ color: palette.text }}>{section.title ?? parent.name}</p>
+            <span className="text-[10px] font-bold" style={{ color: colors.primary }}>See all ›</span>
+          </div>
+          {children.length === 0 ? (
+            <p className="px-3 text-[10px]" style={{ color: palette.muted }}>No sub-categories yet; hidden in the app.</p>
+          ) : (
+            <div className="grid gap-x-2 gap-y-2.5 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
+              {children.map((category) => (
+                <div key={category.id} className="flex flex-col items-center gap-1">
+                  <div className="flex aspect-square w-full items-center justify-center overflow-hidden" style={{ ...card, backgroundColor: dark ? palette.surface : "#E9F4FB" }}>
+                    {category.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+                      <img src={category.imageUrl} alt="" className="size-4/5 object-contain" />
+                    ) : (
+                      <span className="text-base font-bold" style={{ color: colors.primary }}>{category.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: palette.text }}>{category.name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     case "image_tiles":
+      if (section.layout === "carousel") {
+        const [first, second] = section.tiles;
+        const slide = (tile: typeof first, side: boolean) => (
+          <div
+            className="relative aspect-[4/5] shrink-0 overflow-hidden"
+            style={{ width: side ? 40 : 200, borderRadius: radius, backgroundColor: palette.placeholder, transform: side ? "scale(0.92)" : undefined }}
+          >
+            {tile?.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+              <img src={tile.imageUrl} alt="" className="size-full object-cover" />
+            )}
+            {!side && tile?.buttonLabel && tile.link.type === "category" && (
+              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-[10px] font-bold text-neutral-900 shadow">{tile.buttonLabel}</span>
+            )}
+          </div>
+        );
+        return (
+          <div>
+            {title(section.title)}
+            <div className="flex items-center justify-center gap-2 overflow-hidden">
+              {slide(section.tiles[section.tiles.length - 1], true)}
+              {slide(first, false)}
+              {slide(second, true)}
+            </div>
+            <div className="mt-1.5 flex justify-center gap-1">
+              {section.tiles.map((tile, index) => (
+                <span key={tile.id} className="h-1 rounded-full" style={{ width: index === 0 ? 12 : 4, backgroundColor: index === 0 ? colors.primary : palette.border }} />
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           {title(section.title)}
@@ -269,6 +374,7 @@ export function PhonePreview({ appearance, categories, brands, dark }: PhonePrev
               <Search className="size-3.5" />
               Search &quot;milk&quot;
             </div>
+            {appearance.categoryTabs.enabled && <TabsPreview appearance={appearance} categories={categories} />}
           </div>
 
           {announcement.enabled && announcement.text && (

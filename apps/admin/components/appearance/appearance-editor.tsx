@@ -14,9 +14,11 @@ import { useFormAction } from "@/hooks/use-form-action";
 import { describeErrorPath } from "@/lib/appearance";
 import type { AdminAppearance, Appearance, Brand, Category } from "@/lib/types";
 
-function toConfig({ appName, logoUrl, theme, announcement, homeSections }: Appearance): Appearance {
-  return { appName, logoUrl, theme, announcement, homeSections };
+function toConfig({ appName, logoUrl, theme, announcement, categoryTabs, homeSections }: Appearance): Appearance {
+  return { appName, logoUrl, theme, announcement, categoryTabs, homeSections };
 }
+
+const isHomePath = (path: string) => path.startsWith("homeSections") || path.startsWith("categoryTabs");
 
 type AppearanceEditorProps = { initial: AdminAppearance; categories: Category[]; brands: Brand[] };
 
@@ -31,8 +33,8 @@ export function AppearanceEditor({ initial, categories, brands }: AppearanceEdit
   const config = JSON.stringify(draft);
   const dirty = config !== JSON.stringify(saved);
   const errorEntries = Object.entries(fieldErrors);
-  const homeErrors = errorEntries.some(([path]) => path.startsWith("homeSections"));
-  const brandErrors = errorEntries.some(([path]) => !path.startsWith("homeSections"));
+  const homeErrors = errorEntries.some(([path]) => isHomePath(path));
+  const brandErrors = errorEntries.some(([path]) => !isHomePath(path));
   const scheme = draft.theme.colorScheme;
   const dark = scheme === "system" ? previewDark : scheme === "dark";
 

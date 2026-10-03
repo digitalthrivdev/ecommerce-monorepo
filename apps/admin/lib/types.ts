@@ -461,11 +461,16 @@ export type HomeSection =
   | { id: string; enabled: boolean; type: "buy_again"; title: string }
   | { id: string; enabled: boolean; type: "brand_rail"; title: string; brandIds: string[] }
   | { id: string; enabled: boolean; type: "category_deals"; title: string; categoryIds: string[] }
-  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; columns: 2 | 3; tiles: HomeTile[] };
+  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] }
+  | { id: string; enabled: boolean; type: "subcategory_grid"; title: string | null; categoryId: string; columns: 3 | 4; limit: number };
 
-export type HomeTile = { id: string; imageUrl: string; link: AppearanceLink };
+export type HomeTile = { id: string; imageUrl: string; link: AppearanceLink; buttonLabel: string | null };
 
 export type HomeSectionType = HomeSection["type"];
+
+export type CategoryTabIcon = { type: "category" } | { type: "preset"; name: string } | { type: "image"; url: string };
+
+export type CategoryTab = { id: string; categoryId: string; label: string | null; icon: CategoryTabIcon; badge: string | null };
 
 /** The customer app's look and home screen, edited on the Appearance screen. */
 export type Appearance = {
@@ -473,6 +478,7 @@ export type Appearance = {
   logoUrl: string | null;
   theme: AppearanceTheme;
   announcement: Announcement;
+  categoryTabs: { enabled: boolean; tabs: CategoryTab[] };
   homeSections: HomeSection[];
 };
 
