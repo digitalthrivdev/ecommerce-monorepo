@@ -115,6 +115,10 @@ export const listProductsQuerySchema = paginationQuerySchema.extend({
   brandId: idSchema.optional(),
   search: searchQuery,
   includeInactive: booleanQuery,
+  /** Admin filters; they need `includeInactive`. */
+  status: z.enum(["active", "hidden"]).optional(),
+  selling: z.enum(["yes", "no"]).optional(),
+  outOfStock: booleanQuery,
 });
 
 export const productImageParamsSchema = z.object({

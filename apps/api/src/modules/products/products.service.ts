@@ -83,11 +83,30 @@ export function createProductsService(prisma: PrismaClient) {
     }
   }
 
-  async function listProducts({ limit, offset, categoryId, brandId, search, includeInactive }: ListProductsQuery) {
+  async function listProducts(query: ListProductsQuery) {
+    const { limit, offset, categoryId, brandId, search, includeInactive } = query;
+    const listed: Prisma.ProductVariantWhereInput = { stores: { some: {} } };
+    // Status, selling and stock filters are admin information, so they need includeInactive.
+    const adminFilters: Prisma.ProductWhereInput[] = includeInactive
+      ? [
+          query.status ? { isActive: query.status === "active" } : {},
+          query.selling === "yes" ? { variants: { some: listed } } : query.selling === "no" ? { variants: { none: listed } } : {},
+          query.outOfStock
+            ? {
+                variants: {
+                  some: {
+                    isActive: true,
+                    stores: { some: { OR: [{ inventory: { is: null } }, { inventory: { is: { quantity: { lte: 0 } } } }] } },
+                  },
+                },
+              }
+            : {},
+        ]
+      : [];
     const where: Prisma.ProductWhereInput = {
       ...(includeInactive ? {} : customerVisibleProduct),
       ...(brandId && { brandId }),
-      AND: [categoryId ? inCategory(categoryId) : {}, search ? productSearch(search, { matchCodes: includeInactive }) : {}],
+      AND: [categoryId ? inCategory(categoryId) : {}, search ? productSearch(search, { matchCodes: includeInactive }) : {}, ...adminFilters],
     };
 
     const [rows, total] = await prisma.$transaction([
