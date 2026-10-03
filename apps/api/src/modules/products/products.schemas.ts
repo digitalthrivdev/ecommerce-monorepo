@@ -177,6 +177,29 @@ export const updateStoreVariantBodySchema = z
   .partial()
   .refine((body) => Object.keys(body).length > 0, "Provide at least one field to update");
 
+const MAX_PRICE_ROWS = 1000;
+
+/** Prices of a product's variants at many stores at once; missing listings are created. */
+export const setPricesBodySchema = z.object({
+  prices: z
+    .array(
+      z.object({
+        storeId: idSchema,
+        variantId: idSchema,
+        sellingPrice: positiveDecimalSchema,
+        mrp: positiveDecimalSchema.nullish().transform((value) => value ?? null),
+        /** New listings default to available. */
+        isAvailable: z.boolean().optional(),
+      }),
+    )
+    .min(1)
+    .max(MAX_PRICE_ROWS)
+    .refine(
+      (rows) => new Set(rows.map((row) => `${row.storeId}:${row.variantId}`)).size === rows.length,
+      "Each store and variant can appear only once",
+    ),
+});
+
 export type CreateProductInput = z.infer<typeof createProductBodySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductBodySchema>;
 export type VariantsInput = z.infer<typeof variantsBodySchema>;
@@ -186,3 +209,4 @@ export type UpdateImageInput = z.infer<typeof updateImageBodySchema>;
 export type ListStoreProductsQuery = z.infer<typeof listStoreProductsQuerySchema>;
 export type CreateStoreVariantInput = z.infer<typeof createStoreVariantBodySchema>;
 export type UpdateStoreVariantInput = z.infer<typeof updateStoreVariantBodySchema>;
+export type SetPricesInput = z.infer<typeof setPricesBodySchema>;

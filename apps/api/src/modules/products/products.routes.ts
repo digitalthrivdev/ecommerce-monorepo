@@ -11,6 +11,7 @@ import {
   listStoreProductsQuerySchema,
   productImageParamsSchema,
   reorderImagesBodySchema,
+  setPricesBodySchema,
   storeParamsSchema,
   storeProductParamsSchema,
   storeVariantParamsSchema,
@@ -66,6 +67,12 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
     const { id } = idParamsSchema.parse(request.params);
     const body = variantsBodySchema.parse(request.body);
     return productsService.setVariants(id, body);
+  });
+
+  app.put("/:id/prices", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    const body = setPricesBodySchema.parse(request.body);
+    return storeProductsService.setPrices(id, body);
   });
 
   app.post("/:id/images", { preHandler: requireAdmin }, async (request, reply) => {

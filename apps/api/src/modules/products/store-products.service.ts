@@ -15,6 +15,7 @@ import {
 import type {
   CreateStoreVariantInput,
   ListStoreProductsQuery,
+  SetPricesInput,
   UpdateStoreVariantInput,
 } from "./products.schemas.js";
 
@@ -350,11 +351,64 @@ export function createStoreProductsService(prisma: PrismaClient) {
     return getListing(storeId, variantId);
   }
 
+  /** Upserts many listings of one product in a single transaction, so a price change lands everywhere or nowhere. */
+  async function setPrices(productId: string, { prices }: SetPricesInput) {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { variants: { select: { id: true } } },
+    });
+    if (!product) {
+      throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
+    }
+
+    const variantIds = new Set(product.variants.map((variant) => variant.id));
+    const index = prices.findIndex((row) => !variantIds.has(row.variantId));
+    if (index !== -1) {
+      throw new AppError(400, "INVALID_VARIANT", "Variant does not belong to this product", { index });
+    }
+
+    const storeIds = [...new Set(prices.map((row) => row.storeId))];
+    const stores = await prisma.store.count({ where: { id: { in: storeIds } } });
+    if (stores !== storeIds.length) {
+      throw new AppError(400, "INVALID_STORE", "Store does not exist");
+    }
+
+    prices.forEach((row, rowIndex) => {
+      if (row.mrp !== null && new Prisma.Decimal(row.mrp).lt(row.sellingPrice)) {
+        throw new AppError(400, "INVALID_PRICE", "MRP cannot be lower than the selling price", { index: rowIndex });
+      }
+    });
+
+    await prisma.$transaction(
+      prices.map((row) =>
+        prisma.storeProduct.upsert({
+          where: { storeId_variantId: { storeId: row.storeId, variantId: row.variantId } },
+          update: {
+            sellingPrice: row.sellingPrice,
+            mrp: row.mrp,
+            ...(row.isAvailable !== undefined && { isAvailable: row.isAvailable }),
+          },
+          create: {
+            storeId: row.storeId,
+            variantId: row.variantId,
+            sellingPrice: row.sellingPrice,
+            mrp: row.mrp,
+            isAvailable: row.isAvailable ?? true,
+            inventory: { create: { quantity: 0 } },
+          },
+        }),
+      ),
+    );
+
+    return listProductListings(productId);
+  }
+
   return {
     listStoreProducts,
     getStoreProduct,
     listProductListings,
     createStoreVariant,
     updateStoreVariant,
+    setPrices,
   };
 }
