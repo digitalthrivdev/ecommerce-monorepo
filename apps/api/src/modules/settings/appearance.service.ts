@@ -25,6 +25,7 @@ export function defaultAppearance(): Appearance {
       colorScheme: "light",
     },
     announcement: { enabled: true, text: "Groceries delivered in minutes", backgroundColor: null, textColor: null },
+    categoryTabs: { enabled: false, tabs: [] },
     homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", columns: 4, categoryIds: [] }],
   };
 }
@@ -55,6 +56,7 @@ function categoryReferences(sections: HomeSection[]) {
       case "category_grid":
         return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
       case "product_rail":
+      case "subcategory_grid":
         return [{ path: at("categoryId"), id: section.categoryId }];
       case "banner_carousel":
         return section.banners.flatMap((banner, position) =>
@@ -90,8 +92,11 @@ export function createAppearanceService(prisma: PrismaClient) {
   }
 
   /** Inactive categories are allowed (they are hidden in the app until reactivated); deleted ones are not. */
-  async function assertCategoriesExist(sections: HomeSection[]) {
-    const references = categoryReferences(sections);
+  async function assertCategoriesExist(input: UpdateAppearanceInput) {
+    const references = [
+      ...categoryReferences(input.homeSections ?? []),
+      ...(input.categoryTabs?.tabs ?? []).map((tab, index) => ({ path: ["categoryTabs", "tabs", index, "categoryId"], id: tab.categoryId })),
+    ];
     if (references.length === 0) return;
 
     const found = await prisma.category.findMany({
@@ -128,10 +133,8 @@ export function createAppearanceService(prisma: PrismaClient) {
   }
 
   async function updateAppearance(input: UpdateAppearanceInput, adminId: string) {
-    if (input.homeSections) {
-      await assertCategoriesExist(input.homeSections);
-      await assertBrandsExist(input.homeSections);
-    }
+    await assertCategoriesExist(input);
+    if (input.homeSections) await assertBrandsExist(input.homeSections);
 
     const { appearance } = await getAppearance(prisma);
     const config = { ...appearance, ...input } as Prisma.InputJsonValue;

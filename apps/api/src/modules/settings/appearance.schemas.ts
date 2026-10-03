@@ -77,7 +77,114 @@ const tileSchema = z.object({
   id: itemId,
   imageUrl,
   link: linkSchema,
+  /** Shown on the tile in the carousel layout, e.g. "Order now". */
+  buttonLabel: optionalLabel(20),
 });
+
+/** Lucide icon names the admin can pick for a category tab; the apps map each to its icon. */
+export const CATEGORY_TAB_ICONS = [
+  "shopping-basket",
+  "store",
+  "apple",
+  "banana",
+  "carrot",
+  "cherry",
+  "citrus",
+  "grape",
+  "salad",
+  "sprout",
+  "leaf",
+  "milk",
+  "egg",
+  "croissant",
+  "wheat",
+  "nut",
+  "cookie",
+  "candy",
+  "lollipop",
+  "popcorn",
+  "cake-slice",
+  "ice-cream-cone",
+  "dessert",
+  "coffee",
+  "cup-soda",
+  "beer",
+  "wine",
+  "beef",
+  "drumstick",
+  "fish",
+  "pizza",
+  "sandwich",
+  "soup",
+  "utensils",
+  "flame",
+  "snowflake",
+  "baby",
+  "sparkles",
+  "spray-can",
+  "bath",
+  "shower-head",
+  "brush",
+  "scissors",
+  "washing-machine",
+  "pill",
+  "heart-pulse",
+  "paw-print",
+  "dog",
+  "cat",
+  "shirt",
+  "gem",
+  "watch",
+  "glasses",
+  "smartphone",
+  "headphones",
+  "tv",
+  "plug",
+  "lamp",
+  "refrigerator",
+  "house",
+  "hammer",
+  "pencil",
+  "book-open",
+  "gamepad-2",
+  "toy-brick",
+  "dumbbell",
+  "bike",
+  "flower-2",
+  "gift",
+  "party-popper",
+  "tag",
+  "percent",
+  "star",
+  "zap",
+] as const;
+
+const tabIconSchema = z.discriminatedUnion("type", [
+  /** The category's own image. */
+  z.object({ type: z.literal("category") }),
+  z.object({ type: z.literal("preset"), name: z.enum(CATEGORY_TAB_ICONS, "Choose an icon") }),
+  z.object({ type: z.literal("image"), url: imageUrl }),
+]);
+
+/** The row of category shortcuts under the search bar, after a fixed "All" tab. */
+export const categoryTabsSchema = z
+  .object({
+    enabled: z.boolean(),
+    tabs: z
+      .array(
+        z.object({
+          id: itemId,
+          categoryId,
+          /** Null uses the category name. */
+          label: optionalLabel(16),
+          icon: tabIconSchema,
+          /** A small tag above the icon, e.g. "New". */
+          badge: optionalLabel(8),
+        }),
+      )
+      .max(12, "Use at most 12 tabs"),
+  })
+  .refine((value) => !value.enabled || value.tabs.length > 0, { path: ["tabs"], message: "Add at least one category tab" });
 
 const sectionBase = { id: itemId, enabled: z.boolean() };
 
@@ -145,11 +252,23 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     ...sectionBase,
-    /** Small images side by side, each optionally opening a category. */
+    /** Images each optionally opening a category: side by side, or a carousel with the neighbours peeking in. */
     type: z.literal("image_tiles"),
     title: optionalLabel(40),
+    layout: z.enum(["grid", "carousel"]).default("grid"),
+    /** Grid layout only. */
     columns: z.union([z.literal(2), z.literal(3)]),
     tiles: z.array(tileSchema).min(2, "Add at least two tiles").max(9, "Use at most 9 tiles"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** The sub-categories of one category, e.g. "Beauty & Personal Care" → Hair, Skin & Face, … */
+    type: z.literal("subcategory_grid"),
+    /** Null uses the category name. */
+    title: optionalLabel(40),
+    categoryId,
+    columns: z.union([z.literal(3), z.literal(4)]),
+    limit: z.int().min(3, "Show at least 3 sub-categories").max(12, "Show at most 12 sub-categories"),
   }),
 ]);
 
@@ -169,6 +288,7 @@ export const appearanceSchema = z.object({
   logoUrl: imageUrl.nullable(),
   theme: themeSchema,
   announcement: announcementSchema,
+  categoryTabs: categoryTabsSchema,
   homeSections: homeSectionsSchema,
 });
 
@@ -184,4 +304,5 @@ export const homeQuerySchema = z.object({
 
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type HomeSection = z.infer<typeof homeSectionSchema>;
+export type CategoryTabs = z.infer<typeof categoryTabsSchema>;
 export type UpdateAppearanceInput = z.infer<typeof updateAppearanceBodySchema>;

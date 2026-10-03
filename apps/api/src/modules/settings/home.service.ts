@@ -27,6 +27,7 @@ function referencedCategoryIds(sections: HomeSection[]) {
       case "category_deals":
         return section.categoryIds;
       case "product_rail":
+      case "subcategory_grid":
         return [section.categoryId];
       case "deals_rail":
         return section.categoryId ? [section.categoryId] : [];
@@ -82,15 +83,17 @@ export function createHomeService(prisma: PrismaClient) {
   }
 
   /**
-   * The admin's enabled home sections with their data filled in. Inactive or deleted categories are
-   * dropped (links to them become plain), and sections left with nothing to show are omitted.
-   * Sections that depend on the store's stock are only included when a store is given.
+   * The admin's enabled home sections and category tabs with their data filled in. Inactive or deleted
+   * categories are dropped (links to them become plain), and sections left with nothing to show are
+   * omitted. Sections that depend on the store's stock are only included when a store is given.
+   * A tab icon of null means the category has no image; the app shows its first letter.
    */
   async function getHomeFeed(storeId: string | undefined) {
     const [{ appearance }] = await Promise.all([getAppearance(prisma), storeId ? assertActiveStore(storeId) : undefined]);
     const sections = appearance.homeSections.filter((section) => section.enabled);
+    const tabs = appearance.categoryTabs.enabled ? appearance.categoryTabs.tabs : [];
 
-    const ids = [...new Set(referencedCategoryIds(sections))];
+    const ids = [...new Set([...referencedCategoryIds(sections), ...tabs.map((tab) => tab.categoryId)])];
 
     const [referenced, allActive] = await Promise.all([
       ids.length > 0 ? prisma.category.findMany({ where: { id: { in: ids }, isActive: true }, select: categorySelect }) : [],
@@ -177,9 +180,30 @@ export function createHomeService(prisma: PrismaClient) {
               id: section.id,
               type: section.type,
               title: section.title,
+              layout: section.layout,
               columns: section.columns,
               tiles: section.tiles.map((tile) => ({ ...tile, link: resolveLink(tile.link) })),
             };
+
+          case "subcategory_grid": {
+            const category = categories.get(section.categoryId);
+            if (!category) return null;
+            const subcategories = await prisma.category.findMany({
+              where: { parentId: category.id, isActive: true },
+              select: categorySelect,
+              orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+              take: section.limit,
+            });
+            if (subcategories.length === 0) return null;
+            return {
+              id: section.id,
+              type: section.type,
+              title: section.title ?? category.name,
+              columns: section.columns,
+              category,
+              categories: subcategories,
+            };
+          }
 
           case "offer_strip":
             return {
@@ -196,7 +220,21 @@ export function createHomeService(prisma: PrismaClient) {
       }),
     );
 
-    return { storeId: storeId ?? null, sections: resolved.filter((section) => section !== null) };
+    const categoryTabs = tabs.flatMap((tab) => {
+      const category = categories.get(tab.categoryId);
+      if (!category) return [];
+      const icon =
+        tab.icon.type === "preset"
+          ? { type: "preset" as const, name: tab.icon.name }
+          : tab.icon.type === "image"
+            ? { type: "image" as const, url: tab.icon.url }
+            : category.imageUrl
+              ? { type: "image" as const, url: category.imageUrl }
+              : null;
+      return [{ id: tab.id, label: tab.label ?? category.name, icon, badge: tab.badge, category }];
+    });
+
+    return { storeId: storeId ?? null, categoryTabs, sections: resolved.filter((section) => section !== null) };
   }
 
   return { getHomeFeed };
