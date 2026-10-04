@@ -6,11 +6,11 @@ const path = require("node:path");
  * .env for local builds, or as EAS environment variables for cloud builds. All are optional; the
  * values in app.json are the defaults.
  *
- *   APP_NAME              Name under the launcher icon, e.g. "Moozy".
- *   APP_ID                Android package and iOS bundle ID, e.g. "in.moozy.app". Permanent once the
+ *   APP_NAME              Name under the launcher icon, e.g. "Acme Grocery".
+ *   APP_ID                Android package and iOS bundle ID, e.g. "com.acme.grocery". Permanent once the
  *                         app is published, and two installs on one phone need different IDs.
- *   APP_SCHEME            Deep link scheme used to return from online payment, e.g. "moozy".
- *   APP_BRAND             Folder under brands/ with the client's icon and splash screen, e.g. "moozy".
+ *   APP_SCHEME            Deep link scheme used to return from online payment, e.g. "acme".
+ *   APP_BRAND             Folder under brands/ with the client's icon and splash screen, e.g. "acme".
  *   EAS_PROJECT_ID, EXPO_OWNER, APP_SLUG
  *                         The client's own EAS project, when they have one.
  *   GOOGLE_SERVICES_JSON  Firebase config for APP_ID (an EAS file variable), needed for Android push.
