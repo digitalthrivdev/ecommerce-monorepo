@@ -25,6 +25,26 @@
       "extends": "base",
       "environment": "production",
       "autoIncrement": true
+    },
+    "moozy-preview": {
+      "extends": "preview",
+      "env": {
+        "APP_BRAND": "moozy",
+        "APP_NAME": "Moozy Partner",
+        "APP_ID": "in.moozy.partner",
+        "APP_SCHEME": "moozy-partner",
+        "EXPO_PUBLIC_API_URL": "https://api.moozy.in"
+      }
+    },
+    "moozy-production": {
+      "extends": "production",
+      "env": {
+        "APP_BRAND": "moozy",
+        "APP_NAME": "Moozy Partner",
+        "APP_ID": "in.moozy.partner",
+        "APP_SCHEME": "moozy-partner",
+        "EXPO_PUBLIC_API_URL": "https://api.moozy.in"
+      }
     }
   },
   "submit": {
