@@ -48,9 +48,10 @@ async function writeOnce(file: string, data: Buffer) {
 export function createImageStore(uploadsDir: string) {
   const root = path.resolve(uploadsDir);
 
-  async function render(input: Buffer, size: number) {
-    return sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
-      .rotate()
+  /** Animated GIFs and WebPs stay animated, as animated WebP; photos are turned upright first. */
+  async function render(input: Buffer, size: number, animated: boolean) {
+    const image = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, animated });
+    return (animated ? image : image.rotate())
       .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
       .webp({ quality: QUALITY })
       .toBuffer({ resolveWithObject: true });
@@ -58,18 +59,17 @@ export function createImageStore(uploadsDir: string) {
 
   /** Returns the path under the uploads folder, e.g. `images/3f/3f9c….webp`. */
   async function saveImage(input: Buffer) {
-    const format = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
-      .metadata()
-      .then((metadata) => metadata.format, () => undefined);
-    if (!format || !ACCEPTED_FORMATS.has(format)) {
+    const metadata = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata().catch(() => undefined);
+    if (!metadata?.format || !ACCEPTED_FORMATS.has(metadata.format)) {
       throw unreadable();
     }
+    const animated = (metadata.pages ?? 1) > 1;
 
     let large: Awaited<ReturnType<typeof render>>;
     let small: Awaited<ReturnType<typeof render>>;
     try {
-      large = await render(input, SIZES.large);
-      small = await render(input, SIZES.small);
+      large = await render(input, SIZES.large, animated);
+      small = await render(input, SIZES.small, animated);
     } catch {
       throw unreadable();
     }
@@ -82,7 +82,8 @@ export function createImageStore(uploadsDir: string) {
     await writeOnce(path.join(root, smallImagePath(key)), small.data);
     await writeOnce(file, large.data);
 
-    return { key, width: large.info.width, height: large.info.height, bytes: large.info.size };
+    // Animated images stack their frames, so the overall height counts every frame.
+    return { key, width: large.info.width, height: large.info.pageHeight ?? large.info.height, bytes: large.info.size };
   }
 
   return { root, saveImage };

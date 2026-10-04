@@ -186,7 +186,20 @@ export const categoryTabsSchema = z
   })
   .refine((value) => !value.enabled || value.tabs.length > 0, { path: ["tabs"], message: "Add at least one category tab" });
 
-const sectionBase = { id: itemId, enabled: z.boolean() };
+export const SECTION_EDGES = ["straight", "zigzag", "wave"] as const;
+
+/** A coloured band behind a section; `edge` shapes its bottom border, e.g. a paper-cut zigzag. Null keeps the page background. */
+const sectionBackground = z
+  .object({
+    color: hexColor,
+    /** For the title and the labels that sit on the band; cards keep their own colours. */
+    textColor: hexColor,
+    edge: z.enum(SECTION_EDGES, "Choose an edge"),
+  })
+  .nullish()
+  .transform((value) => value ?? null);
+
+const sectionBase = { id: itemId, enabled: z.boolean(), background: sectionBackground };
 
 /** A line under a section's title, e.g. "Fresh picks for your week". */
 const sectionDescription = optionalLabel(100);

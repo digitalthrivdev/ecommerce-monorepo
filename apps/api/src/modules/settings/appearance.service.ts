@@ -26,7 +26,7 @@ export function defaultAppearance(): Appearance {
     },
     announcement: { enabled: true, text: "Groceries delivered in minutes", backgroundColor: null, textColor: null },
     categoryTabs: { enabled: false, tabs: [] },
-    homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", description: null, columns: 4, categoryIds: [] }],
+    homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", description: null, background: null, columns: 4, categoryIds: [] }],
   };
 }
 

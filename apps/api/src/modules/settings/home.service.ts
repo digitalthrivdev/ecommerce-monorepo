@@ -115,122 +115,127 @@ export function createHomeService(prisma: PrismaClient) {
       return category ? { type: "category" as const, category } : { type: "none" as const };
     };
 
+    const resolveSection = async (section: HomeSection) => {
+      switch (section.type) {
+        case "banner_carousel":
+          return {
+            id: section.id,
+            type: section.type,
+            autoplay: section.autoplay,
+            banners: section.banners.map((banner) => ({ ...banner, link: resolveLink(banner.link) })),
+          };
+
+        case "category_grid": {
+          const shown = section.categoryIds.length
+            ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
+            : allActive;
+          if (shown.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, categories: shown };
+        }
+
+        case "product_rail": {
+          const category = categories.get(section.categoryId);
+          if (!storeId || !category) return null;
+          const products = await railProducts(storeId, category.id, section.limit);
+          if (products.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
+        }
+
+        case "deals_rail": {
+          const category = section.categoryId ? categories.get(section.categoryId) : null;
+          if (!storeId || category === undefined) return null;
+          const products = await discovery.dealProducts(storeId, category?.id ?? null, section.limit);
+          if (products.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
+        }
+
+        case "buy_again":
+          return storeId ? { id: section.id, type: section.type, title: section.title, description: section.description } : null;
+
+        case "brand_rail": {
+          if (!storeId) return null;
+          const brands = await railBrands(storeId, section.brandIds);
+          if (brands.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, brands };
+        }
+
+        case "category_deals": {
+          if (!storeId) return null;
+          const candidates = section.categoryIds.length
+            ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
+            : allActive.slice(0, TOP_CATEGORY_DEALS_LIMIT);
+          const discounts = await discovery.categoryDiscounts(
+            storeId,
+            candidates.map((category) => category.id),
+          );
+          const shown = candidates.flatMap((category) => {
+            const maxDiscountPercent = discounts.get(category.id) ?? 0;
+            return maxDiscountPercent > 0 ? [{ ...category, maxDiscountPercent }] : [];
+          });
+          if (shown.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, categories: shown };
+        }
+
+        case "image_tiles":
+          return {
+            id: section.id,
+            type: section.type,
+            title: section.title,
+            description: section.description,
+            layout: section.layout,
+            columns: section.columns,
+            tiles: section.tiles.map((tile) => ({ ...tile, link: resolveLink(tile.link) })),
+          };
+
+        case "category_collection": {
+          const items = section.items.flatMap((item) => {
+            const category = categories.get(item.categoryId);
+            if (!category) return [];
+            return [{ id: item.id, label: item.label ?? category.name, imageUrl: item.imageUrl, badge: item.badge, category }];
+          });
+          if (items.length === 0) return null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, items };
+        }
+
+        case "subcategory_grid": {
+          const category = categories.get(section.categoryId);
+          if (!category) return null;
+          const subcategories = await prisma.category.findMany({
+            where: { parentId: category.id, isActive: true },
+            select: categorySelect,
+            orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+            take: section.limit,
+          });
+          if (subcategories.length === 0) return null;
+          return {
+            id: section.id,
+            type: section.type,
+            title: section.title ?? category.name,
+            description: section.description,
+            columns: section.columns,
+            category,
+            categories: subcategories,
+          };
+        }
+
+        case "offer_strip":
+          return {
+            id: section.id,
+            type: section.type,
+            title: section.title,
+            subtitle: section.subtitle,
+            imageUrl: section.imageUrl,
+            backgroundColor: section.backgroundColor,
+            textColor: section.textColor,
+            link: resolveLink(section.link),
+          };
+      }
+    };
+
     const resolved = await Promise.all(
       sections.map(async (section) => {
-        switch (section.type) {
-          case "banner_carousel":
-            return {
-              id: section.id,
-              type: section.type,
-              autoplay: section.autoplay,
-              banners: section.banners.map((banner) => ({ ...banner, link: resolveLink(banner.link) })),
-            };
-
-          case "category_grid": {
-            const shown = section.categoryIds.length
-              ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
-              : allActive;
-            if (shown.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, categories: shown };
-          }
-
-          case "product_rail": {
-            const category = categories.get(section.categoryId);
-            if (!storeId || !category) return null;
-            const products = await railProducts(storeId, category.id, section.limit);
-            if (products.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
-          }
-
-          case "deals_rail": {
-            const category = section.categoryId ? categories.get(section.categoryId) : null;
-            if (!storeId || category === undefined) return null;
-            const products = await discovery.dealProducts(storeId, category?.id ?? null, section.limit);
-            if (products.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
-          }
-
-          case "buy_again":
-            return storeId ? { id: section.id, type: section.type, title: section.title, description: section.description } : null;
-
-          case "brand_rail": {
-            if (!storeId) return null;
-            const brands = await railBrands(storeId, section.brandIds);
-            if (brands.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, brands };
-          }
-
-          case "category_deals": {
-            if (!storeId) return null;
-            const candidates = section.categoryIds.length
-              ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
-              : allActive.slice(0, TOP_CATEGORY_DEALS_LIMIT);
-            const discounts = await discovery.categoryDiscounts(
-              storeId,
-              candidates.map((category) => category.id),
-            );
-            const shown = candidates.flatMap((category) => {
-              const maxDiscountPercent = discounts.get(category.id) ?? 0;
-              return maxDiscountPercent > 0 ? [{ ...category, maxDiscountPercent }] : [];
-            });
-            if (shown.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, categories: shown };
-          }
-
-          case "image_tiles":
-            return {
-              id: section.id,
-              type: section.type,
-              title: section.title,
-              description: section.description,
-              layout: section.layout,
-              columns: section.columns,
-              tiles: section.tiles.map((tile) => ({ ...tile, link: resolveLink(tile.link) })),
-            };
-
-          case "category_collection": {
-            const items = section.items.flatMap((item) => {
-              const category = categories.get(item.categoryId);
-              if (!category) return [];
-              return [{ id: item.id, label: item.label ?? category.name, imageUrl: item.imageUrl, badge: item.badge, category }];
-            });
-            if (items.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, items };
-          }
-
-          case "subcategory_grid": {
-            const category = categories.get(section.categoryId);
-            if (!category) return null;
-            const subcategories = await prisma.category.findMany({
-              where: { parentId: category.id, isActive: true },
-              select: categorySelect,
-              orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-              take: section.limit,
-            });
-            if (subcategories.length === 0) return null;
-            return {
-              id: section.id,
-              type: section.type,
-              title: section.title ?? category.name,
-              description: section.description,
-              columns: section.columns,
-              category,
-              categories: subcategories,
-            };
-          }
-
-          case "offer_strip":
-            return {
-              id: section.id,
-              type: section.type,
-              title: section.title,
-              subtitle: section.subtitle,
-              imageUrl: section.imageUrl,
-              backgroundColor: section.backgroundColor,
-              textColor: section.textColor,
-              link: resolveLink(section.link),
-            };
-        }
+        const content = await resolveSection(section);
+        return content && { ...content, background: section.background };
       }),
     );
 
