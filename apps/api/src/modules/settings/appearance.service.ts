@@ -49,9 +49,21 @@ export async function getAppearance(db: Db) {
   return { appearance, updatedAt: row?.updatedAt ?? null, updatedById: row?.updatedById ?? null };
 }
 
-function categoryReferences(sections: HomeSection[]) {
-  return sections.flatMap((section, index): { path: (string | number)[]; id: string }[] => {
-    const at = (...path: (string | number)[]) => ["homeSections", index, ...path];
+type Path = (string | number)[];
+
+/** The home screen's sections and each tab page's, with the path to each list. */
+function sectionLists(input: UpdateAppearanceInput): { path: Path; sections: HomeSection[] }[] {
+  return [
+    { path: ["homeSections"], sections: input.homeSections ?? [] },
+    ...(input.categoryTabs?.tabs ?? []).flatMap((tab, index) =>
+      tab.page ? [{ path: ["categoryTabs", "tabs", index, "page", "sections"], sections: tab.page.sections }] : [],
+    ),
+  ];
+}
+
+function categoryReferences(sections: HomeSection[], base: Path) {
+  return sections.flatMap((section, index): { path: Path; id: string }[] => {
+    const at = (...path: Path) => [...base, index, ...path];
     switch (section.type) {
       case "category_grid":
         return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
@@ -81,9 +93,9 @@ function categoryReferences(sections: HomeSection[]) {
   });
 }
 
-function brandReferences(sections: HomeSection[]) {
+function brandReferences(sections: HomeSection[], base: Path) {
   return sections.flatMap((section, index) =>
-    section.type === "brand_rail" ? section.brandIds.map((id, position) => ({ path: ["homeSections", index, "brandIds", position], id })) : [],
+    section.type === "brand_rail" ? section.brandIds.map((id, position) => ({ path: [...base, index, "brandIds", position], id })) : [],
   );
 }
 
@@ -96,7 +108,7 @@ export function createAppearanceService(prisma: PrismaClient) {
   /** Inactive categories are allowed (they are hidden in the app until reactivated); deleted ones are not. */
   async function assertCategoriesExist(input: UpdateAppearanceInput) {
     const references = [
-      ...categoryReferences(input.homeSections ?? []),
+      ...sectionLists(input).flatMap((list) => categoryReferences(list.sections, list.path)),
       ...(input.categoryTabs?.tabs ?? []).map((tab, index) => ({ path: ["categoryTabs", "tabs", index, "categoryId"], id: tab.categoryId })),
     ];
     if (references.length === 0) return;
@@ -116,8 +128,8 @@ export function createAppearanceService(prisma: PrismaClient) {
   }
 
   /** Like categories: inactive brands are allowed and hidden in the app; deleted ones are not. */
-  async function assertBrandsExist(sections: HomeSection[]) {
-    const references = brandReferences(sections);
+  async function assertBrandsExist(input: UpdateAppearanceInput) {
+    const references = sectionLists(input).flatMap((list) => brandReferences(list.sections, list.path));
     if (references.length === 0) return;
 
     const found = await prisma.brand.findMany({
@@ -136,7 +148,7 @@ export function createAppearanceService(prisma: PrismaClient) {
 
   async function updateAppearance(input: UpdateAppearanceInput, adminId: string) {
     await assertCategoriesExist(input);
-    if (input.homeSections) await assertBrandsExist(input.homeSections);
+    await assertBrandsExist(input);
 
     const { appearance } = await getAppearance(prisma);
     const config = { ...appearance, ...input } as Prisma.InputJsonValue;

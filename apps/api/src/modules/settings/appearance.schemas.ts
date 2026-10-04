@@ -166,26 +166,6 @@ const tabIconSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("image"), url: imageUrl }),
 ]);
 
-/** The row of category shortcuts under the search bar, after a fixed "All" tab. */
-export const categoryTabsSchema = z
-  .object({
-    enabled: z.boolean(),
-    tabs: z
-      .array(
-        z.object({
-          id: itemId,
-          categoryId,
-          /** Null uses the category name. */
-          label: optionalLabel(16),
-          icon: tabIconSchema,
-          /** A small tag above the icon, e.g. "New". */
-          badge: optionalLabel(8),
-        }),
-      )
-      .max(12, "Use at most 12 tabs"),
-  })
-  .refine((value) => !value.enabled || value.tabs.length > 0, { path: ["tabs"], message: "Add at least one category tab" });
-
 export const SECTION_EDGES = ["straight", "zigzag", "wave"] as const;
 
 /** A coloured band behind a section; `edge` shapes its bottom border, e.g. a paper-cut zigzag. Null keeps the page background. */
@@ -330,6 +310,44 @@ export const homeSectionsSchema = z
     });
   });
 
+/** Recolours the whole home header (status bar, address, search and tab strip) while the tab's page is open. */
+const tabHeaderSchema = z.object({
+  color: hexColor,
+  /** Fades from `color` at the top to this at the bottom; null is a solid colour. */
+  gradientColor: hexColor.nullable(),
+  textColor: hexColor,
+  /** Drawn over the colour across the whole header; GIFs stay animated. */
+  imageUrl: imageUrl.nullable(),
+});
+
+const tabPageSchema = z.object({ header: tabHeaderSchema, sections: homeSectionsSchema });
+
+/** The row of category shortcuts under the search bar, after a fixed "All" tab. */
+export const categoryTabsSchema = z
+  .object({
+    enabled: z.boolean(),
+    tabs: z
+      .array(
+        z
+          .object({
+            id: itemId,
+            categoryId,
+            /** Null uses the category name. */
+            label: optionalLabel(16),
+            icon: tabIconSchema,
+            /** A small tag above the icon, e.g. "New". */
+            badge: optionalLabel(8),
+            /** "page" shows the tab's own page inside the home screen instead of opening the category screen. */
+            opens: z.enum(["category", "page"]).default("category"),
+            /** Kept while the tab opens the category, so switching back does not lose the page. */
+            page: tabPageSchema.nullish().transform((value) => value ?? null),
+          })
+          .refine((tab) => tab.opens === "category" || tab.page !== null, { path: ["page"], message: "Set up the tab's page" }),
+      )
+      .max(12, "Use at most 12 tabs"),
+  })
+  .refine((value) => !value.enabled || value.tabs.length > 0, { path: ["tabs"], message: "Add at least one category tab" });
+
 export const appearanceSchema = z.object({
   appName: label(50, "the app name"),
   logoUrl: imageUrl.nullable(),
@@ -347,9 +365,12 @@ export const updateAppearanceBodySchema = appearanceSchema
 
 export const homeQuerySchema = z.object({
   storeId: z.string().trim().min(1).max(64).optional(),
+  /** Returns that tab's page instead of the "All" home screen. */
+  tabId: itemId.optional(),
 });
 
 export type Appearance = z.infer<typeof appearanceSchema>;
 export type HomeSection = z.infer<typeof homeSectionSchema>;
 export type CategoryTabs = z.infer<typeof categoryTabsSchema>;
+export type CategoryTab = CategoryTabs["tabs"][number];
 export type UpdateAppearanceInput = z.infer<typeof updateAppearanceBodySchema>;

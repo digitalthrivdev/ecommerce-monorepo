@@ -85,17 +85,14 @@ export function createHomeService(prisma: PrismaClient) {
   }
 
   /**
-   * The admin's enabled home sections and category tabs with their data filled in. Inactive or deleted
-   * categories are dropped (links to them become plain), and sections left with nothing to show are
-   * omitted. Sections that depend on the store's stock are only included when a store is given.
-   * A tab icon of null means the category has no image; the app shows its first letter.
+   * The enabled sections with their data filled in. Inactive or deleted categories are dropped (links to
+   * them become plain), and sections left with nothing to show are omitted. Sections that depend on the
+   * store's stock are only included when a store is given. `extraCategoryIds` are looked up along with the
+   * sections' categories and returned in `categories` when active.
    */
-  async function getHomeFeed(storeId: string | undefined) {
-    const [{ appearance }] = await Promise.all([getAppearance(prisma), storeId ? assertActiveStore(storeId) : undefined]);
-    const sections = appearance.homeSections.filter((section) => section.enabled);
-    const tabs = appearance.categoryTabs.enabled ? appearance.categoryTabs.tabs : [];
-
-    const ids = [...new Set([...referencedCategoryIds(sections), ...tabs.map((tab) => tab.categoryId)])];
+  async function resolveSections(storeId: string | undefined, allSections: HomeSection[], extraCategoryIds: string[]) {
+    const sections = allSections.filter((section) => section.enabled);
+    const ids = [...new Set([...referencedCategoryIds(sections), ...extraCategoryIds])];
 
     const [referenced, allActive] = await Promise.all([
       ids.length > 0 ? prisma.category.findMany({ where: { id: { in: ids }, isActive: true }, select: categorySelect }) : [],
@@ -239,6 +236,27 @@ export function createHomeService(prisma: PrismaClient) {
       }),
     );
 
+    return { categories, sections: resolved.filter((section) => section !== null) };
+  }
+
+  async function loadAppearance(storeId: string | undefined) {
+    const [{ appearance }] = await Promise.all([getAppearance(prisma), storeId ? assertActiveStore(storeId) : undefined]);
+    return { appearance, tabs: appearance.categoryTabs.enabled ? appearance.categoryTabs.tabs : [] };
+  }
+
+  /**
+   * The "All" home screen: the admin's home sections and category tabs. Tabs whose category is inactive
+   * or deleted are dropped. A tab icon of null means the category has no image; the app shows its first
+   * letter. `header` is set for tabs that open their own page, so the app can recolour before it loads.
+   */
+  async function getHomeFeed(storeId: string | undefined) {
+    const { appearance, tabs } = await loadAppearance(storeId);
+    const { categories, sections } = await resolveSections(
+      storeId,
+      appearance.homeSections,
+      tabs.map((tab) => tab.categoryId),
+    );
+
     const categoryTabs = tabs.flatMap((tab) => {
       const category = categories.get(tab.categoryId);
       if (!category) return [];
@@ -250,11 +268,26 @@ export function createHomeService(prisma: PrismaClient) {
             : category.imageUrl
               ? { type: "image" as const, url: category.imageUrl }
               : null;
-      return [{ id: tab.id, label: tab.label ?? category.name, icon, badge: tab.badge, category }];
+      const header = tab.opens === "page" && tab.page ? tab.page.header : null;
+      return [{ id: tab.id, label: tab.label ?? category.name, icon, badge: tab.badge, category, opens: header ? ("page" as const) : ("category" as const), header }];
     });
 
-    return { storeId: storeId ?? null, categoryTabs, sections: resolved.filter((section) => section !== null) };
+    return { storeId: storeId ?? null, categoryTabs, sections };
   }
 
-  return { getHomeFeed };
+  /** The sections of a tab that opens its own page; missing like the tab itself when its category is hidden. */
+  async function getTabPage(storeId: string | undefined, tabId: string) {
+    const { tabs } = await loadAppearance(storeId);
+    const tab = tabs.find((candidate) => candidate.id === tabId);
+    if (!tab || tab.opens !== "page" || !tab.page) {
+      throw new AppError(404, "TAB_NOT_FOUND", "Tab not found");
+    }
+    const { categories, sections } = await resolveSections(storeId, tab.page.sections, [tab.categoryId]);
+    if (!categories.has(tab.categoryId)) {
+      throw new AppError(404, "TAB_NOT_FOUND", "Tab not found");
+    }
+    return { storeId: storeId ?? null, tabId: tab.id, sections };
+  }
+
+  return { getHomeFeed, getTabPage };
 }
