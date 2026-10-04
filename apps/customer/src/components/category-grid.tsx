@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
+import { useBandText } from "@/components/home/section-band";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
@@ -19,6 +20,7 @@ function rows<T>(items: T[], size: number) {
 function CategoryTile({ category }: { category: Category }) {
   const { cardStyle } = useAppTheme();
   const [failed, setFailed] = useState(false);
+  const bandText = useBandText();
 
   return (
     <Pressable onPress={() => openCategory(category)} className="flex-1 items-center gap-1.5 active:opacity-70" accessibilityRole="button" accessibilityLabel={category.name}>
@@ -29,7 +31,7 @@ function CategoryTile({ category }: { category: Category }) {
           <Text className="text-2xl font-extrabold text-primary">{category.name.charAt(0)}</Text>
         )}
       </View>
-      <Text className="text-center text-xs font-semibold leading-tight" numberOfLines={2}>
+      <Text className="text-center text-xs font-semibold leading-tight" style={bandText} numberOfLines={2}>
         {category.name}
       </Text>
     </Pressable>

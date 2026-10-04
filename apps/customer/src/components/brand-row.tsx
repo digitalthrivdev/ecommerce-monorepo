@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
+import { useBandText } from "@/components/home/section-band";
 import { SectionTitle } from "@/components/product-row";
 import { Text } from "@/components/ui/text";
 import { useCardSurface } from "@/lib/app-theme";
@@ -13,6 +14,8 @@ import { cn } from "@/lib/utils";
 function BrandTile({ brand }: { brand: StoreBrand }) {
   const surface = useCardSurface();
   const [failed, setFailed] = useState(false);
+  const bandText = useBandText();
+  const bandMuted = useBandText(true);
 
   return (
     <Pressable onPress={() => openBrand(brand)} className="w-[76px] items-center gap-1.5 active:opacity-70" accessibilityRole="button" accessibilityLabel={brand.name}>
@@ -23,10 +26,10 @@ function BrandTile({ brand }: { brand: StoreBrand }) {
           <Text className="text-2xl font-extrabold text-primary">{brand.name.charAt(0)}</Text>
         )}
       </View>
-      <Text className="text-center text-xs font-semibold leading-tight" numberOfLines={1}>
+      <Text className="text-center text-xs font-semibold leading-tight" style={bandText} numberOfLines={1}>
         {brand.name}
       </Text>
-      <Text className="-mt-1 text-[10px] text-muted-foreground">
+      <Text className="-mt-1 text-[10px] text-muted-foreground" style={bandMuted}>
         {brand.productCount} item{brand.productCount === 1 ? "" : "s"}
       </Text>
     </Pressable>

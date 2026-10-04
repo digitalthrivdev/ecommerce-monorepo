@@ -9,6 +9,7 @@ import { CategoryDeals } from "@/components/home/category-deals";
 import { ImageTiles } from "@/components/home/image-tiles";
 import { OfferStrip } from "@/components/home/offer-strip";
 import { ProductRail } from "@/components/home/product-rail";
+import { SectionBand } from "@/components/home/section-band";
 import { SectionTitle } from "@/components/product-row";
 import { Text } from "@/components/ui/text";
 import { openCategory } from "@/lib/navigation";
@@ -57,9 +58,11 @@ export function HomeSections({ sections }: { sections: HomeSection[] }) {
   }
 
   return (
-    <View className="gap-6">
-      {sections.map((section) => (
-        <Section key={section.id} section={section} />
+    <View>
+      {sections.map((section, index) => (
+        <SectionBand key={section.id} background={section.background ?? null} first={index === 0} joinsPrevious={Boolean(section.background && sections[index - 1]?.background)}>
+          <Section section={section} />
+        </SectionBand>
       ))}
     </View>
   );

@@ -336,7 +336,10 @@ export type CategoryTab = {
   category: Category;
 };
 
-export type HomeSection =
+/** A coloured band behind a section. `textColor` is for the title and labels on the band; cards keep their colours. */
+export type SectionBackground = { color: string; textColor: string; edge: "straight" | "zigzag" | "wave" };
+
+export type HomeSection = (
   | BannerCarouselSection
   | CategoryGridSection
   | ProductRailSection
@@ -347,7 +350,8 @@ export type HomeSection =
   | CategoryDealsSection
   | ImageTilesSection
   | SubcategoryGridSection
-  | CategoryCollectionSection;
+  | CategoryCollectionSection
+) & { background?: SectionBackground | null };
 
 /** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
 export type HomeFeed = { storeId: string | null; categoryTabs?: CategoryTab[]; sections: HomeSection[] };

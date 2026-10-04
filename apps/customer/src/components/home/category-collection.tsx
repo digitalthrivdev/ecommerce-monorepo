@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
+import { useBandText } from "@/components/home/section-band";
 import { SectionTitle } from "@/components/product-row";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
@@ -22,6 +23,7 @@ function CollectionTile({ item, compact }: { item: Item; compact: boolean }) {
   const { cardStyle } = useAppTheme();
   const [failed, setFailed] = useState(false);
   const fallback = item.category.imageUrl;
+  const bandText = useBandText();
 
   return (
     <Pressable onPress={() => openCategory(item.category)} className="flex-1 items-center gap-1.5 active:opacity-70" accessibilityRole="button" accessibilityLabel={item.label}>
@@ -41,7 +43,7 @@ function CollectionTile({ item, compact }: { item: Item; compact: boolean }) {
           </View>
         )}
       </View>
-      <Text className={cn("text-center font-semibold leading-tight", compact ? "text-[11px]" : "text-xs")} numberOfLines={2}>
+      <Text className={cn("text-center font-semibold leading-tight", compact ? "text-[11px]" : "text-xs")} style={bandText} numberOfLines={2}>
         {item.label}
       </Text>
     </Pressable>
