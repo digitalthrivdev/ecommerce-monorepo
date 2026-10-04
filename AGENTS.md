@@ -2,7 +2,7 @@
 
 A white-label quick-commerce grocery platform (a simplified Blinkit). One codebase, deployed separately for each client. The goal is the smallest production-capable B1 MVP: for every decision, ask "does this help deliver and operate a real grocery client?" If not, defer it.
 
-`README.md` covers setup and commands. `TODO.md` lists deferred work.
+`README.md` covers setup and commands. `docs/deployment.md` is the deployment runbook (servers and per-client app builds); follow it for any deploy or build. `TODO.md` lists deferred work.
 
 ## Repository
 
@@ -66,7 +66,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 
 - **No shared-database multi-tenancy.** Each client has its own API, PostgreSQL, Redis, secrets, dashboard and app builds. No `tenantId`.
 - **Branding and business settings** (name, logo, colors, currency, timezone, fees, minimum order, service radius, home sections) live in dashboard settings or env defaults, never in business logic.
-- **Mobile build settings** (name, package ID, scheme, API URL) are env vars read by each app's `app.config.js`.
+- **Mobile builds:** each client has build profiles in `apps/*/eas.json` (name, package ID, scheme, API URL) and a brand folder `apps/*/brands/<brand>/` (icon, splash), read by each app's `app.config.js`. Shared EAS environments hold only values common to all clients. See `docs/deployment.md`.
 - **Secrets** are environment variables. The one exception: payment gateway keys (Razorpay, Cashfree, …) and SMS provider keys (Message Central, …) may also be entered in the dashboard.
   - They're stored AES-256-GCM encrypted with `SECRETS_ENCRYPTION_KEY` and are write-only: the API never returns them.
   - Keys set in the environment take priority.

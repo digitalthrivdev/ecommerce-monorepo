@@ -21,7 +21,7 @@ There is no shared database and no `tenantId`. Never point one client's app at a
 
 | Client | Server | Stack folder | Domains | App build profiles | Package IDs |
 | --- | --- | --- | --- | --- | --- |
-| Moozy | `ssh grocery-vps` | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in` | not created yet (builds still use the shared `preview` environment) | not chosen yet |
+| Moozy (test client on our own domain) | `ssh grocery-vps` | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in` | `moozy-preview`, `moozy-production` (brand folder `moozy`) | `in.moozy.app`, `in.moozy.partner` |
 
 Add a row for every new client.
 
@@ -123,44 +123,50 @@ The delivery app can skip the Play Store and be shared as a preview APK.
 Add `<brand>-preview` and `<brand>-production` to both `eas.json` files:
 
 ```json
-"moozy-preview": {
+"acme-preview": {
   "extends": "preview",
   "env": {
-    "APP_BRAND": "moozy",
-    "APP_NAME": "Moozy",
-    "APP_ID": "in.moozy.app",
-    "APP_SCHEME": "moozy",
-    "EXPO_PUBLIC_API_URL": "https://api.moozy.in"
+    "APP_BRAND": "acme",
+    "APP_NAME": "Acme Grocery",
+    "APP_ID": "com.acme.grocery",
+    "APP_SCHEME": "acme",
+    "EXPO_PUBLIC_API_URL": "https://api.acme.com"
   }
 },
-"moozy-production": {
+"acme-production": {
   "extends": "production",
-  "env": { "APP_BRAND": "moozy", "APP_NAME": "Moozy", "APP_ID": "in.moozy.app", "APP_SCHEME": "moozy", "EXPO_PUBLIC_API_URL": "https://api.moozy.in" }
+  "env": { "APP_BRAND": "acme", "APP_NAME": "Acme Grocery", "APP_ID": "com.acme.grocery", "APP_SCHEME": "acme", "EXPO_PUBLIC_API_URL": "https://api.acme.com" }
 }
 ```
 
-- **`APP_ID`** is the Android package and iOS bundle ID. It's permanent once the app is on a store, and must differ between clients and between the two apps (e.g. `in.moozy.app` and `in.moozy.partner`).
+- **`APP_ID`** is the Android package and iOS bundle ID. It's permanent once the app is on a store, and must differ between clients and between the two apps (e.g. `com.acme.grocery` and `com.acme.partner`).
 - **`APP_SCHEME`** brings the customer back from the payment page; use a unique one per client.
 - **Values here are public.** They are bundled into the app, so they are safe to commit. Never put a secret in `eas.json` or in any `EXPO_PUBLIC_` variable.
 - **Optional:** `EAS_PROJECT_ID`, `EXPO_OWNER` and `APP_SLUG` move a client to their own EAS project.
 
 ### 3. EAS environments: shared values only
 
-The EAS environments (`preview`, `production`) are shared by every client, so they hold only what is the same for all: `GOOGLE_SERVICES_JSON`. Use one Firebase project and register every client's package ID in it, so its `google-services.json` covers all apps. Without a matching entry the build still works, but without push notifications.
+The EAS environments (`preview`, `production`) are shared by every client, so they hold only what is the same for all: `GOOGLE_SERVICES_JSON`. Each app has one Firebase project (customer: `grocery-customer-be73d`, delivery: `grocery-delivery-f1e4e`). For a new client:
 
-Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND` or `EXPO_PUBLIC_API_URL` in an EAS environment: they would leak into every client's build, and EAS doesn't document which value wins when the same name is also in `eas.json`. Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
+1. In that Firebase project, add an Android app with the client's package ID.
+2. Download `google-services.json` again (it now lists every client) and replace the `GOOGLE_SERVICES_JSON` file variable in both EAS environments.
+3. Upload the project's FCM V1 service account key for the new package: `npx eas-cli@latest credentials` → Android → the package → Push Notifications (FCM V1).
+
+Without a matching Firebase entry the build still works, but without push notifications (the build log warns about it).
+
+Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND` or `EXPO_PUBLIC_API_URL` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
 
 ### 4. Build and publish
 
 ```bash
 cd apps/customer   # or apps/delivery
-npx eas build --profile moozy-preview --platform android --no-wait      # APK to install directly
-npx eas build --profile moozy-production --platform android --no-wait   # Play Store bundle
+npx eas build --profile acme-preview --platform android --no-wait      # APK to install directly
+npx eas build --profile acme-production --platform android --no-wait   # Play Store bundle
 npx eas submit --platform android --id <build id>                       # upload to Play Console
 ```
 
 - **Always submit by build ID.** `--latest` takes the newest build of the EAS project, which may belong to another client.
-- **Check before building:** `APP_BRAND=moozy APP_NAME=Moozy npx expo config --type public` shows the resolved name, icon and splash.
+- **Check before building:** `APP_BRAND=acme APP_NAME="Acme Grocery" npx expo config --type public` shows the resolved name, icon and splash.
 - **Signing keys:** EAS creates a separate key for each package ID on its first build and keeps it. Never delete EAS credentials: without the key, the Play Store app can't be updated.
 - **Play Store:** the client should own the Play Console account, so their name shows as the developer.
 - **iOS:** needs an Apple Developer account; use the same commands with `--platform ios`.

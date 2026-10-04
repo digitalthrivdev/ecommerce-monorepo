@@ -17,6 +17,7 @@ Other folders:
 - `deploy/`: the production stack (Docker Compose, Nginx, Let's Encrypt, daily backups).
 - `packages/`: reserved for shared code; currently empty.
 - `AGENTS.md`: product scope, architecture and coding rules. Read it before making larger changes.
+- `docs/deployment.md`: deploying a client's server and building their apps.
 - `TODO.md`: known gaps and planned work.
 
 The API is a modular monolith. Each domain lives in `apps/api/src/modules/` (auth, users, stores, categories, products, inventory, cart, orders, payments, delivery, notifications, settings).
@@ -175,46 +176,23 @@ Each client gets its own server (or Compose project) running `deploy/compose.yml
 - a volume for uploaded images, served by Nginx;
 - a daily `pg_dump` backup kept for 14 days, plus a copy of new images.
 
-Setup, in short:
+To update a server: `git pull && docker compose up -d --build` in `deploy/`. Migrations run automatically.
 
-1. Point an API domain and a dashboard domain at the server, and open ports 80 and 443.
-2. Clone the repository on the server, then in `deploy/`: `cp .env.example .env && cp api.env.example api.env`, and fill both in with freshly generated secrets.
-3. Run `./init-letsencrypt.sh` to get the certificate and start the stack.
-4. Create the first admin with the script above.
-
-To update: `git pull && docker compose up -d --build` in `deploy/`. Migrations run automatically.
-
-The full steps, plus backup and restore, are in `deploy/.env.example` and `deploy/backup.sh`.
+**[docs/deployment.md](docs/deployment.md)** is the full runbook: setting up a new client, updating safely (pending migrations, backups), rollback and restore, and the launch checklist.
 
 ## Mobile app builds
 
-Both Expo apps have EAS profiles in their `eas.json`:
+Both Expo apps are built with EAS. Each client gets:
 
-- `development`: a dev client that loads code from your computer;
-- `preview`: a standalone APK to install directly on a phone;
-- `production`: the Play Store build.
-
-Each profile reads the EAS environment of the same name.
-
-Per-client settings are environment variables, read by each app's `app.config.js`. Set them per EAS environment with `eas env:create`, or in `.env` for local runs:
-
-| Variable | Example | Purpose |
-| --- | --- | --- |
-| `EXPO_PUBLIC_API_URL` | `https://api.example.com` | The client's API |
-| `APP_NAME` | `Moozy` | Name under the launcher icon |
-| `APP_ID` | `in.moozy.app` | Android package and iOS bundle ID; permanent once published |
-| `APP_SCHEME` | `moozy` | Deep link used to return from online payment |
-| `GOOGLE_SERVICES_JSON` | file variable | Firebase config for `APP_ID`, needed for Android push |
-| `EAS_PROJECT_ID`, `EXPO_OWNER`, `APP_SLUG` | | The client's own EAS project, if they have one |
-
-Colors, logo and the app name shown inside the app come from the dashboard settings at runtime, so they don't need a rebuild.
+- a brand folder, `apps/<app>/brands/<brand>/`, with the launcher icon, splash screen and their colours;
+- build profiles in `apps/<app>/eas.json`, such as `acme-preview` (an APK to install directly) and `acme-production` (Play Store), with the app name, package ID, link scheme and API URL.
 
 ```bash
 cd apps/customer
-npx eas build --profile preview --platform android
+npx eas build --profile acme-preview --platform android
 ```
 
-Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Firebase files (`google-services.json`, `GoogleService-Info.plist`) are gitignored and must be provided per client. If the Firebase file has no app for `APP_ID`, the build still works, but without push notifications.
+The shared EAS environments hold only values common to every client (the Firebase file). Colours, logo and texts inside the app come from the client's dashboard at runtime, so they don't need a rebuild. Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Details are in [docs/deployment.md](docs/deployment.md#mobile-apps-per-client).
 
 ## Security notes
 
