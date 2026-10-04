@@ -263,8 +263,7 @@ export default function HomeScreen() {
           <HeaderRegion offset={insets.top + headerHeight} onLayout={(event) => setSearchHeight(event.nativeEvent.layout.height)}>
             <SearchBar tabs={tabs} selectedId={selectedTab?.id ?? null} onSelect={selectTab} />
           </HeaderRegion>
-          <HeaderFade to={topBand?.color} />
-          {showAnnouncement && <AnnouncementBar />}
+          {showAnnouncement ? <AnnouncementBar /> : <HeaderFade to={topBand?.color} />}
           <View className={cn(!topBand && "pt-5")}>
             <HomeContent tab={selectedTab} />
           </View>
