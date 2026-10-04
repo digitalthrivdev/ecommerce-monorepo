@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { COLOR_PRESETS } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
 import type { Appearance, AppearanceTheme } from "@/lib/types";
@@ -31,11 +30,9 @@ const COLOR_SCHEMES: { value: AppearanceTheme["colorScheme"]; label: string }[] 
 ];
 
 export function BrandEditor({ value, onChange, errors }: BrandEditorProps) {
-  const { theme, announcement } = value;
+  const { theme } = value;
   const setTheme = (patch: Partial<AppearanceTheme>) => onChange({ ...value, theme: { ...theme, ...patch } });
   const setColor = (key: keyof AppearanceTheme["colors"]) => (color: string) => setTheme({ colors: { ...theme.colors, [key]: color } });
-  const setAnnouncement = (patch: Partial<Appearance["announcement"]>) => onChange({ ...value, announcement: { ...announcement, ...patch } });
-  const customAnnouncementColors = announcement.backgroundColor !== null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -169,60 +166,6 @@ export function BrandEditor({ value, onChange, errors }: BrandEditorProps) {
                 </SelectContent>
               </Select>
             </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Announcement bar</CardTitle>
-          <CardDescription>A short line under the header, e.g. delivery time or a festival message.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <Field orientation="horizontal">
-              <Switch id="announcement-enabled" checked={announcement.enabled} onCheckedChange={(enabled) => setAnnouncement({ enabled })} />
-              <FieldLabel htmlFor="announcement-enabled">Show the announcement</FieldLabel>
-            </Field>
-            <Field data-invalid={Boolean(errors["announcement.text"])}>
-              <FieldLabel htmlFor="announcement-text">Text</FieldLabel>
-              <Input
-                id="announcement-text"
-                value={announcement.text}
-                maxLength={80}
-                placeholder="Groceries delivered in minutes"
-                onChange={(event) => setAnnouncement({ text: event.target.value })}
-                aria-invalid={Boolean(errors["announcement.text"])}
-              />
-              <FieldError>{errors["announcement.text"]}</FieldError>
-            </Field>
-            <Field orientation="horizontal">
-              <Switch
-                id="announcement-custom"
-                checked={customAnnouncementColors}
-                onCheckedChange={(custom) =>
-                  setAnnouncement(custom ? { backgroundColor: theme.colors.primary, textColor: theme.colors.onPrimary } : { backgroundColor: null, textColor: null })
-                }
-              />
-              <FieldLabel htmlFor="announcement-custom">Use custom colours (otherwise the primary colours)</FieldLabel>
-            </Field>
-            {customAnnouncementColors && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <ColorField
-                  label="Background"
-                  value={announcement.backgroundColor ?? ""}
-                  onChange={(backgroundColor) => setAnnouncement({ backgroundColor })}
-                  error={errors["announcement.backgroundColor"]}
-                />
-                <ColorField
-                  label="Text"
-                  value={announcement.textColor ?? ""}
-                  onChange={(textColor) => setAnnouncement({ textColor })}
-                  error={errors["announcement.textColor"]}
-                  contrastWith={announcement.backgroundColor ? { color: announcement.backgroundColor, label: "the background" } : undefined}
-                />
-              </div>
-            )}
           </FieldGroup>
         </CardContent>
       </Card>

@@ -5,8 +5,15 @@ import {
   ArrowUp,
   Award,
   BadgePercent,
+  BetweenHorizontalEnd,
+  BetweenHorizontalStart,
   ChevronDown,
+  ChevronsDown,
+  ChevronsUp,
+  Copy,
+  Ellipsis,
   GalleryHorizontal,
+  GripVertical,
   Grid2x2,
   LayoutDashboard,
   LayoutGrid,
@@ -19,19 +26,32 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
+import { Fragment, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { toast } from "sonner";
 
+import { AnnouncementEditor } from "@/components/appearance/announcement-editor";
 import { CategoryTabsEditor } from "@/components/appearance/category-tabs-editor";
 import { ColorField } from "@/components/appearance/color-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageField } from "@/components/image-field";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { HOME_PAGE, newCollectionItem, newId, newSection, newTile, pageTabs, SECTION_LABELS } from "@/lib/appearance";
+import { duplicateSection, HOME_PAGE, newCollectionItem, newId, newSection, newTile, pageTabs, SECTION_LABELS, withSections } from "@/lib/appearance";
 import type {
   Appearance,
   AppearanceLink,
@@ -920,9 +940,125 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
 
 const hasErrorsUnder = (errors: Errors, prefix: string) => Object.keys(errors).some((key) => key === prefix || key.startsWith(`${prefix}.`));
 
+const SECTION_TYPES = Object.keys(SECTION_LABELS) as HomeSectionType[];
+
+function sectionTypeItems(onAdd: (type: HomeSectionType) => void) {
+  return SECTION_TYPES.map((type) => {
+    const Icon = SECTION_ICONS[type];
+    return (
+      <DropdownMenuItem key={type} onSelect={() => onAdd(type)} className="items-start">
+        <Icon className="mt-0.5" />
+        <span className="flex flex-col">
+          <span>{SECTION_LABELS[type].name}</span>
+          <span className="text-xs text-muted-foreground">{SECTION_LABELS[type].description}</span>
+        </span>
+      </DropdownMenuItem>
+    );
+  });
+}
+
+type InsertSlotProps = {
+  dropping: boolean;
+  canAdd: boolean;
+  onAdd: (type: HomeSectionType) => void;
+  onDragOver: (event: React.DragEvent) => void;
+  onDrop: (event: React.DragEvent) => void;
+};
+
+/** The gap above a section (or below the last): a "+" on hover to insert a section there, and the drop line while dragging. */
+function InsertSlot({ dropping, canAdd, onAdd, onDragOver, onDrop }: InsertSlotProps) {
+  return (
+    <div className="group relative flex h-4 items-center justify-center" onDragOver={onDragOver} onDrop={onDrop}>
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full",
+          dropping ? "h-1 bg-primary" : canAdd && "h-px group-focus-within:bg-border group-hover:bg-border",
+        )}
+      />
+      {canAdd && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label="Add a section here"
+              className="relative flex size-6 items-center justify-center rounded-full border bg-background text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 data-[state=open]:opacity-100"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-72">
+            <DropdownMenuLabel>Add a section here</DropdownMenuLabel>
+            {sectionTypeItems(onAdd)}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
+  );
+}
+
+type SectionMenuProps = {
+  first: boolean;
+  last: boolean;
+  canAdd: boolean;
+  onAddAbove: (type: HomeSectionType) => void;
+  onAddBelow: (type: HomeSectionType) => void;
+  onDuplicate: () => void;
+  onMoveToTop: () => void;
+  onMoveToBottom: () => void;
+  onRemove: () => void;
+};
+
+function SectionMenu({ first, last, canAdd, onAddAbove, onAddBelow, onDuplicate, onMoveToTop, onMoveToBottom, onRemove }: SectionMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="More section actions">
+          <Ellipsis />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger disabled={!canAdd}>
+            <BetweenHorizontalStart />
+            Add section above
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-72">{sectionTypeItems(onAddAbove)}</DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger disabled={!canAdd}>
+            <BetweenHorizontalEnd />
+            Add section below
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-72">{sectionTypeItems(onAddBelow)}</DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuItem disabled={!canAdd} onSelect={onDuplicate}>
+          <Copy />
+          Duplicate
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled={first} onSelect={onMoveToTop}>
+          <ChevronsUp />
+          Move to top
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={last} onSelect={onMoveToBottom}>
+          <ChevronsDown />
+          Move to bottom
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onSelect={onRemove}>
+          <Trash2 />
+          Remove
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const cardElementId = (sectionId: string) => `home-section-${sectionId}`;
+
 type HomeEditorProps = {
   value: Appearance;
-  onChange: (next: Appearance) => void;
+  onChange: Dispatch<SetStateAction<Appearance>>;
   categories: Category[];
   brands: Brand[];
   errors: Errors;
@@ -936,24 +1072,81 @@ type HomeEditorProps = {
 export function HomeEditor({ value, onChange, categories, brands, errors, expanded, onExpand, page, onPageChange }: HomeEditorProps) {
   const pages = pageTabs(value, categories);
   const editing = pages.find((candidate) => candidate.tab.id === page) ?? null;
+  const pageId = editing?.tab.id ?? HOME_PAGE;
   const sections = editing ? editing.page.sections : value.homeSections;
   const basePath = editing ? `categoryTabs.tabs.${editing.index}.page.sections` : "homeSections";
+  const canAdd = sections.length < MAX_SECTIONS;
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<number | null>(null);
 
-  function setSections(next: HomeSection[]) {
-    if (!editing) return onChange({ ...value, homeSections: next });
-    const tabs = value.categoryTabs.tabs.map((tab) => (tab.id === editing.tab.id ? { ...tab, page: { ...editing.page, sections: next } } : tab));
-    onChange({ ...value, categoryTabs: { ...value.categoryTabs, tabs } });
+  const setSections = (next: HomeSection[]) => onChange(withSections(value, pageId, () => next));
+  const updateSection = (next: HomeSection) => setSections(sections.map((item) => (item.id === next.id ? next : item)));
+
+  function insertSection(section: HomeSection, at: number) {
+    setSections([...sections.slice(0, at), section, ...sections.slice(at)]);
+    onExpand(section.id);
   }
 
-  function addSection(type: HomeSectionType) {
-    const section = newSection(type, categories, value.theme.colors);
-    setSections([...sections, section]);
-    onExpand(section.id);
+  const addSection = (type: HomeSectionType, at = sections.length) => insertSection(newSection(type, categories, value.theme.colors), at);
+
+  function removeSection(section: HomeSection, index: number) {
+    setSections(sections.filter((item) => item.id !== section.id));
+    toast(`${SECTION_LABELS[section.type].name} removed`, {
+      action: {
+        label: "Undo",
+        onClick: () =>
+          onChange((current) =>
+            withSections(current, pageId, (list) => (list.some((item) => item.id === section.id) ? list : [...list.slice(0, index), section, ...list.slice(index)])),
+          ),
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (!expanded) return;
+    const frame = requestAnimationFrame(() => {
+      const card = document.getElementById(cardElementId(expanded));
+      if (!card) return;
+      const { top } = card.getBoundingClientRect();
+      if (top < 0 || top > window.innerHeight - 120) card.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [expanded]);
+
+  const dragOverSlot = (at: number) => (event: React.DragEvent) => {
+    if (!dragId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    setDropAt(at);
+  };
+
+  const dragOverCard = (index: number) => (event: React.DragEvent) => {
+    if (!dragId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    const { top, height } = event.currentTarget.getBoundingClientRect();
+    setDropAt(event.clientY < top + height / 2 ? index : index + 1);
+  };
+
+  function endDrag() {
+    setDragId(null);
+    setDropAt(null);
+  }
+
+  function drop(event: React.DragEvent) {
+    event.preventDefault();
+    const from = sections.findIndex((section) => section.id === dragId);
+    if (from >= 0 && dropAt !== null) {
+      const to = dropAt > from ? dropAt - 1 : dropAt;
+      if (to !== from) setSections(move(sections, from, to));
+    }
+    endDrag();
   }
 
   return (
     <div className="flex flex-col gap-3">
       <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} expanded={expanded} onExpand={onExpand} onEditPage={onPageChange} />
+      <AnnouncementEditor value={value} onChange={onChange} errors={errors} expanded={expanded} onExpand={onExpand} />
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <p className="text-sm font-medium">{editing ? `Sections on the ${editing.label} page` : "Sections"}</p>
         {pages.length > 0 && (
@@ -983,6 +1176,11 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
           </div>
         )}
       </div>
+      {sections.length > 0 && (
+        <p className="-mt-1 text-xs text-muted-foreground">
+          Drag <GripVertical className="inline size-3.5 align-text-bottom" /> to reorder, hover between sections to add one there, or click a section in the preview to edit it.
+        </p>
+      )}
       {sections.length === 0 && (
         <Card>
           <CardContent>
@@ -993,98 +1191,111 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
         </Card>
       )}
 
-      {sections.map((section, index) => {
-        const Icon = SECTION_ICONS[section.type];
-        const prefix = `${basePath}.${index}`;
-        const hasErrors = hasErrorsUnder(errors, prefix);
-        const open = expanded === section.id || hasErrors;
+      <div className="flex flex-col">
+        {sections.map((section, index) => {
+          const Icon = SECTION_ICONS[section.type];
+          const prefix = `${basePath}.${index}`;
+          const hasErrors = hasErrorsUnder(errors, prefix);
+          const open = expanded === section.id || hasErrors;
+          const last = index === sections.length - 1;
 
-        return (
-          <Card key={section.id} size="sm" className={section.enabled ? undefined : "opacity-70"}>
-            <CardHeader>
-              <button type="button" onClick={() => onExpand(open ? null : section.id)} className="flex min-w-0 items-center gap-3 text-left" aria-expanded={open}>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                  <Icon className="size-4" />
-                </span>
-                <span className="min-w-0">
-                  <CardTitle className="flex items-center gap-2">
-                    {SECTION_LABELS[section.type].name}
-                    {!section.enabled && <Badge variant="outline">Hidden</Badge>}
-                    {hasErrors && <Badge variant="destructive">Needs attention</Badge>}
-                  </CardTitle>
-                  <CardDescription className="truncate">{sectionSummary(section, categories)}</CardDescription>
-                </span>
-                <ChevronDown className={`ml-1 size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-              </button>
-              <CardAction className="flex items-center gap-1">
-                <Switch
-                  checked={section.enabled}
-                  onCheckedChange={(enabled) => setSections(sections.map((item) => (item.id === section.id ? { ...item, enabled } : item)))}
-                  aria-label={section.enabled ? "Hide section" : "Show section"}
-                />
-                <Button type="button" variant="ghost" size="icon-sm" disabled={index === 0} onClick={() => setSections(move(sections, index, index - 1))} aria-label="Move section up">
-                  <ArrowUp />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={index === sections.length - 1}
-                  onClick={() => setSections(move(sections, index, index + 1))}
-                  aria-label="Move section down"
-                >
-                  <ArrowDown />
-                </Button>
-                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setSections(sections.filter((item) => item.id !== section.id))} aria-label="Remove section">
-                  <Trash2 />
-                </Button>
-              </CardAction>
-            </CardHeader>
-            {open && (
-              <CardContent>
-                <SectionFields
-                  section={section}
-                  categories={categories}
-                  brands={brands}
-                  errors={errors}
-                  prefix={prefix}
-                  onChange={(next) => setSections(sections.map((item) => (item.id === section.id ? next : item)))}
-                />
-                <BackgroundFields
-                  section={section}
-                  colors={value.theme.colors}
-                  errors={errors}
-                  prefix={prefix}
-                  onChange={(next) => setSections(sections.map((item) => (item.id === section.id ? next : item)))}
-                />
-              </CardContent>
-            )}
-          </Card>
-        );
-      })}
+          return (
+            <Fragment key={section.id}>
+              <InsertSlot dropping={dropAt === index} canAdd={canAdd && !dragId} onAdd={(type) => addSection(type, index)} onDragOver={dragOverSlot(index)} onDrop={drop} />
+              <div id={cardElementId(section.id)} className={cn("scroll-mt-4", dragId === section.id && "opacity-40")} onDragOver={dragOverCard(index)} onDrop={drop}>
+                <Card size="sm" className={cn(!section.enabled && "opacity-70", open && "ring-2 ring-primary/40")}>
+                  <CardHeader>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span
+                        draggable
+                        onDragStart={(event) => {
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/plain", section.id);
+                          const card = document.getElementById(cardElementId(section.id));
+                          if (card) event.dataTransfer.setDragImage(card, 24, 24);
+                          setDragId(section.id);
+                        }}
+                        onDragEnd={endDrag}
+                        title="Drag to reorder"
+                        aria-hidden
+                        className="-ml-1 flex h-8 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
+                      >
+                        <GripVertical className="size-4" />
+                      </span>
+                      <button type="button" onClick={() => onExpand(open ? null : section.id)} className="flex min-w-0 items-center gap-3 text-left" aria-expanded={open}>
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+                          <Icon className="size-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <CardTitle className="flex items-center gap-2">
+                            {SECTION_LABELS[section.type].name}
+                            {!section.enabled && <Badge variant="outline">Hidden</Badge>}
+                            {hasErrors && <Badge variant="destructive">Needs attention</Badge>}
+                          </CardTitle>
+                          <CardDescription className="truncate">{sectionSummary(section, categories)}</CardDescription>
+                        </span>
+                        <ChevronDown className={cn("ml-1 size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+                      </button>
+                    </div>
+                    <CardAction className="flex items-center gap-1">
+                      <Switch
+                        checked={section.enabled}
+                        onCheckedChange={(enabled) => updateSection({ ...section, enabled })}
+                        aria-label={section.enabled ? "Hide section" : "Show section"}
+                      />
+                      <Button type="button" variant="ghost" size="icon-sm" disabled={index === 0} onClick={() => setSections(move(sections, index, index - 1))} aria-label="Move section up">
+                        <ArrowUp />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" disabled={last} onClick={() => setSections(move(sections, index, index + 1))} aria-label="Move section down">
+                        <ArrowDown />
+                      </Button>
+                      <SectionMenu
+                        first={index === 0}
+                        last={last}
+                        canAdd={canAdd}
+                        onAddAbove={(type) => addSection(type, index)}
+                        onAddBelow={(type) => addSection(type, index + 1)}
+                        onDuplicate={() => insertSection(duplicateSection(section), index + 1)}
+                        onMoveToTop={() => setSections(move(sections, index, 0))}
+                        onMoveToBottom={() => setSections(move(sections, index, sections.length - 1))}
+                        onRemove={() => removeSection(section, index)}
+                      />
+                    </CardAction>
+                  </CardHeader>
+                  {open && (
+                    <CardContent>
+                      <SectionFields section={section} categories={categories} brands={brands} errors={errors} prefix={prefix} onChange={updateSection} />
+                      <BackgroundFields section={section} colors={value.theme.colors} errors={errors} prefix={prefix} onChange={updateSection} />
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            </Fragment>
+          );
+        })}
+        {sections.length > 0 && (
+          <InsertSlot
+            dropping={dropAt === sections.length}
+            canAdd={false}
+            onAdd={(type) => addSection(type)}
+            onDragOver={dragOverSlot(sections.length)}
+            onDrop={drop}
+          />
+        )}
+      </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" className="self-start" disabled={sections.length >= MAX_SECTIONS}>
+          <Button type="button" variant="outline" className="self-start" disabled={!canAdd}>
             <Plus />
             Add section
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-72">
-          {(Object.keys(SECTION_LABELS) as HomeSectionType[]).map((type) => {
-            const Icon = SECTION_ICONS[type];
-            return (
-              <DropdownMenuItem key={type} onSelect={() => addSection(type)} className="items-start">
-                <Icon className="mt-0.5" />
-                <span className="flex flex-col">
-                  <span>{SECTION_LABELS[type].name}</span>
-                  <span className="text-xs text-muted-foreground">{SECTION_LABELS[type].description}</span>
-                </span>
-              </DropdownMenuItem>
-            );
-          })}
+          {sectionTypeItems((type) => addSection(type))}
         </DropdownMenuContent>
       </DropdownMenu>
+      {!canAdd && <p className="text-xs text-muted-foreground">You can have up to {MAX_SECTIONS} sections on a page.</p>}
     </div>
   );
 }

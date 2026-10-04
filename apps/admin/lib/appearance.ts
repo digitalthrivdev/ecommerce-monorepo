@@ -113,6 +113,21 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
 
 export const newCollectionItem = (categoryId = ""): CollectionItem => ({ id: newId(), categoryId, imageUrl: null, label: null, badge: null });
 
+/** A copy with fresh ids for the section and its banners, tiles or items, so both can be edited apart. */
+export function duplicateSection(section: HomeSection): HomeSection {
+  const copy = { ...structuredClone(section), id: newId() };
+  switch (copy.type) {
+    case "banner_carousel":
+      return { ...copy, banners: copy.banners.map((banner) => ({ ...banner, id: newId() })) };
+    case "image_tiles":
+      return { ...copy, tiles: copy.tiles.map((tile) => ({ ...tile, id: newId() })) };
+    case "category_collection":
+      return { ...copy, items: copy.items.map((item) => ({ ...item, id: newId() })) };
+    default:
+      return copy;
+  }
+}
+
 export const newTile = (): HomeTile => ({ id: newId(), imageUrl: "", link: { type: "none" }, buttonLabel: null });
 
 /** The header the "All" screen uses. */
@@ -122,6 +137,13 @@ export const newTabPage = (colors: Colors): TabPage => ({ header: defaultTabHead
 
 /** The "All" home screen, as opposed to a tab's page, in the section editor and preview. */
 export const HOME_PAGE = "all";
+
+/** Applies `update` to the sections of the "All" screen (HOME_PAGE) or of the tab page with that id. */
+export function withSections(value: Appearance, page: string, update: (sections: HomeSection[]) => HomeSection[]): Appearance {
+  if (page === HOME_PAGE) return { ...value, homeSections: update(value.homeSections) };
+  const tabs = value.categoryTabs.tabs.map((tab) => (tab.id === page && tab.page ? { ...tab, page: { ...tab.page, sections: update(tab.page.sections) } } : tab));
+  return { ...value, categoryTabs: { ...value.categoryTabs, tabs } };
+}
 
 /** Tabs that show their own page, in tab order, with their position in `categoryTabs.tabs`. */
 export function pageTabs(value: Appearance, categories: Category[]) {

@@ -18,7 +18,7 @@ function toConfig({ appName, logoUrl, theme, announcement, categoryTabs, homeSec
   return { appName, logoUrl, theme, announcement, categoryTabs, homeSections };
 }
 
-const isHomePath = (path: string) => path.startsWith("homeSections") || path.startsWith("categoryTabs");
+const isHomePath = (path: string) => path.startsWith("homeSections") || path.startsWith("categoryTabs") || path.startsWith("announcement");
 
 type EditorTab = "brand" | "home";
 
@@ -62,6 +62,11 @@ export function AppearanceEditor({ initial, categories, brands, initialTab, init
     setPageState(next);
     setExpandedState(null);
     syncUrl(tab, null, next);
+  };
+  const editSection = (id: string) => {
+    setTabState("home");
+    setExpandedState(id);
+    syncUrl("home", id, page);
   };
   const [previewDark, setPreviewDark] = useState(initial.theme.colorScheme === "dark");
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(saveAppearance);
@@ -158,8 +163,17 @@ export function AppearanceEditor({ initial, categories, brands, initialTab, init
             <span className="text-xs text-muted-foreground">{scheme === "dark" ? "Dark" : "Light"} mode</span>
           )}
         </div>
-        <PhonePreview appearance={draft} categories={categories} brands={brands} dark={dark} page={page} onPageChange={setPage} />
-        <p className="text-center text-xs text-muted-foreground">Product cards show placeholders; the app fills them from each store&apos;s stock.</p>
+        <PhonePreview
+          appearance={draft}
+          categories={categories}
+          brands={brands}
+          dark={dark}
+          page={page}
+          onPageChange={setPage}
+          selectedSection={tab === "home" ? expanded : null}
+          onSelectSection={editSection}
+        />
+        <p className="text-center text-xs text-muted-foreground">Click a section to edit it. Product cards show placeholders; the app fills them from each store&apos;s stock.</p>
       </aside>
     </div>
   );

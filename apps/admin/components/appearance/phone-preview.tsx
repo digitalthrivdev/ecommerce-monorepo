@@ -1,9 +1,9 @@
 "use client";
 
 import { Search, ShoppingBasket, UserRound } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
-import { defaultTabHeader, HOME_PAGE, pageTabs } from "@/lib/appearance";
+import { defaultTabHeader, HOME_PAGE, pageTabs, SECTION_LABELS } from "@/lib/appearance";
 import { TAB_ICONS } from "@/lib/tab-icons";
 import type { Appearance, Brand, Category, HomeSection } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -414,10 +414,29 @@ function edgePath(edge: "zigzag" | "wave", width: number, height: number) {
   return `${path} Z`;
 }
 
-/** `page` is a tab id to show that tab's page, or HOME_PAGE for the "All" screen. */
-type PhonePreviewProps = { appearance: Appearance; categories: Category[]; brands: Brand[]; dark: boolean; page: string; onPageChange: (page: string) => void };
+/** `page` is a tab id to show that tab's page, or HOME_PAGE for the "All" screen. Clicking a section selects it for editing. */
+type PhonePreviewProps = {
+  appearance: Appearance;
+  categories: Category[];
+  brands: Brand[];
+  dark: boolean;
+  page: string;
+  onPageChange: (page: string) => void;
+  selectedSection: string | null;
+  onSelectSection: (id: string) => void;
+};
 
-export function PhonePreview({ appearance, categories, brands, dark, page, onPageChange }: PhonePreviewProps) {
+export function PhonePreview({ appearance, categories, brands, dark, page, onPageChange, selectedSection, onSelectSection }: PhonePreviewProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    const element = selectedSection ? container?.querySelector<HTMLElement>(`[data-preview-section="${CSS.escape(selectedSection)}"]`) : null;
+    if (!container || !element) return;
+    const top = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
+    if (top < 80 || top > container.clientHeight - 120) container.scrollTo({ top: container.scrollTop + top - 100, behavior: "smooth" });
+  }, [selectedSection, page]);
+
   const palette = dark ? DARK : LIGHT;
   const { colors, radius } = appearance.theme;
   const { announcement } = appearance;
@@ -435,7 +454,7 @@ export function PhonePreview({ appearance, categories, brands, dark, page, onPag
   return (
     <div className="mx-auto w-[300px] rounded-[44px] border-[10px] border-neutral-900 bg-neutral-900 shadow-xl">
       <div className="relative h-[600px] overflow-hidden rounded-[34px]" style={{ backgroundColor: palette.background }}>
-        <div className="h-full overflow-y-auto pb-16 [scrollbar-width:none]">
+        <div ref={scrollRef} className="h-full overflow-y-auto pb-16 [scrollbar-width:none]">
           <div className={cn("px-3 pt-8", !appearance.categoryTabs.enabled && "pb-3")} style={{ background: headerBackground, color: header.textColor }}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -461,19 +480,15 @@ export function PhonePreview({ appearance, categories, brands, dark, page, onPag
             </div>
             {appearance.categoryTabs.enabled && <TabsPreview appearance={appearance} categories={categories} textColor={header.textColor} page={current ? page : HOME_PAGE} onPageChange={onPageChange} />}
           </div>
-          <div className={cn("h-3", !topBand && "mb-3")} style={{ background: `linear-gradient(180deg, ${headerBottom}, ${topBand?.color ?? palette.background})` }} />
-
-          {showAnnouncement && (
+          {showAnnouncement ? (
             <div
-              className="mx-3 mb-3 px-3 py-1.5 text-center text-[10px] font-semibold"
-              style={{
-                borderRadius: Math.min(radius, 8),
-                backgroundColor: announcement.backgroundColor ?? colors.primary,
-                color: announcement.textColor ?? colors.onPrimary,
-              }}
+              className="mb-3 px-3 py-1.5 text-center text-[10px] font-semibold"
+              style={{ backgroundColor: announcement.backgroundColor ?? colors.primary, color: announcement.textColor ?? colors.onPrimary }}
             >
               {announcement.text}
             </div>
+          ) : (
+            <div className={cn("h-3", !topBand && "mb-3")} style={{ background: `linear-gradient(180deg, ${headerBottom}, ${topBand?.color ?? palette.background})` }} />
           )}
 
           <div className="flex flex-col">
@@ -486,12 +501,30 @@ export function PhonePreview({ appearance, categories, brands, dark, page, onPag
                 const band = section.background;
                 const joinsBand = Boolean(band && sections[index - 1]?.background);
                 const edge = band && band.edge !== "straight" ? band.edge : null;
+                const selected = section.id === selectedSection;
                 return (
                   <div
                     key={section.id}
-                    className={cn("relative", edge && "z-10")}
+                    data-preview-section={section.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Edit ${SECTION_LABELS[section.type].name}`}
+                    aria-pressed={selected}
+                    onClick={() => onSelectSection(section.id)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      onSelectSection(section.id);
+                    }}
+                    className={cn("group/section relative cursor-pointer outline-none", edge && "z-10")}
                     style={{ marginTop: index === 0 || joinsBand ? 0 : 16, backgroundColor: band?.color, paddingBlock: band ? 12 : 0 }}
                   >
+                    <span
+                      className={cn(
+                        "pointer-events-none absolute inset-0 z-20 rounded-md ring-2 ring-inset transition-opacity",
+                        selected ? "opacity-100 ring-primary" : "opacity-0 ring-primary/40 group-hover/section:opacity-100 group-focus-visible/section:opacity-100",
+                      )}
+                    />
                     <SectionPreview section={section} appearance={appearance} categories={categories} brands={brands} palette={palette} dark={dark} />
                     {band && edge && (
                       <svg className="absolute inset-x-0 top-full block w-full" height={EDGE_HEIGHT} viewBox={`0 0 ${PREVIEW_WIDTH} ${EDGE_HEIGHT}`} preserveAspectRatio="none" aria-hidden>
