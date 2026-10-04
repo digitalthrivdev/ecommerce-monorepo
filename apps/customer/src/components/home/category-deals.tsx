@@ -45,7 +45,7 @@ function DealTile({ category }: { category: DealCategory }) {
 export function CategoryDeals({ section }: { section: CategoryDealsSection }) {
   return (
     <View>
-      <SectionTitle title={section.title} />
+      <SectionTitle title={section.title} description={section.description} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4 pb-1">
         {section.categories.map((category) => (
           <DealTile key={category.id} category={category} />

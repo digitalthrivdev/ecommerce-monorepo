@@ -4,5 +4,5 @@ import type { DealsRailSection, ProductRailSection } from "@/lib/types";
 
 export function ProductRail({ section }: { section: ProductRailSection | DealsRailSection }) {
   const { category } = section;
-  return <ProductRow title={section.title} products={section.products} onSeeAll={category ? () => openCategory(category) : undefined} />;
+  return <ProductRow title={section.title} description={section.description} products={section.products} onSeeAll={category ? () => openCategory(category) : undefined} />;
 }

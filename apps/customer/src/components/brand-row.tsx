@@ -34,12 +34,12 @@ function BrandTile({ brand }: { brand: StoreBrand }) {
 }
 
 /** A titled row of brand logos that open the brand's products. */
-export function BrandRow({ title, brands }: { title: string; brands: StoreBrand[] }) {
+export function BrandRow({ title, description, brands }: { title: string; description?: string | null; brands: StoreBrand[] }) {
   if (brands.length === 0) return null;
 
   return (
     <View>
-      <SectionTitle title={title} />
+      <SectionTitle title={title} description={description} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-4 pb-1">
         {brands.map((brand) => (
           <BrandTile key={brand.id} brand={brand} />

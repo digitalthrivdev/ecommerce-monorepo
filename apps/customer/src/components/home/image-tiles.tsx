@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { useState } from "react";
 import { Animated, Pressable, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 
+import { SectionTitle } from "@/components/product-row";
 import { Text } from "@/components/ui/text";
 import { linkAction } from "@/lib/navigation";
 import type { ImageTilesSection } from "@/lib/types";
@@ -96,7 +97,7 @@ function Carousel({ tiles }: { tiles: Tile[] }) {
 export function ImageTiles({ section }: { section: ImageTilesSection }) {
   return (
     <View>
-      {section.title && <Text className="px-4 pb-3 text-lg font-extrabold">{section.title}</Text>}
+      <SectionTitle title={section.title} description={section.description} />
       {section.layout === "carousel" ? (
         <Carousel tiles={section.tiles} />
       ) : (

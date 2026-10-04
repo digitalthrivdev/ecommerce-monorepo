@@ -278,9 +278,9 @@ export type BannerCarouselSection = {
   banners: { id: string; imageUrl: string; title: string | null; subtitle: string | null; link: HomeLink }[];
 };
 
-export type CategoryGridSection = { id: string; type: "category_grid"; title: string | null; columns: 3 | 4; categories: Category[] };
+export type CategoryGridSection = { id: string; type: "category_grid"; title: string | null; description: string | null; columns: 3 | 4; categories: Category[] };
 
-export type ProductRailSection = { id: string; type: "product_rail"; title: string; category: Category; products: StoreProduct[] };
+export type ProductRailSection = { id: string; type: "product_rail"; title: string; description: string | null; category: Category; products: StoreProduct[] };
 
 export type OfferStripSection = {
   id: string;
@@ -294,27 +294,38 @@ export type OfferStripSection = {
 };
 
 /** `category` is null when deals come from every category. */
-export type DealsRailSection = { id: string; type: "deals_rail"; title: string; category: Category | null; products: StoreProduct[] };
+export type DealsRailSection = { id: string; type: "deals_rail"; title: string; description: string | null; category: Category | null; products: StoreProduct[] };
 
 /** The app loads the signed-in customer's products itself. */
-export type BuyAgainSection = { id: string; type: "buy_again"; title: string };
+export type BuyAgainSection = { id: string; type: "buy_again"; title: string; description: string | null };
 
-export type BrandRailSection = { id: string; type: "brand_rail"; title: string; brands: StoreBrand[] };
+export type BrandRailSection = { id: string; type: "brand_rail"; title: string; description: string | null; brands: StoreBrand[] };
 
-export type CategoryDealsSection = { id: string; type: "category_deals"; title: string; categories: (Category & { maxDiscountPercent: number })[] };
+export type CategoryDealsSection = { id: string; type: "category_deals"; title: string; description: string | null; categories: (Category & { maxDiscountPercent: number })[] };
 
 /** `columns` applies to the grid layout only. */
 export type ImageTilesSection = {
   id: string;
   type: "image_tiles";
   title: string | null;
+  description: string | null;
   layout: "grid" | "carousel";
   columns: 2 | 3;
   tiles: { id: string; imageUrl: string; link: HomeLink; buttonLabel: string | null }[];
 };
 
 /** `category` is the parent; `categories` its sub-categories. */
-export type SubcategoryGridSection = { id: string; type: "subcategory_grid"; title: string; columns: 3 | 4; category: Category; categories: Category[] };
+export type SubcategoryGridSection = { id: string; type: "subcategory_grid"; title: string; description: string | null; columns: 3 | 4; category: Category; categories: Category[] };
+
+/** Hand-picked categories. `imageUrl` is the admin's own photo; null falls back to the category's image. */
+export type CategoryCollectionSection = {
+  id: string;
+  type: "category_collection";
+  title: string | null;
+  description: string | null;
+  columns: 2 | 3 | 4 | 5;
+  items: { id: string; label: string; imageUrl: string | null; badge: string | null; category: Category }[];
+};
 
 /** A null icon means the category has no image; show its first letter. */
 export type CategoryTab = {
@@ -335,7 +346,8 @@ export type HomeSection =
   | BrandRailSection
   | CategoryDealsSection
   | ImageTilesSection
-  | SubcategoryGridSection;
+  | SubcategoryGridSection
+  | CategoryCollectionSection;
 
 /** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
 export type HomeFeed = { storeId: string | null; categoryTabs?: CategoryTab[]; sections: HomeSection[] };

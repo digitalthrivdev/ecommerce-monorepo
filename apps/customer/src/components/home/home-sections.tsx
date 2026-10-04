@@ -4,6 +4,7 @@ import { BrandRow } from "@/components/brand-row";
 import { CategoryGrid } from "@/components/category-grid";
 import { BannerCarousel } from "@/components/home/banner-carousel";
 import { BuyAgainRail } from "@/components/home/buy-again-rail";
+import { CategoryCollection } from "@/components/home/category-collection";
 import { CategoryDeals } from "@/components/home/category-deals";
 import { ImageTiles } from "@/components/home/image-tiles";
 import { OfferStrip } from "@/components/home/offer-strip";
@@ -20,7 +21,7 @@ function Section({ section }: { section: HomeSection }) {
     case "category_grid":
       return (
         <View>
-          {section.title && <Text className="px-4 pb-3 text-lg font-extrabold">{section.title}</Text>}
+          <SectionTitle title={section.title} description={section.description} />
           <CategoryGrid categories={section.categories} columns={section.columns} />
         </View>
       );
@@ -32,15 +33,17 @@ function Section({ section }: { section: HomeSection }) {
     case "buy_again":
       return <BuyAgainRail section={section} />;
     case "brand_rail":
-      return <BrandRow title={section.title} brands={section.brands} />;
+      return <BrandRow title={section.title} description={section.description} brands={section.brands} />;
     case "category_deals":
       return <CategoryDeals section={section} />;
     case "image_tiles":
       return <ImageTiles section={section} />;
+    case "category_collection":
+      return <CategoryCollection section={section} />;
     case "subcategory_grid":
       return (
         <View>
-          <SectionTitle title={section.title} onSeeAll={() => openCategory(section.category)} />
+          <SectionTitle title={section.title} description={section.description} onSeeAll={() => openCategory(section.category)} />
           <CategoryGrid categories={section.categories} columns={section.columns} />
         </View>
       );

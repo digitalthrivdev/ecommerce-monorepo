@@ -7,5 +7,5 @@ import type { BuyAgainSection } from "@/lib/types";
 export function BuyAgainRail({ section }: { section: BuyAgainSection }) {
   const { store } = useDeliveryLocation();
   const query = useBuyAgain(store?.id);
-  return <ProductRow title={section.title} products={query.data?.items ?? []} />;
+  return <ProductRow title={section.title} description={section.description} products={query.data?.items ?? []} />;
 }
