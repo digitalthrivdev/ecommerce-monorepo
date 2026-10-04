@@ -6,9 +6,8 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 - [ ] **Message Central go-live check.** Implemented from the VerifyNow guide but only tested against fake credentials. With a real account, add the keys under Settings → SMS provider keys, select it, and sign in with a real phone; confirm the token lifetime and whether `validateOtp` is GET or POST (both are handled).
 - [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `SECRETS_ENCRYPTION_KEY` set and webhooks registered (see `apps/api/.env.example`).
-- [ ] **Real push provider.** Implement `PushSender` (`apps/api/src/modules/notifications/push-sender.ts`) for Expo Push (or FCM/APNs), or deploy with `PUSH_PROVIDER=none` (no pushes).
+- [ ] **Push go-live check.** Expo Push is implemented (`PUSH_PROVIDER=expo`); confirm on a real device with a preview build that the push token registers and order updates arrive.
 - [ ] **Off-site backups.** `deploy/` keeps daily database dumps and a copy of uploaded images on the server only (`deploy/backups`); copy them to object storage or another machine (e.g. a nightly rclone/rsync job).
-- [ ] **First real deployment.** The production stack (`deploy/`) is tested locally with a self-signed certificate only. On the client's VPS, run `deploy/init-letsencrypt.sh` with `STAGING=1` first, then for real.
 
 ## Deployment
 
@@ -29,21 +28,17 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] Undo for an item marked unavailable by mistake (today the refund is issued immediately, so it is final).
 - [ ] Automatic refund of a duplicate online payment (currently logged as an error for manual refund).
 
-## Inventory
-
-- [ ] Inventory adjustment audit log (who changed stock, when, why).
-
 ## Catalog
 
 - [ ] **Delete unused images.** Uploads are kept forever, including ones replaced or never saved. A periodic sweep could remove files under `uploads/images` that no product, category or appearance setting references.
 - [ ] Object storage (e.g. Cloudflare R2) for a client that outgrows one server: a second implementation of `createImageStore` (`apps/api/src/modules/uploads/image-store.ts`).
 - [ ] **Hand-picked products** on the home screen: product rails and banner/offer links can only point at a category today.
+- [ ] **Automatic tab pages:** build a category tab's page from its sub-categories and products instead of hand-made sections.
 - [ ] **Scheduled home content:** start/end dates for banners and offer strips (e.g. festival campaigns).
 - [ ] **Bulk import** of products, store prices and opening stock from CSV, for onboarding a new client's catalog.
 
 ## Stores
 
-- [ ] **Opening hours.** Stores accept orders whenever they are active; there is no schedule or "closed for the night" state.
 - [ ] Map picker for the store location and a preview of the delivery radius. Admin currently enters latitude and longitude.
 - [ ] Show the store phone to delivery partners (delivery app) and customers.
 
