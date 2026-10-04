@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, ShoppingBasket, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ImageField } from "@/components/image-field";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -196,11 +197,30 @@ function move<T>(items: T[], from: number, to: number) {
   return next;
 }
 
+export const CATEGORY_TABS_ID = "categoryTabs";
+
+type CategoryTabsEditorProps = {
+  value: Appearance;
+  onChange: (next: Appearance) => void;
+  categories: Category[];
+  errors: Errors;
+  expanded: string | null;
+  onExpand: (id: string | null) => void;
+};
+
+function tabsSummary(enabled: boolean, tabs: CategoryTab[], categories: Category[]) {
+  if (!enabled) return "Hidden. Turn on to show shortcuts under the search bar.";
+  const names = tabs.map((tab) => tab.label ?? categories.find((category) => category.id === tab.categoryId)?.name ?? "No category");
+  return `${tabs.length} tab${tabs.length === 1 ? "" : "s"}: All, ${names.join(", ")}`;
+}
+
 /** The row of category shortcuts under the search bar. */
-export function CategoryTabsEditor({ value, onChange, categories, errors }: { value: Appearance; onChange: (next: Appearance) => void; categories: Category[]; errors: Errors }) {
+export function CategoryTabsEditor({ value, onChange, categories, errors, expanded, onExpand }: CategoryTabsEditorProps) {
   const { enabled, tabs } = value.categoryTabs;
   const set = (categoryTabs: Appearance["categoryTabs"]) => onChange({ ...value, categoryTabs });
   const setTabs = (next: CategoryTab[]) => set({ enabled, tabs: next });
+  const hasErrors = Object.keys(errors).some((key) => key.startsWith(`${CATEGORY_TABS_ID}.`));
+  const open = enabled && (expanded === CATEGORY_TABS_ID || hasErrors);
 
   function addTab() {
     const used = new Set(tabs.map((tab) => tab.categoryId));
@@ -211,15 +231,25 @@ export function CategoryTabsEditor({ value, onChange, categories, errors }: { va
   return (
     <Card size="sm">
       <CardHeader>
-        <span className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onExpand(open ? null : CATEGORY_TABS_ID)}
+          disabled={!enabled}
+          className="flex min-w-0 items-center gap-3 text-left"
+          aria-expanded={open}
+        >
           <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
             <ShoppingBasket className="size-4" />
           </span>
-          <span>
-            <CardTitle>Category tabs</CardTitle>
-            <CardDescription>Shortcuts under the search bar. The first tab, &quot;All&quot;, is the home screen.</CardDescription>
+          <span className="min-w-0">
+            <CardTitle className="flex items-center gap-2">
+              Category tabs
+              {hasErrors && <Badge variant="destructive">Needs attention</Badge>}
+            </CardTitle>
+            <CardDescription className="truncate">{tabsSummary(enabled, tabs, categories)}</CardDescription>
           </span>
-        </span>
+          {enabled && <ChevronDown className={cn("ml-1 size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />}
+        </button>
         <CardAction>
           <Switch
             checked={enabled}
@@ -228,13 +258,15 @@ export function CategoryTabsEditor({ value, onChange, categories, errors }: { va
                 const firstFew = categories.filter((category) => category.isActive && !category.parentId).slice(0, 5);
                 set({ enabled: true, tabs: firstFew.map((category) => ({ id: newId(), categoryId: category.id, label: null, icon: { type: "category" }, badge: null })) });
               } else set({ enabled: on, tabs });
+              if (on) onExpand(CATEGORY_TABS_ID);
             }}
             aria-label={enabled ? "Hide category tabs" : "Show category tabs"}
           />
         </CardAction>
       </CardHeader>
-      {enabled && (
+      {open && (
         <CardContent>
+          <p className="mb-3 text-sm text-muted-foreground">Shortcuts under the search bar. The first tab, &quot;All&quot;, is the home screen.</p>
           <FieldGroup>
             {tabs.map((tab, index) => (
               <TabFields

@@ -110,7 +110,13 @@ function SectionPreview({
 }) {
   const { radius, colors } = appearance.theme;
   const card = cardStyle(appearance, palette, dark);
-  const title = (text: string | null) => (text ? <p className="px-3 pb-2 text-[13px] font-bold" style={{ color: palette.text }}>{text}</p> : null);
+  const title = (text: string | null, description: string | null) =>
+    text || description ? (
+      <div className="px-3 pb-2">
+        {text && <p className="text-[13px] font-bold" style={{ color: palette.text }}>{text}</p>}
+        {description && <p className="text-[10px] leading-tight" style={{ color: palette.muted }}>{description}</p>}
+      </div>
+    ) : null;
 
   switch (section.type) {
     case "banner_carousel": {
@@ -147,7 +153,7 @@ function SectionPreview({
         : active;
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <div className="grid gap-x-2 gap-y-2.5 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
             {shown.slice(0, section.columns * 2).map((category) => (
               <div key={category.id} className="flex flex-col items-center gap-1">
@@ -171,7 +177,7 @@ function SectionPreview({
     case "buy_again":
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <ProductRailPreview card={card} appearance={appearance} palette={palette} dark={dark} />
         </div>
       );
@@ -179,7 +185,7 @@ function SectionPreview({
     case "deals_rail":
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <ProductRailPreview card={card} appearance={appearance} palette={palette} dark={dark} deals />
         </div>
       );
@@ -190,7 +196,7 @@ function SectionPreview({
         : brands.filter((brand) => brand.isActive);
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <div className="flex gap-2 overflow-hidden px-3">
             {(shown.length ? shown : PLACEHOLDER_BRANDS).slice(0, 5).map((brand) => (
               <div key={brand.id} className="flex w-[52px] shrink-0 flex-col items-center gap-1">
@@ -216,7 +222,7 @@ function SectionPreview({
         : categories.filter((category) => category.isActive && !category.parentId);
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <div className="flex gap-2 overflow-hidden px-3">
             {shown.slice(0, 4).map((category, index) => (
               <div key={category.id} className="flex w-[76px] shrink-0 flex-col overflow-hidden" style={card}>
@@ -239,15 +245,53 @@ function SectionPreview({
       );
     }
 
+    case "category_collection": {
+      const items = section.items.flatMap((item) => {
+        const category = categories.find((candidate) => candidate.id === item.categoryId);
+        return category ? [{ item, category }] : [];
+      });
+      return (
+        <div>
+          {title(section.title, section.description)}
+          <div className="grid gap-x-2 gap-y-2.5 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
+            {items.map(({ item, category }) => {
+              const imageUrl = item.imageUrl ?? category.imageUrl;
+              return (
+                <div key={item.id} className="flex flex-col items-center gap-1">
+                  <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden" style={{ ...card, backgroundColor: dark ? palette.surface : "#E9F4FB" }}>
+                    {imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- admin-entered URLs from any host
+                      <img src={imageUrl} alt="" className={item.imageUrl ? "size-full object-cover" : "size-4/5 object-contain"} />
+                    ) : (
+                      <span className="text-base font-bold" style={{ color: colors.primary }}>{category.name.charAt(0)}</span>
+                    )}
+                    {item.badge && (
+                      <span className="absolute top-0 left-0 rounded-br px-1 text-[7px] leading-3 font-extrabold" style={{ backgroundColor: colors.primary, color: colors.onPrimary }}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: palette.text }}>{item.label ?? category.name}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     case "subcategory_grid": {
       const parent = categories.find((category) => category.id === section.categoryId);
       const children = categories.filter((category) => category.parentId === section.categoryId).slice(0, section.limit);
       if (!parent) return null;
       return (
         <div>
-          <div className="flex items-center justify-between px-3 pb-2">
-            <p className="text-[13px] font-bold" style={{ color: palette.text }}>{section.title ?? parent.name}</p>
-            <span className="text-[10px] font-bold" style={{ color: colors.primary }}>See all ›</span>
+          <div className="flex items-start justify-between gap-2 px-3 pb-2">
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold" style={{ color: palette.text }}>{section.title ?? parent.name}</p>
+              {section.description && <p className="text-[10px] leading-tight" style={{ color: palette.muted }}>{section.description}</p>}
+            </div>
+            <span className="shrink-0 text-[10px] font-bold" style={{ color: colors.primary }}>See all ›</span>
           </div>
           {children.length === 0 ? (
             <p className="px-3 text-[10px]" style={{ color: palette.muted }}>No sub-categories yet; hidden in the app.</p>
@@ -291,7 +335,7 @@ function SectionPreview({
         );
         return (
           <div>
-            {title(section.title)}
+            {title(section.title, section.description)}
             <div className="flex items-center justify-center gap-2 overflow-hidden">
               {slide(section.tiles[section.tiles.length - 1], true)}
               {slide(first, false)}
@@ -307,7 +351,7 @@ function SectionPreview({
       }
       return (
         <div>
-          {title(section.title)}
+          {title(section.title, section.description)}
           <div className="grid gap-2 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
             {section.tiles.map((tile) => (
               <div key={tile.id} className="aspect-square overflow-hidden" style={{ borderRadius: radius, backgroundColor: palette.placeholder }}>

@@ -9,8 +9,9 @@ import type { AdminAppearance, Brand, Category, Paginated } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Appearance" };
 
-export default async function AppearancePage() {
+export default async function AppearancePage({ searchParams }: PageProps<"/appearance">) {
   await requireAdmin();
+  const { tab, section } = await searchParams;
   const [appearance, categories, brands, deployment] = await Promise.all([
     apiFetch<AdminAppearance>("/settings/appearance"),
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
@@ -29,7 +30,12 @@ export default async function AppearancePage() {
         }
       />
       <div className="p-4 md:p-6">
-        <AppearanceEditor key={appearance.updatedAt ?? "defaults"} initial={appearance} categories={categories.items} brands={brands.items} />
+        <AppearanceEditor key={appearance.updatedAt ?? "defaults"} initial={appearance}
+          categories={categories.items}
+          brands={brands.items}
+          initialTab={tab === "home" ? "home" : "brand"}
+          initialExpanded={typeof section === "string" ? section : null}
+        />
       </div>
     </>
   );

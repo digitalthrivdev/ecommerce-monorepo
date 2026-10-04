@@ -444,8 +444,8 @@ export type HomeBanner = { id: string; imageUrl: string; title: string | null; s
 
 export type HomeSection =
   | { id: string; enabled: boolean; type: "banner_carousel"; banners: HomeBanner[]; autoplay: boolean }
-  | { id: string; enabled: boolean; type: "category_grid"; title: string | null; columns: 3 | 4; categoryIds: string[] }
-  | { id: string; enabled: boolean; type: "product_rail"; title: string; categoryId: string; limit: number }
+  | { id: string; enabled: boolean; type: "category_grid"; title: string | null; description: string | null; columns: 3 | 4; categoryIds: string[] }
+  | { id: string; enabled: boolean; type: "product_rail"; title: string; description: string | null; categoryId: string; limit: number }
   | {
       id: string;
       enabled: boolean;
@@ -457,12 +457,16 @@ export type HomeSection =
       textColor: string;
       link: AppearanceLink;
     }
-  | { id: string; enabled: boolean; type: "deals_rail"; title: string; categoryId: string | null; limit: number }
-  | { id: string; enabled: boolean; type: "buy_again"; title: string }
-  | { id: string; enabled: boolean; type: "brand_rail"; title: string; brandIds: string[] }
-  | { id: string; enabled: boolean; type: "category_deals"; title: string; categoryIds: string[] }
-  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] }
-  | { id: string; enabled: boolean; type: "subcategory_grid"; title: string | null; categoryId: string; columns: 3 | 4; limit: number };
+  | { id: string; enabled: boolean; type: "deals_rail"; title: string; description: string | null; categoryId: string | null; limit: number }
+  | { id: string; enabled: boolean; type: "buy_again"; title: string; description: string | null }
+  | { id: string; enabled: boolean; type: "brand_rail"; title: string; description: string | null; brandIds: string[] }
+  | { id: string; enabled: boolean; type: "category_deals"; title: string; description: string | null; categoryIds: string[] }
+  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; description: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] }
+  | { id: string; enabled: boolean; type: "subcategory_grid"; title: string | null; description: string | null; categoryId: string; columns: 3 | 4; limit: number }
+  | { id: string; enabled: boolean; type: "category_collection"; title: string | null; description: string | null; columns: 2 | 3 | 4 | 5; items: CollectionItem[] };
+
+/** Null `imageUrl` and `label` use the category's own. */
+export type CollectionItem = { id: string; categoryId: string; imageUrl: string | null; label: string | null; badge: string | null };
 
 export type HomeTile = { id: string; imageUrl: string; link: AppearanceLink; buttonLabel: string | null };
 

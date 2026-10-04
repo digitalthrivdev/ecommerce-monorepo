@@ -14,6 +14,7 @@ import {
   Plus,
   RotateCcw,
   Rows3,
+  Shapes,
   Tags,
   Trash2,
   type LucideIcon,
@@ -30,8 +31,8 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { newId, newSection, newTile, SECTION_LABELS } from "@/lib/appearance";
-import type { Appearance, AppearanceLink, Brand, Category, HomeBanner, HomeSection, HomeSectionType, HomeTile } from "@/lib/types";
+import { newCollectionItem, newId, newSection, newTile, SECTION_LABELS } from "@/lib/appearance";
+import type { Appearance, AppearanceLink, Brand, Category, CollectionItem, HomeBanner, HomeSection, HomeSectionType, HomeTile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
@@ -45,11 +46,13 @@ const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
   category_deals: Tags,
   image_tiles: Grid2x2,
   subcategory_grid: LayoutDashboard,
+  category_collection: Shapes,
 };
 
 const MAX_SECTIONS = 20;
 const MAX_BANNERS = 10;
 const MAX_TILES = 9;
+const MAX_COLLECTION_ITEMS = 24;
 const ALL_CATEGORIES = "all";
 
 type Errors = Record<string, string>;
@@ -79,6 +82,19 @@ function TextInput({
       {description && <FieldDescription>{description}</FieldDescription>}
       <FieldError>{error}</FieldError>
     </Field>
+  );
+}
+
+function DescriptionInput({ value, onChange, error }: { value: string | null; onChange: (description: string | null) => void; error?: string }) {
+  return (
+    <TextInput
+      label="Description (optional)"
+      maxLength={100}
+      placeholder="A short line under the title"
+      value={value ?? ""}
+      onChange={(description) => onChange(description || null)}
+      error={error}
+    />
   );
 }
 
@@ -264,6 +280,69 @@ function TileFields({
   );
 }
 
+function CollectionItemFields({
+  item,
+  index,
+  count,
+  onChange,
+  onMove,
+  onRemove,
+  categories,
+  errors,
+  prefix,
+}: {
+  item: CollectionItem;
+  index: number;
+  count: number;
+  onChange: (item: CollectionItem) => void;
+  onMove: (to: number) => void;
+  onRemove: () => void;
+  categories: Category[];
+  errors: Errors;
+  prefix: string;
+}) {
+  const at = (field: string) => errors[`${prefix}.${field}`];
+  const category = categories.find((candidate) => candidate.id === item.categoryId);
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border p-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium">Category {index + 1}</span>
+        <div className="ml-auto flex gap-1">
+          <Button type="button" variant="ghost" size="icon-sm" disabled={index === 0} onClick={() => onMove(index - 1)} aria-label="Move category up">
+            <ArrowUp />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" disabled={index === count - 1} onClick={() => onMove(index + 1)} aria-label="Move category down">
+            <ArrowDown />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" disabled={count === 1} onClick={onRemove} aria-label="Remove category">
+            <Trash2 />
+          </Button>
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[2fr_1.5fr_1fr]">
+        <CategorySelect label="Opens" value={item.categoryId} onChange={(categoryId) => onChange({ ...item, categoryId })} categories={categories} error={at("categoryId")} />
+        <TextInput
+          label="Name (optional)"
+          maxLength={24}
+          placeholder={category?.name ?? "Category name"}
+          value={item.label ?? ""}
+          onChange={(label) => onChange({ ...item, label: label || null })}
+          error={at("label")}
+        />
+        <TextInput label="Badge (optional)" maxLength={16} placeholder="Up to 40% OFF" value={item.badge ?? ""} onChange={(badge) => onChange({ ...item, badge: badge || null })} error={at("badge")} />
+      </div>
+      <ImageField
+        id={`collection-image-${item.id}`}
+        label="Photo (optional)"
+        value={item.imageUrl ?? ""}
+        onChange={(imageUrl) => onChange({ ...item, imageUrl: imageUrl.trim() || null })}
+        error={at("imageUrl")}
+        description={category?.imageUrl ? "Leave empty to use the category's image. Square works best." : "Square works best. Without one, the category's first letter is shown."}
+      />
+    </div>
+  );
+}
+
 function firstNestedError(errors: Errors, prefix: string) {
   return Object.entries(errors).find(([key]) => key.startsWith(`${prefix}.`))?.[1];
 }
@@ -340,6 +419,10 @@ function SectionFields({
   prefix: string;
 }) {
   const at = (field: string) => errors[`${prefix}.${field}`];
+  const description =
+    "description" in section ? (
+      <DescriptionInput value={section.description} onChange={(next) => onChange({ ...section, description: next })} error={at("description")} />
+    ) : null;
 
   switch (section.type) {
     case "banner_carousel":
@@ -396,6 +479,7 @@ function SectionFields({
               </Select>
             </Field>
           </div>
+          {description}
           <OrderedPicker
             id={`${section.id}-all`}
             allLabel="Show every active category"
@@ -416,6 +500,7 @@ function SectionFields({
             <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
             <CategorySelect label="Products from" value={section.categoryId} onChange={(categoryId) => onChange({ ...section, categoryId })} categories={categories} error={at("categoryId")} />
           </div>
+          {description}
           <TextInput
             label="How many products"
             type="number"
@@ -486,6 +571,7 @@ function SectionFields({
               <FieldError>{at("categoryId")}</FieldError>
             </Field>
           </div>
+          {description}
           <TextInput
             label="How many products"
             type="number"
@@ -511,6 +597,7 @@ function SectionFields({
             error={at("title")}
             description="Each signed-in customer sees products from their past orders that are in stock. Hidden for new customers."
           />
+          {description}
         </FieldGroup>
       );
 
@@ -518,6 +605,7 @@ function SectionFields({
       return (
         <FieldGroup>
           <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+          {description}
           <OrderedPicker
             id={`${section.id}-all`}
             allLabel="Show the brands with the most products in stock"
@@ -536,6 +624,7 @@ function SectionFields({
       return (
         <FieldGroup>
           <TextInput label="Title" maxLength={40} value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+          {description}
           <OrderedPicker
             id={`${section.id}-all`}
             allLabel="Use every main category"
@@ -581,6 +670,7 @@ function SectionFields({
               </Field>
             )}
           </div>
+          {description}
           {section.layout === "carousel" && (
             <FieldDescription>One large tile in the middle with the next and previous ones peeking in at the sides. Each tile can show a button.</FieldDescription>
           )}
@@ -614,6 +704,57 @@ function SectionFields({
         </FieldGroup>
       );
 
+    case "category_collection":
+      return (
+        <FieldGroup>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <TextInput label="Title (optional)" maxLength={40} value={section.title ?? ""} onChange={(title) => onChange({ ...section, title: title || null })} error={at("title")} />
+            <Field>
+              <FieldLabel>Tiles per row</FieldLabel>
+              <Select value={String(section.columns)} onValueChange={(columns) => onChange({ ...section, columns: Number(columns) as 2 | 3 | 4 | 5 })}>
+                <SelectTrigger className="w-full sm:w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[2, 3, 4, 5].map((columns) => (
+                    <SelectItem key={columns} value={String(columns)}>
+                      {columns}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+          {description}
+          {section.items.map((item, index) => (
+            <CollectionItemFields
+              key={item.id}
+              item={item}
+              index={index}
+              count={section.items.length}
+              categories={categories}
+              errors={errors}
+              prefix={`${prefix}.items.${index}`}
+              onChange={(next) => onChange({ ...section, items: section.items.map((current, position) => (position === index ? next : current)) })}
+              onMove={(to) => onChange({ ...section, items: move(section.items, index, to) })}
+              onRemove={() => onChange({ ...section, items: section.items.filter((_, position) => position !== index) })}
+            />
+          ))}
+          {at("items") && <FieldError>{at("items")}</FieldError>}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start"
+            disabled={section.items.length >= MAX_COLLECTION_ITEMS}
+            onClick={() => onChange({ ...section, items: [...section.items, newCollectionItem()] })}
+          >
+            <Plus />
+            Add category
+          </Button>
+        </FieldGroup>
+      );
+
     case "subcategory_grid": {
       const parents = categories.filter((category) => !category.parentId);
       const parent = categories.find((category) => category.id === section.categoryId);
@@ -636,6 +777,7 @@ function SectionFields({
               error={at("title")}
             />
           </div>
+          {description}
           {parent && parent.childCount === 0 && (
             <FieldDescription>{parent.name} has no sub-categories yet, so this section stays hidden in the app.</FieldDescription>
           )}
@@ -693,6 +835,8 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
       return `${section.title ?? `${section.tiles.length} tiles`} · ${section.layout === "carousel" ? "Carousel" : "Grid"}`;
     case "subcategory_grid":
       return section.title ?? categoryName(section.categoryId);
+    case "category_collection":
+      return `${section.title ?? count(section.items.map((item) => item.id), ["category", "categories"], "")} · ${section.columns} per row`;
   }
 }
 
@@ -718,7 +862,7 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
 
   return (
     <div className="flex flex-col gap-3">
-      <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} />
+      <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} expanded={expanded} onExpand={onExpand} />
       <p className="mt-2 text-sm font-medium">Sections</p>
       {sections.length === 0 && (
         <Card>

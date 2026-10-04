@@ -1,4 +1,4 @@
-import type { AppearanceTheme, Category, HomeSection, HomeSectionType, HomeTile } from "./types";
+import type { AppearanceTheme, Category, CollectionItem, HomeSection, HomeSectionType, HomeTile } from "./types";
 
 type Colors = AppearanceTheme["colors"];
 
@@ -21,6 +21,7 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   category_deals: { name: "Category deals", description: "Category tiles showing \"Up to X% OFF\"" },
   image_tiles: { name: "Image tiles", description: "Images in a grid, or a carousel with buttons" },
   subcategory_grid: { name: "Sub-category grid", description: "The sub-categories of one category, e.g. Hair, Skin & Face" },
+  category_collection: { name: "Category collection", description: "Any categories you pick, with your own photos and badges" },
 };
 
 export const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
@@ -65,9 +66,9 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
     case "banner_carousel":
       return { id, type, enabled: true, autoplay: true, banners: [{ id: newId(), imageUrl: "", title: null, subtitle: null, link: { type: "none" } }] };
     case "category_grid":
-      return { id, type, enabled: true, title: "Shop by category", columns: 4, categoryIds: [] };
+      return { id, type, enabled: true, title: "Shop by category", description: null, columns: 4, categoryIds: [] };
     case "product_rail":
-      return { id, type, enabled: true, title: "Bestsellers", categoryId: firstCategory, limit: 10 };
+      return { id, type, enabled: true, title: "Bestsellers", description: null, categoryId: firstCategory, limit: 10 };
     case "offer_strip":
       return {
         id,
@@ -81,29 +82,36 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
         link: { type: "none" },
       };
     case "deals_rail":
-      return { id, type, enabled: true, title: "Top deals", categoryId: null, limit: 10 };
+      return { id, type, enabled: true, title: "Top deals", description: null, categoryId: null, limit: 10 };
     case "buy_again":
-      return { id, type, enabled: true, title: "Buy again" };
+      return { id, type, enabled: true, title: "Buy again", description: null };
     case "brand_rail":
-      return { id, type, enabled: true, title: "Top brands", brandIds: [] };
+      return { id, type, enabled: true, title: "Top brands", description: null, brandIds: [] };
     case "category_deals":
-      return { id, type, enabled: true, title: "Mega price drops", categoryIds: [] };
+      return { id, type, enabled: true, title: "Mega price drops", description: null, categoryIds: [] };
     case "image_tiles":
       return {
         id,
         type,
         enabled: true,
         title: null,
+        description: null,
         layout: "grid",
         columns: 2,
         tiles: [newTile(), newTile()],
       };
     case "subcategory_grid": {
       const parent = categories.find((category) => category.isActive && category.childCount > 0) ?? categories.find((category) => category.isActive);
-      return { id, type, enabled: true, title: null, categoryId: parent?.id ?? "", columns: 4, limit: 8 };
+      return { id, type, enabled: true, title: null, description: null, categoryId: parent?.id ?? "", columns: 4, limit: 8 };
+    }
+    case "category_collection": {
+      const picked = categories.filter((category) => category.isActive).slice(0, 4);
+      return { id, type, enabled: true, title: "Shop by collection", description: null, columns: 4, items: picked.map((category) => newCollectionItem(category.id)) };
     }
   }
 }
+
+export const newCollectionItem = (categoryId = ""): CollectionItem => ({ id: newId(), categoryId, imageUrl: null, label: null, badge: null });
 
 export const newTile = (): HomeTile => ({ id: newId(), imageUrl: "", link: { type: "none" }, buttonLabel: null });
 
@@ -115,6 +123,7 @@ const FIELD_NAMES: Record<string, string> = {
   categoryIds: "Categories",
   brandIds: "Brands",
   buttonLabel: "Button text",
+  description: "Description",
   url: "Icon image URL",
   backgroundColor: "Background colour",
   textColor: "Text colour",
@@ -134,6 +143,7 @@ export function describeErrorPath(path: string) {
     else if (part === "announcement") labels.push("Announcement");
     else if (part === "banners") labels.push(`Banner ${Number(next) + 1}`);
     else if (part === "tiles") labels.push(`Tile ${Number(next) + 1}`);
+    else if (part === "items") labels.push(next === undefined ? "Categories" : `Category ${Number(next) + 1}`);
     else if (/^\d+$/.test(part)) {
       if (parts[index - 1] === "homeSections") labels.push(`Section ${Number(part) + 1}`);
     } else labels.push(FIELD_NAMES[part] ?? part.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));

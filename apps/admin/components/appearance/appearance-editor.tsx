@@ -20,13 +20,40 @@ function toConfig({ appName, logoUrl, theme, announcement, categoryTabs, homeSec
 
 const isHomePath = (path: string) => path.startsWith("homeSections") || path.startsWith("categoryTabs");
 
-type AppearanceEditorProps = { initial: AdminAppearance; categories: Category[]; brands: Brand[] };
+type EditorTab = "brand" | "home";
 
-export function AppearanceEditor({ initial, categories, brands }: AppearanceEditorProps) {
+type AppearanceEditorProps = {
+  initial: AdminAppearance;
+  categories: Category[];
+  brands: Brand[];
+  initialTab: EditorTab;
+  initialExpanded: string | null;
+};
+
+/** Keeps the open tab and section in the URL, so they survive the reload after saving. */
+function syncUrl(tab: EditorTab, section: string | null) {
+  const params = new URLSearchParams();
+  if (tab === "home") params.set("tab", "home");
+  if (tab === "home" && section) params.set("section", section);
+  const query = params.toString();
+  window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+}
+
+export function AppearanceEditor({ initial, categories, brands, initialTab, initialExpanded }: AppearanceEditorProps) {
   const [saved] = useState(() => toConfig(initial));
   const [draft, setDraft] = useState(saved);
-  const [tab, setTab] = useState("brand");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [tab, setTabState] = useState<EditorTab>(initialTab);
+  const [expanded, setExpandedState] = useState<string | null>(initialExpanded);
+
+  const setTab = (next: string) => {
+    const value: EditorTab = next === "home" ? "home" : "brand";
+    setTabState(value);
+    syncUrl(value, expanded);
+  };
+  const setExpanded = (next: string | null) => {
+    setExpandedState(next);
+    syncUrl(tab, next);
+  };
   const [previewDark, setPreviewDark] = useState(initial.theme.colorScheme === "dark");
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(saveAppearance);
 
