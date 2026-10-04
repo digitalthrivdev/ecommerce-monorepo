@@ -3,7 +3,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient, type Infi
 import { apiFetch } from "./api";
 import { detailPlaceholder } from "./catalog";
 import { buyAgainKey } from "./orders";
-import type { Category, HomeFeed, Paginated, StoreBrand, StoreProduct, StoreProductDetail } from "./types";
+import type { Category, HomeFeed, HomeTabPage, Paginated, StoreBrand, StoreProduct, StoreProductDetail } from "./types";
 
 const PRODUCTS_PAGE_SIZE = 30;
 
@@ -23,6 +23,16 @@ export function useHomeFeed(storeId: string | undefined, { enabled = true }: { e
     queryFn: () => apiFetch<HomeFeed>("/home", { query: { storeId } }),
     staleTime: 5 * 60_000,
     enabled,
+  });
+}
+
+/** A category tab's own page; fetched the first time it is opened, then cached like the home feed. */
+export function useHomeTabPage(storeId: string | undefined, tabId: string | null, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: ["home", storeId ?? null, "tab", tabId],
+    queryFn: () => apiFetch<HomeTabPage>("/home", { query: { storeId, tabId: tabId! } }),
+    staleTime: 5 * 60_000,
+    enabled: tabId !== null && enabled,
   });
 }
 
@@ -59,8 +69,9 @@ function cachedProduct(queryClient: QueryClient, storeId: string, productId: str
   ];
   const listed = lists.flatMap(([, data]) => data?.items ?? []).find((product) => product.productId === productId);
   if (listed) return listed;
-  const feed = queryClient.getQueryData<HomeFeed>(["home", storeId]);
-  return feed?.sections
+  return queryClient
+    .getQueriesData<HomeFeed | HomeTabPage>({ queryKey: ["home", storeId] })
+    .flatMap(([, data]) => data?.sections ?? [])
     .flatMap((section) => (section.type === "product_rail" || section.type === "deals_rail" ? section.products : []))
     .find((product) => product.productId === productId);
 }

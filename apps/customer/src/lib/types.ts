@@ -327,13 +327,21 @@ export type CategoryCollectionSection = {
   items: { id: string; label: string; imageUrl: string | null; badge: string | null; category: Category }[];
 };
 
-/** A null icon means the category has no image; show its first letter. */
+/** Recolours the whole home header while a tab's page is open. Null `gradientColor` is a solid colour. */
+export type TabHeader = { color: string; gradientColor: string | null; textColor: string; imageUrl: string | null };
+
+/**
+ * A null icon means the category has no image; show its first letter. Tabs that `opens` "page" show their
+ * page (`GET /home?tabId=`) inside the home screen under `header`; others open the category screen.
+ */
 export type CategoryTab = {
   id: string;
   label: string;
   icon: { type: "preset"; name: string } | { type: "image"; url: string } | null;
   badge: string | null;
   category: Category;
+  opens?: "category" | "page";
+  header?: TabHeader | null;
 };
 
 /** A coloured band behind a section. `textColor` is for the title and labels on the band; cards keep their colours. */
@@ -355,3 +363,6 @@ export type HomeSection = (
 
 /** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
 export type HomeFeed = { storeId: string | null; categoryTabs?: CategoryTab[]; sections: HomeSection[] };
+
+/** `GET /home?tabId=`: the sections of a tab's own page. */
+export type HomeTabPage = { storeId: string | null; tabId: string; sections: HomeSection[] };

@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { Image } from "expo-image";
+import { router, useFocusEffect } from "expo-router";
 import { ChevronDown, Clock, LocateFixed, MapPinOff, Search, UserRound } from "lucide-react-native";
-import { useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ActiveOrderBar } from "@/components/active-order-bar";
@@ -12,7 +12,8 @@ import { CartBar } from "@/components/cart-bar";
 import { BrandMark } from "@/components/brand-mark";
 import { CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
-import { CategoryTabs } from "@/components/home/category-tabs";
+import { CategoryTabs, opensPage } from "@/components/home/category-tabs";
+import { HeaderFade, HeaderLookProvider, HeaderRegion } from "@/components/home/header-backdrop";
 import { HomeSections } from "@/components/home/home-sections";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,10 @@ import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { useDeliveryLocation, useLocateMe } from "@/lib/delivery-location";
-import { useHomeFeed } from "@/lib/queries";
+import { useHomeFeed, useHomeTabPage } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 import { closedText } from "@/lib/store-hours";
-import type { Store } from "@/lib/types";
+import type { CategoryTab, Store, TabHeader } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const openLocationPicker = () => router.push("/location");
@@ -34,7 +35,7 @@ function HomeHeader() {
   const { location } = useDeliveryLocation();
 
   return (
-    <View className="flex-row items-start justify-between gap-3 bg-highlight px-4 pb-3 pt-2">
+    <View className="flex-row items-start justify-between gap-3 px-4 pb-3 pt-2">
       <Pressable onPress={openLocationPicker} className="flex-1 gap-0.5 active:opacity-80" accessibilityLabel="Change delivery location">
         <BrandMark textClassName="text-highlight-foreground text-sm" />
         <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
@@ -60,17 +61,13 @@ function HomeHeader() {
 }
 
 /** Sticks to the top with the category tabs under it. */
-function SearchBar() {
-  const { store } = useDeliveryLocation();
-  const feed = useHomeFeed(store?.id, { enabled: false });
-  const tabs = feed.data?.categoryTabs ?? [];
-
+function SearchBar({ tabs, selectedId, onSelect }: { tabs: CategoryTab[]; selectedId: string | null; onSelect: (tab: CategoryTab | null) => void }) {
   return (
-    <View className={cn("bg-highlight", tabs.length === 0 && "pb-3")}>
+    <View className={cn(tabs.length === 0 && "pb-3")}>
       <View className="px-4">
         <SearchField />
       </View>
-      <CategoryTabs tabs={tabs} />
+      <CategoryTabs tabs={tabs} selectedId={selectedId} onSelect={onSelect} />
     </View>
   );
 }
@@ -158,10 +155,14 @@ function StoreClosed({ store }: { store: Store }) {
   );
 }
 
-function HomeContent() {
+/** The "All" home sections, or the sections of the tab whose page is open. */
+function HomeContent({ tab }: { tab: CategoryTab | null }) {
   const { location, ready, serviceability, store } = useDeliveryLocation();
   const checkingStore = location !== null && serviceability.isPending;
-  const feed = useHomeFeed(store?.id, { enabled: ready && !checkingStore && (location === null || store !== null) });
+  const canLoad = ready && !checkingStore && (location === null || store !== null);
+  const home = useHomeFeed(store?.id, { enabled: canLoad });
+  const tabPage = useHomeTabPage(store?.id, tab?.id ?? null, { enabled: canLoad });
+  const feed = tab ? tabPage : home;
 
   if (!ready || checkingStore) return <HomeSkeleton />;
 
@@ -186,10 +187,53 @@ function HomeContent() {
 }
 
 export default function HomeScreen() {
-  const { colors, neutral } = useAppTheme();
+  const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { location, store } = useDeliveryLocation();
+  const { announcement } = useSettings();
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [searchHeight, setSearchHeight] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
+
+  const feed = useHomeFeed(store?.id, { enabled: false });
+  const tabs = useMemo(() => feed.data?.categoryTabs ?? [], [feed.data]);
+  const selectedTab = tabs.find((tab) => tab.id === selectedId && opensPage(tab)) ?? null;
+  const look: TabHeader = selectedTab?.header ?? { color: colors.accent, gradientColor: null, textColor: colors.onAccent, imageUrl: null };
+
+  const tabPage = useHomeTabPage(store?.id, selectedTab?.id ?? null, { enabled: false });
+  const sections = selectedTab ? tabPage.data?.sections : feed.data?.sections;
+  const showAnnouncement = !selectedTab && announcement.enabled && Boolean(announcement.text);
+  // A band on the first section continues straight from the header, unless a notice sits between them.
+  const topBand = !showAnnouncement && location !== null && store?.isOpen === true ? (sections?.[0]?.background ?? null) : null;
+
+  useEffect(() => {
+    const urls = tabs.flatMap((tab) => (opensPage(tab) && tab.header?.imageUrl ? [tab.header.imageUrl] : []));
+    if (urls.length > 0) void Image.prefetch(urls);
+  }, [tabs]);
+
+  const selectTab = useCallback(
+    (tab: CategoryTab | null) => {
+      setSelectedId(tab?.id ?? null);
+      // The new page starts under the stuck search bar instead of wherever the old one was scrolled to.
+      if (scrollY.current > headerHeight) scrollRef.current?.scrollTo({ y: headerHeight, animated: false });
+    },
+    [headerHeight],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedTab) return;
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        selectTab(null);
+        return true;
+      });
+      return () => subscription.remove();
+    }, [selectedTab, selectTab]),
+  );
 
   async function refresh() {
     setRefreshing(true);
@@ -198,25 +242,36 @@ export default function HomeScreen() {
   }
 
   return (
-    <View className="flex-1 bg-highlight" style={{ paddingTop: insets.top }}>
-      <FocusStatusBar onHighlight />
-      <ScrollView
-        className="bg-background"
-        stickyHeaderIndices={[1]}
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-8"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.onAccent} />}
-      >
-        <HomeHeader />
-        <SearchBar />
-        <LinearGradient colors={[colors.accent, neutral.background]} style={{ height: 16 }} />
-        <AnnouncementBar />
-        <View className="pt-5">
-          <HomeContent />
-        </View>
-      </ScrollView>
-      <ActiveOrderBar />
-      <CartBar inset={false} />
-    </View>
+    <HeaderLookProvider look={look} height={insets.top + headerHeight + searchHeight}>
+      <View className="flex-1 bg-background">
+        <FocusStatusBar contentColor={look.textColor} />
+        <HeaderRegion offset={0} style={{ height: insets.top }} />
+        <ScrollView
+          ref={scrollRef}
+          stickyHeaderIndices={[1]}
+          showsVerticalScrollIndicator={false}
+          contentContainerClassName="pb-8"
+          onScroll={(event) => {
+            scrollY.current = event.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={32}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={look.textColor} />}
+        >
+          <HeaderRegion offset={insets.top} onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}>
+            <HomeHeader />
+          </HeaderRegion>
+          <HeaderRegion offset={insets.top + headerHeight} onLayout={(event) => setSearchHeight(event.nativeEvent.layout.height)}>
+            <SearchBar tabs={tabs} selectedId={selectedTab?.id ?? null} onSelect={selectTab} />
+          </HeaderRegion>
+          <HeaderFade to={topBand?.color} />
+          {showAnnouncement && <AnnouncementBar />}
+          <View className={cn(!topBand && "pt-5")}>
+            <HomeContent tab={selectedTab} />
+          </View>
+        </ScrollView>
+        <ActiveOrderBar />
+        <CartBar inset={false} />
+      </View>
+    </HeaderLookProvider>
   );
 }

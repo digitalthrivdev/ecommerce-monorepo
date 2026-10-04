@@ -48,17 +48,33 @@ function TabIcon({ tab }: { tab: CategoryTab }) {
   return <Text className="text-lg font-extrabold leading-tight text-highlight-foreground">{tab.category.name.charAt(0)}</Text>;
 }
 
-/** Category shortcuts under the search bar; "All" is the home screen itself. */
-export function CategoryTabs({ tabs }: { tabs: CategoryTab[] }) {
+/** Whether the tab shows its own page in the home screen rather than opening the category screen. */
+export const opensPage = (tab: CategoryTab) => tab.opens === "page" && Boolean(tab.header);
+
+type CategoryTabsProps = {
+  tabs: CategoryTab[];
+  /** The tab whose page is shown; null for "All". */
+  selectedId: string | null;
+  onSelect: (tab: CategoryTab | null) => void;
+};
+
+/** Category shortcuts under the search bar. "All" is the home screen itself; other tabs show their page or open their category. */
+export function CategoryTabs({ tabs, selectedId, onSelect }: CategoryTabsProps) {
   if (tabs.length === 0) return null;
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="px-2" accessibilityRole="tablist">
-      <TabButton label="All" selected>
+      <TabButton label="All" selected={selectedId === null} onPress={() => onSelect(null)}>
         <Icon as={ShoppingBasket} size={ICON_SIZE} className="text-highlight-foreground" />
       </TabButton>
       {tabs.map((tab) => (
-        <TabButton key={tab.id} label={tab.label} badge={tab.badge} onPress={() => openCategory(tab.category)}>
+        <TabButton
+          key={tab.id}
+          label={tab.label}
+          badge={tab.badge}
+          selected={tab.id === selectedId}
+          onPress={() => (opensPage(tab) ? onSelect(tab) : openCategory(tab.category))}
+        >
           <TabIcon tab={tab} />
         </TabButton>
       ))}
