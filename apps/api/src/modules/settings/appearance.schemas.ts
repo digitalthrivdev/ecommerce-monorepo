@@ -188,6 +188,9 @@ export const categoryTabsSchema = z
 
 const sectionBase = { id: itemId, enabled: z.boolean() };
 
+/** A line under a section's title, e.g. "Fresh picks for your week". */
+const sectionDescription = optionalLabel(100);
+
 export const homeSectionSchema = z.discriminatedUnion("type", [
   z.object({
     ...sectionBase,
@@ -199,6 +202,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     ...sectionBase,
     type: z.literal("category_grid"),
     title: optionalLabel(40),
+    description: sectionDescription,
     columns: z.union([z.literal(3), z.literal(4)]),
     /** Empty shows every active category in catalog order. */
     categoryIds: z.array(categoryId).max(24, "Choose at most 24 categories"),
@@ -207,6 +211,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     ...sectionBase,
     type: z.literal("product_rail"),
     title: label(40, "a title"),
+    description: sectionDescription,
     categoryId,
     limit: z.int().min(4, "Show at least 4 products").max(20, "Show at most 20 products"),
   }),
@@ -225,6 +230,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     /** In-stock products with the biggest discount off MRP. */
     type: z.literal("deals_rail"),
     title: label(40, "a title"),
+    description: sectionDescription,
     /** Null takes deals from every category. */
     categoryId: categoryId.nullable(),
     limit: z.int().min(4, "Show at least 4 products").max(20, "Show at most 20 products"),
@@ -234,11 +240,13 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     /** What the signed-in customer has ordered before; the app loads it for each customer. */
     type: z.literal("buy_again"),
     title: label(40, "a title"),
+    description: sectionDescription,
   }),
   z.object({
     ...sectionBase,
     type: z.literal("brand_rail"),
     title: label(40, "a title"),
+    description: sectionDescription,
     /** Empty shows the brands with the most products in stock at the customer's store. */
     brandIds: z.array(brandId).max(20, "Choose at most 20 brands"),
   }),
@@ -247,6 +255,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     /** Category tiles showing their biggest discount, e.g. "Up to 40% OFF". */
     type: z.literal("category_deals"),
     title: label(40, "a title"),
+    description: sectionDescription,
     /** Empty uses every top-level category. Categories without a discount at the store are left out. */
     categoryIds: z.array(categoryId).max(12, "Choose at most 12 categories"),
   }),
@@ -255,6 +264,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     /** Images each optionally opening a category: side by side, or a carousel with the neighbours peeking in. */
     type: z.literal("image_tiles"),
     title: optionalLabel(40),
+    description: sectionDescription,
     layout: z.enum(["grid", "carousel"]).default("grid"),
     /** Grid layout only. */
     columns: z.union([z.literal(2), z.literal(3)]),
@@ -266,9 +276,33 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     type: z.literal("subcategory_grid"),
     /** Null uses the category name. */
     title: optionalLabel(40),
+    description: sectionDescription,
     categoryId,
     columns: z.union([z.literal(3), z.literal(4)]),
     limit: z.int().min(3, "Show at least 3 sub-categories").max(12, "Show at most 12 sub-categories"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** Hand-picked categories, each with an optional photo, name and badge of the admin's choosing. */
+    type: z.literal("category_collection"),
+    title: optionalLabel(40),
+    description: sectionDescription,
+    columns: z.union([z.literal(2), z.literal(3), z.literal(4), z.literal(5)], "Choose 2 to 5 per row"),
+    items: z
+      .array(
+        z.object({
+          id: itemId,
+          categoryId,
+          /** Null uses the category's image. */
+          imageUrl: imageUrl.nullish().transform((value) => value ?? null),
+          /** Null uses the category name. */
+          label: optionalLabel(24),
+          /** e.g. "New" or "Up to 40% OFF". */
+          badge: optionalLabel(16),
+        }),
+      )
+      .min(1, "Add at least one category")
+      .max(24, "Use at most 24 categories"),
   }),
 ]);
 

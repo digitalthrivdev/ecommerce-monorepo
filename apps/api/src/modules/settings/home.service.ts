@@ -26,6 +26,8 @@ function referencedCategoryIds(sections: HomeSection[]) {
       case "category_grid":
       case "category_deals":
         return section.categoryIds;
+      case "category_collection":
+        return section.items.map((item) => item.categoryId);
       case "product_rail":
       case "subcategory_grid":
         return [section.categoryId];
@@ -129,7 +131,7 @@ export function createHomeService(prisma: PrismaClient) {
               ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
               : allActive;
             if (shown.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, columns: section.columns, categories: shown };
+            return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, categories: shown };
           }
 
           case "product_rail": {
@@ -137,7 +139,7 @@ export function createHomeService(prisma: PrismaClient) {
             if (!storeId || !category) return null;
             const products = await railProducts(storeId, category.id, section.limit);
             if (products.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, category, products };
+            return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
           }
 
           case "deals_rail": {
@@ -145,17 +147,17 @@ export function createHomeService(prisma: PrismaClient) {
             if (!storeId || category === undefined) return null;
             const products = await discovery.dealProducts(storeId, category?.id ?? null, section.limit);
             if (products.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, category, products };
+            return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
           }
 
           case "buy_again":
-            return storeId ? { id: section.id, type: section.type, title: section.title } : null;
+            return storeId ? { id: section.id, type: section.type, title: section.title, description: section.description } : null;
 
           case "brand_rail": {
             if (!storeId) return null;
             const brands = await railBrands(storeId, section.brandIds);
             if (brands.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, brands };
+            return { id: section.id, type: section.type, title: section.title, description: section.description, brands };
           }
 
           case "category_deals": {
@@ -172,7 +174,7 @@ export function createHomeService(prisma: PrismaClient) {
               return maxDiscountPercent > 0 ? [{ ...category, maxDiscountPercent }] : [];
             });
             if (shown.length === 0) return null;
-            return { id: section.id, type: section.type, title: section.title, categories: shown };
+            return { id: section.id, type: section.type, title: section.title, description: section.description, categories: shown };
           }
 
           case "image_tiles":
@@ -180,10 +182,21 @@ export function createHomeService(prisma: PrismaClient) {
               id: section.id,
               type: section.type,
               title: section.title,
+              description: section.description,
               layout: section.layout,
               columns: section.columns,
               tiles: section.tiles.map((tile) => ({ ...tile, link: resolveLink(tile.link) })),
             };
+
+          case "category_collection": {
+            const items = section.items.flatMap((item) => {
+              const category = categories.get(item.categoryId);
+              if (!category) return [];
+              return [{ id: item.id, label: item.label ?? category.name, imageUrl: item.imageUrl, badge: item.badge, category }];
+            });
+            if (items.length === 0) return null;
+            return { id: section.id, type: section.type, title: section.title, description: section.description, columns: section.columns, items };
+          }
 
           case "subcategory_grid": {
             const category = categories.get(section.categoryId);
@@ -199,6 +212,7 @@ export function createHomeService(prisma: PrismaClient) {
               id: section.id,
               type: section.type,
               title: section.title ?? category.name,
+              description: section.description,
               columns: section.columns,
               category,
               categories: subcategories,

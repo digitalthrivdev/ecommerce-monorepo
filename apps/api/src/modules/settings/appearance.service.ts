@@ -26,7 +26,7 @@ export function defaultAppearance(): Appearance {
     },
     announcement: { enabled: true, text: "Groceries delivered in minutes", backgroundColor: null, textColor: null },
     categoryTabs: { enabled: false, tabs: [] },
-    homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", columns: 4, categoryIds: [] }],
+    homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", description: null, columns: 4, categoryIds: [] }],
   };
 }
 
@@ -68,6 +68,8 @@ function categoryReferences(sections: HomeSection[]) {
         return section.categoryId ? [{ path: at("categoryId"), id: section.categoryId }] : [];
       case "category_deals":
         return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
+      case "category_collection":
+        return section.items.map((item, position) => ({ path: at("items", position, "categoryId"), id: item.categoryId }));
       case "image_tiles":
         return section.tiles.flatMap((tile, position) =>
           tile.link.type === "category" ? [{ path: at("tiles", position, "link", "categoryId"), id: tile.link.categoryId }] : [],
