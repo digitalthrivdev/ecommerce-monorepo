@@ -32,7 +32,19 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { newCollectionItem, newId, newSection, newTile, SECTION_LABELS } from "@/lib/appearance";
-import type { Appearance, AppearanceLink, Brand, Category, CollectionItem, HomeBanner, HomeSection, HomeSectionType, HomeTile } from "@/lib/types";
+import type {
+  Appearance,
+  AppearanceLink,
+  Brand,
+  Category,
+  CollectionItem,
+  HomeBanner,
+  HomeSection,
+  HomeSectionType,
+  HomeTile,
+  SectionBackground,
+  SectionEdge,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
@@ -812,6 +824,72 @@ function SectionFields({
   }
 }
 
+const EDGE_LABELS: Record<SectionEdge, string> = { straight: "Straight", zigzag: "Paper cut (zigzag)", wave: "Wave" };
+
+function BackgroundFields({
+  section,
+  onChange,
+  colors,
+  errors,
+  prefix,
+}: {
+  section: HomeSection;
+  onChange: (section: HomeSection) => void;
+  colors: Appearance["theme"]["colors"];
+  errors: Errors;
+  prefix: string;
+}) {
+  const background = section.background;
+  const at = (field: string) => errors[`${prefix}.background.${field}`];
+  const set = (next: SectionBackground | null) => onChange({ ...section, background: next });
+
+  return (
+    <FieldGroup className="mt-5 border-t pt-5">
+      <Field orientation="horizontal">
+        <Switch
+          id={`${section.id}-background`}
+          checked={background !== null}
+          onCheckedChange={(on) => set(on ? { color: colors.primary, textColor: colors.onPrimary, edge: "zigzag" } : null)}
+        />
+        <FieldLabel htmlFor={`${section.id}-background`}>Coloured background</FieldLabel>
+      </Field>
+      {background ? (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ColorField label="Background" value={background.color} onChange={(color) => set({ ...background, color })} error={at("color")} />
+            <ColorField
+              label="Title and labels"
+              value={background.textColor}
+              onChange={(textColor) => set({ ...background, textColor })}
+              error={at("textColor")}
+              contrastWith={{ color: background.color, label: "the background" }}
+            />
+            <Field data-invalid={Boolean(at("edge"))}>
+              <FieldLabel htmlFor={`${section.id}-edge`}>Bottom edge</FieldLabel>
+              <Select value={background.edge} onValueChange={(edge) => set({ ...background, edge: edge as SectionEdge })}>
+                <SelectTrigger id={`${section.id}-edge`} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(EDGE_LABELS) as SectionEdge[]).map((edge) => (
+                    <SelectItem key={edge} value={edge}>
+                      {EDGE_LABELS[edge]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{at("edge")}</FieldError>
+            </Field>
+          </div>
+          <FieldDescription>Product cards stay white. Give the next section the same colour to continue the band, or a different one for the edge to cut into.</FieldDescription>
+        </>
+      ) : (
+        <FieldDescription>Put this section on a band of colour, e.g. for a sale or festival zone.</FieldDescription>
+      )}
+    </FieldGroup>
+  );
+}
+
 function sectionSummary(section: HomeSection, categories: Category[]) {
   const categoryName = (id: string) => categories.find((category) => category.id === id)?.name ?? "No category";
   const count = (ids: string[], [one, many]: [string, string], all: string) => (ids.length ? `${ids.length} ${ids.length === 1 ? one : many}` : all);
@@ -925,6 +1003,13 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
                   section={section}
                   categories={categories}
                   brands={brands}
+                  errors={errors}
+                  prefix={prefix}
+                  onChange={(next) => setSections(sections.map((item) => (item.id === section.id ? next : item)))}
+                />
+                <BackgroundFields
+                  section={section}
+                  colors={value.theme.colors}
                   errors={errors}
                   prefix={prefix}
                   onChange={(next) => setSections(sections.map((item) => (item.id === section.id ? next : item)))}

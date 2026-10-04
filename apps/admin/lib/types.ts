@@ -442,13 +442,18 @@ export type Announcement = { enabled: boolean; text: string; backgroundColor: st
 
 export type HomeBanner = { id: string; imageUrl: string; title: string | null; subtitle: string | null; link: AppearanceLink };
 
+export type SectionEdge = "straight" | "zigzag" | "wave";
+
+/** A coloured band behind a section. `textColor` is for the title and labels on the band; cards keep their colours. */
+export type SectionBackground = { color: string; textColor: string; edge: SectionEdge };
+
+type SectionBase = { id: string; enabled: boolean; background: SectionBackground | null };
+
 export type HomeSection =
-  | { id: string; enabled: boolean; type: "banner_carousel"; banners: HomeBanner[]; autoplay: boolean }
-  | { id: string; enabled: boolean; type: "category_grid"; title: string | null; description: string | null; columns: 3 | 4; categoryIds: string[] }
-  | { id: string; enabled: boolean; type: "product_rail"; title: string; description: string | null; categoryId: string; limit: number }
-  | {
-      id: string;
-      enabled: boolean;
+  | (SectionBase & { type: "banner_carousel"; banners: HomeBanner[]; autoplay: boolean })
+  | (SectionBase & { type: "category_grid"; title: string | null; description: string | null; columns: 3 | 4; categoryIds: string[] })
+  | (SectionBase & { type: "product_rail"; title: string; description: string | null; categoryId: string; limit: number })
+  | (SectionBase & {
       type: "offer_strip";
       title: string;
       subtitle: string | null;
@@ -456,14 +461,14 @@ export type HomeSection =
       backgroundColor: string;
       textColor: string;
       link: AppearanceLink;
-    }
-  | { id: string; enabled: boolean; type: "deals_rail"; title: string; description: string | null; categoryId: string | null; limit: number }
-  | { id: string; enabled: boolean; type: "buy_again"; title: string; description: string | null }
-  | { id: string; enabled: boolean; type: "brand_rail"; title: string; description: string | null; brandIds: string[] }
-  | { id: string; enabled: boolean; type: "category_deals"; title: string; description: string | null; categoryIds: string[] }
-  | { id: string; enabled: boolean; type: "image_tiles"; title: string | null; description: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] }
-  | { id: string; enabled: boolean; type: "subcategory_grid"; title: string | null; description: string | null; categoryId: string; columns: 3 | 4; limit: number }
-  | { id: string; enabled: boolean; type: "category_collection"; title: string | null; description: string | null; columns: 2 | 3 | 4 | 5; items: CollectionItem[] };
+    })
+  | (SectionBase & { type: "deals_rail"; title: string; description: string | null; categoryId: string | null; limit: number })
+  | (SectionBase & { type: "buy_again"; title: string; description: string | null })
+  | (SectionBase & { type: "brand_rail"; title: string; description: string | null; brandIds: string[] })
+  | (SectionBase & { type: "category_deals"; title: string; description: string | null; categoryIds: string[] })
+  | (SectionBase & { type: "image_tiles"; title: string | null; description: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] })
+  | (SectionBase & { type: "subcategory_grid"; title: string | null; description: string | null; categoryId: string; columns: 3 | 4; limit: number })
+  | (SectionBase & { type: "category_collection"; title: string | null; description: string | null; columns: 2 | 3 | 4 | 5; items: CollectionItem[] });
 
 /** Null `imageUrl` and `label` use the category's own. */
 export type CollectionItem = { id: string; categoryId: string; imageUrl: string | null; label: string | null; badge: string | null };

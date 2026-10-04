@@ -110,11 +110,14 @@ function SectionPreview({
 }) {
   const { radius, colors } = appearance.theme;
   const card = cardStyle(appearance, palette, dark);
+  const onBand = section.background
+    ? { text: section.background.textColor, muted: `${section.background.textColor}CC` }
+    : { text: palette.text, muted: palette.muted };
   const title = (text: string | null, description: string | null) =>
     text || description ? (
       <div className="px-3 pb-2">
-        {text && <p className="text-[13px] font-bold" style={{ color: palette.text }}>{text}</p>}
-        {description && <p className="text-[10px] leading-tight" style={{ color: palette.muted }}>{description}</p>}
+        {text && <p className="text-[13px] font-bold" style={{ color: onBand.text }}>{text}</p>}
+        {description && <p className="text-[10px] leading-tight" style={{ color: onBand.muted }}>{description}</p>}
       </div>
     ) : null;
 
@@ -165,7 +168,7 @@ function SectionPreview({
                     <span className="text-base font-bold" style={{ color: colors.primary }}>{category.name.charAt(0)}</span>
                   )}
                 </div>
-                <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: palette.text }}>{category.name}</p>
+                <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: onBand.text }}>{category.name}</p>
               </div>
             ))}
           </div>
@@ -271,7 +274,7 @@ function SectionPreview({
                       </span>
                     )}
                   </div>
-                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: palette.text }}>{item.label ?? category.name}</p>
+                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: onBand.text }}>{item.label ?? category.name}</p>
                 </div>
               );
             })}
@@ -288,13 +291,13 @@ function SectionPreview({
         <div>
           <div className="flex items-start justify-between gap-2 px-3 pb-2">
             <div className="min-w-0">
-              <p className="text-[13px] font-bold" style={{ color: palette.text }}>{section.title ?? parent.name}</p>
-              {section.description && <p className="text-[10px] leading-tight" style={{ color: palette.muted }}>{section.description}</p>}
+              <p className="text-[13px] font-bold" style={{ color: onBand.text }}>{section.title ?? parent.name}</p>
+              {section.description && <p className="text-[10px] leading-tight" style={{ color: onBand.muted }}>{section.description}</p>}
             </div>
             <span className="shrink-0 text-[10px] font-bold" style={{ color: colors.primary }}>See all ›</span>
           </div>
           {children.length === 0 ? (
-            <p className="px-3 text-[10px]" style={{ color: palette.muted }}>No sub-categories yet; hidden in the app.</p>
+            <p className="px-3 text-[10px]" style={{ color: onBand.muted }}>No sub-categories yet; hidden in the app.</p>
           ) : (
             <div className="grid gap-x-2 gap-y-2.5 px-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
               {children.map((category) => (
@@ -307,7 +310,7 @@ function SectionPreview({
                       <span className="text-base font-bold" style={{ color: colors.primary }}>{category.name.charAt(0)}</span>
                     )}
                   </div>
-                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: palette.text }}>{category.name}</p>
+                  <p className="line-clamp-2 text-center text-[9px] leading-tight font-medium" style={{ color: onBand.text }}>{category.name}</p>
                 </div>
               ))}
             </div>
@@ -383,6 +386,21 @@ function SectionPreview({
   }
 }
 
+const PREVIEW_WIDTH = 280;
+const EDGE_HEIGHT = 7;
+
+/** The shape hanging below a coloured band: teeth for a paper cut, or a wave. Mirrors the customer app. */
+function edgePath(edge: "zigzag" | "wave", width: number, height: number) {
+  const tooth = edge === "zigzag" ? 10 : 24;
+  const count = Math.ceil(width / tooth);
+  let path = "M0,0";
+  for (let index = 0; index < count; index++) {
+    const x = index * tooth;
+    path += edge === "zigzag" ? ` L${x + tooth / 2},${height} L${x + tooth},0` : ` Q${x + tooth / 2},${height * 2} ${x + tooth},0`;
+  }
+  return `${path} Z`;
+}
+
 type PhonePreviewProps = { appearance: Appearance; categories: Category[]; brands: Brand[]; dark: boolean };
 
 export function PhonePreview({ appearance, categories, brands, dark }: PhonePreviewProps) {
@@ -434,11 +452,29 @@ export function PhonePreview({ appearance, categories, brands, dark }: PhonePrev
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
             {sections.length === 0 ? (
               <p className="px-6 py-10 text-center text-[11px]" style={{ color: palette.muted }}>No visible sections on the home screen.</p>
             ) : (
-              sections.map((section) => <SectionPreview key={section.id} section={section} appearance={appearance} categories={categories} brands={brands} palette={palette} dark={dark} />)
+              sections.map((section, index) => {
+                const band = section.background;
+                const joinsBand = Boolean(band && sections[index - 1]?.background);
+                const edge = band && band.edge !== "straight" ? band.edge : null;
+                return (
+                  <div
+                    key={section.id}
+                    className={cn("relative", edge && "z-10")}
+                    style={{ marginTop: index === 0 || joinsBand ? 0 : 16, backgroundColor: band?.color, paddingBlock: band ? 12 : 0 }}
+                  >
+                    <SectionPreview section={section} appearance={appearance} categories={categories} brands={brands} palette={palette} dark={dark} />
+                    {band && edge && (
+                      <svg className="absolute inset-x-0 top-full block w-full" height={EDGE_HEIGHT} viewBox={`0 0 ${PREVIEW_WIDTH} ${EDGE_HEIGHT}`} preserveAspectRatio="none" aria-hidden>
+                        <path d={edgePath(edge, PREVIEW_WIDTH, EDGE_HEIGHT)} fill={band.color} />
+                      </svg>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

@@ -64,16 +64,16 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
   const firstCategory = categories.find((category) => category.isActive)?.id ?? "";
   switch (type) {
     case "banner_carousel":
-      return { id, type, enabled: true, autoplay: true, banners: [{ id: newId(), imageUrl: "", title: null, subtitle: null, link: { type: "none" } }] };
+      return { id, type, enabled: true, background: null, autoplay: true, banners: [{ id: newId(), imageUrl: "", title: null, subtitle: null, link: { type: "none" } }] };
     case "category_grid":
-      return { id, type, enabled: true, title: "Shop by category", description: null, columns: 4, categoryIds: [] };
+      return { id, type, enabled: true, background: null, title: "Shop by category", description: null, columns: 4, categoryIds: [] };
     case "product_rail":
-      return { id, type, enabled: true, title: "Bestsellers", description: null, categoryId: firstCategory, limit: 10 };
+      return { id, type, enabled: true, background: null, title: "Bestsellers", description: null, categoryId: firstCategory, limit: 10 };
     case "offer_strip":
       return {
         id,
         type,
-        enabled: true,
+        enabled: true, background: null,
         title: "Free delivery on your first order",
         subtitle: null,
         imageUrl: null,
@@ -82,18 +82,18 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
         link: { type: "none" },
       };
     case "deals_rail":
-      return { id, type, enabled: true, title: "Top deals", description: null, categoryId: null, limit: 10 };
+      return { id, type, enabled: true, background: null, title: "Top deals", description: null, categoryId: null, limit: 10 };
     case "buy_again":
-      return { id, type, enabled: true, title: "Buy again", description: null };
+      return { id, type, enabled: true, background: null, title: "Buy again", description: null };
     case "brand_rail":
-      return { id, type, enabled: true, title: "Top brands", description: null, brandIds: [] };
+      return { id, type, enabled: true, background: null, title: "Top brands", description: null, brandIds: [] };
     case "category_deals":
-      return { id, type, enabled: true, title: "Mega price drops", description: null, categoryIds: [] };
+      return { id, type, enabled: true, background: null, title: "Mega price drops", description: null, categoryIds: [] };
     case "image_tiles":
       return {
         id,
         type,
-        enabled: true,
+        enabled: true, background: null,
         title: null,
         description: null,
         layout: "grid",
@@ -102,11 +102,11 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
       };
     case "subcategory_grid": {
       const parent = categories.find((category) => category.isActive && category.childCount > 0) ?? categories.find((category) => category.isActive);
-      return { id, type, enabled: true, title: null, description: null, categoryId: parent?.id ?? "", columns: 4, limit: 8 };
+      return { id, type, enabled: true, background: null, title: null, description: null, categoryId: parent?.id ?? "", columns: 4, limit: 8 };
     }
     case "category_collection": {
       const picked = categories.filter((category) => category.isActive).slice(0, 4);
-      return { id, type, enabled: true, title: "Shop by collection", description: null, columns: 4, items: picked.map((category) => newCollectionItem(category.id)) };
+      return { id, type, enabled: true, background: null, title: "Shop by collection", description: null, columns: 4, items: picked.map((category) => newCollectionItem(category.id)) };
     }
   }
 }
@@ -127,6 +127,8 @@ const FIELD_NAMES: Record<string, string> = {
   url: "Icon image URL",
   backgroundColor: "Background colour",
   textColor: "Text colour",
+  color: "Colour",
+  edge: "Bottom edge",
 };
 
 /** "homeSections.2.banners.0.imageUrl" → "Home screen › Section 3 › Banner 1 › Image URL". */
