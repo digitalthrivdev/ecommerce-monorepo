@@ -1,4 +1,4 @@
-import type { AppearanceTheme, Category, CollectionItem, HomeSection, HomeSectionType, HomeTile } from "./types";
+import type { Appearance, AppearanceTheme, Category, CollectionItem, HomeSection, HomeSectionType, HomeTile, TabHeader, TabPage } from "./types";
 
 type Colors = AppearanceTheme["colors"];
 
@@ -115,6 +115,24 @@ export const newCollectionItem = (categoryId = ""): CollectionItem => ({ id: new
 
 export const newTile = (): HomeTile => ({ id: newId(), imageUrl: "", link: { type: "none" }, buttonLabel: null });
 
+/** The header the "All" screen uses. */
+export const defaultTabHeader = (colors: Colors): TabHeader => ({ color: colors.accent, gradientColor: null, textColor: colors.onAccent, imageUrl: null });
+
+export const newTabPage = (colors: Colors): TabPage => ({ header: defaultTabHeader(colors), sections: [] });
+
+/** The "All" home screen, as opposed to a tab's page, in the section editor and preview. */
+export const HOME_PAGE = "all";
+
+/** Tabs that show their own page, in tab order, with their position in `categoryTabs.tabs`. */
+export function pageTabs(value: Appearance, categories: Category[]) {
+  if (!value.categoryTabs.enabled) return [];
+  return value.categoryTabs.tabs.flatMap((tab, index) =>
+    tab.opens === "page" && tab.page
+      ? [{ tab, index, page: tab.page, label: tab.label ?? categories.find((category) => category.id === tab.categoryId)?.name ?? `Tab ${index + 1}` }]
+      : [],
+  );
+}
+
 const FIELD_NAMES: Record<string, string> = {
   appName: "App name",
   logoUrl: "Logo URL",
@@ -128,10 +146,14 @@ const FIELD_NAMES: Record<string, string> = {
   backgroundColor: "Background colour",
   textColor: "Text colour",
   color: "Colour",
+  gradientColor: "Gradient colour",
   edge: "Bottom edge",
 };
 
-/** "homeSections.2.banners.0.imageUrl" → "Home screen › Section 3 › Banner 1 › Image URL". */
+/**
+ * "homeSections.2.banners.0.imageUrl" → "Home screen › Section 3 › Banner 1 › Image URL";
+ * "categoryTabs.tabs.1.page.sections.0.title" → "Category tabs › Tab 2 › Page › Section 1 › Title".
+ */
 export function describeErrorPath(path: string) {
   const parts = path.split(".");
   const labels: string[] = [];
@@ -141,6 +163,9 @@ export function describeErrorPath(path: string) {
     if (part === "homeSections") labels.push("Home screen");
     else if (part === "categoryTabs") labels.push("Category tabs");
     else if (part === "tabs") labels.push(next === undefined ? "Tabs" : `Tab ${Number(next) + 1}`);
+    else if (part === "page") labels.push("Page");
+    else if (part === "header") labels.push("Header");
+    else if (part === "sections") labels.push(next === undefined ? "Sections" : `Section ${Number(next) + 1}`);
     else if (part === "theme" || part === "colors") continue;
     else if (part === "announcement") labels.push("Announcement");
     else if (part === "banners") labels.push(`Banner ${Number(next) + 1}`);

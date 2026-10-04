@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFormAction } from "@/hooks/use-form-action";
-import { describeErrorPath } from "@/lib/appearance";
+import { describeErrorPath, HOME_PAGE, pageTabs } from "@/lib/appearance";
 import type { AdminAppearance, Appearance, Brand, Category } from "@/lib/types";
 
 function toConfig({ appName, logoUrl, theme, announcement, categoryTabs, homeSections }: Appearance): Appearance {
@@ -28,31 +28,40 @@ type AppearanceEditorProps = {
   brands: Brand[];
   initialTab: EditorTab;
   initialExpanded: string | null;
+  initialPage: string | null;
 };
 
-/** Keeps the open tab and section in the URL, so they survive the reload after saving. */
-function syncUrl(tab: EditorTab, section: string | null) {
+/** Keeps the open tab, section and tab page in the URL, so they survive the reload after saving. */
+function syncUrl(tab: EditorTab, section: string | null, page: string) {
   const params = new URLSearchParams();
   if (tab === "home") params.set("tab", "home");
+  if (tab === "home" && page !== HOME_PAGE) params.set("page", page);
   if (tab === "home" && section) params.set("section", section);
   const query = params.toString();
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
-export function AppearanceEditor({ initial, categories, brands, initialTab, initialExpanded }: AppearanceEditorProps) {
+export function AppearanceEditor({ initial, categories, brands, initialTab, initialExpanded, initialPage }: AppearanceEditorProps) {
   const [saved] = useState(() => toConfig(initial));
   const [draft, setDraft] = useState(saved);
   const [tab, setTabState] = useState<EditorTab>(initialTab);
   const [expanded, setExpandedState] = useState<string | null>(initialExpanded);
+  const [pageState, setPageState] = useState(initialPage ?? HOME_PAGE);
+  const page = pageTabs(draft, categories).some((item) => item.tab.id === pageState) ? pageState : HOME_PAGE;
 
   const setTab = (next: string) => {
     const value: EditorTab = next === "home" ? "home" : "brand";
     setTabState(value);
-    syncUrl(value, expanded);
+    syncUrl(value, expanded, page);
   };
   const setExpanded = (next: string | null) => {
     setExpandedState(next);
-    syncUrl(tab, next);
+    syncUrl(tab, next, page);
+  };
+  const setPage = (next: string) => {
+    setPageState(next);
+    setExpandedState(null);
+    syncUrl(tab, null, next);
   };
   const [previewDark, setPreviewDark] = useState(initial.theme.colorScheme === "dark");
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(saveAppearance);
@@ -102,7 +111,17 @@ export function AppearanceEditor({ initial, categories, brands, initialTab, init
             <BrandEditor value={draft} onChange={setDraft} errors={fieldErrors} />
           </TabsContent>
           <TabsContent value="home" className="mt-2">
-            <HomeEditor value={draft} onChange={setDraft} categories={categories} brands={brands} errors={fieldErrors} expanded={expanded} onExpand={setExpanded} />
+            <HomeEditor
+              value={draft}
+              onChange={setDraft}
+              categories={categories}
+              brands={brands}
+              errors={fieldErrors}
+              expanded={expanded}
+              onExpand={setExpanded}
+              page={page}
+              onPageChange={setPage}
+            />
           </TabsContent>
         </Tabs>
 
@@ -139,7 +158,7 @@ export function AppearanceEditor({ initial, categories, brands, initialTab, init
             <span className="text-xs text-muted-foreground">{scheme === "dark" ? "Dark" : "Light"} mode</span>
           )}
         </div>
-        <PhonePreview appearance={draft} categories={categories} brands={brands} dark={dark} />
+        <PhonePreview appearance={draft} categories={categories} brands={brands} dark={dark} page={page} onPageChange={setPage} />
         <p className="text-center text-xs text-muted-foreground">Product cards show placeholders; the app fills them from each store&apos;s stock.</p>
       </aside>
     </div>

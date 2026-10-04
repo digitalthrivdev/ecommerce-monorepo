@@ -479,7 +479,21 @@ export type HomeSectionType = HomeSection["type"];
 
 export type CategoryTabIcon = { type: "category" } | { type: "preset"; name: string } | { type: "image"; url: string };
 
-export type CategoryTab = { id: string; categoryId: string; label: string | null; icon: CategoryTabIcon; badge: string | null };
+/** Recolours the app's whole home header while the tab's page is open. Null `gradientColor` is a solid colour. */
+export type TabHeader = { color: string; gradientColor: string | null; textColor: string; imageUrl: string | null };
+
+export type TabPage = { header: TabHeader; sections: HomeSection[] };
+
+/** `page` is kept while `opens` is "category", so switching back does not lose it. */
+export type CategoryTab = {
+  id: string;
+  categoryId: string;
+  label: string | null;
+  icon: CategoryTabIcon;
+  badge: string | null;
+  opens: "category" | "page";
+  page: TabPage | null;
+};
 
 /** The customer app's look and home screen, edited on the Appearance screen. */
 export type Appearance = {

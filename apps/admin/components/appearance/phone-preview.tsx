@@ -3,6 +3,7 @@
 import { Search, ShoppingBasket, UserRound } from "lucide-react";
 import type { CSSProperties } from "react";
 
+import { defaultTabHeader, HOME_PAGE, pageTabs } from "@/lib/appearance";
 import { TAB_ICONS } from "@/lib/tab-icons";
 import type { Appearance, Brand, Category, HomeSection } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -24,25 +25,37 @@ function cardStyle(appearance: Appearance, palette: Palette, dark: boolean): CSS
   }
 }
 
-function TabsPreview({ appearance, categories }: { appearance: Appearance; categories: Category[] }) {
-  const { onAccent } = appearance.theme.colors;
+type TabsPreviewProps = { appearance: Appearance; categories: Category[]; textColor: string; page: string; onPageChange: (page: string) => void };
+
+/** Tabs with their own page switch the preview to it, like in the app. */
+function TabsPreview({ appearance, categories, textColor, page, onPageChange }: TabsPreviewProps) {
   const tabs = appearance.categoryTabs.tabs.flatMap((tab) => {
     const category = categories.find((item) => item.id === tab.categoryId);
     return category ? [{ tab, category }] : [];
   });
-  const tabClass = "relative flex w-[46px] shrink-0 flex-col items-center gap-0.5 pt-2 pb-1.5";
+  const tabClass = "relative flex w-[46px] shrink-0 flex-col items-center gap-0.5 pt-2 pb-1.5 disabled:cursor-default";
+  const indicator = <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full" style={{ backgroundColor: textColor }} />;
   return (
-    <div className="-mx-3 mt-1 flex gap-1 overflow-hidden px-2" style={{ color: onAccent }}>
-      <div className={tabClass}>
+    <div className="-mx-3 mt-1 flex gap-1 overflow-hidden px-2" style={{ color: textColor }}>
+      <button type="button" className={cn(tabClass, page !== HOME_PAGE && "opacity-80")} onClick={() => onPageChange(HOME_PAGE)}>
         <ShoppingBasket className="size-4" />
-        <span className="text-[9px] font-bold">All</span>
-        <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full" style={{ backgroundColor: onAccent }} />
-      </div>
+        <span className={cn("text-[9px]", page === HOME_PAGE ? "font-bold" : "font-medium")}>All</span>
+        {page === HOME_PAGE && indicator}
+      </button>
       {tabs.map(({ tab, category }) => {
         const Preset = tab.icon.type === "preset" ? TAB_ICONS[tab.icon.name] : undefined;
         const imageUrl = tab.icon.type === "image" ? tab.icon.url : tab.icon.type === "category" ? category.imageUrl : null;
+        const selected = page === tab.id;
         return (
-          <div key={tab.id} className={cn(tabClass, "opacity-80")}>
+          <button
+            key={tab.id}
+            type="button"
+            className={cn(tabClass, !selected && "opacity-80")}
+            disabled={tab.opens !== "page"}
+            onClick={() => onPageChange(tab.id)}
+            title={tab.opens === "page" ? "Preview this tab's page" : "Opens the category screen"}
+          >
+            {selected && indicator}
             {tab.badge && (
               <span className="absolute -top-0.5 right-0 rounded-full bg-red-600 px-1 text-[7px] leading-3 font-bold text-white">{tab.badge}</span>
             )}
@@ -54,8 +67,8 @@ function TabsPreview({ appearance, categories }: { appearance: Appearance; categ
             ) : (
               <span className="flex size-4 items-center justify-center text-[11px] font-bold">{category.name.charAt(0)}</span>
             )}
-            <span className="w-full truncate text-center text-[9px] font-medium">{tab.label ?? category.name}</span>
-          </div>
+            <span className={cn("w-full truncate text-center text-[9px]", selected ? "font-bold" : "font-medium")}>{tab.label ?? category.name}</span>
+          </button>
         );
       })}
     </div>
@@ -401,19 +414,29 @@ function edgePath(edge: "zigzag" | "wave", width: number, height: number) {
   return `${path} Z`;
 }
 
-type PhonePreviewProps = { appearance: Appearance; categories: Category[]; brands: Brand[]; dark: boolean };
+/** `page` is a tab id to show that tab's page, or HOME_PAGE for the "All" screen. */
+type PhonePreviewProps = { appearance: Appearance; categories: Category[]; brands: Brand[]; dark: boolean; page: string; onPageChange: (page: string) => void };
 
-export function PhonePreview({ appearance, categories, brands, dark }: PhonePreviewProps) {
+export function PhonePreview({ appearance, categories, brands, dark, page, onPageChange }: PhonePreviewProps) {
   const palette = dark ? DARK : LIGHT;
   const { colors, radius } = appearance.theme;
   const { announcement } = appearance;
-  const sections = appearance.homeSections.filter((section) => section.enabled);
+  const current = pageTabs(appearance, categories).find((item) => item.tab.id === page) ?? null;
+  const header = current?.page.header ?? defaultTabHeader(colors);
+  const headerBottom = header.gradientColor ?? header.color;
+  const headerBackground = [header.imageUrl && `center / cover no-repeat url(${JSON.stringify(header.imageUrl)})`, `linear-gradient(180deg, ${header.color}, ${headerBottom})`]
+    .filter(Boolean)
+    .join(", ");
+  const sections = (current?.page.sections ?? appearance.homeSections).filter((section) => section.enabled);
+  const showAnnouncement = !current && announcement.enabled && Boolean(announcement.text);
+  // A band on the first section continues straight from the header, like in the app.
+  const topBand = showAnnouncement ? null : (sections[0]?.background ?? null);
 
   return (
     <div className="mx-auto w-[300px] rounded-[44px] border-[10px] border-neutral-900 bg-neutral-900 shadow-xl">
       <div className="relative h-[600px] overflow-hidden rounded-[34px]" style={{ backgroundColor: palette.background }}>
         <div className="h-full overflow-y-auto pb-16 [scrollbar-width:none]">
-          <div className="px-3 pt-8 pb-3" style={{ background: `linear-gradient(180deg, ${colors.accent} 0%, ${colors.accent} 70%, ${palette.background} 100%)`, color: colors.onAccent }}>
+          <div className={cn("px-3 pt-8", !appearance.categoryTabs.enabled && "pb-3")} style={{ background: headerBackground, color: header.textColor }}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -436,10 +459,11 @@ export function PhonePreview({ appearance, categories, brands, dark }: PhonePrev
               <Search className="size-3.5" />
               Search &quot;milk&quot;
             </div>
-            {appearance.categoryTabs.enabled && <TabsPreview appearance={appearance} categories={categories} />}
+            {appearance.categoryTabs.enabled && <TabsPreview appearance={appearance} categories={categories} textColor={header.textColor} page={current ? page : HOME_PAGE} onPageChange={onPageChange} />}
           </div>
+          <div className={cn("h-3", !topBand && "mb-3")} style={{ background: `linear-gradient(180deg, ${headerBottom}, ${topBand?.color ?? palette.background})` }} />
 
-          {announcement.enabled && announcement.text && (
+          {showAnnouncement && (
             <div
               className="mx-3 mb-3 px-3 py-1.5 text-center text-[10px] font-semibold"
               style={{
@@ -454,7 +478,9 @@ export function PhonePreview({ appearance, categories, brands, dark }: PhonePrev
 
           <div className="flex flex-col">
             {sections.length === 0 ? (
-              <p className="px-6 py-10 text-center text-[11px]" style={{ color: palette.muted }}>No visible sections on the home screen.</p>
+              <p className="px-6 py-10 text-center text-[11px]" style={{ color: palette.muted }}>
+                {current ? `No visible sections on the ${current.label} page.` : "No visible sections on the home screen."}
+              </p>
             ) : (
               sections.map((section, index) => {
                 const band = section.background;

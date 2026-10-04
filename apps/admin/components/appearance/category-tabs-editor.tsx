@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronDown, Plus, ShoppingBasket, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, PanelsTopLeft, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { ColorField } from "@/components/appearance/color-field";
 import { ImageField } from "@/components/image-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { newId } from "@/lib/appearance";
+import { newId, newTabPage } from "@/lib/appearance";
 import { TAB_ICONS } from "@/lib/tab-icons";
-import type { Appearance, Category, CategoryTab, CategoryTabIcon } from "@/lib/types";
+import type { Appearance, Category, CategoryTab, CategoryTabIcon, TabHeader } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const MAX_TABS = 12;
@@ -26,6 +27,76 @@ const ICON_SOURCES: { type: CategoryTabIcon["type"]; label: string }[] = [
   { type: "preset", label: "Icon" },
   { type: "image", label: "Custom image" },
 ];
+
+type Colors = Appearance["theme"]["colors"];
+
+function Segmented<T extends string>({ label, options, value, onChange }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (value: T) => void }) {
+  return (
+    <div className="flex w-fit rounded-md border p-0.5" role="radiogroup" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={cn("rounded px-3 py-1 text-sm", value === option.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TabHeaderFields({ tabId, header, onChange, errors, prefix }: { tabId: string; header: TabHeader; onChange: (header: TabHeader) => void; errors: Errors; prefix: string }) {
+  const at = (field: string) => errors[`${prefix}.${field}`];
+  const gradient = header.gradientColor !== null;
+  return (
+    <FieldGroup className="rounded-lg bg-muted/40 p-3">
+      <Field>
+        <FieldLabel>Header</FieldLabel>
+        <FieldDescription>Recolours the whole header, from the status bar to the tabs, while this page is open.</FieldDescription>
+        <Segmented
+          label="Header background"
+          options={[
+            { value: "solid", label: "Solid colour" },
+            { value: "gradient", label: "Gradient" },
+          ]}
+          value={gradient ? "gradient" : "solid"}
+          onChange={(style) => onChange({ ...header, gradientColor: style === "gradient" ? (header.gradientColor ?? header.color) : null })}
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <ColorField label={gradient ? "Top colour" : "Colour"} value={header.color} onChange={(color) => onChange({ ...header, color })} error={at("color")} />
+        {gradient && (
+          <ColorField
+            label="Bottom colour"
+            value={header.gradientColor ?? header.color}
+            onChange={(gradientColor) => onChange({ ...header, gradientColor })}
+            error={at("gradientColor")}
+          />
+        )}
+        <ColorField
+          label="Text and icons"
+          value={header.textColor}
+          onChange={(textColor) => onChange({ ...header, textColor })}
+          error={at("textColor")}
+          contrastWith={{ color: header.color, label: "the header" }}
+        />
+      </div>
+      <ImageField
+        id={`tab-header-image-${tabId}`}
+        label="Header image (optional)"
+        shape="wide"
+        value={header.imageUrl ?? ""}
+        onChange={(imageUrl) => onChange({ ...header, imageUrl: imageUrl.trim() || null })}
+        error={at("imageUrl")}
+        description="Covers the header behind the text; GIFs stay animated. About 3:2 (e.g. 1200×800). Keep the middle plain so the address stays readable."
+      />
+    </FieldGroup>
+  );
+}
 
 function IconPicker({ value, onChange, error }: { value: string | null; onChange: (name: string) => void; error?: string }) {
   const [open, setOpen] = useState(false);
@@ -69,9 +140,11 @@ function TabFields({
   index,
   count,
   categories,
+  colors,
   onChange,
   onMove,
   onRemove,
+  onEditPage,
   errors,
   prefix,
 }: {
@@ -79,9 +152,11 @@ function TabFields({
   index: number;
   count: number;
   categories: Category[];
+  colors: Colors;
   onChange: (tab: CategoryTab) => void;
   onMove: (to: number) => void;
   onRemove: () => void;
+  onEditPage: () => void;
   errors: Errors;
   prefix: string;
 }) {
@@ -186,6 +261,33 @@ function TabFields({
           description="A small square image with a transparent background works best (e.g. 128×128 PNG)."
         />
       )}
+      <Field>
+        <FieldLabel>When tapped</FieldLabel>
+        <Segmented
+          label="When tapped"
+          options={[
+            { value: "category", label: "Open the category screen" },
+            { value: "page", label: "Show its own page" },
+          ]}
+          value={tab.opens}
+          onChange={(opens) => onChange({ ...tab, opens, page: tab.page ?? (opens === "page" ? newTabPage(colors) : null) })}
+        />
+        {tab.opens === "category" && <FieldDescription>Opens {category?.name ?? "the category"} with its sub-categories and products.</FieldDescription>}
+      </Field>
+      {tab.opens === "page" && tab.page && (
+        <>
+          <TabHeaderFields tabId={tab.id} header={tab.page.header} onChange={(header) => onChange({ ...tab, page: { ...tab.page!, header } })} errors={errors} prefix={`${prefix}.page.header`} />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onEditPage}>
+              <PanelsTopLeft />
+              Edit page sections
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {tab.page.sections.length === 0 ? "No sections yet" : `${tab.page.sections.length} section${tab.page.sections.length === 1 ? "" : "s"}`}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -206,7 +308,13 @@ type CategoryTabsEditorProps = {
   errors: Errors;
   expanded: string | null;
   onExpand: (id: string | null) => void;
+  onEditPage: (tabId: string) => void;
 };
+
+const newTab = (categoryId: string): CategoryTab => ({ id: newId(), categoryId, label: null, icon: { type: "category" }, badge: null, opens: "category", page: null });
+
+/** Errors in a tab page's sections are shown in the section list, not here. */
+const isTabError = (key: string) => key.startsWith(`${CATEGORY_TABS_ID}.`) && !key.includes(".page.sections");
 
 function tabsSummary(enabled: boolean, tabs: CategoryTab[], categories: Category[]) {
   if (!enabled) return "Hidden. Turn on to show shortcuts under the search bar.";
@@ -215,17 +323,17 @@ function tabsSummary(enabled: boolean, tabs: CategoryTab[], categories: Category
 }
 
 /** The row of category shortcuts under the search bar. */
-export function CategoryTabsEditor({ value, onChange, categories, errors, expanded, onExpand }: CategoryTabsEditorProps) {
+export function CategoryTabsEditor({ value, onChange, categories, errors, expanded, onExpand, onEditPage }: CategoryTabsEditorProps) {
   const { enabled, tabs } = value.categoryTabs;
   const set = (categoryTabs: Appearance["categoryTabs"]) => onChange({ ...value, categoryTabs });
   const setTabs = (next: CategoryTab[]) => set({ enabled, tabs: next });
-  const hasErrors = Object.keys(errors).some((key) => key.startsWith(`${CATEGORY_TABS_ID}.`));
+  const hasErrors = Object.keys(errors).some(isTabError);
   const open = enabled && (expanded === CATEGORY_TABS_ID || hasErrors);
 
   function addTab() {
     const used = new Set(tabs.map((tab) => tab.categoryId));
     const next = categories.find((category) => category.isActive && !category.parentId && !used.has(category.id));
-    setTabs([...tabs, { id: newId(), categoryId: next?.id ?? "", label: null, icon: { type: "category" }, badge: null }]);
+    setTabs([...tabs, newTab(next?.id ?? "")]);
   }
 
   return (
@@ -256,7 +364,7 @@ export function CategoryTabsEditor({ value, onChange, categories, errors, expand
             onCheckedChange={(on) => {
               if (on && tabs.length === 0) {
                 const firstFew = categories.filter((category) => category.isActive && !category.parentId).slice(0, 5);
-                set({ enabled: true, tabs: firstFew.map((category) => ({ id: newId(), categoryId: category.id, label: null, icon: { type: "category" }, badge: null })) });
+                set({ enabled: true, tabs: firstFew.map((category) => newTab(category.id)) });
               } else set({ enabled: on, tabs });
               if (on) onExpand(CATEGORY_TABS_ID);
             }}
@@ -266,7 +374,9 @@ export function CategoryTabsEditor({ value, onChange, categories, errors, expand
       </CardHeader>
       {open && (
         <CardContent>
-          <p className="mb-3 text-sm text-muted-foreground">Shortcuts under the search bar. The first tab, &quot;All&quot;, is the home screen.</p>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Shortcuts under the search bar. The first tab, &quot;All&quot;, is the home screen. A tab can open its category, or show its own page with its own header colours and sections.
+          </p>
           <FieldGroup>
             {tabs.map((tab, index) => (
               <TabFields
@@ -275,11 +385,13 @@ export function CategoryTabsEditor({ value, onChange, categories, errors, expand
                 index={index}
                 count={tabs.length}
                 categories={categories}
+                colors={value.theme.colors}
                 errors={errors}
                 prefix={`categoryTabs.tabs.${index}`}
                 onChange={(next) => setTabs(tabs.map((item, position) => (position === index ? next : item)))}
                 onMove={(to) => setTabs(move(tabs, index, to))}
                 onRemove={() => setTabs(tabs.filter((_, position) => position !== index))}
+                onEditPage={() => onEditPage(tab.id)}
               />
             ))}
             {errors["categoryTabs.tabs"] && <FieldError>{errors["categoryTabs.tabs"]}</FieldError>}

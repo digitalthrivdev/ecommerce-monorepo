@@ -31,7 +31,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { newCollectionItem, newId, newSection, newTile, SECTION_LABELS } from "@/lib/appearance";
+import { HOME_PAGE, newCollectionItem, newId, newSection, newTile, pageTabs, SECTION_LABELS } from "@/lib/appearance";
 import type {
   Appearance,
   AppearanceLink,
@@ -918,6 +918,8 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
   }
 }
 
+const hasErrorsUnder = (errors: Errors, prefix: string) => Object.keys(errors).some((key) => key === prefix || key.startsWith(`${prefix}.`));
+
 type HomeEditorProps = {
   value: Appearance;
   onChange: (next: Appearance) => void;
@@ -926,11 +928,22 @@ type HomeEditorProps = {
   errors: Errors;
   expanded: string | null;
   onExpand: (id: string | null) => void;
+  /** The tab whose page is being edited, or HOME_PAGE for the "All" screen. */
+  page: string;
+  onPageChange: (page: string) => void;
 };
 
-export function HomeEditor({ value, onChange, categories, brands, errors, expanded, onExpand }: HomeEditorProps) {
-  const sections = value.homeSections;
-  const setSections = (homeSections: HomeSection[]) => onChange({ ...value, homeSections });
+export function HomeEditor({ value, onChange, categories, brands, errors, expanded, onExpand, page, onPageChange }: HomeEditorProps) {
+  const pages = pageTabs(value, categories);
+  const editing = pages.find((candidate) => candidate.tab.id === page) ?? null;
+  const sections = editing ? editing.page.sections : value.homeSections;
+  const basePath = editing ? `categoryTabs.tabs.${editing.index}.page.sections` : "homeSections";
+
+  function setSections(next: HomeSection[]) {
+    if (!editing) return onChange({ ...value, homeSections: next });
+    const tabs = value.categoryTabs.tabs.map((tab) => (tab.id === editing.tab.id ? { ...tab, page: { ...editing.page, sections: next } } : tab));
+    onChange({ ...value, categoryTabs: { ...value.categoryTabs, tabs } });
+  }
 
   function addSection(type: HomeSectionType) {
     const section = newSection(type, categories, value.theme.colors);
@@ -940,20 +953,50 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
 
   return (
     <div className="flex flex-col gap-3">
-      <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} expanded={expanded} onExpand={onExpand} />
-      <p className="mt-2 text-sm font-medium">Sections</p>
+      <CategoryTabsEditor value={value} onChange={onChange} categories={categories} errors={errors} expanded={expanded} onExpand={onExpand} onEditPage={onPageChange} />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-sm font-medium">{editing ? `Sections on the ${editing.label} page` : "Sections"}</p>
+        {pages.length > 0 && (
+          <div className="ml-auto flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Editing">
+            <span className="text-xs text-muted-foreground">Editing:</span>
+            {[{ id: HOME_PAGE, label: "All", path: "homeSections" }, ...pages.map((item) => ({ id: item.tab.id, label: item.label, path: `categoryTabs.tabs.${item.index}.page.sections` }))].map(
+              (option) => {
+                const selected = (editing?.tab.id ?? HOME_PAGE) === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => onPageChange(option.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium",
+                      selected ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {option.label}
+                    {hasErrorsUnder(errors, option.path) && <span className="size-1.5 rounded-full bg-destructive" aria-label="has errors" />}
+                  </button>
+                );
+              },
+            )}
+          </div>
+        )}
+      </div>
       {sections.length === 0 && (
         <Card>
           <CardContent>
-            <p className="py-6 text-center text-sm text-muted-foreground">The home screen is empty. Add a section to get started.</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {editing ? `The ${editing.label} page is empty. Add a section to get started.` : "The home screen is empty. Add a section to get started."}
+            </p>
           </CardContent>
         </Card>
       )}
 
       {sections.map((section, index) => {
         const Icon = SECTION_ICONS[section.type];
-        const prefix = `homeSections.${index}`;
-        const hasErrors = Object.keys(errors).some((key) => key === prefix || key.startsWith(`${prefix}.`));
+        const prefix = `${basePath}.${index}`;
+        const hasErrors = hasErrorsUnder(errors, prefix);
         const open = expanded === section.id || hasErrors;
 
         return (
