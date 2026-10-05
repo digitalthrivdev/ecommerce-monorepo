@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Check, LocateFixed } from "lucide-react-native";
+import { Check, LocateFixed, MapPin } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { FormField } from "@/components/form-field";
+import { MapPinPicker } from "@/components/map-pin-picker";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,8 @@ import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { PHONE_COUNTRY_CODE, PHONE_NATIONAL_LENGTH } from "@/lib/config";
 import { useDeliveryLocation } from "@/lib/delivery-location";
-import { describePlace, getCurrentCoordinates } from "@/lib/location";
+import { describePlace, getCurrentCoordinates, type PlaceDetails } from "@/lib/location";
+import { mapsAvailable } from "@/lib/maps";
 import { isValidNationalNumber, toE164 } from "@/lib/phone";
 import { useSession } from "@/lib/session";
 import type { Address, Coordinates } from "@/lib/types";
@@ -70,10 +72,12 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { user } = useSession();
-  const { selectAddress } = useDeliveryLocation();
+  const { location, selectAddress } = useDeliveryLocation();
   const save = useSaveAddress();
   const [fields, setFields] = useState(() => initialFields(address, user));
   const [coordinates, setCoordinates] = useState<Coordinates | null>(() => (address ? addressCoordinates(address) : null));
+  const [pinnedPlace, setPinnedPlace] = useState<string | null>(null);
+  const [mapOpen, setMapOpen] = useState(!address && mapsAvailable);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -85,34 +89,41 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
-  /** Pins the address to the phone's position and fills in the parts of the address the user hasn't typed. */
+  /** Pins the address and fills in the parts of the address the user hasn't typed. */
+  const pin = useCallback((found: Coordinates, place: PlaceDetails | null) => {
+    setCoordinates(found);
+    setPinnedPlace(place?.summary || null);
+    setErrors((current) => ({ ...current, location: undefined }));
+    if (place) {
+      setFields((current) => ({
+        ...current,
+        addressLine2: current.addressLine2 || place.area || "",
+        city: current.city || place.city || "",
+        state: current.state || place.state || "",
+        postalCode: current.postalCode || place.postalCode || "",
+      }));
+    }
+  }, []);
+
+  /** Without a map: pins the address to the phone's position. */
   const detect = useCallback(async () => {
     setLocating(true);
     setLocationError(null);
     try {
       const found = await getCurrentCoordinates();
-      setCoordinates(found);
-      setErrors((current) => ({ ...current, location: undefined }));
-      const place = await describePlace(found);
-      if (place) {
-        setFields((current) => ({
-          ...current,
-          addressLine2: current.addressLine2 || place.area || "",
-          city: current.city || place.city || "",
-          state: current.state || place.state || "",
-          postalCode: current.postalCode || place.postalCode || "",
-        }));
-      }
+      pin(found, await describePlace(found));
     } catch (caught) {
       setLocationError(errorMessage(caught));
     } finally {
       setLocating(false);
     }
-  }, []);
+  }, [pin]);
+
+  const setLocation = mapsAvailable ? () => setMapOpen(true) : detect;
 
   const detectedOnOpen = useRef(false);
   useEffect(() => {
-    if (address || detectedOnOpen.current) return;
+    if (address || mapsAvailable || detectedOnOpen.current) return;
     detectedOnOpen.current = true;
     detect();
   }, [address, detect]);
@@ -162,19 +173,42 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
       <FocusStatusBar />
       <ScreenHeader title={address ? "Edit address" : "Add address"} />
       <ScrollView contentContainerClassName="gap-5 px-4 pb-6 pt-2" keyboardShouldPersistTaps="handled">
-        <View className={cn("gap-2 rounded-lg border bg-card px-4 py-3.5", errors.location ? "border-destructive" : "border-border")}>
+        <Pressable
+          onPress={setLocation}
+          disabled={locating}
+          className={cn("gap-2 rounded-lg border bg-card px-4 py-3.5 active:bg-accent", errors.location ? "border-destructive" : "border-border")}
+        >
           <View className="flex-row items-center gap-3">
-            {locating ? <ActivityIndicator color={colors.primary} /> : <Icon as={coordinates ? Check : LocateFixed} size={20} className="text-primary" />}
-            <Text className="flex-1 text-sm font-semibold">
-              {locating ? "Finding your location…" : coordinates ? "Pinned to your location" : "Location not set"}
-            </Text>
-            <Pressable onPress={detect} disabled={locating} hitSlop={8}>
-              <Text className="text-sm font-bold text-primary">{coordinates ? "Update" : "Detect"}</Text>
-            </Pressable>
+            {locating ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <Icon as={coordinates ? (mapsAvailable ? MapPin : Check) : LocateFixed} size={20} className="text-primary" />
+            )}
+            <View className="flex-1">
+              <Text className="text-sm font-semibold">
+                {locating
+                  ? "Finding your location…"
+                  : coordinates
+                    ? mapsAvailable
+                      ? "Pinned on the map"
+                      : "Pinned to your location"
+                    : "Location not set"}
+              </Text>
+              {pinnedPlace && !locating ? (
+                <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                  {pinnedPlace}
+                </Text>
+              ) : null}
+            </View>
+            <Text className="text-sm font-bold text-primary">{coordinates ? "Change" : mapsAvailable ? "Set on map" : "Detect"}</Text>
           </View>
-          <Text className="text-xs text-muted-foreground">Stand at the delivery address when you set this, so the rider finds you easily.</Text>
+          <Text className="text-xs text-muted-foreground">
+            {mapsAvailable
+              ? "Place the pin on your building's entrance, so the rider finds you easily."
+              : "Stand at the delivery address when you set this, so the rider finds you easily."}
+          </Text>
           {(locationError || errors.location) && <Text className="text-xs text-destructive">{locationError ?? errors.location}</Text>}
-        </View>
+        </Pressable>
 
         <View className="gap-1.5">
           <Text className="text-sm font-semibold">Save as</Text>
@@ -236,6 +270,19 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
           {save.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Save address</Text>}
         </Button>
       </View>
+
+      {mapsAvailable && (
+        <MapPinPicker
+          visible={mapOpen}
+          initial={coordinates}
+          fallback={location}
+          onClose={() => setMapOpen(false)}
+          onConfirm={(found, place) => {
+            pin(found, place);
+            setMapOpen(false);
+          }}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }

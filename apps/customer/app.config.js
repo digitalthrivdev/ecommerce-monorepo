@@ -13,6 +13,9 @@ const path = require("node:path");
  *   APP_BRAND             Folder under brands/ with the client's icon and splash screen, e.g. "acme".
  *   EAS_PROJECT_ID, EXPO_OWNER, APP_SLUG
  *                         The client's own EAS project, when they have one.
+ *   GOOGLE_MAPS_ANDROID_API_KEY
+ *                         Google Maps key for Android, restricted to each APP_ID and its signing SHA-1.
+ *                         Without it Android builds pin addresses to GPS only, with no map.
  *   GOOGLE_SERVICES_JSON  Firebase config for APP_ID (an EAS file variable), needed for Android push.
  *                         Falls back to ./google-services.json, which is kept out of git.
  *
@@ -127,15 +130,17 @@ module.exports = ({ config: baseConfig }) => {
   const appId = setting("APP_ID", ID_PATTERN) ?? config.android.package;
   const projectId = setting("EAS_PROJECT_ID");
   const googleServicesFile = googleServicesFor(appId);
+  const mapsKey = setting("GOOGLE_MAPS_ANDROID_API_KEY");
 
   return {
     ...config,
+    plugins: mapsKey ? [...(config.plugins ?? []), ["react-native-maps", { androidGoogleMapsApiKey: mapsKey }]] : config.plugins,
     name: setting("APP_NAME") ?? config.name,
     slug: setting("APP_SLUG") ?? config.slug,
     owner: setting("EXPO_OWNER") ?? config.owner,
     scheme: setting("APP_SCHEME", SCHEME_PATTERN) ?? config.scheme,
     ios: { ...config.ios, bundleIdentifier: appId },
     android: { ...config.android, package: appId, ...(googleServicesFile && { googleServicesFile }) },
-    extra: { ...config.extra, eas: { ...config.extra?.eas, ...(projectId && { projectId }) } },
+    extra: { ...config.extra, googleMapsAndroid: Boolean(mapsKey), eas: { ...config.extra?.eas, ...(projectId && { projectId }) } },
   };
 };
