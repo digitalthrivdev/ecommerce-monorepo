@@ -59,14 +59,17 @@ export function useOrder(id: string) {
 
 const TRACKABLE: OrderStatus[] = ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"];
 
-/** The partner's distance and arrival estimate while the order is with them; both are null until their location is known. */
+/** Matches how often the delivery app sends the partner's position while they have an order. */
+export const TRACKING_REFRESH_MS = 10_000;
+
+/** The partner's position, distance and arrival estimate while the order is with them; null until their location is known. */
 export function useOrderTracking(id: string, status: OrderStatus | undefined) {
   return useQuery({
     queryKey: [...orderKey(id), "tracking"],
     queryFn: () => apiFetch<OrderTracking>(`${orderPath(id)}/tracking`),
     enabled: status !== undefined && TRACKABLE.includes(status),
-    staleTime: 10_000,
-    refetchInterval: LIVE_REFRESH_MS,
+    staleTime: 5_000,
+    refetchInterval: TRACKING_REFRESH_MS,
   });
 }
 

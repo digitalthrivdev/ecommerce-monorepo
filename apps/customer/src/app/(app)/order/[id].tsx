@@ -9,6 +9,7 @@ import { BillDetails, mrpTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
+import { TrackingMap } from "@/components/tracking-map";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -16,6 +17,7 @@ import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { formatDateTime, formatMoney, formatTime } from "@/lib/format";
 import { smallImage } from "@/lib/images";
+import { mapsAvailable } from "@/lib/maps";
 import { isOrderFinished, ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder, useOrderTracking } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
@@ -259,6 +261,8 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
 
   return (
     <>
+      {live && mapsAvailable && tracking?.trackable && <TrackingMap tracking={tracking} />}
+
       {live ? <StepsCard order={order} tracking={tracking} /> : <StatusCard order={order} />}
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}

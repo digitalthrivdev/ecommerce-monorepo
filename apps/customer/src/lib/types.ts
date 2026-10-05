@@ -265,6 +265,10 @@ export type OrderDetail = {
 export type OrderTracking = {
   orderStatus: OrderStatus;
   trackable: boolean;
+  /** The partner's last reported position; null until they share it, or after 10 minutes without an update. */
+  partnerLocation: (Coordinates & { heading: number | null; updatedAt: string }) | null;
+  store: Coordinates;
+  destination: Coordinates | null;
   distanceKm: number | null;
   etaMinutes: number | null;
 };
