@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 import { saveStore } from "@/app/(dashboard)/stores/actions";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useFormAction } from "@/hooks/use-form-action";
 import type { StoreDetails } from "@/lib/types";
+
+import { StoreLocationPicker } from "./store-location-picker";
 
 type TextFieldProps = {
   name: string;
@@ -23,15 +26,27 @@ function TextField({ name, label, defaultValue, error, description, ...props }: 
   return (
     <Field data-invalid={Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Input id={id} name={name} defaultValue={defaultValue ?? ""} aria-invalid={Boolean(error)} {...props} />
+      <Input id={id} name={name} defaultValue={props.value === undefined ? (defaultValue ?? "") : undefined} aria-invalid={Boolean(error)} {...props} />
       {description && <FieldDescription>{description}</FieldDescription>}
       <FieldError>{error}</FieldError>
     </Field>
   );
 }
 
+function parseCoordinate(value: string, limit: number) {
+  const number = Number(value);
+  return value.trim() !== "" && Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
+}
+
 export function StoreForm({ store }: { store?: StoreDetails }) {
   const { pending, fieldErrors, onSubmit } = useFormAction(saveStore);
+  const [latitude, setLatitude] = useState(store?.latitude ?? "");
+  const [longitude, setLongitude] = useState(store?.longitude ?? "");
+  const [radius, setRadius] = useState(store ? Number(store.serviceRadiusKm).toString() : "3");
+
+  const lat = parseCoordinate(latitude, 90);
+  const lng = parseCoordinate(longitude, 180);
+  const radiusKm = Number(radius) > 0 ? Number(radius) : null;
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
@@ -75,17 +90,41 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
 
         <FieldSet>
           <FieldLegend>Delivery area</FieldLegend>
-          <FieldDescription>
-            Customers within the radius of this point can order from the store. Copy the coordinates from Google Maps by
-            right-clicking the store&apos;s location.
-          </FieldDescription>
+          <FieldDescription>Customers within the radius of the store&apos;s location can order from it.</FieldDescription>
+          <StoreLocationPicker
+            position={lat !== null && lng !== null ? { latitude: lat, longitude: lng } : null}
+            radiusKm={radiusKm}
+            onPick={(point) => {
+              setLatitude(point.latitude.toFixed(6));
+              setLongitude(point.longitude.toFixed(6));
+            }}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextField name="latitude" label="Latitude" defaultValue={store?.latitude} error={fieldErrors.latitude} inputMode="decimal" placeholder="12.9352" required />
-            <TextField name="longitude" label="Longitude" defaultValue={store?.longitude} error={fieldErrors.longitude} inputMode="decimal" placeholder="77.6245" required />
+            <TextField
+              name="latitude"
+              label="Latitude"
+              value={latitude}
+              onChange={(event) => setLatitude(event.target.value)}
+              error={fieldErrors.latitude}
+              inputMode="decimal"
+              placeholder="12.9352"
+              required
+            />
+            <TextField
+              name="longitude"
+              label="Longitude"
+              value={longitude}
+              onChange={(event) => setLongitude(event.target.value)}
+              error={fieldErrors.longitude}
+              inputMode="decimal"
+              placeholder="77.6245"
+              required
+            />
             <TextField
               name="serviceRadiusKm"
               label="Delivers up to (km)"
-              defaultValue={store ? Number(store.serviceRadiusKm).toString() : "3"}
+              value={radius}
+              onChange={(event) => setRadius(event.target.value)}
               error={fieldErrors.serviceRadiusKm}
               inputMode="decimal"
               required
