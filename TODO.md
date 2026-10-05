@@ -16,7 +16,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Delivery
 
-- [ ] **Live tracking over WebSockets.** Push partner location and order status to the customer app (`@fastify/websocket`, Redis pub/sub so it works across API instances). Today the app polls `GET /orders/:id/tracking`.
+- [ ] **Live tracking over WebSockets.** Push partner location and order status to the customer app (`@fastify/websocket`, Redis pub/sub so it works across API instances). Today the customer app polls `GET /orders/:id/tracking` every 10 seconds and glides the partner's marker on the map between updates; WebSockets are only worth it at much higher order volumes.
 - [ ] **Admin override to mark delivered** when the delivery OTP is locked after too many wrong attempts.
 - [ ] **Admin unassign** (send an assigned order back to `READY_FOR_PICKUP` without picking a replacement).
 - [ ] Semi-automatic assignment suggestion (nearest online partner, using last known location).
