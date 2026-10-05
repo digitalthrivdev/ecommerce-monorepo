@@ -112,7 +112,7 @@ export default function HomeScreen() {
   const setStatus = useSetPartnerStatus();
   const working = partner.data ? partner.data.status !== "OFFLINE" : false;
   const deliveries = useActiveDeliveries({ poll: working });
-  const locationGranted = useLocationSharing(working);
+  const locationGranted = useLocationSharing(working, (deliveries.data?.length ?? 0) > 0);
   const [refreshing, setRefreshing] = useState(false);
   const inactive = partner.error instanceof ApiError && partner.error.code === "PARTNER_INACTIVE";
 
