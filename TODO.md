@@ -21,7 +21,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Admin unassign** (send an assigned order back to `READY_FOR_PICKUP` without picking a replacement).
 - [ ] Semi-automatic assignment suggestion (nearest online partner, using last known location).
 - [ ] Push to the previous partner when an admin reassigns their order (only the new partner is notified today).
-- [ ] **Map pin for customer addresses.** The customer app pins an address to the phone's GPS position when it is saved; there is no map to drag the pin or search for a place.
+- [ ] Place suggestions while typing (Google Places autocomplete through the API). Search today finds a typed address with the phone's geocoder or Nominatim, without suggestions.
 
 ## Orders and store workflow
 
@@ -39,7 +39,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Stores
 
-- [ ] Map picker for the store location and a preview of the delivery radius. Admin currently enters latitude and longitude.
 - [ ] Show the store phone to delivery partners (delivery app) and customers.
 
 ## Auth

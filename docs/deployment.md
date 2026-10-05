@@ -156,6 +156,28 @@ Without a matching Firebase entry the build still works, but without push notifi
 
 Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND` or `EXPO_PUBLIC_API_URL` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
 
+### Google Maps key (customer app, Android)
+
+The customer app pins addresses on a map. iOS uses Apple Maps with no key; Android uses Google Maps and needs `GOOGLE_MAPS_ANDROID_API_KEY` at build time. Without it, Android builds fall back to pinning the address to the phone's GPS position, with no map.
+
+One key serves every client:
+
+1. In [Google Cloud](https://console.cloud.google.com), pick a project with billing enabled (Google requires a billing account; showing maps in the Android SDK isn't charged). Under APIs & Services → Library, enable **Maps SDK for Android**.
+2. APIs & Services → Credentials → **Create credentials → API key**. Edit it:
+   - Application restrictions: **Android apps**. Add one entry per client app: the package name (`APP_ID`) and its SHA-1 fingerprint. EAS shows the SHA-1 under `npx eas-cli@latest credentials` → Android → the package → keystore. For apps on the Play Store, also add the SHA-1 of Google's app signing key (Play Console → the app → Test and release → App integrity).
+   - API restrictions: **Maps SDK for Android** only.
+3. Save it in the customer app's EAS environments:
+   ```bash
+   cd apps/customer
+   npx eas-cli@latest env:create --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> \
+     --environment development --environment preview --environment production --visibility sensitive
+   ```
+4. Rebuild the app. If the map shows only a grey grid, the package name or SHA-1 isn't on the key's list yet.
+
+Maps without a map ID are free and unlimited ("Maps SDK" on Google's price list, India and global). Don't give the `MapView` a map ID (cloud-based styling): those loads are billed as Dynamic Maps.
+
+The admin's store map uses OpenStreetMap and needs no key. Place search uses the phone's geocoder in the app and OpenStreetMap's Nominatim in the admin (one search per click, within its usage policy).
+
 ### 4. Build and publish
 
 ```bash
@@ -179,6 +201,7 @@ Colours, logo, banners and texts inside the app come from the client's dashboard
 - [ ] SMS keys are set, and a real phone receives an OTP and signs in.
 - [ ] Online payments: sandbox payment, failed payment and refund tested, with webhooks registered. Otherwise offer cash on delivery only.
 - [ ] A store with location, radius and hours; products with prices and stock.
+- [ ] Adding an address in the customer app opens the map (Android needs the Google Maps key for that app's package and SHA-1).
 - [ ] A delivery partner account signs in on the delivery app.
 - [ ] One full order end to end: place, accept, pack, assign, pick up, deliver with OTP. A push notification arrives.
 - [ ] Backups appear in `deploy/backups`; the client knows they also need an off-site copy.
