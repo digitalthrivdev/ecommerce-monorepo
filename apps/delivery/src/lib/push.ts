@@ -12,6 +12,9 @@ type NotificationsModule = typeof import("expo-notifications");
 /** Remote push needs a development or store build: Expo Go on Android dropped it in SDK 53. */
 const PUSH_SUPPORTED = !isRunningInExpoGo() && (Platform.OS === "android" || Platform.OS === "ios");
 
+/** Must match the channel the API sends new assignments to. */
+const NEW_DELIVERY_CHANNEL = "new-delivery";
+
 /** The token registered for the signed-in partner, so sign-out can remove it. */
 let registeredToken: string | null = null;
 let lastOpenedId: string | null = null;
@@ -21,7 +24,11 @@ let notificationsModule: Promise<NotificationsModule> | null = null;
 function loadNotifications() {
   notificationsModule ??= import("expo-notifications").then((Notifications) => {
     Notifications.setNotificationHandler({
-      handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+      // With the app open, the incoming delivery sheet rings instead of the notification.
+      handleNotification: async (notification) => {
+        const ringsInApp = notification.request.content.data?.status === "ASSIGNED";
+        return { shouldShowBanner: !ringsInApp, shouldShowList: true, shouldPlaySound: !ringsInApp, shouldSetBadge: false };
+      },
     });
     return Notifications;
   });
@@ -50,6 +57,15 @@ async function register(Notifications: NotificationsModule) {
     await Notifications.setNotificationChannelAsync("default", {
       name: "Deliveries",
       importance: Notifications.AndroidImportance.HIGH,
+    });
+    // The API sends new assignments here. Android fixes a channel's sound when it is created.
+    await Notifications.setNotificationChannelAsync(NEW_DELIVERY_CHANNEL, {
+      name: "New deliveries",
+      description: "Rings when a delivery is assigned to you.",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "new_delivery.wav",
+      vibrationPattern: [0, 600, 400, 600],
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     });
   }
 

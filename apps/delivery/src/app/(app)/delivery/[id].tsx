@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Banknote, CreditCard, MapPin, Navigation, Phone, Store, type LucideIcon } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { DeliveryMap } from "@/components/delivery-map";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { OtpInput } from "@/components/otp-input";
 import { QueryError } from "@/components/query-error";
@@ -15,6 +16,7 @@ import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { directionsUrl, stepText, useDelivery, useDeliveryAction } from "@/lib/delivery";
 import { formatMoney } from "@/lib/format";
+import { mapsAvailable } from "@/lib/maps";
 import { formatPhone } from "@/lib/phone";
 import { useSettings } from "@/lib/settings";
 import type { PartnerDelivery } from "@/lib/types";
@@ -72,7 +74,6 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
   const { currency } = useSettings();
   const run = useDeliveryAction(delivery.orderId);
   const [otp, setOtp] = useState("");
-  const [enteringOtp, setEnteringOtp] = useState(false);
   const actions = delivery.allowedActions;
   const cash = Number(delivery.cashToCollect) > 0;
 
@@ -136,18 +137,20 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
       </Button>
     );
   } else if (actions.includes("delivered")) {
-    content = enteringOtp ? (
+    content = (
       <View className="gap-3">
-        <Text className="text-sm font-semibold">Enter the 4-digit OTP from the customer</Text>
+        <Text className="text-sm font-semibold">Tap the boxes and enter the 4-digit OTP from the customer</Text>
         <OtpInput
           value={otp}
           onChange={(value) => {
+            if (run.isError) run.reset();
             setOtp(value);
             if (value.length === OTP_LENGTH) submitOtp(value);
           }}
           length={OTP_LENGTH}
           invalid={run.isError}
           editable={!run.isPending}
+          autoFocus={false}
         />
         {run.isPending ? (
           <ActivityIndicator color={colors.primary} />
@@ -157,16 +160,6 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
           <Text className="text-sm font-semibold">Collect {formatMoney(delivery.cashToCollect, currency)} before handing over the order.</Text>
         ) : null}
       </View>
-    ) : (
-      <Button
-        onPress={() => {
-          run.reset();
-          setEnteringOtp(true);
-        }}
-        className="h-12 rounded-lg"
-      >
-        <Text className="text-base font-bold">Enter delivery OTP</Text>
-      </Button>
     );
   }
 
@@ -191,6 +184,8 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
         <Text className="text-xl font-extrabold">{step.title}</Text>
         <Text className="text-sm text-muted-foreground">{step.detail}</Text>
       </View>
+
+      {mapsAvailable && delivery.allowedActions.length > 0 && <DeliveryMap delivery={delivery} />}
 
       <View className={cn("mx-4 flex-row items-center gap-3 rounded-lg p-4", cash ? "bg-highlight" : surface)}>
         <Icon as={cash ? Banknote : CreditCard} size={24} className={cash ? "text-highlight-foreground" : "text-primary"} />
@@ -270,7 +265,8 @@ export default function DeliveryScreen() {
   const delivery = useDelivery(id);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    // Android draws edge-to-edge, so the window no longer shrinks for the keyboard; padding keeps the OTP above it.
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <ScreenHeader title={delivery.data?.orderNumber ?? "Delivery"} />
       {delivery.data ? (
