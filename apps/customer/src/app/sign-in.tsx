@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandMark } from "@/components/brand-mark";
 import { FocusStatusBar } from "@/components/focus-status-bar";
+import { PolicyLink } from "@/components/policy-link";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Separator } from "@/components/ui/separator";
@@ -50,7 +51,7 @@ function Collage() {
 }
 
 export default function SignInScreen() {
-  const { announcement } = useSettings();
+  const { announcement, policies } = useSettings();
   const { colors, neutral } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [digits, setDigits] = useState("");
@@ -125,7 +126,10 @@ export default function SignInScreen() {
             {sendOtp.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Continue</Text>}
           </Button>
 
-          <Text className="mt-auto text-center text-xs leading-5 text-muted-foreground">By continuing, you agree to our Terms of Service and Privacy Policy.</Text>
+          <Text className="mt-auto text-center text-xs leading-5 text-muted-foreground">
+            By continuing, you agree to our <PolicyLink url={policies?.terms}>Terms of Service</PolicyLink> and{" "}
+            <PolicyLink url={policies?.privacy}>Privacy Policy</PolicyLink>.
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

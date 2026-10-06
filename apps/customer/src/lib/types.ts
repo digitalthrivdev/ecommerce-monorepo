@@ -21,6 +21,8 @@ export type PublicSettings = {
   pricing: { deliveryFee: string; freeDeliveryThreshold: string | null; minOrderValue: string };
   payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
   support: { phone: string | null; email: string | null };
+  /** Links to the public website and its policy pages; null when it is not set up, missing from older servers. */
+  policies?: Record<"home" | "index" | "terms" | "privacy" | "refunds" | "shipping" | "contact", string> | null;
 };
 
 export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";

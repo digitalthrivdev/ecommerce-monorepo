@@ -1,10 +1,11 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { ChevronRight, LogOut, Mail, MapPin, Package, Phone, UserRound, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, FileText, LogOut, Mail, MapPin, Package, Phone, UserRound, type LucideIcon } from "lucide-react-native";
 import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
+import { openPolicy } from "@/components/policy-link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
@@ -33,7 +34,7 @@ function Row({ icon, label, detail, onPress }: RowProps) {
 
 export default function AccountScreen() {
   const { user, signOut } = useSession();
-  const { appName, support } = useSettings();
+  const { appName, support, policies } = useSettings();
   const insets = useSafeAreaInsets();
 
   function confirmSignOut() {
@@ -88,6 +89,12 @@ export default function AccountScreen() {
               {support.email ? <Row icon={Mail} label="Email us" detail={support.email} onPress={() => Linking.openURL(`mailto:${support.email}`)} /> : null}
             </Card>
           </View>
+        ) : null}
+
+        {policies ? (
+          <Card className="gap-0 overflow-hidden py-1">
+            <Row icon={FileText} label="Terms and policies" detail="Privacy, refunds and delivery" onPress={() => openPolicy(policies.index)} />
+          </Card>
         ) : null}
 
         <Button variant="outline" onPress={confirmSignOut} className="mt-2 h-12 rounded-lg">
