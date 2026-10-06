@@ -8,7 +8,8 @@ The platform is white-label. Every client is a separate deployment of the same c
 
 | Part | Per client | Where it is configured |
 | --- | --- | --- |
-| Server (API, dashboard, PostgreSQL, Redis, Nginx, backups) | Own VPS | `deploy/.env`, `deploy/api.env` on that server |
+| Server (API, dashboard, public website, PostgreSQL, Redis, Nginx, backups) | Own VPS | `deploy/.env`, `deploy/api.env` on that server |
+| Website (home page, Terms, Privacy, Refunds, Shipping, Contact) | Client's main domain | Dashboard → Settings → Website |
 | Secrets (database password, JWT, encryption key) | Freshly generated | `deploy/.env`, `deploy/api.env` (never in git) |
 | Payment and SMS keys | Client's own accounts | Dashboard → Settings (encrypted), or `deploy/api.env` |
 | Branding, colours, fees, home screen | | Dashboard → Appearance and Settings (no rebuild) |
@@ -21,7 +22,7 @@ There is no shared database and no `tenantId`. Never point one client's app at a
 
 | Client | Server | Stack folder | Domains | App build profiles | Package IDs |
 | --- | --- | --- | --- | --- | --- |
-| Moozy (test client on our own domain) | `ssh grocery-vps` | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in` | `moozy-preview`, `moozy-production` (brand folder `moozy`) | `in.moozy.app`, `in.moozy.partner` |
+| Moozy (test client on our own domain) | `ssh grocery-vps` | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in`, `moozy.in` (website) | `moozy-preview`, `moozy-production` (brand folder `moozy`) | `in.moozy.app`, `in.moozy.partner` |
 
 Add a row for every new client.
 
@@ -29,7 +30,7 @@ Add a row for every new client.
 
 Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM (or swap), since the dashboard image build needs about 1.5 GB. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
 
-1. **DNS:** point the API and dashboard domains (A records) at the server. Open ports 80 and 443.
+1. **DNS:** point the API and dashboard domains, the client's main domain (`SITE_DOMAIN`, the public website) and its `www` (A records) at the server. Open ports 80 and 443.
 2. **Code:** `git clone git@github.com:piyushGupta20/grocery-app-monorepo.git <client>` then `cd <client>/deploy && cp .env.example .env && cp api.env.example api.env`.
 3. **Settings:** fill in both files. Generate every secret on the server, new for this client:
    - `POSTGRES_PASSWORD`: `openssl rand -hex 24` (letters and digits only).
@@ -43,6 +44,7 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM (or swap), 
 6. **Check:** `docker compose ps` (all healthy) and `curl https://API_DOMAIN/health`.
 7. **Dashboard:** sign in at `https://ADMIN_DOMAIN`, then:
    - Settings: SMS provider keys (customers can't sign in without them) and payment gateway keys;
+   - Settings → Website: business name and address, then read and adjust each policy page;
    - Appearance: name, logo, colours, home screen;
    - stores (location, radius, hours), categories, products, store prices and stock, delivery partners.
 8. Add the client to the table above, then build their apps (below).
@@ -58,6 +60,13 @@ Push to GitHub first; the server pulls from there.
 5. **Verify:** `docker compose ps` (api and admin healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
 
 With several clients, update every server before releasing new app builds: a new app may call endpoints an older server doesn't have.
+
+**Adding the website to a server set up before it existed:** `docker compose up` stops with "Set SITE_DOMAIN in .env" until it's configured.
+
+1. Point the main domain and its `www` at the server (A records) and wait until `dig +short <domain>` shows the server's IP.
+2. Add `SITE_DOMAIN=<domain>` to `deploy/.env`.
+3. Deploy as above (`docker compose up -d --build`).
+4. Run `./request-certificate.sh`, which adds the website to the certificate and reloads Nginx.
 
 ## Rollback and restore
 
@@ -114,7 +123,8 @@ These change without a rebuild. Uploads accept JPEG, PNG, WebP, AVIF and GIF up 
 | Feature graphic | 1024×500 JPG or PNG, no transparency |
 | Phone screenshots | 2 to 8, for example 1080×1920 |
 | Short and full description | Up to 80 and 4000 characters |
-| Privacy policy | A public URL |
+| Privacy policy | `https://<SITE_DOMAIN>/privacy` (both apps can use it) |
+| App access (sign-in for reviewers) | Turn on Settings → SMS sign-in → Review login and give its phone number and code |
 
 The delivery app can skip the Play Store and be shared as a preview APK.
 
@@ -199,6 +209,8 @@ Colours, logo, banners and texts inside the app come from the client's dashboard
 
 - [ ] `/health` is `ok` and the certificate is valid.
 - [ ] SMS keys are set, and a real phone receives an OTP and signs in.
+- [ ] Website at `https://<SITE_DOMAIN>` loads with a valid certificate. Settings → Website: business name and address filled in, a help line phone or email set, and every policy page read and adjusted to the client's terms. Give the website to the payment gateway, and the privacy page to the Play Store.
+- [ ] Review login on while Google Play and the payment gateway review the app; off once both approve.
 - [ ] Online payments: sandbox payment, failed payment and refund tested, with webhooks registered. Otherwise offer cash on delivery only.
 - [ ] A store with location, radius and hours; products with prices and stock.
 - [ ] Adding an address in the customer app opens the map (Android needs the Google Maps key for that app's package and SHA-1).

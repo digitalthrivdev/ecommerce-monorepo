@@ -61,6 +61,9 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
   - Passwords are scrypt hashes (`shared/password.ts`), and failed attempts are rate-limited per email and network.
   - Admins set and reset staff passwords in the dashboard. The first admin, and any admin password reset, uses the `create-admin` script.
 - **SMS fallback:** in development, OTPs are written to the API log until an SMS provider is set up. In production, OTP sign-in is unavailable until an admin configures SMS. `OTP_PROVIDER` in the environment overrides the dashboard choice, for recovery.
+- **Review login** (Settings → SMS sign-in), for app store and payment gateway reviewers: one phone number signs in to a customer account with a fixed code and no SMS.
+  - Off by default. The code is stored only as an HMAC, it never applies to admin, staff or rider accounts, and orders from it are flagged "Review account".
+  - Do not extend it to other roles or numbers.
 
 ## White-label
 
@@ -105,6 +108,7 @@ Never upgrade to Prisma 8 or use Prisma 8 APIs; the project hit a 7/8 mismatch b
 - **Dev services** (`docker/docker-compose.yml`): PostgreSQL 17 on host port 5433 (5432 is taken by a Windows PostgreSQL) and Redis 7 on 6379. Database, user and password: `grocery` / `grocery` / `grocery_dev`. These are for development only.
 - **Production** (`deploy/`): one Compose stack per client.
   - It runs PostgreSQL, Redis, migrations, the API, the dashboard, Nginx with Let's Encrypt, an uploads volume and daily backups.
+  - The dashboard container also serves the client's public website (home and policy pages, `apps/admin/app/site`) on `SITE_DOMAIN`, where its proxy exposes nothing else.
   - Configured by `deploy/.env` and `deploy/api.env` on the server. Setup steps are in `deploy/.env.example`.
 - **Health check:** `GET /health` returns `status`, `database` and `redis` as `ok`.
 

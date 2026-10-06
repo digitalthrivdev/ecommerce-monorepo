@@ -65,6 +65,7 @@ services:
       DATABASE_URL: postgresql://grocery:${POSTGRES_PASSWORD}@postgres:5432/grocery
       REDIS_URL: redis://redis:6379
       PUBLIC_API_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}
+      PUBLIC_SITE_URL: https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
       # Nginx is the only way in and overwrites X-Forwarded-For with the client address.
       TRUST_PROXY: "1"
       UPLOADS_DIR: /repo/apps/api/uploads
@@ -86,6 +87,8 @@ services:
     image: ${COMPOSE_PROJECT_NAME:-grocery}-admin
     environment:
       API_URL: http://api:4000
+      # The admin app also serves the public website on this domain.
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
     depends_on:
       api:
         condition: service_healthy
@@ -99,6 +102,7 @@ services:
     environment:
       API_DOMAIN: ${API_DOMAIN}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:?Set ADMIN_DOMAIN in .env}
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
       - letsencrypt:/etc/letsencrypt
