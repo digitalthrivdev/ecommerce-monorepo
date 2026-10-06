@@ -39,7 +39,15 @@ export function createExpoPushSender(log: FastifyBaseLogger, accessToken: string
         ...(accessToken && { authorization: `Bearer ${accessToken}` }),
       },
       body: JSON.stringify(
-        messages.map(({ token, title, body, data }) => ({ to: token, title, body, data, sound: "default", priority: "high" })),
+        messages.map(({ token, title, body, data, channelId, sound }) => ({
+          to: token,
+          title,
+          body,
+          data,
+          sound: sound ?? "default",
+          priority: "high",
+          ...(channelId && { channelId }),
+        })),
       ),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

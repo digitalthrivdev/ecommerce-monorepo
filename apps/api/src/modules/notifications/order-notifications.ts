@@ -19,9 +19,19 @@ export type OrderContext = {
   partnerUserId: string | null;
 };
 
-export type Notification = { userId: string; title: string; body: string; data: Record<string, string> };
+export type Notification = {
+  userId: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  channelId?: string;
+  sound?: string;
+};
 
 const HELD_BY_PARTNER: OrderStatus[] = [OrderStatus.ASSIGNED, OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY];
+
+/** Rings like a call: the delivery app creates this Android channel with its bundled ringtone. */
+const NEW_DELIVERY_ALERT = { channelId: "new-delivery", sound: "new_delivery.wav" };
 
 /**
  * Who to notify about an order status change, and what to say. Store staff and admins watch the
@@ -30,11 +40,12 @@ const HELD_BY_PARTNER: OrderStatus[] = [OrderStatus.ASSIGNED, OrderStatus.PICKED
 export function orderNotifications(change: StatusChange, order: OrderContext): Notification[] {
   const data = { type: "order_status", orderId: order.id, status: change.toStatus };
   const customer = (title: string, body: string) => ({ userId: order.userId, title, body, data });
-  const partner = (title: string, body: string) =>
-    order.partnerUserId && order.partnerUserId !== change.changedById ? [{ userId: order.partnerUserId, title, body, data }] : [];
+  const partner = (title: string, body: string, alert?: typeof NEW_DELIVERY_ALERT) =>
+    order.partnerUserId && order.partnerUserId !== change.changedById ? [{ userId: order.partnerUserId, title, body, data, ...alert }] : [];
 
-  // The status did not move: the store marked items unavailable, and the note names them.
-  if (change.fromStatus === change.toStatus) {
+  // The status did not move: the store marked items unavailable, and the note names them. An
+  // ASSIGNED to ASSIGNED change is a reassignment, handled below like a first assignment.
+  if (change.fromStatus === change.toStatus && change.toStatus !== OrderStatus.ASSIGNED) {
     const refund = order.paymentMethod === PaymentMethod.ONLINE ? "You'll get a refund for them." : "You won't be charged for them.";
     return [customer("Item unavailable", `${order.storeName}: ${change.note ?? "an item is unavailable"} in order ${order.orderNumber}. ${refund}`)];
   }
@@ -44,7 +55,7 @@ export function orderNotifications(change: StatusChange, order: OrderContext): N
       return [customer("Order confirmed", `We've received order ${order.orderNumber}. ${order.storeName} will start packing it soon.`)];
 
     case OrderStatus.ASSIGNED:
-      return partner("New delivery", `Order ${order.orderNumber} from ${order.storeName} is assigned to you. Open the app to accept it.`);
+      return partner("New delivery", `Order ${order.orderNumber} from ${order.storeName} is assigned to you. Open the app to accept it.`, NEW_DELIVERY_ALERT);
 
     case OrderStatus.OUT_FOR_DELIVERY:
       return [customer("Your order is on the way", `Order ${order.orderNumber} is out for delivery. Keep your delivery OTP ready.`)];

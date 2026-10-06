@@ -9,6 +9,10 @@ export type PushMessage = {
   body: string;
   /** Lets the app open the right screen when the notification is tapped. */
   data: Record<string, string>;
+  /** Android notification channel the app created; it decides the sound and importance there. */
+  channelId?: string;
+  /** Sound file bundled with the app (used by iOS); "default" when not set. */
+  sound?: string;
 };
 
 export interface PushSender {
