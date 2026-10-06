@@ -2,6 +2,7 @@ import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../gen
 import { AppError } from "../../shared/errors.js";
 import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
+import { reviewAccountUserId } from "../settings/settings.service.js";
 import { lockOrder, transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
 import { includedTax } from "./tax.js";
@@ -106,6 +107,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         skip: query.offset,
         select: {
           id: true,
+          userId: true,
           orderNumber: true,
           status: true,
           paymentMethod: true,
@@ -123,10 +125,12 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
       prisma.order.count({ where }),
       prisma.order.groupBy({ by: ["status"], where: baseWhere, orderBy: { status: "asc" }, _count: { _all: true } }),
     ]);
+    const reviewUserId = await reviewAccountUserId(prisma);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, statusHistory, delivery, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, statusHistory, delivery, userId, ...order }) => ({
         ...order,
+        reviewAccount: userId === reviewUserId,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
         /** When the order reached its current status, for "waiting 8 min" timers. */
@@ -160,14 +164,18 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     }
 
     const actorIds = [...new Set(order.statusHistory.map((entry) => entry.changedById).filter((id) => id !== null))];
-    const actors = actorIds.length
-      ? await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true, role: true } })
-      : [];
+    const [actors, reviewUserId] = await Promise.all([
+      actorIds.length
+        ? prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true, role: true } })
+        : [],
+      reviewAccountUserId(prisma),
+    ]);
     const actorById = new Map(actors.map(({ id, ...user }) => [id, user]));
 
     const { canCancel: _customerCanCancel, ...view } = toDetailView(order);
     return {
       ...view,
+      reviewAccount: order.userId === reviewUserId,
       statusHistory: order.statusHistory.map(({ changedById, ...entry }) => ({
         ...entry,
         changedBy: changedById ? (actorById.get(changedById) ?? null) : null,

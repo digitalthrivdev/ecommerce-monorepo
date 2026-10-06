@@ -6,6 +6,7 @@ import { canStoreSecrets, openSecret, sealSecret } from "../../shared/secret-box
 import { getPlatformSettings } from "../settings/settings.service.js";
 import {
   createLogProvider,
+  createReviewProvider,
   OTP_PROVIDERS,
   type OtpProvider,
   type OtpProviderDefinition,
@@ -24,7 +25,11 @@ type LoadedProvider = {
   stored: { updatedAt: Date; readable: boolean } | null;
 };
 
-type Loaded = { providers: Map<string, LoadedProvider>; selected: string | null };
+type Loaded = {
+  providers: Map<string, LoadedProvider>;
+  selected: string | null;
+  review: { phone: string; codeHash: string } | null;
+};
 
 const sealContext = (name: string) => `otp:${name}`;
 
@@ -46,6 +51,7 @@ function readStored(definition: OtpProviderDefinition, sealed: string) {
  */
 export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prisma: PrismaClient }) {
   const logProvider = createLogProvider(deps.log);
+  const reviewProvider = createReviewProvider(deps.log, async () => (await loaded()).review);
   let cache: { expires: number; loaded: Promise<Loaded> } | null = null;
 
   function createProvider(definition: OtpProviderDefinition, credentials: Credentials | null) {
@@ -79,7 +85,13 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
         ];
       }),
     );
-    return { providers, selected: settings.otpProvider };
+    const { reviewLoginEnabled, reviewLoginPhone, reviewLoginCodeHash } = settings;
+    return {
+      providers,
+      selected: settings.otpProvider,
+      review:
+        reviewLoginEnabled && reviewLoginPhone && reviewLoginCodeHash ? { phone: reviewLoginPhone, codeHash: reviewLoginCodeHash } : null,
+    };
   }
 
   function loaded() {
@@ -105,8 +117,13 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
     return name ? (providers.get(name)?.provider ?? null) : null;
   }
 
-  /** The provider for a new OTP. Without one, development writes codes to the log; production refuses. */
-  async function sender() {
+  /**
+   * The provider for a new OTP to `phone`. The review login's number gets the review provider when
+   * `allowReview` (the number is not a staff or rider account). Without a provider, development
+   * writes codes to the log; production refuses.
+   */
+  async function sender(phone: string, { allowReview }: { allowReview: boolean }) {
+    if (allowReview && (await loaded()).review?.phone === phone) return reviewProvider;
     const provider = await active();
     if (provider) return provider;
     if (env.NODE_ENV !== "production") return logProvider;
@@ -116,6 +133,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
   /** The provider that sent a pending OTP, so it can still be checked after a switch. */
   async function byName(name: string) {
     if (name === logProvider.name) return logProvider;
+    if (name === reviewProvider.name) return reviewProvider;
     return (await loaded()).providers.get(name)?.provider ?? null;
   }
 

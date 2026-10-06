@@ -77,6 +77,7 @@ export const ModelName = {
   Delivery: 'Delivery',
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
+  PolicyPage: 'PolicyPage',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
   OtpProviderCredential: 'OtpProviderCredential',
   AppAppearance: 'AppAppearance',
@@ -488,6 +489,13 @@ export const PlatformSettingsScalarFieldEnum = {
   deliveryPartnerFee: 'deliveryPartnerFee',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  websiteTagline: 'websiteTagline',
+  playStoreUrl: 'playStoreUrl',
+  reviewLoginEnabled: 'reviewLoginEnabled',
+  reviewLoginPhone: 'reviewLoginPhone',
+  reviewLoginCodeHash: 'reviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   updatedById: 'updatedById',
@@ -496,6 +504,17 @@ export const PlatformSettingsScalarFieldEnum = {
 } as const
 
 export type PlatformSettingsScalarFieldEnum = (typeof PlatformSettingsScalarFieldEnum)[keyof typeof PlatformSettingsScalarFieldEnum]
+
+
+export const PolicyPageScalarFieldEnum = {
+  slug: 'slug',
+  body: 'body',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PolicyPageScalarFieldEnum = (typeof PolicyPageScalarFieldEnum)[keyof typeof PolicyPageScalarFieldEnum]
 
 
 export const PaymentGatewayCredentialScalarFieldEnum = {

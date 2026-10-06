@@ -1,7 +1,8 @@
 import { env } from "../../config/env.js";
-import { PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { PaymentMethod, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { canStoreSecrets } from "../../shared/secret-box.js";
+import { hashOtp } from "../auth/otp-provider.js";
 import type { OtpRegistry } from "../auth/otp-registry.js";
 import {
   activePaymentProvider,
@@ -11,7 +12,8 @@ import {
   saveGatewayCredentials,
 } from "../payments/gateway-registry.js";
 import { getAppearance } from "./appearance.service.js";
-import type { UpdateSettingsInput } from "./settings.schemas.js";
+import { POLICY_SLUGS, type PolicySlug } from "./policy-templates.js";
+import type { ReviewLoginInput, UpdateSettingsInput } from "./settings.schemas.js";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -60,6 +62,29 @@ export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSet
   };
 }
 
+/** Links to the public website and its policy pages; null when PUBLIC_SITE_URL is not set. */
+function policyLinks() {
+  if (!env.PUBLIC_SITE_URL) {
+    return null;
+  }
+  const base = env.PUBLIC_SITE_URL.replace(/\/+$/, "");
+  return {
+    home: base,
+    index: `${base}/policies`,
+    ...Object.fromEntries([...POLICY_SLUGS, "contact"].map((slug) => [slug, `${base}/${slug}`])),
+  } as Record<"home" | "index" | PolicySlug | "contact", string>;
+}
+
+/** The customer account reviewers sign in to, so staff can tell its orders apart. */
+export async function reviewAccountUserId(db: Db) {
+  const { reviewLoginPhone } = await getPlatformSettings(db);
+  if (!reviewLoginPhone) {
+    return null;
+  }
+  const user = await db.user.findUnique({ where: { phone: reviewLoginPhone }, select: { id: true } });
+  return user?.id ?? null;
+}
+
 async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: PlatformSettings) {
   return {
     deliveryFee: settings.deliveryFee.toFixed(2),
@@ -68,6 +93,15 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     deliveryPartnerFee: settings.deliveryPartnerFee.toFixed(2),
     supportPhone: settings.supportPhone,
     supportEmail: settings.supportEmail,
+    businessName: settings.businessName,
+    businessAddress: settings.businessAddress,
+    websiteTagline: settings.websiteTagline,
+    playStoreUrl: settings.playStoreUrl,
+    reviewLogin: {
+      enabled: settings.reviewLoginEnabled,
+      phone: settings.reviewLoginPhone,
+      codeSet: settings.reviewLoginCodeHash !== null,
+    },
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
     canStoreSecrets,
@@ -105,6 +139,7 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
         phone: settings.supportPhone,
         email: settings.supportEmail,
       },
+      policies: policyLinks(),
     };
   }
 
@@ -152,10 +187,42 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     return getAdminSettings();
   }
 
+  /** A blank code keeps the saved one, which only works for the same phone number. */
+  async function saveReviewLogin(input: ReviewLoginInput, adminId: string) {
+    const settings = await getPlatformSettings(prisma);
+    const { enabled, phone, code } = input;
+
+    if (phone) {
+      const owner = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
+      if (owner && owner.role !== UserRole.CUSTOMER) {
+        throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin, store staff or rider. Use a number only reviewers will use.", {
+          field: "phone",
+        });
+      }
+    }
+    const keepsCode = !code && phone === settings.reviewLoginPhone && settings.reviewLoginCodeHash !== null;
+    if (enabled && !code && !keepsCode) {
+      throw new AppError(400, "REVIEW_CODE_REQUIRED", "Enter the code reviewers will type", { field: "code" });
+    }
+
+    const updated = await prisma.platformSettings.update({
+      where: { id: SETTINGS_ID },
+      data: {
+        reviewLoginEnabled: enabled,
+        reviewLoginPhone: phone,
+        reviewLoginCodeHash: phone && code ? hashOtp(phone, code) : keepsCode ? settings.reviewLoginCodeHash : null,
+        updatedById: adminId,
+      },
+    });
+    otp.invalidate();
+    return toAdminView(prisma, otp, updated);
+  }
+
   return {
     getPublicSettings,
     getAdminSettings,
     updateSettings,
+    saveReviewLogin,
     saveGatewayKeys,
     removeGatewayKeys,
     saveOtpProviderKeys,

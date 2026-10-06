@@ -1,10 +1,11 @@
 import type Redis from "ioredis";
 
 import { env } from "../../config/env.js";
-import type { PrismaClient, UserRole } from "../../generated/prisma/client";
+import { UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { verifyAgainstDummy, verifyPassword } from "../../shared/password.js";
 import { signsInWithPassword } from "../../shared/roles.js";
+import { REVIEW_PROVIDER } from "./otp-provider.js";
 import type { OtpRegistry } from "./otp-registry.js";
 
 const OTP_TTL_SECONDS = 300;
@@ -81,7 +82,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       throw usePassword();
     }
 
-    const otpProvider = await otp.sender();
+    const otpProvider = await otp.sender(phone, { allowReview: !existing || existing.role === UserRole.CUSTOMER });
 
     const sends = await redis.incr(keys.sends(phone));
     if (sends === 1) {
@@ -171,6 +172,9 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
     });
     if (signsInWithPassword(user.role)) {
       throw usePassword();
+    }
+    if (pending.provider === REVIEW_PROVIDER && user.role !== UserRole.CUSTOMER) {
+      throw invalidOtp();
     }
 
     const accessToken = signToken({ sub: user.id, role: user.role });

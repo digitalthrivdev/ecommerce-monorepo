@@ -170,6 +170,11 @@ export type DeliveryLocation = Prisma.DeliveryLocationModel
  */
 export type PlatformSettings = Prisma.PlatformSettingsModel
 /**
+ * Model PolicyPage
+ * 
+ */
+export type PolicyPage = Prisma.PolicyPageModel
+/**
  * Model PaymentGatewayCredential
  * 
  */

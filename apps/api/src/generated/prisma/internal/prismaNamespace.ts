@@ -423,6 +423,7 @@ export const ModelName = {
   Delivery: 'Delivery',
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
+  PolicyPage: 'PolicyPage',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
   OtpProviderCredential: 'OtpProviderCredential',
   AppAppearance: 'AppAppearance',
@@ -442,7 +443,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2370,6 +2371,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PolicyPage: {
+      payload: Prisma.$PolicyPagePayload<ExtArgs>
+      fields: Prisma.PolicyPageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PolicyPageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PolicyPageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        findFirst: {
+          args: Prisma.PolicyPageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PolicyPageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        findMany: {
+          args: Prisma.PolicyPageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>[]
+        }
+        create: {
+          args: Prisma.PolicyPageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        createMany: {
+          args: Prisma.PolicyPageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PolicyPageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>[]
+        }
+        delete: {
+          args: Prisma.PolicyPageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        update: {
+          args: Prisma.PolicyPageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        deleteMany: {
+          args: Prisma.PolicyPageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PolicyPageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PolicyPageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>[]
+        }
+        upsert: {
+          args: Prisma.PolicyPageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PolicyPagePayload>
+        }
+        aggregate: {
+          args: Prisma.PolicyPageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePolicyPage>
+        }
+        groupBy: {
+          args: Prisma.PolicyPageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PolicyPageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PolicyPageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PolicyPageCountAggregateOutputType> | number
+        }
+      }
+    }
     PaymentGatewayCredential: {
       payload: Prisma.$PaymentGatewayCredentialPayload<ExtArgs>
       fields: Prisma.PaymentGatewayCredentialFieldRefs
@@ -3094,6 +3169,13 @@ export const PlatformSettingsScalarFieldEnum = {
   deliveryPartnerFee: 'deliveryPartnerFee',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  websiteTagline: 'websiteTagline',
+  playStoreUrl: 'playStoreUrl',
+  reviewLoginEnabled: 'reviewLoginEnabled',
+  reviewLoginPhone: 'reviewLoginPhone',
+  reviewLoginCodeHash: 'reviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   updatedById: 'updatedById',
@@ -3102,6 +3184,17 @@ export const PlatformSettingsScalarFieldEnum = {
 } as const
 
 export type PlatformSettingsScalarFieldEnum = (typeof PlatformSettingsScalarFieldEnum)[keyof typeof PlatformSettingsScalarFieldEnum]
+
+
+export const PolicyPageScalarFieldEnum = {
+  slug: 'slug',
+  body: 'body',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PolicyPageScalarFieldEnum = (typeof PolicyPageScalarFieldEnum)[keyof typeof PolicyPageScalarFieldEnum]
 
 
 export const PaymentGatewayCredentialScalarFieldEnum = {
@@ -3588,6 +3681,7 @@ export type GlobalOmitConfig = {
   delivery?: Prisma.DeliveryOmit
   deliveryLocation?: Prisma.DeliveryLocationOmit
   platformSettings?: Prisma.PlatformSettingsOmit
+  policyPage?: Prisma.PolicyPageOmit
   paymentGatewayCredential?: Prisma.PaymentGatewayCredentialOmit
   otpProviderCredential?: Prisma.OtpProviderCredentialOmit
   appAppearance?: Prisma.AppAppearanceOmit

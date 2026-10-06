@@ -48,6 +48,13 @@ export type PlatformSettingsMinAggregateOutputType = {
   deliveryPartnerFee: runtime.Decimal | null
   supportPhone: string | null
   supportEmail: string | null
+  businessName: string | null
+  businessAddress: string | null
+  websiteTagline: string | null
+  playStoreUrl: string | null
+  reviewLoginEnabled: boolean | null
+  reviewLoginPhone: string | null
+  reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -63,6 +70,13 @@ export type PlatformSettingsMaxAggregateOutputType = {
   deliveryPartnerFee: runtime.Decimal | null
   supportPhone: string | null
   supportEmail: string | null
+  businessName: string | null
+  businessAddress: string | null
+  websiteTagline: string | null
+  playStoreUrl: string | null
+  reviewLoginEnabled: boolean | null
+  reviewLoginPhone: string | null
+  reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -78,6 +92,13 @@ export type PlatformSettingsCountAggregateOutputType = {
   deliveryPartnerFee: number
   supportPhone: number
   supportEmail: number
+  businessName: number
+  businessAddress: number
+  websiteTagline: number
+  playStoreUrl: number
+  reviewLoginEnabled: number
+  reviewLoginPhone: number
+  reviewLoginCodeHash: number
   paymentProvider: number
   otpProvider: number
   updatedById: number
@@ -109,6 +130,13 @@ export type PlatformSettingsMinAggregateInputType = {
   deliveryPartnerFee?: true
   supportPhone?: true
   supportEmail?: true
+  businessName?: true
+  businessAddress?: true
+  websiteTagline?: true
+  playStoreUrl?: true
+  reviewLoginEnabled?: true
+  reviewLoginPhone?: true
+  reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -124,6 +152,13 @@ export type PlatformSettingsMaxAggregateInputType = {
   deliveryPartnerFee?: true
   supportPhone?: true
   supportEmail?: true
+  businessName?: true
+  businessAddress?: true
+  websiteTagline?: true
+  playStoreUrl?: true
+  reviewLoginEnabled?: true
+  reviewLoginPhone?: true
+  reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -139,6 +174,13 @@ export type PlatformSettingsCountAggregateInputType = {
   deliveryPartnerFee?: true
   supportPhone?: true
   supportEmail?: true
+  businessName?: true
+  businessAddress?: true
+  websiteTagline?: true
+  playStoreUrl?: true
+  reviewLoginEnabled?: true
+  reviewLoginPhone?: true
+  reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -241,6 +283,13 @@ export type PlatformSettingsGroupByOutputType = {
   deliveryPartnerFee: runtime.Decimal
   supportPhone: string | null
   supportEmail: string | null
+  businessName: string | null
+  businessAddress: string | null
+  websiteTagline: string | null
+  playStoreUrl: string | null
+  reviewLoginEnabled: boolean
+  reviewLoginPhone: string | null
+  reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -279,6 +328,13 @@ export type PlatformSettingsWhereInput = {
   deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  businessName?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  businessAddress?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  websiteTagline?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
+  reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -294,6 +350,13 @@ export type PlatformSettingsOrderByWithRelationInput = {
   deliveryPartnerFee?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   supportEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessName?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  websiteTagline?: Prisma.SortOrderInput | Prisma.SortOrder
+  playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewLoginEnabled?: Prisma.SortOrder
+  reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -312,6 +375,13 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  businessName?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  businessAddress?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  websiteTagline?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
+  reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -327,6 +397,13 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   deliveryPartnerFee?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   supportEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessName?: Prisma.SortOrderInput | Prisma.SortOrder
+  businessAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  websiteTagline?: Prisma.SortOrderInput | Prisma.SortOrder
+  playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewLoginEnabled?: Prisma.SortOrder
+  reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -350,6 +427,13 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   deliveryPartnerFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  businessName?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  businessAddress?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  websiteTagline?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  playStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  reviewLoginEnabled?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
+  reviewLoginPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  reviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -365,6 +449,13 @@ export type PlatformSettingsCreateInput = {
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: string | null
   supportEmail?: string | null
+  businessName?: string | null
+  businessAddress?: string | null
+  websiteTagline?: string | null
+  playStoreUrl?: string | null
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: string | null
+  reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -380,6 +471,13 @@ export type PlatformSettingsUncheckedCreateInput = {
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: string | null
   supportEmail?: string | null
+  businessName?: string | null
+  businessAddress?: string | null
+  websiteTagline?: string | null
+  playStoreUrl?: string | null
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: string | null
+  reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -395,6 +493,13 @@ export type PlatformSettingsUpdateInput = {
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -410,6 +515,13 @@ export type PlatformSettingsUncheckedUpdateInput = {
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -425,6 +537,13 @@ export type PlatformSettingsCreateManyInput = {
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: string | null
   supportEmail?: string | null
+  businessName?: string | null
+  businessAddress?: string | null
+  websiteTagline?: string | null
+  playStoreUrl?: string | null
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: string | null
+  reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -440,6 +559,13 @@ export type PlatformSettingsUpdateManyMutationInput = {
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -455,6 +581,13 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -470,6 +603,13 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   deliveryPartnerFee?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
+  businessName?: Prisma.SortOrder
+  businessAddress?: Prisma.SortOrder
+  websiteTagline?: Prisma.SortOrder
+  playStoreUrl?: Prisma.SortOrder
+  reviewLoginEnabled?: Prisma.SortOrder
+  reviewLoginPhone?: Prisma.SortOrder
+  reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -492,6 +632,13 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   deliveryPartnerFee?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
+  businessName?: Prisma.SortOrder
+  businessAddress?: Prisma.SortOrder
+  websiteTagline?: Prisma.SortOrder
+  playStoreUrl?: Prisma.SortOrder
+  reviewLoginEnabled?: Prisma.SortOrder
+  reviewLoginPhone?: Prisma.SortOrder
+  reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -507,6 +654,13 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   deliveryPartnerFee?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
+  businessName?: Prisma.SortOrder
+  businessAddress?: Prisma.SortOrder
+  websiteTagline?: Prisma.SortOrder
+  playStoreUrl?: Prisma.SortOrder
+  reviewLoginEnabled?: Prisma.SortOrder
+  reviewLoginPhone?: Prisma.SortOrder
+  reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -531,6 +685,13 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   deliveryPartnerFee?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
+  businessName?: boolean
+  businessAddress?: boolean
+  websiteTagline?: boolean
+  playStoreUrl?: boolean
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: boolean
+  reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -546,6 +707,13 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   deliveryPartnerFee?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
+  businessName?: boolean
+  businessAddress?: boolean
+  websiteTagline?: boolean
+  playStoreUrl?: boolean
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: boolean
+  reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -561,6 +729,13 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   deliveryPartnerFee?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
+  businessName?: boolean
+  businessAddress?: boolean
+  websiteTagline?: boolean
+  playStoreUrl?: boolean
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: boolean
+  reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -576,6 +751,13 @@ export type PlatformSettingsSelectScalar = {
   deliveryPartnerFee?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
+  businessName?: boolean
+  businessAddress?: boolean
+  websiteTagline?: boolean
+  playStoreUrl?: boolean
+  reviewLoginEnabled?: boolean
+  reviewLoginPhone?: boolean
+  reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -583,7 +765,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "supportPhone" | "supportEmail" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "websiteTagline" | "playStoreUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -596,6 +778,13 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     deliveryPartnerFee: runtime.Decimal
     supportPhone: string | null
     supportEmail: string | null
+    businessName: string | null
+    businessAddress: string | null
+    websiteTagline: string | null
+    playStoreUrl: string | null
+    reviewLoginEnabled: boolean
+    reviewLoginPhone: string | null
+    reviewLoginCodeHash: string | null
     paymentProvider: string | null
     otpProvider: string | null
     updatedById: string | null
@@ -1031,6 +1220,13 @@ export interface PlatformSettingsFieldRefs {
   readonly deliveryPartnerFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly supportPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly supportEmail: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly businessName: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly businessAddress: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly websiteTagline: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly playStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly reviewLoginEnabled: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
+  readonly reviewLoginPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly reviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly paymentProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly otpProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly updatedById: Prisma.FieldRef<"PlatformSettings", 'String'>

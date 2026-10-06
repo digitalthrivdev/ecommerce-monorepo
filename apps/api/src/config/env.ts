@@ -82,6 +82,10 @@ const envSchema = z.object({
   // webhooks back to it. In development it defaults to the address the app called.
   PUBLIC_API_URL: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
 
+  // Public website of this client (home page and policy pages, served by the admin app on
+  // SITE_DOMAIN). The apps link to its policy pages; without it the links are hidden.
+  PUBLIC_SITE_URL: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
+
   // Folder for uploaded images, relative to the API's working directory. Served at /uploads/; in
   // production Nginx serves it directly (see deploy/compose.yml) and the daily backup copies it.
   UPLOADS_DIR: z.string().trim().min(1).default("uploads"),

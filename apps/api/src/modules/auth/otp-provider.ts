@@ -28,8 +28,41 @@ export const OTP_LENGTH = 6;
 
 export type OtpProviderDeps = { log: FastifyBaseLogger; redis: Redis };
 
-function hashOtp(phone: string, otp: string) {
+export function hashOtp(phone: string, otp: string) {
   return createHmac("sha256", env.JWT_SECRET).update(`${phone}:${otp}`).digest("hex");
+}
+
+function sameHash(expectedHex: string, actualHex: string) {
+  const expected = Buffer.from(expectedHex, "hex");
+  const actual = Buffer.from(actualHex, "hex");
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+export const REVIEW_PROVIDER = "review";
+
+/**
+ * The review login: sends nothing and accepts the fixed code an admin set for one phone number.
+ * `current` returns that number and code hash, or null once it is turned off.
+ */
+export function createReviewProvider(
+  log: FastifyBaseLogger,
+  current: () => Promise<{ phone: string; codeHash: string } | null>,
+): OtpProvider {
+  return {
+    name: REVIEW_PROVIDER,
+    async start(phone) {
+      log.info({ phone }, "Review login: no SMS sent, the fixed review code applies");
+      return { reference: REVIEW_PROVIDER };
+    },
+    async check({ phone, code }) {
+      const review = await current();
+      if (review?.phone !== phone) return "expired";
+      return sameHash(review.codeHash, hashOtp(phone, code)) ? "valid" : "invalid";
+    },
+    async checkCredentials() {
+      return true;
+    },
+  };
 }
 
 /**
@@ -45,9 +78,7 @@ export function createLogProvider(log: FastifyBaseLogger): OtpProvider {
       return { reference: hashOtp(phone, otp) };
     },
     async check({ phone, code, reference }) {
-      const expected = Buffer.from(reference, "hex");
-      const actual = Buffer.from(hashOtp(phone, code), "hex");
-      return expected.length === actual.length && timingSafeEqual(expected, actual) ? "valid" : "invalid";
+      return sameHash(reference, hashOtp(phone, code)) ? "valid" : "invalid";
     },
     async checkCredentials() {
       return true;

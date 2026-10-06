@@ -687,6 +687,20 @@ model PlatformSettings {
   supportPhone String?
   supportEmail String?
 
+  // Legal name and registered address of the business, shown on the public policy and contact pages.
+  businessName    String?
+  businessAddress String?
+
+  // Public website on SITE_DOMAIN: home page tagline and the customer app's Play Store listing.
+  websiteTagline String?
+  playStoreUrl   String?
+
+  // Review login for app store and payment gateway reviewers: this phone number signs in to a
+  // customer account with a fixed code and no SMS. The code is stored only as an HMAC.
+  reviewLoginEnabled  Boolean @default(false)
+  reviewLoginPhone    String?
+  reviewLoginCodeHash String?
+
   // Gateway new online payments use (e.g. "razorpay", "cashfree"); null means cash on delivery only.
   // Only gateways with working keys can be selected.
   paymentProvider String?
@@ -694,6 +708,18 @@ model PlatformSettings {
   // SMS provider that sends login OTPs (e.g. "message-central"). Null means none is set up: OTPs go to
   // the API log, in production for admins only. OTP_PROVIDER in the environment overrides this.
   otpProvider String?
+
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Policy pages of the public website (terms, privacy, refunds, shipping) as edited by admins.
+// Without a row, the page shows the built-in template.
+model PolicyPage {
+  slug String @id
+  body String
 
   updatedById String?
 

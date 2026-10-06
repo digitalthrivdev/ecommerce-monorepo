@@ -6,18 +6,49 @@ import { createAppearanceService } from "./appearance.service.js";
 import {
   gatewayParamsSchema,
   otpProviderParamsSchema,
+  policyParamsSchema,
+  reviewLoginBodySchema,
   saveGatewayKeysBodySchema,
+  savePolicyBodySchema,
   updateSettingsBodySchema,
 } from "./settings.schemas.js";
 import { createSettingsService } from "./settings.service.js";
+import { createWebsiteService } from "./website.service.js";
 
 const settingsRoutes: FastifyPluginAsync = async (app) => {
   const settings = createSettingsService(app.prisma, app.otp);
   const appearance = createAppearanceService(app.prisma);
+  const website = createWebsiteService(app.prisma);
   const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };
 
   // Public: the apps load branding, theme, pricing and payment options at startup.
   app.get("/", async () => settings.getPublicSettings());
+
+  // Public: the website on SITE_DOMAIN, whose policy pages the apps link to.
+  app.get("/website", async () => website.getWebsite());
+
+  app.get("/website/pages/:slug", async (request) => {
+    const { slug } = policyParamsSchema.parse(request.params);
+    return website.getPublic(slug);
+  });
+
+  app.get("/policy-pages", adminOnly, async () => website.listForEditing());
+
+  app.put("/policy-pages/:slug", adminOnly, async (request) => {
+    const { slug } = policyParamsSchema.parse(request.params);
+    const { body } = savePolicyBodySchema.parse(request.body);
+    return website.save(slug, body, request.user.sub);
+  });
+
+  app.delete("/policy-pages/:slug", adminOnly, async (request) => {
+    const { slug } = policyParamsSchema.parse(request.params);
+    return website.restoreTemplate(slug);
+  });
+
+  app.put("/review-login", adminOnly, async (request) => {
+    const body = reviewLoginBodySchema.parse(request.body);
+    return settings.saveReviewLogin(body, request.user.sub);
+  });
 
   app.get("/platform", adminOnly, async () => settings.getAdminSettings());
 
