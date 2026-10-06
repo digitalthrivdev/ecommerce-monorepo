@@ -56,6 +56,8 @@ export type OrderListItem = {
   statusChangedAt: string;
   rider: { name: string | null; phone: string } | null;
   allowedActions: OrderAction[];
+  /** Placed through the review login, by an app store or payment gateway reviewer. */
+  reviewAccount: boolean;
 };
 
 export type OrderList = Paginated<OrderListItem> & {
@@ -66,6 +68,8 @@ export type OrderDetail = {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  /** Placed through the review login, by an app store or payment gateway reviewer. */
+  reviewAccount: boolean;
   paymentMethod: PaymentMethod;
   payment: {
     status: PaymentStatus;
@@ -418,6 +422,13 @@ export type PlatformSettings = {
   deliveryPartnerFee: string;
   supportPhone: string | null;
   supportEmail: string | null;
+  /** Legal name and registered address, shown on the policy and contact pages. */
+  businessName: string | null;
+  businessAddress: string | null;
+  websiteTagline: string | null;
+  playStoreUrl: string | null;
+  /** One customer number that signs in with a fixed code, for app store and payment gateway reviewers. */
+  reviewLogin: { enabled: boolean; phone: string | null; codeSet: boolean };
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];
@@ -427,6 +438,45 @@ export type PlatformSettings = {
   /** Null until an admin first saves; the values are then the server defaults. */
   updatedById: string | null;
   updatedAt: string;
+};
+
+/** Business details on the public website; `name` falls back to the app name. */
+export type PolicyBusiness = {
+  appName: string;
+  logoUrl: string | null;
+  name: string;
+  address: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
+/** The public website's home page details and policy page titles. */
+export type Website = {
+  business: PolicyBusiness;
+  tagline: string | null;
+  playStoreUrl: string | null;
+  /** Cities with an active store. */
+  cities: string[];
+  pages: { slug: string; title: string; updatedAt: string | null }[];
+};
+
+/** A public policy page with its placeholders filled in. `updatedAt` is null while it shows the template. */
+export type PolicyPage = {
+  slug: string;
+  title: string;
+  body: string;
+  updatedAt: string | null;
+  business: PolicyBusiness;
+};
+
+/** A policy page as an admin edits it: placeholders kept, plus the template to restore. */
+export type EditablePolicyPage = {
+  slug: string;
+  title: string;
+  body: string;
+  template: string;
+  custom: boolean;
+  updatedAt: string | null;
 };
 
 export type AppearanceLink = { type: "none" } | { type: "category"; categoryId: string };

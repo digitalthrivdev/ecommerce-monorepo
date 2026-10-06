@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
 import { PageBody, Panel } from "@/components/section";
-import { OrderStatusPill } from "@/components/status-pill";
+import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { StoreFilter } from "@/components/store-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -212,6 +212,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                           </Link>
                           <OrderStatusPill status={order.status} />
                         </div>
+                        {order.reviewAccount && <ReviewAccountPill />}
                         <p className="text-sm">
                           {order.customerName}
                           <span className="text-muted-foreground">
@@ -254,6 +255,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                           <TableCell>
                             <div>{order.customerName}</div>
                             <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
+                            {order.reviewAccount && <ReviewAccountPill />}
                           </TableCell>
                           {showStore && <TableCell>{order.store.name}</TableCell>}
                           <TableCell>

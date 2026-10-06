@@ -6,6 +6,7 @@ import { Bike, Clock } from "lucide-react";
 
 import { Elapsed } from "@/components/orders/elapsed";
 import { AssignPartnerDialog, NextStepButton, type StoreLocation } from "@/components/orders/order-actions";
+import { ReviewAccountPill } from "@/components/status-pill";
 import { formatMoney, ORDER_STATUS_LABELS } from "@/lib/format";
 import { BOARD_COLUMNS, type BoardColumn } from "@/lib/order-flow";
 import type { DeliveryPartner, OrderListItem } from "@/lib/types";
@@ -52,6 +53,7 @@ function Ticket({ order, currency, showStore, partners, storeLocations }: { orde
           <p className="text-muted-foreground">Paid online · {formatMoney(order.total, currency)}</p>
         )}
         {showStore && <p className="truncate text-xs text-muted-foreground">{order.store.name}</p>}
+        {order.reviewAccount && <ReviewAccountPill />}
       </div>
 
       {inPacking && order.status !== "PICKING" && (

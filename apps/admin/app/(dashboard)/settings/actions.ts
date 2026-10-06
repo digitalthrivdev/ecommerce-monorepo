@@ -4,8 +4,8 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
-import { apiFetch } from "@/lib/api";
-import { decimal, formText, optionalDecimal, optionalEmail, optionalPhoneInput } from "@/lib/form-schemas";
+import { ApiError, apiFetch } from "@/lib/api";
+import { decimal, formChecked, formText, optionalDecimal, optionalEmail, optionalPhoneInput, optionalText, text } from "@/lib/form-schemas";
 import type { ActionResult } from "@/lib/types";
 
 const AMOUNT = "Enter an amount like 25 or 25.50";
@@ -38,6 +38,107 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
 
   refresh();
   return { ok: true, message: "Settings saved" };
+}
+
+const websiteSchema = z.object({
+  businessName: optionalText(200),
+  businessAddress: optionalText(500),
+  websiteTagline: optionalText(160),
+  playStoreUrl: optionalText(300).refine(
+    (url) => url === null || /^https:\/\/play\.google\.com\/\S+$/.test(url),
+    "Paste the app's link from play.google.com",
+  ),
+});
+
+export async function updateWebsiteDetails(formData: FormData): Promise<ActionResult> {
+  const parsed = websiteSchema.safeParse({
+    businessName: formText(formData, "businessName"),
+    businessAddress: formText(formData, "businessAddress"),
+    websiteTagline: formText(formData, "websiteTagline"),
+    playStoreUrl: formText(formData, "playStoreUrl"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  try {
+    await apiFetch("/settings/platform", { method: "PATCH", body: parsed.data });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Website details saved" };
+}
+
+const reviewLoginSchema = z.object({
+  enabled: z.boolean(),
+  phone: optionalPhoneInput,
+  code: z
+    .string()
+    .trim()
+    .regex(/^(\d{6})?$/, "Use 6 digits")
+    .transform((value) => value || undefined),
+});
+
+export async function saveReviewLogin(formData: FormData): Promise<ActionResult> {
+  const parsed = reviewLoginSchema.safeParse({
+    enabled: formChecked(formData, "enabled"),
+    phone: formText(formData, "phone"),
+    code: formText(formData, "code"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+  if (parsed.data.enabled && !parsed.data.phone) {
+    return { ok: false, error: "Check the highlighted fields", fieldErrors: { phone: "Enter the phone number reviewers will use" } };
+  }
+
+  try {
+    await apiFetch("/settings/review-login", { method: "PUT", body: parsed.data });
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "REVIEW_PHONE_NOT_CUSTOMER") {
+      return { ok: false, error: error.message, fieldErrors: { phone: error.message } };
+    }
+    if (error instanceof ApiError && error.code === "REVIEW_CODE_REQUIRED") {
+      return { ok: false, error: error.message, fieldErrors: { code: error.message } };
+    }
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: parsed.data.enabled ? "Review login is on" : "Review login is off" };
+}
+
+const policySlug = z.string().trim().min(1).max(32);
+
+const policySchema = z.object({
+  slug: policySlug,
+  body: text(50_000).min(1, "Write the page text"),
+});
+
+export async function savePolicyPage(formData: FormData): Promise<ActionResult> {
+  const parsed = policySchema.safeParse({ slug: formText(formData, "slug"), body: formText(formData, "body") });
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  try {
+    await apiFetch(`/settings/policy-pages/${encodeURIComponent(parsed.data.slug)}`, { method: "PUT", body: { body: parsed.data.body } });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Page saved" };
+}
+
+export async function restorePolicyTemplate(input: { slug: string }): Promise<ActionResult> {
+  const slug = policySlug.safeParse(input.slug);
+  if (!slug.success) return { ok: false, error: "Unknown page" };
+
+  try {
+    await apiFetch(`/settings/policy-pages/${encodeURIComponent(slug.data)}`, { method: "DELETE" });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Template restored" };
 }
 
 const integrationName = z.string().trim().min(1).max(32);

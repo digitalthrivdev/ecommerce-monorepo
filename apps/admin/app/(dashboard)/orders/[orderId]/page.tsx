@@ -9,7 +9,7 @@ import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
 import { PageHeader } from "@/components/page-header";
 import { Block, PageBody, Panel, Section } from "@/components/section";
-import { OrderStatusPill } from "@/components/status-pill";
+import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
@@ -75,6 +75,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
         status={
           <>
             <OrderStatusPill status={order.status} size="md" />
+            {order.reviewAccount && <ReviewAccountPill size="md" />}
             {isOpen && order.status !== "PENDING_PAYMENT" && <Elapsed since={statusChangedAt(order)} status={order.status} className="h-8 px-3 text-sm" />}
           </>
         }

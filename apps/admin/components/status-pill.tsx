@@ -4,6 +4,7 @@ import {
   Bike,
   CircleCheck,
   Clock,
+  FlaskConical,
   PackageCheck,
   PackageOpen,
   type LucideIcon,
@@ -42,6 +43,15 @@ export function Pill({ tone, icon: Icon, size = "sm", className, children }: Pil
       {Icon && <Icon className={size === "sm" ? "size-3.5" : "size-4"} aria-hidden />}
       {children}
     </span>
+  );
+}
+
+/** Orders placed through the review login by app store or payment gateway reviewers. */
+export function ReviewAccountPill({ size }: { size?: "sm" | "md" }) {
+  return (
+    <Pill tone="violet" icon={FlaskConical} size={size}>
+      Review account
+    </Pill>
   );
 }
 

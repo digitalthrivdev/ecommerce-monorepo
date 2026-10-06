@@ -1,10 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { isSiteHost, SITE_DOMAIN } from "./lib/site-domain";
 import { decodeToken, isTokenExpired, SESSION_COOKIE } from "./lib/token";
+
+const SITE_PREFIX = "/site";
 
 /** Optimistic routing only: pages still verify the session with the API. */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  // The public website: only the pages under app/site, read-only, never the dashboard.
+  if (isSiteHost(request.headers.get("host"))) {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new NextResponse(null, { status: 405, headers: { allow: "GET, HEAD" } });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = pathname === "/" ? SITE_PREFIX : `${SITE_PREFIX}${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  if (pathname === SITE_PREFIX || pathname.startsWith(`${SITE_PREFIX}/`)) {
+    if (SITE_DOMAIN) {
+      return NextResponse.redirect(`https://${SITE_DOMAIN}${pathname.slice(SITE_PREFIX.length) || "/"}${search}`);
+    }
+    return NextResponse.next();
+  }
 
   if (pathname === "/auth/signout") {
     return NextResponse.next();

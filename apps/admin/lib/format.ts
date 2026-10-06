@@ -23,6 +23,10 @@ export function formatDateTime(value: string | Date, timeZone: string) {
   }).format(new Date(value));
 }
 
+export function formatDate(value: string | Date, timeZone: string) {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: "long", timeZone }).format(new Date(value));
+}
+
 export function formatTime(value: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat(LOCALE, { timeStyle: "short", timeZone }).format(new Date(value));
 }

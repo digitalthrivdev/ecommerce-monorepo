@@ -7,17 +7,20 @@ import { PageTabs } from "@/components/page-tabs";
 import { PageBody, Panel, Section } from "@/components/section";
 import { GatewayKeys } from "@/components/settings/gateway-keys";
 import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
+import { ReviewLoginForm } from "@/components/settings/review-login-form";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { SmsProviderForm, SmsProviderKeys } from "@/components/settings/sms-provider-form";
+import { PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/components/settings/website-settings";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
-import type { PlatformSettings } from "@/lib/types";
+import type { EditablePolicyPage, PlatformSettings } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { getSiteUrl } from "@/lib/website";
 
 export const metadata: Metadata = { title: "Settings" };
 
-const TABS = ["rules", "payments", "sms", "about"] as const;
+const TABS = ["rules", "payments", "sms", "website", "about"] as const;
 type Tab = (typeof TABS)[number];
 
 function Dot({ ok }: { ok: boolean }) {
@@ -84,7 +87,17 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   await requireAdmin();
   const { tab: tabParam } = await searchParams;
   const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "rules";
-  const [settings, deployment] = await Promise.all([apiFetch<PlatformSettings>("/settings/platform"), getPublicSettings()]);
+  const [settings, deployment, policyPages, siteUrl] = await Promise.all([
+    apiFetch<PlatformSettings>("/settings/platform"),
+    getPublicSettings(),
+    tab === "website" ? apiFetch<EditablePolicyPage[]>("/settings/policy-pages") : null,
+    getSiteUrl(),
+  ]);
+  const siteLinks = [
+    { title: "Website", url: siteUrl },
+    ...(policyPages ?? []).map((page) => ({ title: page.title, url: `${siteUrl}/${page.slug}` })),
+    { title: "Contact Us", url: `${siteUrl}/contact` },
+  ];
 
   const activeGateway = settings.paymentGateways.find((gateway) => gateway.name === settings.paymentProvider);
   const paymentsOk = Boolean(activeGateway?.configured && !activeGateway.testMode);
@@ -103,6 +116,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             { id: "rules", label: "Shop rules", href: "/settings" },
             { id: "payments", label: "Online payments", href: "/settings?tab=payments", badge: <Dot ok={paymentsOk} /> },
             { id: "sms", label: "SMS sign-in", href: "/settings?tab=sms", badge: <Dot ok={smsOk} /> },
+            { id: "website", label: "Website", href: "/settings?tab=website" },
             { id: "about", label: "About this setup", href: "/settings?tab=about" },
           ]}
         />
@@ -147,6 +161,40 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                   key={`${settings.updatedAt}-${settings.sms.providers.map((provider) => `${provider.name}:${provider.configured}`).join()}`}
                   sms={settings.sms}
                 />
+              </Panel>
+            </Section>
+            <Section
+              title="Review login"
+              hint="Google Play and payment gateways test the app before approving it. Give them this number and code."
+            >
+              <Panel className="p-5">
+                <ReviewLoginForm key={settings.updatedAt} reviewLogin={settings.reviewLogin} />
+              </Panel>
+            </Section>
+          </div>
+        )}
+
+        {tab === "website" && policyPages && (
+          <div className="flex flex-col gap-8 pb-12">
+            <Notice tone="info" title="Your public website">
+              A home page plus the policy pages Razorpay, Cashfree and Google Play ask for, at{" "}
+              <a href={siteUrl} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
+                {siteUrl.replace(/^https?:\/\//, "")}
+              </a>
+              . Each policy starts from a template written for how this app works; read it and change anything that doesn’t match
+              your business, ideally with a legal adviser.
+            </Notice>
+            <Section step={1} title="Your business and home page" hint="Shown on the home page, every policy page and the contact page.">
+              <Panel className="p-5">
+                <WebsiteDetailsForm key={settings.updatedAt} settings={settings} />
+              </Panel>
+            </Section>
+            <Section step={2} title="Check the policy pages" hint="Open a page to read or change it.">
+              <PolicyEditors pages={policyPages} siteUrl={siteUrl} timezone={deployment.timezone} />
+            </Section>
+            <Section step={3} title="Share the links" hint="Paste these where you are asked for a website, privacy policy or terms.">
+              <Panel>
+                <PolicyLinks links={siteLinks} />
               </Panel>
             </Section>
           </div>
