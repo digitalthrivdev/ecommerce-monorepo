@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Bike, Clock } from "lucide-react";
 
 import { Elapsed } from "@/components/orders/elapsed";
-import { AssignPartnerDialog, NextStepButton } from "@/components/orders/order-actions";
+import { AssignPartnerDialog, NextStepButton, type StoreLocation } from "@/components/orders/order-actions";
 import { formatMoney, ORDER_STATUS_LABELS } from "@/lib/format";
 import { BOARD_COLUMNS, type BoardColumn } from "@/lib/order-flow";
 import type { DeliveryPartner, OrderListItem } from "@/lib/types";
@@ -17,9 +17,11 @@ type BoardProps = {
   showStore: boolean;
   /** Online riders, for admins assigning from a Ready ticket. */
   partners: DeliveryPartner[] | null;
+  /** Store positions by ID, to show how far each rider is from the order's store. */
+  storeLocations: Record<string, StoreLocation> | null;
 };
 
-function Ticket({ order, currency, showStore, partners }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
+function Ticket({ order, currency, showStore, partners, storeLocations }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
   const canAssign = order.allowedActions.includes("assign");
   const inPacking = order.status === "STORE_ACCEPTED" || order.status === "PICKING" || order.status === "PACKED";
   const onTheWay = order.status === "ASSIGNED" || order.status === "PICKED_UP" || order.status === "OUT_FOR_DELIVERY";
@@ -86,6 +88,7 @@ function Ticket({ order, currency, showStore, partners }: { order: OrderListItem
             orderId={order.id}
             mode="assign"
             partners={partners ?? []}
+            store={storeLocations?.[order.store.id] ?? null}
             className="w-full"
           />
         )}

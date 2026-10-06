@@ -23,7 +23,7 @@ import {
 } from "@/lib/format";
 import { statusChangedAt } from "@/lib/order-flow";
 import { getOrder } from "@/lib/orders";
-import type { DeliveryPartner, Paginated } from "@/lib/types";
+import type { DeliveryPartner, Paginated, StoreDetails } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Order" };
 
@@ -46,11 +46,12 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
     : order.allowedActions.includes("reassign")
       ? "reassign"
       : null;
-  const partners = assignMode
-    ? await apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", {
-        query: { isActive: true, limit: 100 },
-      })
-    : null;
+  const [partners, store] = assignMode
+    ? await Promise.all([
+        apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", { query: { isActive: true, limit: 100 } }),
+        apiFetch<StoreDetails>(`/stores/${encodeURIComponent(order.store.id)}`),
+      ])
+    : [null, null];
 
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const date = (value: string) => formatDateTime(value, settings.timezone);
@@ -271,7 +272,13 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 </p>
               )}
               {assignMode && (
-                <RiderPicker storeId={order.store.id} orderId={order.id} mode={assignMode} partners={partners?.items ?? []} />
+                <RiderPicker
+                  storeId={order.store.id}
+                  orderId={order.id}
+                  mode={assignMode}
+                  partners={partners?.items ?? []}
+                  store={store && { latitude: Number(store.latitude), longitude: Number(store.longitude) }}
+                />
               )}
             </Block>
           </div>

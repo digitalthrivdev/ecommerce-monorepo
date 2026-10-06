@@ -22,7 +22,7 @@ import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { BOARD_STATUSES } from "@/lib/order-flow";
 import { listOrders } from "@/lib/orders";
-import type { DeliveryPartner, OrderListItem, OrderStatus, Paginated, Store } from "@/lib/types";
+import type { DeliveryPartner, OrderListItem, OrderStatus, Paginated, StoreDetails } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Orders" };
@@ -70,7 +70,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
           limit: PAGE_SIZE,
           offset: (page - 1) * PAGE_SIZE,
         }),
-    isAdmin ? apiFetch<Paginated<Store>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
+    isAdmin ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
     getPublicSettings(),
   ]);
 
@@ -138,7 +138,17 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
       <PageBody className="gap-4">
         {view === "board" ? (
           <>
-            <OrderBoard orders={orders.items} currency={currency} showStore={showStore} partners={partners?.items ?? null} />
+            <OrderBoard
+              orders={orders.items}
+              currency={currency}
+              showStore={showStore}
+              partners={partners?.items ?? null}
+              storeLocations={
+                stores
+                  ? Object.fromEntries(stores.items.map((store) => [store.id, { latitude: Number(store.latitude), longitude: Number(store.longitude) }]))
+                  : null
+              }
+            />
             {orders.total > BOARD_LIMIT && (
               <p className="text-sm text-muted-foreground">
                 Showing the {BOARD_LIMIT} oldest of {orders.total} open orders.{" "}

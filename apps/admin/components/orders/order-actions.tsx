@@ -273,29 +273,72 @@ export function MarkUnavailableDialog({ storeId, orderId, item, className }: Tar
   );
 }
 
-function PartnerSelect({ id, partners, value, onChange }: {
+export type StoreLocation = { latitude: number; longitude: number };
+
+const STATUS_RANK = { ONLINE: 0, BUSY: 1, OFFLINE: 2 } as const;
+
+function distanceKm(a: StoreLocation, b: StoreLocation) {
+  const rad = (degrees: number) => (degrees * Math.PI) / 180;
+  const h =
+    Math.sin(rad(b.latitude - a.latitude) / 2) ** 2 +
+    Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(rad(b.longitude - a.longitude) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+const formatDistance = (km: number) => (km < 1 ? `${Math.max(10, Math.round(km * 100) * 10)} m` : `${km.toFixed(1)} km`);
+
+type RiderOption = { partner: DeliveryPartner; distanceKm: number | null };
+
+/**
+ * Free riders first, nearest to the store first (straight line from their last position, which is
+ * at most 10 minutes old); riders without a recent position come after those with one.
+ */
+function riderOptions(partners: DeliveryPartner[], store: StoreLocation | null): RiderOption[] {
+  return partners
+    .map((partner) => ({ partner, distanceKm: store && partner.lastLocation ? distanceKm(store, partner.lastLocation) : null }))
+    .sort(
+      (a, b) =>
+        STATUS_RANK[a.partner.status] - STATUS_RANK[b.partner.status] ||
+        (a.distanceKm ?? Number.MAX_VALUE) - (b.distanceKm ?? Number.MAX_VALUE),
+    );
+}
+
+/** The free rider closest to the store, if any has shared a position. */
+function nearestFreeRider(partners: DeliveryPartner[], store: StoreLocation | null) {
+  const [first] = riderOptions(partners, store);
+  return first && first.partner.status === "ONLINE" && first.distanceKm !== null ? first.partner.id : "";
+}
+
+function riderLabel({ partner, distanceKm }: RiderOption, nearest: boolean, store: StoreLocation | null) {
+  const parts = [partner.name ?? partner.phone];
+  if (partner.vehicleNumber) parts.push(partner.vehicleNumber);
+  if (partner.status === "BUSY") parts.push(`Busy${partner.activeDelivery ? ` with ${partner.activeDelivery.orderNumber}` : ""}`);
+  if (partner.status === "OFFLINE") parts.push("Offline");
+  if (partner.status === "ONLINE" && store) {
+    parts.push(distanceKm === null ? "location unknown" : `${formatDistance(distanceKm)} from store${nearest ? " (nearest)" : ""}`);
+  }
+  return parts.join(" · ");
+}
+
+function PartnerSelect({ id, partners, store, value, onChange }: {
   id: string;
   partners: DeliveryPartner[];
+  store: StoreLocation | null;
   value: string;
   onChange: (value: string) => void;
 }) {
+  const nearest = nearestFreeRider(partners, store);
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger id={id} className="w-full">
         <SelectValue placeholder="Choose a rider" />
       </SelectTrigger>
       <SelectContent>
-        {[...partners]
-          .sort((a, b) => Number(b.status === "ONLINE") - Number(a.status === "ONLINE"))
-          .map((partner) => (
-            <SelectItem key={partner.id} value={partner.id} disabled={partner.status !== "ONLINE"}>
-              {partner.name ?? partner.phone}
-              {partner.vehicleNumber && ` · ${partner.vehicleNumber}`}
-              {partner.status === "BUSY" &&
-                ` · Busy${partner.activeDelivery ? ` with ${partner.activeDelivery.orderNumber}` : ""}`}
-              {partner.status === "OFFLINE" && " · Offline"}
-            </SelectItem>
-          ))}
+        {riderOptions(partners, store).map((option) => (
+          <SelectItem key={option.partner.id} value={option.partner.id} disabled={option.partner.status !== "ONLINE"}>
+            {riderLabel(option, option.partner.id === nearest, store)}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );
@@ -307,8 +350,9 @@ function noRidersText(partners: DeliveryPartner[]) {
   return "No rider is free right now. Busy riders become free when they finish or decline their delivery; offline riders need to go online in the rider app.";
 }
 
-function useAssign({ storeId, orderId, mode }: Target & { mode: "assign" | "reassign" }) {
-  const [partnerId, setPartnerId] = useState("");
+/** Starts with the nearest free rider chosen, so assigning them is one click. */
+function useAssign({ storeId, orderId, mode, initialPartnerId }: Target & { mode: "assign" | "reassign"; initialPartnerId: string }) {
+  const [partnerId, setPartnerId] = useState(initialPartnerId);
   const [pending, startTransition] = useTransition();
 
   function submit(onDone?: () => void) {
@@ -324,13 +368,14 @@ function useAssign({ storeId, orderId, mode }: Target & { mode: "assign" | "reas
 }
 
 /** "Assign rider" on a board ticket. */
-export function AssignPartnerDialog({ storeId, orderId, mode, partners, className }: Target & {
+export function AssignPartnerDialog({ storeId, orderId, mode, partners, store, className }: Target & {
   mode: "assign" | "reassign";
   partners: DeliveryPartner[];
+  store: StoreLocation | null;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode });
+  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode, initialPartnerId: nearestFreeRider(partners, store) });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -351,7 +396,7 @@ export function AssignPartnerDialog({ storeId, orderId, mode, partners, classNam
         {partners.length > 0 && (
           <Field>
             <FieldLabel htmlFor={`partner-${orderId}`}>Rider</FieldLabel>
-            <PartnerSelect id={`partner-${orderId}`} partners={partners} value={partnerId} onChange={setPartnerId} />
+            <PartnerSelect id={`partner-${orderId}`} partners={partners} store={store} value={partnerId} onChange={setPartnerId} />
           </Field>
         )}
         {noRidersText(partners) && <p className="text-sm text-muted-foreground">{noRidersText(partners)}</p>}
@@ -370,12 +415,13 @@ export function AssignPartnerDialog({ storeId, orderId, mode, partners, classNam
 }
 
 /** Choosing a rider right on the order page. */
-export function RiderPicker({ storeId, orderId, mode, partners, className }: Target & {
+export function RiderPicker({ storeId, orderId, mode, partners, store, className }: Target & {
   mode: "assign" | "reassign";
   partners: DeliveryPartner[];
+  store: StoreLocation | null;
   className?: string;
 }) {
-  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode });
+  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode, initialPartnerId: nearestFreeRider(partners, store) });
 
   const hint = noRidersText(partners);
   if (partners.length === 0) {
@@ -385,7 +431,7 @@ export function RiderPicker({ storeId, orderId, mode, partners, className }: Tar
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <FieldLabel htmlFor="rider-picker">{mode === "assign" ? "Choose a rider" : "Change to another rider"}</FieldLabel>
-      <PartnerSelect id="rider-picker" partners={partners} value={partnerId} onChange={setPartnerId} />
+      <PartnerSelect id="rider-picker" partners={partners} store={store} value={partnerId} onChange={setPartnerId} />
       {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
       <Button
         variant={mode === "assign" ? "default" : "outline"}
