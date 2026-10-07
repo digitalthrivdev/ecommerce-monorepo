@@ -168,6 +168,9 @@ const tabIconSchema = z.discriminatedUnion("type", [
 
 export const SECTION_EDGES = ["straight", "zigzag", "wave"] as const;
 
+/** Shapes drifting behind a sale hero's title. */
+export const SALE_HERO_EFFECTS = ["none", "snow", "sparkles", "confetti", "hearts"] as const;
+
 /** A coloured band behind a section; `edge` shapes its bottom border, e.g. a paper-cut zigzag. Null keeps the page background. */
 const sectionBackground = z
   .object({
@@ -296,6 +299,27 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
       )
       .min(1, "Add at least one category")
       .max(24, "Use at most 24 categories"),
+  }),
+  z.object({
+    ...sectionBase,
+    /** A festive sale block: an animated title, hand-picked products that cycle in a card, and hand-picked category tiles. */
+    type: z.literal("sale_hero"),
+    title: label(20, "a title"),
+    subtitle: optionalLabel(20),
+    /** e.g. "30th Nov – 7th Dec". */
+    tagline: optionalLabel(50),
+    titleColor: hexColor,
+    /** The title's letters bounce one after another. */
+    animateTitle: z.boolean(),
+    effect: z.enum(SALE_HERO_EFFECTS, "Choose an effect"),
+    /** Shown on both sides of the title; null for none. */
+    icon: z.enum(CATEGORY_TAB_ICONS, "Choose an icon").nullable(),
+    /** Heading on the cycling products card; null uses "Crazy deals" when there are products. */
+    dealsLabel: optionalLabel(20),
+    /** Products to cycle in the left card, in this order. Empty hides the card. Out-of-stock ones are skipped in the app. */
+    productIds: z.array(z.string().trim().min(1, "Choose a product").max(64)).max(8, "Choose at most 8 products"),
+    /** Category tiles on the right, in this order. Empty hides the tiles. */
+    categoryIds: z.array(categoryId).max(4, "Choose at most 4 categories"),
   }),
 ]);
 

@@ -16,6 +16,8 @@ const ALL_CATEGORIES_LIMIT = 100;
 const TOP_BRANDS_LIMIT = 12;
 /** Category deal tiles shown when the admin hasn't picked any. */
 const TOP_CATEGORY_DEALS_LIMIT = 12;
+/** A sale hero's product images per tile. */
+const SALE_HERO_TILE_IMAGES = 4;
 
 type SectionLink = Extract<HomeSection, { type: "offer_strip" }>["link"];
 
@@ -33,6 +35,8 @@ function referencedCategoryIds(sections: HomeSection[]) {
         return [section.categoryId];
       case "deals_rail":
         return section.categoryId ? [section.categoryId] : [];
+      case "sale_hero":
+        return section.categoryIds;
       case "banner_carousel":
         return section.banners.flatMap((banner) => linked(banner.link));
       case "image_tiles":
@@ -171,6 +175,43 @@ export function createHomeService(prisma: PrismaClient) {
           });
           if (shown.length === 0) return null;
           return { id: section.id, type: section.type, title: section.title, description: section.description, categories: shown };
+        }
+
+        case "sale_hero": {
+          if (!storeId) return null;
+          const tiles = section.categoryIds.flatMap((id) => categories.get(id) ?? []);
+          const [products, discounts, images] = await Promise.all([
+            section.productIds.length > 0 ? discovery.productsByIds(storeId, section.productIds) : [],
+            discovery.categoryDiscounts(
+              storeId,
+              tiles.map((category) => category.id),
+            ),
+            discovery.categoryDealImages(
+              storeId,
+              tiles.map((category) => category.id),
+              SALE_HERO_TILE_IMAGES,
+            ),
+          ]);
+          return {
+            id: section.id,
+            type: section.type,
+            title: section.title,
+            subtitle: section.subtitle,
+            tagline: section.tagline,
+            titleColor: section.titleColor,
+            animateTitle: section.animateTitle,
+            effect: section.effect,
+            icon: section.icon,
+            deals:
+              products.length > 0
+                ? { label: section.dealsLabel ?? "Crazy deals", category: null, products }
+                : null,
+            categories: tiles.map((category) => ({
+              ...category,
+              maxDiscountPercent: discounts.get(category.id) ?? 0,
+              imageUrls: images.get(category.id) ?? [],
+            })),
+          };
         }
 
         case "image_tiles":

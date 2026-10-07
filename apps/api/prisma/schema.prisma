@@ -691,9 +691,15 @@ model PlatformSettings {
   businessName    String?
   businessAddress String?
 
-  // Public website on SITE_DOMAIN: home page tagline and the customer app's Play Store listing.
-  websiteTagline String?
-  playStoreUrl   String?
+  // Public website on SITE_DOMAIN: home page tagline and where to get the customer and delivery
+  // partner apps. A direct download link only shows while that app has no store listing.
+  websiteTagline       String?
+  playStoreUrl         String?
+  appStoreUrl          String?
+  appDownloadUrl       String?
+  deliveryPlayStoreUrl String?
+  deliveryAppStoreUrl  String?
+  deliveryDownloadUrl  String?
 
   // Review login for app store and payment gateway reviewers: this phone number signs in to a
   // customer account with a fixed code and no SMS. The code is stored only as an HMAC.

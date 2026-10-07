@@ -80,6 +80,8 @@ function categoryReferences(sections: HomeSection[], base: Path) {
         return section.categoryId ? [{ path: at("categoryId"), id: section.categoryId }] : [];
       case "category_deals":
         return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
+      case "sale_hero":
+        return section.categoryIds.map((id, position) => ({ path: at("categoryIds", position), id }));
       case "category_collection":
         return section.items.map((item, position) => ({ path: at("items", position, "categoryId"), id: item.categoryId }));
       case "image_tiles":
@@ -96,6 +98,12 @@ function categoryReferences(sections: HomeSection[], base: Path) {
 function brandReferences(sections: HomeSection[], base: Path) {
   return sections.flatMap((section, index) =>
     section.type === "brand_rail" ? section.brandIds.map((id, position) => ({ path: [...base, index, "brandIds", position], id })) : [],
+  );
+}
+
+function productReferences(sections: HomeSection[], base: Path) {
+  return sections.flatMap((section, index) =>
+    section.type === "sale_hero" ? section.productIds.map((id, position) => ({ path: [...base, index, "productIds", position], id })) : [],
   );
 }
 
@@ -146,9 +154,29 @@ export function createAppearanceService(prisma: PrismaClient) {
     }
   }
 
+  /** Like categories: inactive products are allowed and skipped in the app; deleted ones are not. */
+  async function assertProductsExist(input: UpdateAppearanceInput) {
+    const references = sectionLists(input).flatMap((list) => productReferences(list.sections, list.path));
+    if (references.length === 0) return;
+
+    const found = await prisma.product.findMany({
+      where: { id: { in: [...new Set(references.map((reference) => reference.id))] } },
+      select: { id: true },
+    });
+    const existing = new Set(found.map((product) => product.id));
+    const missing = references.filter((reference) => !existing.has(reference.id));
+
+    if (missing.length > 0) {
+      throw new z.ZodError(
+        missing.map((reference) => ({ code: "custom" as const, path: reference.path, message: "This product does not exist", input: reference.id })),
+      );
+    }
+  }
+
   async function updateAppearance(input: UpdateAppearanceInput, adminId: string) {
     await assertCategoriesExist(input);
     await assertBrandsExist(input);
+    await assertProductsExist(input);
 
     const { appearance } = await getAppearance(prisma);
     const config = { ...appearance, ...input } as Prisma.InputJsonValue;

@@ -3,6 +3,24 @@ import { z } from "zod";
 import { decimalSchema, phoneSchema } from "../../shared/schemas.js";
 import { OTP_LENGTH } from "../auth/otp-provider.js";
 
+const playStoreUrlSchema = z
+  .url()
+  .max(300)
+  .refine((url) => url.startsWith("https://play.google.com/"), "Use the app's link on play.google.com")
+  .nullable();
+
+const appStoreUrlSchema = z
+  .url()
+  .max(300)
+  .refine((url) => url.startsWith("https://apps.apple.com/"), "Use the app's link on apps.apple.com")
+  .nullable();
+
+const downloadUrlSchema = z
+  .url()
+  .max(500)
+  .refine((url) => url.startsWith("https://"), "Use an https:// link")
+  .nullable();
+
 export const updateSettingsBodySchema = z
   .object({
     deliveryFee: decimalSchema,
@@ -14,11 +32,12 @@ export const updateSettingsBodySchema = z
     businessName: z.string().trim().min(1).max(200).nullable(),
     businessAddress: z.string().trim().min(1).max(500).nullable(),
     websiteTagline: z.string().trim().min(1).max(160).nullable(),
-    playStoreUrl: z
-      .url()
-      .max(300)
-      .refine((url) => url.startsWith("https://play.google.com/"), "Use the app's link on play.google.com")
-      .nullable(),
+    playStoreUrl: playStoreUrlSchema,
+    appStoreUrl: appStoreUrlSchema,
+    appDownloadUrl: downloadUrlSchema,
+    deliveryPlayStoreUrl: playStoreUrlSchema,
+    deliveryAppStoreUrl: appStoreUrlSchema,
+    deliveryDownloadUrl: downloadUrlSchema,
     paymentProvider: z.string().trim().min(1).max(32).nullable(),
     otpProvider: z.string().trim().min(1).max(32).nullable(),
   })

@@ -52,6 +52,11 @@ export type PlatformSettingsMinAggregateOutputType = {
   businessAddress: string | null
   websiteTagline: string | null
   playStoreUrl: string | null
+  appStoreUrl: string | null
+  appDownloadUrl: string | null
+  deliveryPlayStoreUrl: string | null
+  deliveryAppStoreUrl: string | null
+  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
@@ -74,6 +79,11 @@ export type PlatformSettingsMaxAggregateOutputType = {
   businessAddress: string | null
   websiteTagline: string | null
   playStoreUrl: string | null
+  appStoreUrl: string | null
+  appDownloadUrl: string | null
+  deliveryPlayStoreUrl: string | null
+  deliveryAppStoreUrl: string | null
+  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
@@ -96,6 +106,11 @@ export type PlatformSettingsCountAggregateOutputType = {
   businessAddress: number
   websiteTagline: number
   playStoreUrl: number
+  appStoreUrl: number
+  appDownloadUrl: number
+  deliveryPlayStoreUrl: number
+  deliveryAppStoreUrl: number
+  deliveryDownloadUrl: number
   reviewLoginEnabled: number
   reviewLoginPhone: number
   reviewLoginCodeHash: number
@@ -134,6 +149,11 @@ export type PlatformSettingsMinAggregateInputType = {
   businessAddress?: true
   websiteTagline?: true
   playStoreUrl?: true
+  appStoreUrl?: true
+  appDownloadUrl?: true
+  deliveryPlayStoreUrl?: true
+  deliveryAppStoreUrl?: true
+  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
@@ -156,6 +176,11 @@ export type PlatformSettingsMaxAggregateInputType = {
   businessAddress?: true
   websiteTagline?: true
   playStoreUrl?: true
+  appStoreUrl?: true
+  appDownloadUrl?: true
+  deliveryPlayStoreUrl?: true
+  deliveryAppStoreUrl?: true
+  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
@@ -178,6 +203,11 @@ export type PlatformSettingsCountAggregateInputType = {
   businessAddress?: true
   websiteTagline?: true
   playStoreUrl?: true
+  appStoreUrl?: true
+  appDownloadUrl?: true
+  deliveryPlayStoreUrl?: true
+  deliveryAppStoreUrl?: true
+  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
@@ -287,6 +317,11 @@ export type PlatformSettingsGroupByOutputType = {
   businessAddress: string | null
   websiteTagline: string | null
   playStoreUrl: string | null
+  appStoreUrl: string | null
+  appDownloadUrl: string | null
+  deliveryPlayStoreUrl: string | null
+  deliveryAppStoreUrl: string | null
+  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
@@ -332,6 +367,11 @@ export type PlatformSettingsWhereInput = {
   businessAddress?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   websiteTagline?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  appStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  appDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryPlayStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryAppStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -354,6 +394,11 @@ export type PlatformSettingsOrderByWithRelationInput = {
   businessAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   websiteTagline?: Prisma.SortOrderInput | Prisma.SortOrder
   playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  appStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  appDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryPlayStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryAppStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -379,6 +424,11 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   businessAddress?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   websiteTagline?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  appStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  appDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryPlayStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryAppStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  deliveryDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -401,6 +451,11 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   businessAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   websiteTagline?: Prisma.SortOrderInput | Prisma.SortOrder
   playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  appStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  appDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryPlayStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryAppStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveryDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -431,6 +486,11 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   businessAddress?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   websiteTagline?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   playStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  appStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  appDownloadUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  deliveryPlayStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  deliveryAppStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  deliveryDownloadUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -453,6 +513,11 @@ export type PlatformSettingsCreateInput = {
   businessAddress?: string | null
   websiteTagline?: string | null
   playStoreUrl?: string | null
+  appStoreUrl?: string | null
+  appDownloadUrl?: string | null
+  deliveryPlayStoreUrl?: string | null
+  deliveryAppStoreUrl?: string | null
+  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
@@ -475,6 +540,11 @@ export type PlatformSettingsUncheckedCreateInput = {
   businessAddress?: string | null
   websiteTagline?: string | null
   playStoreUrl?: string | null
+  appStoreUrl?: string | null
+  appDownloadUrl?: string | null
+  deliveryPlayStoreUrl?: string | null
+  deliveryAppStoreUrl?: string | null
+  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
@@ -497,6 +567,11 @@ export type PlatformSettingsUpdateInput = {
   businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -519,6 +594,11 @@ export type PlatformSettingsUncheckedUpdateInput = {
   businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -541,6 +621,11 @@ export type PlatformSettingsCreateManyInput = {
   businessAddress?: string | null
   websiteTagline?: string | null
   playStoreUrl?: string | null
+  appStoreUrl?: string | null
+  appDownloadUrl?: string | null
+  deliveryPlayStoreUrl?: string | null
+  deliveryAppStoreUrl?: string | null
+  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
@@ -563,6 +648,11 @@ export type PlatformSettingsUpdateManyMutationInput = {
   businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -585,6 +675,11 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   businessAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   websiteTagline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -607,6 +702,11 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   businessAddress?: Prisma.SortOrder
   websiteTagline?: Prisma.SortOrder
   playStoreUrl?: Prisma.SortOrder
+  appStoreUrl?: Prisma.SortOrder
+  appDownloadUrl?: Prisma.SortOrder
+  deliveryPlayStoreUrl?: Prisma.SortOrder
+  deliveryAppStoreUrl?: Prisma.SortOrder
+  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
@@ -636,6 +736,11 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   businessAddress?: Prisma.SortOrder
   websiteTagline?: Prisma.SortOrder
   playStoreUrl?: Prisma.SortOrder
+  appStoreUrl?: Prisma.SortOrder
+  appDownloadUrl?: Prisma.SortOrder
+  deliveryPlayStoreUrl?: Prisma.SortOrder
+  deliveryAppStoreUrl?: Prisma.SortOrder
+  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
@@ -658,6 +763,11 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   businessAddress?: Prisma.SortOrder
   websiteTagline?: Prisma.SortOrder
   playStoreUrl?: Prisma.SortOrder
+  appStoreUrl?: Prisma.SortOrder
+  appDownloadUrl?: Prisma.SortOrder
+  deliveryPlayStoreUrl?: Prisma.SortOrder
+  deliveryAppStoreUrl?: Prisma.SortOrder
+  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
@@ -689,6 +799,11 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   businessAddress?: boolean
   websiteTagline?: boolean
   playStoreUrl?: boolean
+  appStoreUrl?: boolean
+  appDownloadUrl?: boolean
+  deliveryPlayStoreUrl?: boolean
+  deliveryAppStoreUrl?: boolean
+  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
@@ -711,6 +826,11 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   businessAddress?: boolean
   websiteTagline?: boolean
   playStoreUrl?: boolean
+  appStoreUrl?: boolean
+  appDownloadUrl?: boolean
+  deliveryPlayStoreUrl?: boolean
+  deliveryAppStoreUrl?: boolean
+  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
@@ -733,6 +853,11 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   businessAddress?: boolean
   websiteTagline?: boolean
   playStoreUrl?: boolean
+  appStoreUrl?: boolean
+  appDownloadUrl?: boolean
+  deliveryPlayStoreUrl?: boolean
+  deliveryAppStoreUrl?: boolean
+  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
@@ -755,6 +880,11 @@ export type PlatformSettingsSelectScalar = {
   businessAddress?: boolean
   websiteTagline?: boolean
   playStoreUrl?: boolean
+  appStoreUrl?: boolean
+  appDownloadUrl?: boolean
+  deliveryPlayStoreUrl?: boolean
+  deliveryAppStoreUrl?: boolean
+  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
@@ -765,7 +895,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "websiteTagline" | "playStoreUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "deliveryPlayStoreUrl" | "deliveryAppStoreUrl" | "deliveryDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -782,6 +912,11 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     businessAddress: string | null
     websiteTagline: string | null
     playStoreUrl: string | null
+    appStoreUrl: string | null
+    appDownloadUrl: string | null
+    deliveryPlayStoreUrl: string | null
+    deliveryAppStoreUrl: string | null
+    deliveryDownloadUrl: string | null
     reviewLoginEnabled: boolean
     reviewLoginPhone: string | null
     reviewLoginCodeHash: string | null
@@ -1224,6 +1359,11 @@ export interface PlatformSettingsFieldRefs {
   readonly businessAddress: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly websiteTagline: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly playStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly appStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly appDownloadUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly deliveryPlayStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly deliveryAppStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly deliveryDownloadUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly reviewLoginEnabled: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
   readonly reviewLoginPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly reviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>

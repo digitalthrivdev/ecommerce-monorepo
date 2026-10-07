@@ -30,6 +30,14 @@ export function createWebsiteService(prisma: PrismaClient) {
 
   type Business = Awaited<ReturnType<typeof getBusiness>>;
 
+  /** Null when the app has no links; the direct download is dropped once a store listing exists. */
+  function appLinks(playStore: string | null, appStore: string | null, download: string | null) {
+    if (!playStore && !appStore && !download) {
+      return null;
+    }
+    return { playStore, appStore, download: playStore || appStore ? null : download };
+  }
+
   function fill(body: string, business: Business) {
     const contact = [
       `- ${business.name}`,
@@ -59,7 +67,10 @@ export function createWebsiteService(prisma: PrismaClient) {
     return {
       business,
       tagline: settings.websiteTagline,
-      playStoreUrl: settings.playStoreUrl,
+      apps: {
+        customer: appLinks(settings.playStoreUrl, settings.appStoreUrl, settings.appDownloadUrl),
+        delivery: appLinks(settings.deliveryPlayStoreUrl, settings.deliveryAppStoreUrl, settings.deliveryDownloadUrl),
+      },
       cities: cities.map((store) => store.city),
       pages: POLICY_SLUGS.map((slug) => ({ slug, title: POLICY_TITLES[slug], updatedAt: updatedAt.get(slug) ?? null })),
     };

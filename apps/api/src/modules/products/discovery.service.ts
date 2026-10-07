@@ -79,6 +79,44 @@ export function createDiscoveryService(prisma: PrismaClient) {
     );
   }
 
+  /** Customer views of the given products that are in stock at the store, in the given order. */
+  async function productsByIds(storeId: string, productIds: string[]) {
+    return inStockProducts(storeId, productIds, productIds.length);
+  }
+
+  /**
+   * Images of each category's biggest in-stock deals, counting its sub-categories, at most `perCategory`
+   * each. A product's image is its first product-level one, like on its card.
+   */
+  async function categoryDealImages(storeId: string, categoryIds: string[], perCategory: number) {
+    const images = new Map<string, string[]>(categoryIds.map((id) => [id, []]));
+    if (categoryIds.length === 0) return images;
+    const ids = Prisma.join(categoryIds);
+    const rows = await prisma.$queryRaw<{ categoryId: string; url: string }[]>`
+      WITH deals AS (
+        SELECT CASE WHEN c.id IN (${ids}) THEN c.id ELSE c."parentId" END AS "categoryId",
+               p.id AS "productId",
+               MAX((sp.mrp - sp."sellingPrice") / sp.mrp) AS discount
+        ${inStockListings(storeId)}
+          AND sp.mrp > sp."sellingPrice" AND (c.id IN (${ids}) OR c."parentId" IN (${ids}))
+        GROUP BY 1, 2
+      ), ranked AS (
+        SELECT d."categoryId", image.url,
+               ROW_NUMBER() OVER (PARTITION BY d."categoryId" ORDER BY d.discount DESC, d."productId") AS rank
+        FROM deals d
+        JOIN LATERAL (
+          SELECT pi.url FROM "ProductImage" pi
+          WHERE pi."productId" = d."productId"
+          ORDER BY (pi."variantId" IS NOT NULL), pi."sortOrder", pi."createdAt"
+          LIMIT 1
+        ) image ON true
+      )
+      SELECT "categoryId", url FROM ranked WHERE rank <= ${perCategory} ORDER BY "categoryId", rank
+    `;
+    for (const row of rows) images.get(row.categoryId)?.push(row.url);
+    return images;
+  }
+
   /**
    * Active brands with something in stock at the store, most products first. With `brandIds`, only
    * those brands, in that order.
@@ -155,5 +193,5 @@ export function createDiscoveryService(prisma: PrismaClient) {
     return { items: await storeBrands(storeId, { categoryId, limit }) };
   }
 
-  return { dealProducts, categoryDiscounts, storeBrands, alsoBought, buyAgain, listStoreBrands };
+  return { dealProducts, categoryDiscounts, categoryDealImages, productsByIds, storeBrands, alsoBought, buyAgain, listStoreBrands };
 }

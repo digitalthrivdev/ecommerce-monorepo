@@ -97,6 +97,11 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     businessAddress: settings.businessAddress,
     websiteTagline: settings.websiteTagline,
     playStoreUrl: settings.playStoreUrl,
+    appStoreUrl: settings.appStoreUrl,
+    appDownloadUrl: settings.appDownloadUrl,
+    deliveryPlayStoreUrl: settings.deliveryPlayStoreUrl,
+    deliveryAppStoreUrl: settings.deliveryAppStoreUrl,
+    deliveryDownloadUrl: settings.deliveryDownloadUrl,
     reviewLogin: {
       enabled: settings.reviewLoginEnabled,
       phone: settings.reviewLoginPhone,
