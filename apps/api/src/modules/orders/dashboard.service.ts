@@ -2,6 +2,7 @@ import { env } from "../../config/env.js";
 import { LOW_STOCK_THRESHOLD } from "../inventory/inventory.service.js";
 import {
   DeliveryPartnerStatus,
+  DeliveryStatus,
   OrderStatus,
   Prisma,
   UserRole,
@@ -16,6 +17,21 @@ type TodayRow = {
   delivered: bigint;
   cancelled: bigint;
 };
+
+/** Minutes before a waiting order is flagged to admins. Matches the red timers on the order board. */
+export const ATTENTION_MINUTES = {
+  STORE_NOT_ACCEPTED: 10,
+  NO_RIDER: 20,
+  RIDER_NOT_ACCEPTED: 5,
+} as const;
+
+export type AttentionReason = keyof typeof ATTENTION_MINUTES;
+
+const ATTENTION_LIMIT = 50;
+
+type WaitingRow = { id: string; orderNumber: string; status: OrderStatus; storeId: string; storeName: string; since: Date };
+
+const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000);
 
 export function createDashboardService(prisma: PrismaClient) {
   /** storeId undefined means all stores (admins only). */
@@ -102,5 +118,64 @@ export function createDashboardService(prisma: PrismaClient) {
     };
   }
 
-  return { getDashboard };
+  /**
+   * Orders nobody has picked up: the store has not accepted, no rider is assigned, or the assigned
+   * rider has not accepted. Oldest first. Nothing changes automatically; an admin decides.
+   */
+  async function getAttention() {
+    const [waiting, unaccepted] = await Promise.all([
+      prisma.$queryRaw<WaitingRow[]>`
+        SELECT o.id, o."orderNumber", o.status, o."storeId", s.name AS "storeName", h.since
+        FROM "Order" o
+        JOIN "Store" s ON s.id = o."storeId"
+        CROSS JOIN LATERAL (
+          SELECT coalesce(max(h."createdAt"), o."createdAt") AS since
+          FROM "OrderStatusHistory" h
+          WHERE h."orderId" = o.id AND h."toStatus" = o.status AND h."fromStatus" IS DISTINCT FROM h."toStatus"
+        ) h
+        WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.STORE_NOT_ACCEPTED)})
+           OR (o.status = 'READY_FOR_PICKUP' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NO_RIDER)})
+        ORDER BY h.since
+        LIMIT ${ATTENTION_LIMIT}
+      `,
+      prisma.delivery.findMany({
+        where: {
+          status: DeliveryStatus.ASSIGNED,
+          acceptedAt: null,
+          assignedAt: { lt: minutesAgo(ATTENTION_MINUTES.RIDER_NOT_ACCEPTED) },
+          order: { status: OrderStatus.ASSIGNED },
+        },
+        orderBy: { assignedAt: "asc" },
+        take: ATTENTION_LIMIT,
+        select: {
+          assignedAt: true,
+          order: { select: { id: true, orderNumber: true, store: { select: { id: true, name: true } } } },
+          partner: { select: { user: { select: { name: true, phone: true } } } },
+        },
+      }),
+    ]);
+
+    const items = [
+      ...waiting.map((row) => ({
+        orderId: row.id,
+        orderNumber: row.orderNumber,
+        store: { id: row.storeId, name: row.storeName },
+        reason: (row.status === OrderStatus.CONFIRMED ? "STORE_NOT_ACCEPTED" : "NO_RIDER") as AttentionReason,
+        since: row.since,
+        rider: null,
+      })),
+      ...unaccepted.map((row) => ({
+        orderId: row.order.id,
+        orderNumber: row.order.orderNumber,
+        store: row.order.store,
+        reason: "RIDER_NOT_ACCEPTED" as AttentionReason,
+        since: row.assignedAt!,
+        rider: row.partner && { name: row.partner.user.name, phone: row.partner.user.phone },
+      })),
+    ].sort((a, b) => a.since.getTime() - b.since.getTime());
+
+    return { items: items.slice(0, ATTENTION_LIMIT), minutes: ATTENTION_MINUTES };
+  }
+
+  return { getDashboard, getAttention };
 }

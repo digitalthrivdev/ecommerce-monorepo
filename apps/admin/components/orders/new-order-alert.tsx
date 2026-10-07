@@ -25,7 +25,7 @@ function subscribeSound(onChange: () => void) {
   };
 }
 
-function useSoundSetting(): SoundSetting {
+export function useSoundSetting(): SoundSetting {
   return useSyncExternalStore(
     subscribeSound,
     () => (localStorage.getItem(SOUND_KEY) as "on" | "off" | null) ?? "unset",
@@ -47,7 +47,7 @@ function unlockAudio() {
 }
 
 /** A short two-note chime made in the browser, played twice. */
-function playChime() {
+export function playChime() {
   if (!audio) return;
   if (audio.state === "suspended") void audio.resume();
   const start = audio.currentTime + 0.05;

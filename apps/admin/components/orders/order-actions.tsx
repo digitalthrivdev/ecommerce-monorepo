@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Ban, Loader2, MoreHorizontal, Printer } from "lucide-react";
+import { Ban, Loader2, MoreHorizontal, PackageCheck, Printer, UserMinus } from "lucide-react";
 
-import { advanceOrder, assignPartner, cancelOrder, markItemUnavailable } from "@/app/(dashboard)/orders/actions";
+import {
+  advanceOrder,
+  assignPartner,
+  cancelOrder,
+  markDelivered,
+  markItemUnavailable,
+  unassignPartner,
+} from "@/app/(dashboard)/orders/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +47,7 @@ import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
 import { nextStep } from "@/lib/order-flow";
 import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
-import type { DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
+import type { ActionResult, DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Target = { storeId: string; orderId: string };
@@ -159,9 +166,77 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, open, onOpenChange }
   );
 }
 
+/** Asks for a reason, then runs an admin action on the order. */
+function ReasonDialog({ open, onOpenChange, title, description, label, placeholder, required, confirm, destructive, onSubmit }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  confirm: string;
+  destructive?: boolean;
+  onSubmit: (reason: string) => Promise<ActionResult>;
+}) {
+  const [reason, setReason] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  function submit() {
+    startTransition(async () => {
+      if (toastResult(await onSubmit(reason.trim()))) {
+        onOpenChange(false);
+        setReason("");
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <Field>
+          <FieldLabel htmlFor="action-reason">{label}</FieldLabel>
+          <Textarea
+            id="action-reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            maxLength={300}
+            placeholder={placeholder}
+          />
+          <FieldDescription>Recorded in the order history.</FieldDescription>
+        </Field>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Go back</Button>
+          </DialogClose>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            disabled={pending || (required && reason.trim().length === 0)}
+            onClick={submit}
+          >
+            {pending && <Loader2 className="animate-spin" />}
+            {confirm}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /** Less common actions, kept away from the main button so Cancel isn't tapped by mistake. */
-export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel }: Target & { orderNumber: string; canCancel: boolean }) {
+export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel, canUnassign, canMarkDelivered }: Target & {
+  orderNumber: string;
+  canCancel: boolean;
+  canUnassign?: boolean;
+  canMarkDelivered?: boolean;
+}) {
   const [cancelling, setCancelling] = useState(false);
+  const [unassigning, setUnassigning] = useState(false);
+  const [delivering, setDelivering] = useState(false);
 
   return (
     <>
@@ -179,6 +254,18 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel }: Targ
               Print packing slip
             </Link>
           </DropdownMenuItem>
+          {canUnassign && (
+            <DropdownMenuItem onSelect={() => setUnassigning(true)}>
+              <UserMinus />
+              {ORDER_ACTION_LABELS.unassign}
+            </DropdownMenuItem>
+          )}
+          {canMarkDelivered && (
+            <DropdownMenuItem onSelect={() => setDelivering(true)}>
+              <PackageCheck />
+              {ORDER_ACTION_LABELS["mark-delivered"]}
+            </DropdownMenuItem>
+          )}
           {canCancel && (
             <>
               <DropdownMenuSeparator />
@@ -197,6 +284,32 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel }: Targ
           orderNumber={orderNumber}
           open={cancelling}
           onOpenChange={setCancelling}
+        />
+      )}
+      {canUnassign && (
+        <ReasonDialog
+          open={unassigning}
+          onOpenChange={setUnassigning}
+          title={`Remove the rider from ${orderNumber}?`}
+          description="The order goes back to waiting for a rider, and the rider is free for other deliveries. Use this when the rider can't come and nobody else is free yet."
+          label="Reason (optional)"
+          placeholder="e.g. Rider's bike broke down"
+          required={false}
+          confirm="Remove rider"
+          onSubmit={(note) => unassignPartner({ storeId, orderId, note: note || undefined })}
+        />
+      )}
+      {canMarkDelivered && (
+        <ReasonDialog
+          open={delivering}
+          onOpenChange={setDelivering}
+          title={`Mark ${orderNumber} as delivered?`}
+          description="Only when you're sure the customer has the order, e.g. the delivery OTP is locked after wrong tries. The rider is paid for the delivery and cash orders count as collected by the rider."
+          label="Reason"
+          placeholder="e.g. Customer confirmed by phone; OTP locked"
+          required
+          confirm="Mark delivered"
+          onSubmit={(reason) => markDelivered({ storeId, orderId, reason })}
         />
       )}
     </>

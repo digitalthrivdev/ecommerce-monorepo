@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 
 import { UserRole } from "../../generated/prisma/client";
+import { createDashboardService } from "./dashboard.service.js";
 import { manageOrdersQuerySchema } from "./orders.schemas.js";
 import { createStoreOrdersService } from "./store-orders.service.js";
 
@@ -15,6 +16,7 @@ const adminListQuerySchema = manageOrdersQuerySchema.extend({ storeId: idSchema.
  */
 const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
   const storeOrders = createStoreOrdersService(app.prisma, app.payments);
+  const dashboard = createDashboardService(app.prisma);
 
   app.addHook("preHandler", app.requireRole(UserRole.ADMIN));
 
@@ -24,6 +26,8 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
     const { storeId, ...query } = adminListQuerySchema.parse(request.query);
     return storeOrders.listOrders(storeId, query, actor(request.user.sub));
   });
+
+  app.get("/attention", async () => dashboard.getAttention());
 
   app.get("/:orderId", async (request) => {
     const { orderId } = z.object({ orderId: idSchema }).parse(request.params);

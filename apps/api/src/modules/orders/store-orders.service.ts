@@ -56,7 +56,10 @@ function allowedActions(status: OrderStatus, isAdmin: boolean) {
     actions.push("assign");
   }
   if (isAdmin && status === OrderStatus.ASSIGNED) {
-    actions.push("reassign");
+    actions.push("reassign", "unassign");
+  }
+  if (isAdmin && (status === OrderStatus.PICKED_UP || status === OrderStatus.OUT_FOR_DELIVERY)) {
+    actions.push("mark-delivered");
   }
 
   if (cancellableFrom(isAdmin).includes(status)) {

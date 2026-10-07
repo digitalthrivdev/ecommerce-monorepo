@@ -15,7 +15,7 @@ const actionBodySchema = z
   .object({ note: z.string().trim().min(1).max(300).optional() })
   .default({});
 
-const cancelBodySchema = z.object({
+const reasonBodySchema = z.object({
   reason: z.string().trim().min(1).max(300),
 });
 
@@ -58,7 +58,7 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/:orderId/cancel", async (request) => {
     const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { reason } = cancelBodySchema.parse(request.body);
+    const { reason } = reasonBodySchema.parse(request.body);
     return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason);
   });
 
@@ -81,6 +81,20 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
     const { storeId, orderId } = orderParamsSchema.parse(request.params);
     const { partnerId } = assignBodySchema.parse(request.body);
     await deliveryService.reassign(storeId, orderId, partnerId, request.user.sub);
+    return storeOrdersService.getOrder(storeId, orderId, actor(request));
+  });
+
+  app.post("/:orderId/unassign", adminOnly, async (request) => {
+    const { storeId, orderId } = orderParamsSchema.parse(request.params);
+    const { note } = actionBodySchema.parse(request.body ?? undefined);
+    await deliveryService.unassign(storeId, orderId, request.user.sub, note);
+    return storeOrdersService.getOrder(storeId, orderId, actor(request));
+  });
+
+  app.post("/:orderId/mark-delivered", adminOnly, async (request) => {
+    const { storeId, orderId } = orderParamsSchema.parse(request.params);
+    const { reason } = reasonBodySchema.parse(request.body);
+    await deliveryService.adminMarkDelivered(storeId, orderId, request.user.sub, reason);
     return storeOrdersService.getOrder(storeId, orderId, actor(request));
   });
 };

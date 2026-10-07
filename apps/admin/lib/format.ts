@@ -112,6 +112,8 @@ export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   ready: "Ready for rider",
   assign: "Assign rider",
   reassign: "Change rider",
+  unassign: "Remove rider",
+  "mark-delivered": "Mark delivered",
   cancel: "Cancel order",
   "mark-unavailable": "Item not found",
 };

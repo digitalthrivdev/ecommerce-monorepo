@@ -5,8 +5,8 @@ import { z } from "zod";
 
 import { ApiError, apiFetch } from "@/lib/api";
 import { getCurrentUser } from "@/lib/dal";
-import { listOrders } from "@/lib/orders";
-import type { ActionResult, OrderAction } from "@/lib/types";
+import { getAttention, listOrders } from "@/lib/orders";
+import type { ActionResult, AttentionList, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
 const targetSchema = z.object({ storeId: idSchema, orderId: idSchema });
@@ -18,6 +18,8 @@ const SUCCESS: Record<OrderAction, string> = {
   ready: "Order is ready for pickup",
   assign: "Rider assigned",
   reassign: "Rider changed",
+  unassign: "Rider removed. The order is waiting for a rider again.",
+  "mark-delivered": "Order marked as delivered",
   cancel: "Order cancelled",
   "mark-unavailable": "Item marked unavailable",
 };
@@ -129,4 +131,32 @@ export async function assignPartner(input: {
   if (!parsed.success) return { ok: false, error: "Choose a rider" };
   const { storeId, orderId, partnerId, mode } = parsed.data;
   return run(orderPath(storeId, orderId, mode), { partnerId }, mode);
+}
+
+const unassignSchema = targetSchema.extend({
+  note: z.string().trim().max(300, "Keep the reason under 300 characters").optional(),
+});
+
+export async function unassignPartner(input: { storeId: string; orderId: string; note?: string }): Promise<ActionResult> {
+  const parsed = unassignSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
+  const { storeId, orderId, note } = parsed.data;
+  return run(orderPath(storeId, orderId, "unassign"), note ? { note } : {}, "unassign");
+}
+
+const markDeliveredSchema = targetSchema.extend({
+  reason: z.string().trim().min(1, "Enter why you are marking it delivered").max(300, "Keep the reason under 300 characters"),
+});
+
+export async function markDelivered(input: { storeId: string; orderId: string; reason: string }): Promise<ActionResult> {
+  const parsed = markDeliveredSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
+  const { storeId, orderId, reason } = parsed.data;
+  return run(orderPath(storeId, orderId, "mark-delivered"), { reason }, "mark-delivered");
+}
+
+/** Polled by the attention banner (admins only). */
+export async function pollAttention(): Promise<AttentionList | null> {
+  const user = await getCurrentUser();
+  return user.role === "ADMIN" ? getAttention() : null;
 }

@@ -39,7 +39,7 @@ export type DeliveryStatus = "PENDING" | "ASSIGNED" | "PICKED_UP" | "OUT_FOR_DEL
 export type DeliveryPartnerStatus = "OFFLINE" | "ONLINE" | "BUSY";
 
 export type StoreOrderAction = "accept" | "start-picking" | "pack" | "ready";
-export type OrderAction = StoreOrderAction | "assign" | "reassign" | "cancel" | "mark-unavailable";
+export type OrderAction = StoreOrderAction | "assign" | "reassign" | "unassign" | "mark-delivered" | "cancel" | "mark-unavailable";
 
 export type OrderListItem = {
   id: string;
@@ -62,6 +62,22 @@ export type OrderListItem = {
 
 export type OrderList = Paginated<OrderListItem> & {
   statusCounts: Partial<Record<OrderStatus, number>>;
+};
+
+export type AttentionReason = "STORE_NOT_ACCEPTED" | "NO_RIDER" | "RIDER_NOT_ACCEPTED";
+
+export type AttentionList = {
+  items: Array<{
+    orderId: string;
+    orderNumber: string;
+    store: { id: string; name: string };
+    reason: AttentionReason;
+    /** When the order started waiting. */
+    since: string;
+    rider: { name: string | null; phone: string | null } | null;
+  }>;
+  /** Minutes before each reason is flagged. */
+  minutes: Record<AttentionReason, number>;
 };
 
 export type OrderDetail = {

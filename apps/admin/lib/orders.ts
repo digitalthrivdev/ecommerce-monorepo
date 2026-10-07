@@ -3,7 +3,7 @@ import "server-only";
 import { notFound } from "next/navigation";
 
 import { ApiError, apiFetch } from "./api";
-import type { DashboardUser, OrderDetail, OrderList, OrderStatus } from "./types";
+import type { AttentionList, DashboardUser, OrderDetail, OrderList, OrderStatus } from "./types";
 
 export type OrderListParams = {
   status?: OrderStatus[];
@@ -22,6 +22,11 @@ export function listOrders(user: DashboardUser, { status, q, storeId, sort, limi
     return apiFetch<OrderList>("/admin/orders", { query: { ...query, storeId } });
   }
   return apiFetch<OrderList>(`/stores/${encodeURIComponent(user.store!.id)}/orders`, { query });
+}
+
+/** Orders nobody has picked up in time (admins only). */
+export function getAttention() {
+  return apiFetch<AttentionList>("/admin/orders/attention");
 }
 
 export async function getOrder(user: DashboardUser, orderId: string) {

@@ -129,6 +129,26 @@ async function freePartner(tx: Tx, partnerId: string) {
   });
 }
 
+/** Closes a delivery whose order has just moved to DELIVERED: earning, free rider, cash collected. */
+async function completeDelivery(tx: Tx, delivery: { id: string; orderId: string; partnerId: string | null }) {
+  const now = new Date();
+  await tx.delivery.update({
+    where: { id: delivery.id },
+    data: {
+      status: DeliveryStatus.DELIVERED,
+      deliveredAt: now,
+      earning: (await getPlatformSettings(tx)).deliveryPartnerFee,
+    },
+  });
+  if (delivery.partnerId) {
+    await freePartner(tx, delivery.partnerId);
+  }
+  await tx.payment.updateMany({
+    where: { orderId: delivery.orderId, method: PaymentMethod.COD, status: PaymentStatus.PENDING },
+    data: { status: PaymentStatus.PAID, paidAt: now, provider: "cash" },
+  });
+}
+
 /** Locks partner rows in id order so concurrent reassignments cannot deadlock. */
 async function lockPartners(tx: Tx, ids: string[]) {
   const sorted = [...new Set(ids)].sort();
@@ -358,7 +378,6 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
         });
       }
 
-      const now = new Date();
       await transitionOrder(tx, {
         orderId,
         scope: { partnerId: partner.id },
@@ -366,19 +385,7 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
         to: OrderStatus.DELIVERED,
         changedById: userId,
       });
-      await tx.delivery.update({
-        where: { id: delivery.id },
-        data: {
-          status: DeliveryStatus.DELIVERED,
-          deliveredAt: now,
-          earning: (await getPlatformSettings(tx)).deliveryPartnerFee,
-        },
-      });
-      await freePartner(tx, partner.id);
-      await tx.payment.updateMany({
-        where: { orderId, method: PaymentMethod.COD, status: PaymentStatus.PENDING },
-        data: { status: PaymentStatus.PAID, paidAt: now, provider: "cash" },
-      });
+      await completeDelivery(tx, delivery);
     });
 
     await redis.del(attemptsKey);
@@ -504,6 +511,62 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
     });
   }
 
+  /** Takes the order back from its rider before pickup, so any rider can be assigned later. */
+  async function unassign(storeId: string, orderId: string, adminId: string, reason?: string) {
+    await prisma.$transaction(async (tx) => {
+      const order = await lockOrder(tx, orderId, { storeId });
+      if (order.status !== OrderStatus.ASSIGNED) {
+        throw new AppError(409, "INVALID_STATUS_TRANSITION", `Cannot unassign an order that is ${order.status}`, {
+          status: order.status,
+          allowedFrom: [OrderStatus.ASSIGNED],
+        });
+      }
+
+      const delivery = await tx.delivery.findUniqueOrThrow({ where: { orderId } });
+      const riderName = delivery.partnerId ? (await lockPartners(tx, [delivery.partnerId])).get(delivery.partnerId)?.name : null;
+
+      await transitionOrder(tx, {
+        orderId,
+        scope: { storeId },
+        allowedFrom: [OrderStatus.ASSIGNED],
+        to: OrderStatus.READY_FOR_PICKUP,
+        changedById: adminId,
+        note: [`Unassigned from ${riderName ?? "delivery partner"}`, reason].filter(Boolean).join(": "),
+      });
+      await tx.delivery.update({
+        where: { id: delivery.id },
+        data: { status: DeliveryStatus.PENDING, partnerId: null, assignedAt: null, acceptedAt: null },
+      });
+      if (delivery.partnerId) {
+        await freePartner(tx, delivery.partnerId);
+      }
+    });
+  }
+
+  /**
+   * For when the rider cannot finish with the OTP: the customer cannot give it, the OTP is locked
+   * after wrong tries, or the rider's phone died after pickup. The rider is paid and cash counts as
+   * collected, as if they had entered the OTP.
+   */
+  async function adminMarkDelivered(storeId: string, orderId: string, adminId: string, reason: string) {
+    const deliveryId = await prisma.$transaction(async (tx) => {
+      await transitionOrder(tx, {
+        orderId,
+        scope: { storeId },
+        allowedFrom: [OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY],
+        to: OrderStatus.DELIVERED,
+        changedById: adminId,
+        note: `Marked delivered by admin: ${reason}`,
+        notAllowed: { code: "INVALID_STATUS_TRANSITION", message: "Only orders the rider has picked up can be marked delivered" },
+      });
+      const delivery = await tx.delivery.findUniqueOrThrow({ where: { orderId } });
+      await completeDelivery(tx, delivery);
+      return delivery.id;
+    });
+
+    await redis.del(otpAttemptsKey(deliveryId));
+  }
+
   return {
     resolvePartner,
     getMe,
@@ -519,5 +582,7 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
     earnings,
     assign,
     reassign,
+    unassign,
+    adminMarkDelivered,
   };
 }

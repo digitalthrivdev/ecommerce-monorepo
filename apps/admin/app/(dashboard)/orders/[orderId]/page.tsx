@@ -94,6 +94,8 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               orderId={order.id}
               orderNumber={order.orderNumber}
               canCancel={order.allowedActions.includes("cancel")}
+              canUnassign={order.allowedActions.includes("unassign")}
+              canMarkDelivered={order.allowedActions.includes("mark-delivered")}
             />
             <NextStepButton
               storeId={order.store.id}
