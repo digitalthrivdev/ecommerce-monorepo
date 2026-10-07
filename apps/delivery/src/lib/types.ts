@@ -89,4 +89,39 @@ export type PartnerDelivery = {
 };
 
 /** `GET /delivery/earnings` */
+/** Cash from cash-on-delivery orders not yet deposited. At the limit no new orders are assigned. */
+export type CashSummary = {
+  currency: string;
+  inHand: string;
+  collected: string;
+  deposited: string;
+  limit: string | null;
+  limitReached: boolean;
+};
+
+export type CashDeposit = {
+  id: string;
+  amount: string;
+  note: string | null;
+  createdAt: string;
+  store: { id: string; name: string } | null;
+  recordedBy: string | null;
+  voided: { at: string; reason: string | null; by: string | null } | null;
+};
+
+export type PayoutMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "OTHER";
+
+export type EarningsSummary = { currency: string; since: string; earned: string; paid: string; unpaid: string };
+
+export type RiderPayout = {
+  id: string;
+  amount: string;
+  method: PayoutMethod;
+  note: string | null;
+  paidAt: string;
+  voided: { at: string; reason: string | null; by: string | null } | null;
+};
+
+export type PayoutPage = Paginated<RiderPayout> & { earnings: EarningsSummary };
+
 export type Earnings = { from: string; to: string; currency: string; deliveries: number; earnings: string; cashCollected: string };

@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPinOff, Power, Radar, UserX, type LucideIcon } from "lucide-react-native";
+import { router } from "expo-router";
+import { Banknote, ChevronRight, MapPinOff, Power, Radar, UserX, type LucideIcon } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, Switch, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +14,7 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { useActiveDeliveries, useEarnings, usePartner, useSetPartnerStatus } from "@/lib/delivery";
+import { useActiveDeliveries, useCash, useEarnings, usePartner, useSetPartnerStatus } from "@/lib/delivery";
 import { formatMoney } from "@/lib/format";
 import { useLocationSharing } from "@/lib/location-sharing";
 import { useSession } from "@/lib/session";
@@ -75,6 +76,32 @@ function TodaySummary() {
   );
 }
 
+function CashInHand() {
+  const surface = useCardSurface();
+  const cash = useCash();
+  if (!cash.data) return null;
+  const { inHand, limit, limitReached, currency } = cash.data;
+
+  return (
+    <Pressable onPress={() => router.push("/cash")} className={cn("mx-4 gap-2 rounded-lg p-4 active:opacity-80", surface)} accessibilityRole="button">
+      <View className="flex-row items-center gap-3">
+        <View className={cn("size-10 items-center justify-center rounded-full", limitReached ? "bg-destructive/10" : "bg-muted")}>
+          <Icon as={Banknote} size={20} className={limitReached ? "text-destructive" : "text-foreground"} />
+        </View>
+        <View className="flex-1">
+          <Text className="text-xs text-muted-foreground">Cash in hand</Text>
+          <Text className="text-lg font-extrabold">{formatMoney(inHand, currency)}</Text>
+        </View>
+        {limit && !limitReached && <Text className="text-xs text-muted-foreground">Limit {formatMoney(limit, currency)}</Text>}
+        <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
+      </View>
+      {limitReached && (
+        <Text className="text-sm font-semibold text-destructive">You&apos;ve reached the cash limit. Deposit cash at the store to get new orders.</Text>
+      )}
+    </Pressable>
+  );
+}
+
 function EmptyState({ icon, title, detail, action }: { icon: LucideIcon; title: string; detail: string; action?: ReactNode }) {
   return (
     <View className="items-center gap-3 px-8 py-10">
@@ -115,10 +142,11 @@ export default function HomeScreen() {
   const locationGranted = useLocationSharing(working, (deliveries.data?.length ?? 0) > 0);
   const [refreshing, setRefreshing] = useState(false);
   const inactive = partner.error instanceof ApiError && partner.error.code === "PARTNER_INACTIVE";
+  const cashLimitReached = useCash().data?.limitReached ?? false;
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all(["partner", "deliveries", "earnings"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
+    await Promise.all(["partner", "deliveries", "earnings", "cash"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
     setRefreshing(false);
   }
 
@@ -158,6 +186,8 @@ export default function HomeScreen() {
               </Pressable>
             )}
 
+            {cashLimitReached && <CashInHand />}
+
             {!working ? (
               <EmptyState
                 icon={Power}
@@ -183,6 +213,7 @@ export default function HomeScreen() {
               items.map((delivery) => <DeliveryCard key={delivery.orderId} delivery={delivery} />)
             )}
 
+            {!cashLimitReached && <CashInHand />}
             <TodaySummary />
           </>
         )}

@@ -1,9 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiFetch } from "./api";
-import type { Earnings, Paginated, PartnerDelivery, PartnerProfile, PartnerStatus } from "./types";
+import type { CashDeposit, CashSummary, Earnings, Paginated, PartnerDelivery, PartnerProfile, PartnerStatus, PayoutPage } from "./types";
 
 const PROFILE_KEY = ["partner"] as const;
+const CASH_KEY = ["cash"] as const;
+const PAYOUTS_KEY = ["payouts"] as const;
 const ACTIVE_KEY = ["deliveries", "active"] as const;
 const HISTORY_KEY = ["deliveries", "history"] as const;
 const HISTORY_PAGE_SIZE = 20;
@@ -64,7 +66,34 @@ export function useDeliveryAction(orderId: string) {
         queryClient.invalidateQueries({ queryKey: PROFILE_KEY }),
         queryClient.invalidateQueries({ queryKey: HISTORY_KEY }),
         queryClient.invalidateQueries({ queryKey: ["earnings"] }),
+        queryClient.invalidateQueries({ queryKey: CASH_KEY }),
+        queryClient.invalidateQueries({ queryKey: PAYOUTS_KEY }),
       ]),
+  });
+}
+
+/** Refetched every minute so a deposit recorded at the store shows up without pulling to refresh. */
+export function useCash() {
+  return useQuery({ queryKey: CASH_KEY, queryFn: () => apiFetch<CashSummary>("/delivery/cash"), refetchInterval: 60_000 });
+}
+
+/** Payouts newest first; every page carries the current earned / paid / unpaid totals. */
+export function usePayouts() {
+  return useInfiniteQuery({
+    queryKey: PAYOUTS_KEY,
+    queryFn: ({ pageParam }) => apiFetch<PayoutPage>("/delivery/payouts", { query: { limit: HISTORY_PAGE_SIZE, offset: pageParam } }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+export function useCashDeposits() {
+  return useInfiniteQuery({
+    queryKey: [...CASH_KEY, "deposits"],
+    queryFn: ({ pageParam }) => apiFetch<Paginated<CashDeposit>>("/delivery/cash/deposits", { query: { limit: HISTORY_PAGE_SIZE, offset: pageParam } }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
   });
 }
 

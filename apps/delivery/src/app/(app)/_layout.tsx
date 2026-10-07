@@ -11,6 +11,8 @@ export default function AppLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="delivery/[id]" />
+        <Stack.Screen name="cash" />
+        <Stack.Screen name="payouts" />
       </Stack>
       <IncomingDelivery />
     </>

@@ -29,6 +29,11 @@ export function formatMonth(date: Date) {
   return new Intl.DateTimeFormat(LOCALE, { month: "long", year: "numeric" }).format(date);
 }
 
+/** "7 Oct 2026" */
+export function formatDate(iso: string) {
+  return new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+}
+
 /** "1 Oct, 4:32 pm" */
 export function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));

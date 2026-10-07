@@ -1,5 +1,6 @@
 import Constants from "expo-constants";
-import { Bike, LogOut, Mail, Phone, UserRound, type LucideIcon } from "lucide-react-native";
+import { router } from "expo-router";
+import { Banknote, Bike, HandCoins, LogOut, Mail, Phone, UserRound, type LucideIcon } from "lucide-react-native";
 import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -10,7 +11,8 @@ import { Icon } from "@/components/ui/icon";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
-import { usePartner, useSetPartnerStatus } from "@/lib/delivery";
+import { useCash, usePartner, usePayouts, useSetPartnerStatus } from "@/lib/delivery";
+import { formatMoney } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { useSession } from "@/lib/session";
 import { useSettings } from "@/lib/settings";
@@ -34,6 +36,8 @@ export default function AccountScreen() {
   const { user, signOut } = useSession();
   const { appName, support } = useSettings();
   const partner = usePartner().data;
+  const cash = useCash().data;
+  const unpaid = usePayouts().data?.pages[0]?.earnings;
   const setStatus = useSetPartnerStatus();
   const vehicle = [partner?.vehicleType, partner?.vehicleNumber].filter(Boolean).join(" · ");
 
@@ -83,6 +87,20 @@ export default function AccountScreen() {
 
         <Card className="gap-0 overflow-hidden py-1">
           <Row icon={Bike} label="Vehicle" detail={vehicle || "Not set. Ask your store admin to add it."} />
+          <Separator className="ml-16 w-auto" />
+          <Row
+            icon={Banknote}
+            label="Cash in hand"
+            detail={cash ? `${formatMoney(cash.inHand, cash.currency)} · see your deposits` : "See your deposits"}
+            onPress={() => router.push("/cash")}
+          />
+          <Separator className="ml-16 w-auto" />
+          <Row
+            icon={HandCoins}
+            label="Payouts"
+            detail={unpaid ? `${formatMoney(unpaid.unpaid, unpaid.currency)} still to be paid` : "Your earnings and payments"}
+            onPress={() => router.push("/payouts")}
+          />
         </Card>
 
         {support.phone || support.email ? (
