@@ -65,9 +65,20 @@ export const locationBodySchema = z.object({
   speed: z.number().min(0).max(100).optional(),
 });
 
-export const historyQuerySchema = paginationQuerySchema.extend({
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
+/** `from`/`to` limit the list to deliveries finished in that range, like the earnings summary. */
+export const historyQuerySchema = paginationQuerySchema
+  .extend({
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+    from: z.iso
+      .datetime({ offset: true })
+      .transform((value) => new Date(value))
+      .optional(),
+    to: z.iso
+      .datetime({ offset: true })
+      .transform((value) => new Date(value))
+      .optional(),
+  })
+  .refine(({ from, to }) => !from || !to || from < to, "from must be before to");
 
 export const earningsQuerySchema = z
   .object({

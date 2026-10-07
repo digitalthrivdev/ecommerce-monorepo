@@ -35,6 +35,18 @@ function travelMinutes(km: number) {
   return (km * ROAD_FACTOR * 60) / AVERAGE_SPEED_KMPH;
 }
 
+/** Rough road distance and riding time between two points. */
+export function travelEstimate(from: Point, to: Point) {
+  const km = distanceKm(from, to);
+  return { distanceKm: Number((km * ROAD_FACTOR).toFixed(1)), minutes: Math.max(1, Math.ceil(travelMinutes(km))) };
+}
+
+/** The partner's last shared position, or null when it is older than the Redis TTL. */
+export async function readPartnerLocation(redis: Redis, partnerId: string) {
+  const value = await redis.get(locationKey(partnerId));
+  return value ? (JSON.parse(value) as PartnerLocation) : null;
+}
+
 export function createTrackingService(prisma: PrismaClient, redis: Redis) {
   async function getPartnerLocations(partnerIds: string[]) {
     if (partnerIds.length === 0) {

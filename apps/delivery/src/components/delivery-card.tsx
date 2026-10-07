@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useCardSurface } from "@/lib/app-theme";
 import { stepText } from "@/lib/delivery";
-import { formatDateTime, formatMoney } from "@/lib/format";
+import { formatDateTime, formatMoney, formatPickup } from "@/lib/format";
 import { useSettings } from "@/lib/settings";
 import type { PartnerDelivery } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ export function DeliveryCard({ delivery, past = false }: { delivery: PartnerDeli
           <Text className="flex-1 text-sm" numberOfLines={1}>
             {delivery.store.name}
           </Text>
+          {!past && delivery.pickup && <Text className="text-xs font-semibold text-muted-foreground">{formatPickup(delivery.pickup)}</Text>}
         </View>
         <View className="flex-row items-center gap-2">
           <Icon as={MapPin} size={16} className="text-muted-foreground" />

@@ -9,7 +9,7 @@ import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { useActiveDeliveries, useDeliveryAction, usePartner } from "@/lib/delivery";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatPickup } from "@/lib/format";
 import { useSettings } from "@/lib/settings";
 import type { PartnerDelivery } from "@/lib/types";
 
@@ -204,6 +204,11 @@ function IncomingSheet({ delivery }: { delivery: PartnerDelivery }) {
                 <Text style={{ color: colors.onPrimary }} className="text-sm opacity-80" numberOfLines={2}>
                   {[delivery.store.addressLine1, delivery.store.addressLine2, delivery.store.city].filter(Boolean).join(", ")}
                 </Text>
+                {delivery.pickup && (
+                  <Text style={{ color: colors.onPrimary }} className="mt-1 text-sm font-bold">
+                    {formatPickup(delivery.pickup)}
+                  </Text>
+                )}
               </View>
             </View>
             <Text style={{ color: colors.onPrimary }} className="text-sm font-semibold">

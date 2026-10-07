@@ -15,6 +15,7 @@ import { lockOrder, transitionOrder } from "../orders/order-status.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
 import { deliveryOtp, hashDeliveryOtp, verifyDeliveryOtp } from "./delivery-otp.js";
 import { ACTIVE_DELIVERY_STATUSES } from "./partners.service.js";
+import { readPartnerLocation, travelEstimate, type PartnerLocation } from "./tracking.service.js";
 
 type Tx = Prisma.TransactionClient;
 
@@ -74,9 +75,11 @@ function partnerActions(orderStatus: OrderStatus, accepted: boolean) {
   }
 }
 
-function toPartnerView(delivery: DeliveryRow) {
+/** `location` is the partner's last shared position, for the distance to the store while they head there. */
+function toPartnerView(delivery: DeliveryRow, location: PartnerLocation | null = null) {
   const { order } = delivery;
   const active = ACTIVE_DELIVERY_STATUSES.includes(delivery.status);
+  const headingToStore = active && order.status === OrderStatus.ASSIGNED;
 
   return {
     orderId: order.id,
@@ -89,6 +92,10 @@ function toPartnerView(delivery: DeliveryRow) {
     pickedUpAt: delivery.pickedUpAt,
     deliveredAt: delivery.deliveredAt,
     store: order.store,
+    pickup:
+      headingToStore && location
+        ? travelEstimate(location, { latitude: order.store.latitude.toNumber(), longitude: order.store.longitude.toNumber() })
+        : null,
     // Customer contact details are only shared while the delivery is in progress.
     customer: active
       ? {
@@ -202,17 +209,20 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
     if (!row) {
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
-    return toPartnerView(row);
+    return toPartnerView(row, await readPartnerLocation(redis, partnerId));
   }
 
   async function listActive(userId: string) {
     const partner = await resolvePartner(userId);
-    const rows = await prisma.delivery.findMany({
-      where: { partnerId: partner.id, status: { in: ACTIVE_DELIVERY_STATUSES } },
-      include: deliveryInclude,
-      orderBy: { assignedAt: "asc" },
-    });
-    return { items: rows.map(toPartnerView) };
+    const [rows, location] = await Promise.all([
+      prisma.delivery.findMany({
+        where: { partnerId: partner.id, status: { in: ACTIVE_DELIVERY_STATUSES } },
+        include: deliveryInclude,
+        orderBy: { assignedAt: "asc" },
+      }),
+      readPartnerLocation(redis, partner.id),
+    ]);
+    return { items: rows.map((row) => toPartnerView(row, location)) };
   }
 
   async function getDelivery(userId: string, orderId: string) {
@@ -374,11 +384,14 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
     return findView(partner.id, orderId);
   }
 
-  async function history(userId: string, { limit, offset }: { limit: number; offset: number }) {
+  async function history(userId: string, { limit, offset, from, to }: { limit: number; offset: number; from?: Date; to?: Date }) {
     const partner = await resolvePartner(userId);
+    const range = from || to ? { gte: from, lt: to } : undefined;
     const where: Prisma.DeliveryWhereInput = {
       partnerId: partner.id,
       status: { in: [DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED] },
+      // Delivered ones count by when they were delivered, as earnings do; cancelled ones by when they were cancelled.
+      ...(range && { OR: [{ deliveredAt: range }, { deliveredAt: null, updatedAt: range }] }),
     };
 
     const [rows, total] = await prisma.$transaction([
@@ -386,7 +399,7 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
       prisma.delivery.count({ where }),
     ]);
 
-    return { items: rows.map(toPartnerView), total, limit, offset };
+    return { items: rows.map((row) => toPartnerView(row)), total, limit, offset };
   }
 
   async function earnings(userId: string, { from, to }: { from: Date; to: Date }) {

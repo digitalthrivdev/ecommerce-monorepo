@@ -66,6 +66,8 @@ export type PartnerDelivery = {
   pickedUpAt: string | null;
   deliveredAt: string | null;
   store: { name: string; phone: string | null; addressLine1: string; addressLine2: string | null; city: string; latitude: string; longitude: string };
+  /** Rough road distance and riding time to the store from the partner's last shared location, while heading there. */
+  pickup?: { distanceKm: number; minutes: number } | null;
   /** Contact details and address are only included while the delivery is in progress. */
   customer: {
     name: string;

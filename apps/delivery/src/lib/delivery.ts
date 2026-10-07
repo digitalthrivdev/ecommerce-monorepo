@@ -68,26 +68,44 @@ export function useDeliveryAction(orderId: string) {
   });
 }
 
-export function useDeliveryHistory() {
-  return useInfiniteQuery({
-    queryKey: HISTORY_KEY,
-    queryFn: ({ pageParam }) => apiFetch<Paginated<PartnerDelivery>>("/delivery/history", { query: { limit: HISTORY_PAGE_SIZE, offset: pageParam } }),
-    initialPageParam: 0,
-    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
+/** A calendar month in the phone's time zone; `month` is 0 for January. */
+export type Month = { year: number; month: number };
+
+export const currentMonth = (): Month => ({ year: new Date().getFullYear(), month: new Date().getMonth() });
+
+/** Today so far, the last seven days, or a whole month (so far, for the current one). */
+export type Period = "today" | "week" | Month;
+
+const periodKey = (period: Period) => (typeof period === "string" ? period : `${period.year}-${period.month}`);
+
+function periodRange(period: Period) {
+  if (period === "today" || period === "week") {
+    const from = new Date();
+    if (period === "today") from.setHours(0, 0, 0, 0);
+    else from.setDate(from.getDate() - 7);
+    return { from: from.toISOString() };
+  }
+  const from = new Date(period.year, period.month, 1);
+  const to = new Date(period.year, period.month + 1, 1);
+  return { from: from.toISOString(), to: to < new Date() ? to.toISOString() : undefined };
+}
+
+export function useEarnings(period: Period) {
+  return useQuery({
+    queryKey: ["earnings", periodKey(period)],
+    queryFn: () => apiFetch<Earnings>("/delivery/earnings", { query: periodRange(period) }),
+    staleTime: 30_000,
   });
 }
 
-/** Earnings since `from` (start of today, or seven days ago). */
-export function useEarnings(range: "today" | "week") {
-  return useQuery({
-    queryKey: ["earnings", range],
-    queryFn: () => {
-      const from = new Date();
-      if (range === "today") from.setHours(0, 0, 0, 0);
-      else from.setDate(from.getDate() - 7);
-      return apiFetch<Earnings>("/delivery/earnings", { query: { from: from.toISOString() } });
-    },
-    staleTime: 30_000,
+/** Finished deliveries in the period, newest first, a page at a time. */
+export function useDeliveryHistory(period: Period) {
+  return useInfiniteQuery({
+    queryKey: [...HISTORY_KEY, periodKey(period)],
+    queryFn: ({ pageParam }) =>
+      apiFetch<Paginated<PartnerDelivery>>("/delivery/history", { query: { limit: HISTORY_PAGE_SIZE, offset: pageParam, ...periodRange(period) } }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
   });
 }
 

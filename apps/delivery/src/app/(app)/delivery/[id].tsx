@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Banknote, CreditCard, MapPin, Navigation, Phone, Store, type LucideIcon } from "lucide-react-native";
+import { Banknote, Check, CreditCard, MapPin, Navigation, Phone, Store, type LucideIcon } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DeliveryMap } from "@/components/delivery-map";
@@ -15,7 +15,7 @@ import { Text } from "@/components/ui/text";
 import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { directionsUrl, stepText, useDelivery, useDeliveryAction } from "@/lib/delivery";
-import { formatMoney } from "@/lib/format";
+import { formatDuration, formatMoney, formatPickup } from "@/lib/format";
 import { mapsAvailable } from "@/lib/maps";
 import { formatPhone } from "@/lib/phone";
 import { useSettings } from "@/lib/settings";
@@ -68,12 +68,40 @@ function otpErrorMessage(error: unknown) {
   return errorMessage(error);
 }
 
-function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
+const itemCount = (delivery: PartnerDelivery) => delivery.items.reduce((sum, item) => sum + item.quantity, 0);
+
+/** Before pickup the partner deliberately checks the order ID against the bill on the bag. */
+function ConfirmOrderId({ delivery, confirmed, onToggle }: { delivery: PartnerDelivery; confirmed: boolean; onToggle: () => void }) {
+  const count = itemCount(delivery);
+  return (
+    <Pressable
+      onPress={onToggle}
+      className={cn("flex-row items-center gap-3 rounded-lg border-2 p-3 active:opacity-80", confirmed ? "border-primary bg-primary/10" : "border-border")}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: confirmed }}
+      accessibilityLabel={`Order ID ${delivery.orderNumber} matches the bag`}
+    >
+      <View className="flex-1 gap-0.5">
+        <Text className="text-xs font-bold uppercase text-muted-foreground">Confirm order ID</Text>
+        <Text className="text-2xl font-extrabold tracking-wide">{delivery.orderNumber}</Text>
+        <Text className="text-xs text-muted-foreground">
+          Match it with the bill on the bag and check all {count} {count === 1 ? "item" : "items"}.
+        </Text>
+      </View>
+      <View className={cn("size-7 items-center justify-center rounded-md border-2", confirmed ? "border-primary bg-primary" : "border-border")}>
+        {confirmed && <Icon as={Check} size={18} className="text-primary-foreground" />}
+      </View>
+    </Pressable>
+  );
+}
+
+function ActionPanel({ delivery, onDelivered }: { delivery: PartnerDelivery; onDelivered: () => void }) {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { currency } = useSettings();
   const run = useDeliveryAction(delivery.orderId);
   const [otp, setOtp] = useState("");
+  const [idConfirmed, setIdConfirmed] = useState(false);
   const actions = delivery.allowedActions;
   const cash = Number(delivery.cashToCollect) > 0;
 
@@ -92,24 +120,8 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
     ]);
   }
 
-  function confirmPickup() {
-    Alert.alert("Picked up the order?", `Check you have all ${delivery.items.reduce((sum, item) => sum + item.quantity, 0)} items from ${delivery.store.name}.`, [
-      { text: "Not yet", style: "cancel" },
-      { text: "Picked up", onPress: () => run.mutate({ action: "pickup" }, { onError: fail("Couldn't mark as picked up") }) },
-    ]);
-  }
-
   function submitOtp(value: string) {
-    run.mutate(
-      { action: "delivered", otp: value },
-      {
-        onSuccess: (result) => {
-          const earning = "earning" in result && result.earning ? ` You earned ${formatMoney(result.earning, currency)}.` : "";
-          Alert.alert("Delivery complete", `Great job!${earning}`, [{ text: "Done", onPress: () => router.back() }]);
-        },
-        onError: () => setOtp(""),
-      },
-    );
+    run.mutate({ action: "delivered", otp: value }, { onSuccess: onDelivered, onError: () => setOtp("") });
   }
 
   let content: ReactNode;
@@ -126,9 +138,16 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
     );
   } else if (actions.includes("pickup")) {
     content = (
-      <Button onPress={confirmPickup} disabled={run.isPending} className="h-12 rounded-lg">
-        {run.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Picked up from store</Text>}
-      </Button>
+      <View className="gap-3">
+        <ConfirmOrderId delivery={delivery} confirmed={idConfirmed} onToggle={() => setIdConfirmed((value) => !value)} />
+        <Button
+          onPress={() => run.mutate({ action: "pickup" }, { onError: fail("Couldn't mark as picked up") })}
+          disabled={!idConfirmed || run.isPending}
+          className="h-12 rounded-lg"
+        >
+          {run.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Picked up from store</Text>}
+        </Button>
+      </View>
     );
   } else if (actions.includes("start-delivery")) {
     content = (
@@ -170,6 +189,59 @@ function ActionPanel({ delivery }: { delivery: PartnerDelivery }) {
   );
 }
 
+/** Times from the stored delivery timestamps; distance isn't shown because GPS history isn't kept for every update. */
+function TripStats({ delivery }: { delivery: PartnerDelivery }) {
+  const { currency } = useSettings();
+  const cash = Number(delivery.cashToCollect) > 0;
+  const rows = [
+    { label: "Trip time", hint: "Store to customer", value: formatDuration(delivery.pickedUpAt, delivery.deliveredAt), earning: false },
+    { label: "Total time", hint: "From accepting", value: formatDuration(delivery.acceptedAt, delivery.deliveredAt), earning: false },
+    { label: "Cash collected", hint: null, value: cash ? formatMoney(delivery.cashToCollect, currency) : null, earning: false },
+    { label: "You earned", hint: null, value: delivery.earning ? formatMoney(delivery.earning, currency) : null, earning: true },
+  ].filter((row) => row.value !== null);
+
+  return (
+    <View className="gap-2.5">
+      {rows.map((row) => (
+        <View key={row.label} className="flex-row items-center justify-between">
+          <View>
+            <Text className="text-sm font-semibold">{row.label}</Text>
+            {row.hint && <Text className="text-xs text-muted-foreground">{row.hint}</Text>}
+          </View>
+          <Text className={cn("text-base font-extrabold", row.earning && "text-primary")}>{row.value}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function DeliveredSheet({ delivery, onDone }: { delivery: PartnerDelivery; onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onDone}>
+      <View className="flex-1 justify-end bg-black/50">
+        <View className="gap-5 rounded-t-3xl bg-card px-5 pt-6" style={{ paddingBottom: insets.bottom + 16 }}>
+          <View className="items-center gap-2">
+            <View className="size-16 items-center justify-center rounded-full bg-primary">
+              <Icon as={Check} size={34} className="text-primary-foreground" />
+            </View>
+            <Text className="text-2xl font-extrabold">Delivery complete</Text>
+            <Text className="text-sm text-muted-foreground">
+              {delivery.orderNumber} · {delivery.customer.name}
+            </Text>
+          </View>
+          <View className="rounded-lg bg-muted/60 p-4">
+            <TripStats delivery={delivery} />
+          </View>
+          <Button onPress={onDone} className="h-12 rounded-lg">
+            <Text className="text-base font-bold">Done</Text>
+          </Button>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
   const surface = useCardSurface();
   const { currency } = useSettings();
@@ -177,12 +249,18 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
   const { store, customer } = delivery;
   const cash = Number(delivery.cashToCollect) > 0;
   const headingToStore = delivery.orderStatus === "ASSIGNED";
+  const delivered = delivery.orderStatus === "DELIVERED";
 
   return (
     <ScrollView contentContainerClassName="gap-4 pb-6 pt-1">
       <View className={cn("mx-4 gap-1 rounded-lg p-4", surface)}>
         <Text className="text-xl font-extrabold">{step.title}</Text>
         <Text className="text-sm text-muted-foreground">{step.detail}</Text>
+        {delivered && (
+          <View className="mt-3 border-t border-border pt-3">
+            <TripStats delivery={delivery} />
+          </View>
+        )}
       </View>
 
       {mapsAvailable && delivery.allowedActions.length > 0 && <DeliveryMap delivery={delivery} />}
@@ -208,6 +286,7 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
           <Text className="text-base font-bold">{store.name}</Text>
           <Text className="text-sm text-muted-foreground">{[store.addressLine1, store.addressLine2, store.city].filter(Boolean).join(", ")}</Text>
           {store.phone && <Text className="text-xs text-muted-foreground">{formatPhone(store.phone)}</Text>}
+          {headingToStore && delivery.pickup && <Text className="mt-1 text-sm font-bold text-primary">{formatPickup(delivery.pickup)}</Text>}
         </View>
       </Section>
 
@@ -233,7 +312,7 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
 
       <View className={cn("mx-4 gap-2 rounded-lg p-4", surface)}>
         <Text className="text-sm font-bold uppercase text-muted-foreground">
-          {delivery.items.reduce((sum, item) => sum + item.quantity, 0)} items · {delivery.orderNumber}
+          {itemCount(delivery)} items · {delivery.orderNumber}
         </Text>
         {delivery.items.map((item, index) => (
           <Text key={index} className="text-sm">
@@ -263,6 +342,7 @@ export default function DeliveryScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const delivery = useDelivery(id);
+  const [justDelivered, setJustDelivered] = useState(false);
 
   return (
     // Android draws edge-to-edge, so the window no longer shrinks for the keyboard; padding keeps the OTP above it.
@@ -272,7 +352,8 @@ export default function DeliveryScreen() {
       {delivery.data ? (
         <>
           <DeliveryBody delivery={delivery.data} />
-          <ActionPanel delivery={delivery.data} />
+          <ActionPanel delivery={delivery.data} onDelivered={() => setJustDelivered(true)} />
+          {justDelivered && delivery.data.orderStatus === "DELIVERED" && <DeliveredSheet delivery={delivery.data} onDone={() => router.back()} />}
         </>
       ) : delivery.isPending ? (
         <ActivityIndicator color={colors.primary} className="py-12" />
