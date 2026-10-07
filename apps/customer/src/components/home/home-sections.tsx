@@ -9,6 +9,7 @@ import { CategoryDeals } from "@/components/home/category-deals";
 import { ImageTiles } from "@/components/home/image-tiles";
 import { OfferStrip } from "@/components/home/offer-strip";
 import { ProductRail } from "@/components/home/product-rail";
+import { SaleHero } from "@/components/home/sale-hero";
 import { SectionBand } from "@/components/home/section-band";
 import { SectionTitle } from "@/components/product-row";
 import { Text } from "@/components/ui/text";
@@ -41,6 +42,8 @@ function Section({ section }: { section: HomeSection }) {
       return <ImageTiles section={section} />;
     case "category_collection":
       return <CategoryCollection section={section} />;
+    case "sale_hero":
+      return <SaleHero section={section} />;
     case "subcategory_grid":
       return (
         <View>

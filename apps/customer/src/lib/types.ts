@@ -333,6 +333,26 @@ export type CategoryCollectionSection = {
   items: { id: string; label: string; imageUrl: string | null; badge: string | null; category: Category }[];
 };
 
+export type SaleHeroEffect = "none" | "snow" | "sparkles" | "confetti" | "hearts";
+
+/**
+ * A festive sale block. `icon` is a tab icon name shown beside the title; `deals` is null when its card is
+ * hidden or has nothing to show; each category's `imageUrls` are its biggest deals.
+ */
+export type SaleHeroSection = {
+  id: string;
+  type: "sale_hero";
+  title: string;
+  subtitle: string | null;
+  tagline: string | null;
+  titleColor: string;
+  animateTitle: boolean;
+  effect: SaleHeroEffect;
+  icon: string | null;
+  deals: { label: string; category: Category | null; products: StoreProduct[] } | null;
+  categories: (Category & { maxDiscountPercent: number; imageUrls: string[] })[];
+};
+
 /** Recolours the whole home header while a tab's page is open. Null `gradientColor` is a solid colour. */
 export type TabHeader = { color: string; gradientColor: string | null; textColor: string; imageUrl: string | null };
 
@@ -365,6 +385,7 @@ export type HomeSection = (
   | ImageTilesSection
   | SubcategoryGridSection
   | CategoryCollectionSection
+  | SaleHeroSection
 ) & { background?: SectionBackground | null };
 
 /** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
