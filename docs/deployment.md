@@ -15,6 +15,7 @@ The platform is white-label. Every client is a separate deployment of the same c
 | Branding, colours, fees, home screen | | Dashboard → Appearance and Settings (no rebuild) |
 | App name, package ID, link scheme, API URL | | Build profiles in `apps/*/eas.json` |
 | Launcher icon, splash screen | | `apps/*/brands/<brand>/` |
+| Error tracking (Sentry project) | One project per client | `SENTRY_DSN` in `deploy/.env`; `EXPO_PUBLIC_SENTRY_DSN` in the build profiles |
 
 There is no shared database and no `tenantId`. Never point one client's app at another client's API, and never copy secrets between clients.
 
@@ -39,6 +40,7 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
    - `COMPOSE_PROJECT_NAME`: the client's name.
    - Starting branding and fees: `APP_NAME`, quoted colours, `TIMEZONE`, `CURRENCY`, delivery fees.
    - `PUSH_PROVIDER=expo` for push notifications, or `none`.
+   - `SENTRY_DSN`: the client's Sentry project (see "Error tracking and uptime"), or blank.
 4. **Certificate:** dry run with `STAGING=1 ./init-letsencrypt.sh`, then `./init-letsencrypt.sh` for the real certificate. This starts the stack; renewal is automatic.
 5. **First admin:** `docker compose run --rm api node dist/scripts/create-admin.js --email … --phone … --name "…"`. It asks for the password; running it again resets the password.
 6. **Check:** `docker compose ps` (all healthy) and `curl https://API_DOMAIN/health`.
@@ -47,7 +49,8 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
    - Settings → Website: business name and address, then read and adjust each policy page. Add app links (Google Play, App Store, or a direct download until the app is listed) for the customer app and the delivery partner app once they exist; the partner app gets its own page, `https://<SITE_DOMAIN>/partner`, to send riders;
    - Appearance: name, logo, colours, home screen;
    - stores (location, radius, hours), categories, products, store prices and stock, delivery partners.
-8. Add the client to the table above, then build their apps (below).
+8. **Monitoring:** add the client's uptime monitors (see "Error tracking and uptime").
+9. Add the client to the table above, then build their apps (below).
 
 ## Updating a server
 
@@ -74,6 +77,30 @@ With several clients, update every server before releasing new app builds: a new
 - **After migrations:** Prisma migrations don't roll back. Restore the backup taken before the update, using the steps at the top of `deploy/backup.sh` (stop api and admin, `pg_restore`, copy images, start again), then deploy the old code.
 
 Backups are daily dumps in `deploy/backups`, kept `BACKUP_KEEP_DAYS` days, plus copies of uploaded images. They stay on the same server; copying them elsewhere is still on `TODO.md`.
+
+## Error tracking and uptime
+
+**Errors: Sentry.** One Sentry organisation for all clients, on the free Developer plan (one user, about 5,000 errors a month shared by every project). Create one project per client (platform: Node.js) and use its DSN for all five parts; reports are tagged `app` (`api`, `admin`, `web`, `customer`, `delivery`).
+
+- Server: `SENTRY_DSN=<dsn>` in `deploy/.env`, then `docker compose up -d` (no rebuild). Compose passes it to the API, dashboard and website.
+- Apps: `"EXPO_PUBLIC_SENTRY_DSN": "<dsn>"` in the client's build profiles, then rebuild. The DSN is not a secret (it only allows sending reports), so it is fine in `eas.json`.
+- Blank turns reporting off. Development builds and Metro never report.
+
+What is reported: everything the API logs at error level (500s, failed payment sweeps and refunds, SMS and push failures, crashes), server errors in the dashboard and website, and JavaScript and native crashes in the apps. Not reported: 4xx responses, browser errors in the dashboard and website, performance data.
+
+Personal data stays out: no request bodies, headers, cookies, query strings or user IDs; phone numbers and email addresses in error messages are replaced. Each server process sends at most 60 reports an hour and each phone at most 10, so one broken client can't use up the shared quota. Also leave Sentry's spike protection on, and set a rate limit per DSN if the plan offers it (Project → Settings → Client Keys → Configure).
+
+App stack traces are minified, because source maps are not uploaded (that needs Sentry's Expo plugin and an auth token in EAS). The error message, screen and device still show.
+
+To move to GlitchTip later (hosted or self-hosted, Sentry-compatible): create the projects there and swap the DSNs. No code changes.
+
+**Uptime: UptimeRobot.** The free plan has 50 monitors with 5-minute checks and allows commercial use. Per client, add:
+
+- a **Keyword** monitor on `https://API_DOMAIN/health`, alerting when the keyword `"redis":"ok"` is missing (the page fails without the database, and says `error` when Redis is down);
+- an **HTTP(s)** monitor on `https://ADMIN_DOMAIN/login`;
+- optionally an **HTTP(s)** monitor on `https://SITE_DOMAIN`.
+
+Send alerts to your email and the UptimeRobot phone app. Name monitors `<client> API` etc. so alerts say which client is down.
 
 ## Mobile apps per client
 
@@ -140,17 +167,19 @@ Add `<brand>-preview` and `<brand>-production` to both `eas.json` files:
     "APP_NAME": "Acme Grocery",
     "APP_ID": "com.acme.grocery",
     "APP_SCHEME": "acme",
-    "EXPO_PUBLIC_API_URL": "https://api.acme.com"
+    "EXPO_PUBLIC_API_URL": "https://api.acme.com",
+    "EXPO_PUBLIC_SENTRY_DSN": "https://<key>@<org>.ingest.sentry.io/<project>"
   }
 },
 "acme-production": {
   "extends": "production",
-  "env": { "APP_BRAND": "acme", "APP_NAME": "Acme Grocery", "APP_ID": "com.acme.grocery", "APP_SCHEME": "acme", "EXPO_PUBLIC_API_URL": "https://api.acme.com" }
+  "env": { "APP_BRAND": "acme", "APP_NAME": "Acme Grocery", "APP_ID": "com.acme.grocery", "APP_SCHEME": "acme", "EXPO_PUBLIC_API_URL": "https://api.acme.com", "EXPO_PUBLIC_SENTRY_DSN": "https://<key>@<org>.ingest.sentry.io/<project>" }
 }
 ```
 
 - **`APP_ID`** is the Android package and iOS bundle ID. It's permanent once the app is on a store, and must differ between clients and between the two apps (e.g. `com.acme.grocery` and `com.acme.partner`).
 - **`APP_SCHEME`** brings the customer back from the payment page; use a unique one per client.
+- **`EXPO_PUBLIC_SENTRY_DSN`** is the client's Sentry project (optional; blank turns error reporting off).
 - **Values here are public.** They are bundled into the app, so they are safe to commit. Never put a secret in `eas.json` or in any `EXPO_PUBLIC_` variable.
 - **Optional:** `EAS_PROJECT_ID`, `EXPO_OWNER` and `APP_SLUG` move a client to their own EAS project.
 
@@ -164,7 +193,7 @@ The EAS environments (`preview`, `production`) are shared by every client, so th
 
 Without a matching Firebase entry the build still works, but without push notifications (the build log warns about it).
 
-Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND` or `EXPO_PUBLIC_API_URL` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
+Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND`, `EXPO_PUBLIC_API_URL` or `EXPO_PUBLIC_SENTRY_DSN` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
 
 ### Google Maps key (Android)
 
@@ -217,3 +246,4 @@ Colours, logo, banners and texts inside the app come from the client's dashboard
 - [ ] A delivery partner account signs in on the delivery app, and an accepted delivery shows the map.
 - [ ] One full order end to end: place, accept, pack, assign, pick up, deliver with OTP. A push notification arrives.
 - [ ] Backups appear in `deploy/backups`; the client knows they also need an off-site copy.
+- [ ] Sentry: `SENTRY_DSN` set on the server and in both apps' production profiles. UptimeRobot monitors for the API and dashboard are green.

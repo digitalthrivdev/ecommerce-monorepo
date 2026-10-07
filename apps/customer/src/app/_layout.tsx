@@ -13,11 +13,13 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { errorMessage } from "@/lib/api";
 import { AppThemeProvider, useAppTheme } from "@/lib/app-theme";
+import { initErrorReporting } from "@/lib/error-reporting";
 import { queryClient } from "@/lib/query-client";
 import { SessionProvider, useSession } from "@/lib/session";
 import { SettingsProvider, useSettingsState } from "@/lib/settings";
 import { DEFAULT_THEME } from "@/lib/theme";
 
+initErrorReporting("customer");
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

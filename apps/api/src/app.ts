@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 
 import { env } from "./config/env.js";
+import { reportLoggedError } from "./infrastructure/error-reporting.js";
 import authPlugin from "./plugins/auth.js";
 import errorHandlerPlugin from "./plugins/error-handler.js";
 import notificationsPlugin from "./plugins/notifications.js";
@@ -35,7 +36,14 @@ import usersRoutes from "./modules/users/users.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
-    logger: true,
+    logger: {
+      hooks: {
+        logMethod(args, method, level) {
+          if (level >= 50) reportLoggedError(args);
+          return method.apply(this, args);
+        },
+      },
+    },
     trustProxy:
       typeof env.TRUST_PROXY === "number"
         ? (_address: string, hop: number) => hop < (env.TRUST_PROXY as number)

@@ -68,6 +68,7 @@ services:
       PUBLIC_SITE_URL: https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
       # Nginx is the only way in and overwrites X-Forwarded-For with the client address.
       TRUST_PROXY: "1"
+      SENTRY_DSN: ${SENTRY_DSN:-}
       UPLOADS_DIR: /repo/apps/api/uploads
     volumes:
       - uploads:/repo/apps/api/uploads
@@ -89,6 +90,7 @@ services:
       API_URL: http://api:4000
       # For links to the public website in the dashboard.
       SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       api:
         condition: service_healthy
@@ -102,6 +104,7 @@ services:
     image: ${COMPOSE_PROJECT_NAME:-grocery}-web
     environment:
       API_URL: http://api:4000
+      SENTRY_DSN: ${SENTRY_DSN:-}
     depends_on:
       api:
         condition: service_healthy

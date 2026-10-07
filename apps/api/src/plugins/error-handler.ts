@@ -31,7 +31,7 @@ export default fp(async (app) => {
 
     if (error instanceof AppError) {
       if (error.statusCode >= 500) {
-        request.log.error(error);
+        request.log.error({ err: error, route: `${request.method} ${request.routeOptions.url}` }, "Request failed");
       }
       return reply.status(error.statusCode).send({
         error: error.code,
@@ -59,7 +59,7 @@ export default fp(async (app) => {
     const statusCode = ("statusCode" in error && error.statusCode) || 500;
 
     if (statusCode >= 500) {
-      request.log.error(error);
+      request.log.error({ err: error, route: `${request.method} ${request.routeOptions.url}` }, "Request failed");
       return reply.status(statusCode).send({
         error: "INTERNAL_SERVER_ERROR",
         message: "Something went wrong",

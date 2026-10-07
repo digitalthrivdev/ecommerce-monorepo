@@ -6,6 +6,7 @@ packages:
 nodeLinker: hoisted
 allowBuilds:
   '@prisma/engines': true
+  '@sentry/cli': false
   dtrace-provider: false
   esbuild: true
   prisma: true

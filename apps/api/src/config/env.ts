@@ -137,6 +137,10 @@ const envSchema = z.object({
 
   // 0 disables the background sender for order status notifications.
   NOTIFICATION_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(60).default(3),
+
+  // Error tracking (Sentry, or a Sentry-compatible server such as GlitchTip). Blank turns it off.
+  // Everything logged at error level is reported, without request bodies, headers or query strings.
+  SENTRY_DSN: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
 }).refine((value) => value.NODE_ENV !== "production" || value.PUBLIC_API_URL?.startsWith("https://"), {
   message: "PUBLIC_API_URL must be set to an https URL in production",
   path: ["PUBLIC_API_URL"],

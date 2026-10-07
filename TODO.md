@@ -45,4 +45,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 ## Engineering
 
 - [ ] Automated test runner and CI (current verification uses throwaway scripts against the dev database).
+- [ ] Readable app stack traces in Sentry: upload source maps from EAS builds (Sentry's Expo plugin and a `SENTRY_AUTH_TOKEN` EAS secret).
+- [ ] Report browser errors in the dashboard (only its server errors are reported today).
 - [ ] Share validation rules (phone, money, slugs) between the API and admin through `packages/validation` instead of duplicating them.

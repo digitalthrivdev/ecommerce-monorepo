@@ -1,7 +1,9 @@
 import { buildApp } from "./app.js";
 import { env } from "./config/env.js";
+import { flushErrorReports, initErrorReporting } from "./infrastructure/error-reporting.js";
 
 async function start() {
+  initErrorReporting();
   const app = await buildApp();
 
   try {
@@ -11,6 +13,7 @@ async function start() {
     });
   } catch (error) {
     app.log.error(error);
+    await flushErrorReports();
     process.exit(1);
   }
 }
