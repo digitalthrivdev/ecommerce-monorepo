@@ -10,6 +10,7 @@ A white-label quick-commerce grocery platform (a simplified Blinkit). One codeba
   - Modules live in `src/modules/`: auth, users, stores, categories, brands, products, inventory, cart, orders, payments, delivery, notifications, settings, uploads.
   - Infrastructure is in `src/infrastructure/` (database, redis) and Fastify plugins in `src/plugins/`.
 - `apps/admin`: Next.js 16 dashboard for admins and store staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
+- `apps/web`: Next.js 16 public website on the client's main domain: home page built from the Appearance home sections (like the customer app), policy pages and app download links. Read-only for now; web ordering would follow the app's flow through the same API. It calls the API only from the server (`API_URL`).
 - `apps/customer`, `apps/delivery`: Expo / React Native apps.
 - `deploy/`: production stack. `docker/`: dev PostgreSQL and Redis. `packages/`: reserved, currently empty.
 - pnpm workspaces and Turborepo. Do not split the backend into microservices.
@@ -107,8 +108,7 @@ Never upgrade to Prisma 8 or use Prisma 8 APIs; the project hit a 7/8 mismatch b
 - **Machine:** Windows with WSL2, project at `/home/piyush/projects/grocery-platform`. Docker Engine runs inside WSL; never suggest Docker Desktop. Node 24, pnpm 11.
 - **Dev services** (`docker/docker-compose.yml`): PostgreSQL 17 on host port 5433 (5432 is taken by a Windows PostgreSQL) and Redis 7 on 6379. Database, user and password: `grocery` / `grocery` / `grocery_dev`. These are for development only.
 - **Production** (`deploy/`): one Compose stack per client.
-  - It runs PostgreSQL, Redis, migrations, the API, the dashboard, Nginx with Let's Encrypt, an uploads volume and daily backups.
-  - The dashboard container also serves the client's public website (home and policy pages, `apps/admin/app/site`) on `SITE_DOMAIN`, where its proxy exposes nothing else.
+  - It runs PostgreSQL, Redis, migrations, the API, the dashboard, the public website (`apps/web` on `SITE_DOMAIN`), Nginx with Let's Encrypt, an uploads volume and daily backups.
   - Configured by `deploy/.env` and `deploy/api.env` on the server. Setup steps are in `deploy/.env.example`.
 - **Health check:** `GET /health` returns `status`, `database` and `redis` as `ok`.
 

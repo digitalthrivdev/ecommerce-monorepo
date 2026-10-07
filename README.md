@@ -89,7 +89,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
    pnpm --filter delivery start
    ```
 
-   If the phone can't reach the API, set `EXPO_PUBLIC_API_URL` in the app's `.env` to your computer's LAN address, for example `http://192.168.1.10:4000`.
+   Local Metro always talks to the API on the machine running Expo (port 4000), not the production URL in `eas.json`. If the phone can't reach it, set `EXPO_PUBLIC_DEV_API_URL` in the app's `.env` (LAN IP, `http://10.0.2.2:4000` on the Android emulator, or a tunnel).
 
 ### Sample accounts
 

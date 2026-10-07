@@ -87,8 +87,21 @@ services:
     image: ${COMPOSE_PROJECT_NAME:-grocery}-admin
     environment:
       API_URL: http://api:4000
-      # The admin app also serves the public website on this domain.
+      # For links to the public website in the dashboard.
       SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Public website on SITE_DOMAIN: home page from Appearance, policy pages, app download links.
+  web:
+    <<: *restart
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    image: ${COMPOSE_PROJECT_NAME:-grocery}-web
+    environment:
+      API_URL: http://api:4000
     depends_on:
       api:
         condition: service_healthy
@@ -114,6 +127,7 @@ services:
     depends_on:
       - api
       - admin
+      - web
 
   # Renews the HTTPS certificate when it is close to expiry (initial issue: ./init-letsencrypt.sh).
   certbot:

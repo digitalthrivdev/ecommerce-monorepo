@@ -9,7 +9,7 @@ The platform is white-label. Every client is a separate deployment of the same c
 | Part | Per client | Where it is configured |
 | --- | --- | --- |
 | Server (API, dashboard, public website, PostgreSQL, Redis, Nginx, backups) | Own VPS | `deploy/.env`, `deploy/api.env` on that server |
-| Website (home page, Terms, Privacy, Refunds, Shipping, Contact) | Client's main domain | Dashboard → Settings → Website |
+| Website (`apps/web`: home page, Terms, Privacy, Refunds, Shipping, Contact) | Client's main domain | Dashboard → Settings → Website; the home page's banners and categories come from Appearance |
 | Secrets (database password, JWT, encryption key) | Freshly generated | `deploy/.env`, `deploy/api.env` (never in git) |
 | Payment and SMS keys | Client's own accounts | Dashboard → Settings (encrypted), or `deploy/api.env` |
 | Branding, colours, fees, home screen | | Dashboard → Appearance and Settings (no rebuild) |
@@ -28,7 +28,7 @@ Add a row for every new client.
 
 ## New client: server
 
-Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM (or swap), since the dashboard image build needs about 1.5 GB. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
+Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
 
 1. **DNS:** point the API and dashboard domains, the client's main domain (`SITE_DOMAIN`, the public website) and its `www` (A records) at the server. Open ports 80 and 443.
 2. **Code:** `git clone git@github.com:piyushGupta20/grocery-app-monorepo.git <client>` then `cd <client>/deploy && cp .env.example .env && cp api.env.example api.env`.
@@ -44,7 +44,7 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM (or swap), 
 6. **Check:** `docker compose ps` (all healthy) and `curl https://API_DOMAIN/health`.
 7. **Dashboard:** sign in at `https://ADMIN_DOMAIN`, then:
    - Settings: SMS provider keys (customers can't sign in without them) and payment gateway keys;
-   - Settings → Website: business name and address, then read and adjust each policy page;
+   - Settings → Website: business name and address, then read and adjust each policy page. Add app links (Google Play, App Store, or a direct download until the app is listed) for the customer app and the delivery partner app once they exist; the partner app gets its own page, `https://<SITE_DOMAIN>/partner`, to send riders;
    - Appearance: name, logo, colours, home screen;
    - stores (location, radius, hours), categories, products, store prices and stock, delivery partners.
 8. Add the client to the table above, then build their apps (below).
@@ -57,7 +57,7 @@ Push to GitHub first; the server pulls from there.
 2. **Pending migrations:** from the repository, `git diff --name-only <deployed>..origin/main -- apps/api/prisma/migrations`. Read each new `migration.sql`. Migrations that only add tables or columns are safe. If one moves data, drops a column or adds `NOT NULL`, check it against the live data and take a backup first.
 3. **Backup:** `docker compose exec backup sh /usr/local/bin/backup.sh` (in `deploy/`).
 4. **Deploy:** `cd ~/<client> && git pull && cd deploy && docker compose up -d --build`. The `migrate` service applies migrations before the API starts. On a 1-CPU server the build takes about 5 minutes.
-5. **Verify:** `docker compose ps` (api and admin healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
+5. **Verify:** `docker compose ps` (api, admin and web healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
 
 With several clients, update every server before releasing new app builds: a new app may call endpoints an older server doesn't have.
 
