@@ -19,7 +19,7 @@ import { createTrackingService } from "./tracking.service.js";
 
 /** Delivery partner app. */
 const deliveryRoutes: FastifyPluginAsync = async (app) => {
-  const delivery = createDeliveryService(app.prisma, app.redis);
+  const delivery = createDeliveryService(app.prisma, app.redis, app.notifications.notify);
   const cash = createCashService(app.prisma);
   const payouts = createPayoutsService(app.prisma);
   const tracking = createTrackingService(app.prisma, app.redis);

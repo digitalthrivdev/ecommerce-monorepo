@@ -11,6 +11,7 @@ import {
   type PrismaClient,
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { partnerAcceptedNotification, type Notification } from "../notifications/order-notifications.js";
 import { lockOrder, transitionOrder } from "../orders/order-status.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
 import { assertUnderCashLimit } from "./cash.service.js";
@@ -177,7 +178,7 @@ function assertAvailable<T extends { status: DeliveryPartnerStatus; isActive: bo
   return partner;
 }
 
-export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
+export function createDeliveryService(prisma: PrismaClient, redis: Redis, notify: (notifications: Notification[]) => Promise<void>) {
   async function resolvePartner(userId: string) {
     const partner = await prisma.deliveryPartner.findUnique({
       where: { userId },
@@ -272,6 +273,12 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
       }
       await tx.delivery.update({ where: { id: delivery.id }, data: { acceptedAt: new Date() } });
     });
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      select: { id: true, orderNumber: true, userId: true, store: { select: { name: true } } },
+    });
+    await notify([partnerAcceptedNotification({ ...order, storeName: order.store.name }, partner.user.name)]);
 
     return findView(partner.id, orderId);
   }

@@ -13,6 +13,7 @@ import {
   MessageSquareWarning,
   Phone,
   ShoppingBag,
+  Store,
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
@@ -237,7 +238,7 @@ function NotificationsCard() {
 
 function HelpCard({ order }: { order: OrderDetail }) {
   const { support } = useSettings();
-  const phone = support.phone ?? order.store.phone;
+  const phone = support.phone ?? (isLive(order) ? null : order.store.phone);
   if (phone) {
     return <InfoCard icon={Headset} title="Need help?" detail="Call us about any issue with your order." action={{ label: "Call support", onPress: () => Linking.openURL(`tel:${phone}`) }} />;
   }
@@ -335,6 +336,20 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
       ) : live ? (
         <InfoCard icon={Bike} title="We'll assign a delivery partner as soon as your order is packed" />
       ) : null}
+
+      {live && order.store.phone && (
+        <InfoCard
+          icon={Store}
+          title={order.store.name}
+          detail="Call the store about the items in your order"
+          right={
+            <Button variant="outline" size="sm" onPress={() => Linking.openURL(`tel:${order.store.phone}`)} className="h-9 rounded-md">
+              <Icon as={Phone} size={16} />
+              <Text className="font-semibold">Call</Text>
+            </Button>
+          }
+        />
+      )}
 
       {!isOrderFinished(order.status) && <NotificationsCard />}
 

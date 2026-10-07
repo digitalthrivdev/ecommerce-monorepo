@@ -280,7 +280,13 @@ function DeliveryBody({ delivery }: { delivery: PartnerDelivery }) {
       <Section
         icon={Store}
         title={headingToStore ? "Pick up from" : "Picked up from"}
-        actions={headingToStore ? <ContactButtons phone={store.phone} latitude={store.latitude} longitude={store.longitude} /> : null}
+        actions={
+          headingToStore ? (
+            <ContactButtons phone={store.phone} latitude={store.latitude} longitude={store.longitude} />
+          ) : store.phone && delivery.allowedActions.length > 0 ? (
+            <ContactButtons phone={store.phone} />
+          ) : null
+        }
       >
         <View className="gap-0.5">
           <Text className="text-base font-bold">{store.name}</Text>

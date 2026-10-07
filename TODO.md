@@ -33,10 +33,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Automatic tab pages:** build a category tab's page from its sub-categories and products instead of hand-made sections.
 - [ ] **Scheduled home content:** start/end dates for banners and offer strips (e.g. festival campaigns).
 
-## Stores
-
-- [ ] Show the store phone to delivery partners (delivery app) and customers.
-
 ## Auth
 
 - [ ] Refresh tokens. Access tokens last `JWT_EXPIRES_IN` (7 days by default), then the user signs in again. Signing out revokes the token on the server (`POST /auth/logout`).

@@ -33,6 +33,19 @@ const HELD_BY_PARTNER: OrderStatus[] = [OrderStatus.ASSIGNED, OrderStatus.PICKED
 /** Rings like a call: the delivery app creates this Android channel with its bundled ringtone. */
 const NEW_DELIVERY_ALERT = { channelId: "new-delivery", sound: "new_delivery.wav" };
 
+/** Tells the customer their delivery partner accepted the order. Accepting doesn't change the order status. */
+export function partnerAcceptedNotification(
+  order: { id: string; orderNumber: string; userId: string; storeName: string },
+  partnerName: string | null,
+): Notification {
+  return {
+    userId: order.userId,
+    title: "Delivery partner on the way",
+    body: `${partnerName ?? "Your delivery partner"} accepted order ${order.orderNumber} and is heading to ${order.storeName} to pick it up.`,
+    data: { type: "order_status", orderId: order.id, status: OrderStatus.ASSIGNED },
+  };
+}
+
 /**
  * Who to notify about an order status change, and what to say. Store staff and admins watch the
  * dashboard instead, and people are not notified about changes they made themselves.

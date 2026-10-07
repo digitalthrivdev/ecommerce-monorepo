@@ -33,7 +33,7 @@ const unavailableBodySchema = z
 
 const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
   const storeOrdersService = createStoreOrdersService(app.prisma, app.payments);
-  const deliveryService = createDeliveryService(app.prisma, app.redis);
+  const deliveryService = createDeliveryService(app.prisma, app.redis, app.notifications.notify);
 
   app.addHook("preHandler", app.requireStoreAccess);
 
