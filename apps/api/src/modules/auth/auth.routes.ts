@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { FastifyPluginAsync } from "fastify";
 
 import { createAuthService } from "./auth.service.js";
@@ -8,7 +10,8 @@ const authRoutes: FastifyPluginAsync = async (app) => {
     prisma: app.prisma,
     redis: app.redis,
     otp: app.otp,
-    signToken: (payload) => app.jwt.sign(payload),
+    // The ID lets one token be revoked on sign-out.
+    signToken: (payload) => app.jwt.sign({ ...payload, jti: randomUUID() }),
   });
 
   app.post("/send-otp", async (request) => {
@@ -25,6 +28,11 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   app.post("/login", async (request) => {
     const { email, password } = loginBodySchema.parse(request.body);
     return authService.login(email, password, request.ip);
+  });
+
+  app.post("/logout", { preHandler: app.authenticate }, async (request, reply) => {
+    await app.revokeToken(request.user);
+    return reply.status(204).send();
   });
 };
 

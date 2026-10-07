@@ -40,7 +40,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Auth
 
-- [ ] Refresh tokens and server-side logout. Access tokens stay valid until they expire; signing out only deletes the cookie.
+- [ ] Refresh tokens. Access tokens last `JWT_EXPIRES_IN` (7 days by default), then the user signs in again. Signing out revokes the token on the server (`POST /auth/logout`).
 
 ## Engineering
 

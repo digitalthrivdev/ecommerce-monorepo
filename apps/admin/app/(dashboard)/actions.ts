@@ -6,6 +6,8 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { clearSession } from "@/lib/session";
 
 export async function signOut() {
+  // Best effort: the cookie is cleared even if the API is unreachable or the session already expired.
+  await apiFetch("/auth/logout", { method: "POST" }).catch(() => undefined);
   await clearSession();
   redirect("/login");
 }

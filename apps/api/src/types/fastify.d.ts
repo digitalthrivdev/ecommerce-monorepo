@@ -19,13 +19,15 @@ declare module "fastify" {
     requireStoreAccess: (request: FastifyRequest) => Promise<void>;
     /** Rejects every token issued to the user until now, e.g. after the account is deleted. */
     revokeTokens: (userId: string) => Promise<void>;
+    /** Rejects one token (sign-out on one device); other devices stay signed in. */
+    revokeToken: (user: FastifyRequest["user"]) => Promise<void>;
   }
 }
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string; role: UserRole };
-    /** `iat` is set by the signer, in seconds. */
-    user: { sub: string; role: UserRole; iat: number };
+    payload: { sub: string; role: UserRole; jti?: string };
+    /** `iat` and `exp` are set by the signer, in seconds. Tokens issued before sign-out existed have no `jti`. */
+    user: { sub: string; role: UserRole; iat: number; exp: number; jti?: string };
   }
 }

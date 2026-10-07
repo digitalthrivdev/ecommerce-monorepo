@@ -39,6 +39,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const signOut = useCallback(async () => {
     unregisterPush();
+    // Best effort, like unregisterPush: ends this token on the server; the phone signs out regardless.
+    apiFetch("/auth/logout", { method: "POST" }).catch(() => {});
     setAccessToken(null);
     setToken(null);
     setUserState(null);

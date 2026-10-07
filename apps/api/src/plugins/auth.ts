@@ -16,9 +16,10 @@ export default fp(async (app) => {
   const probe = app.jwt.decode<{ iat: number; exp: number }>(app.jwt.sign({ sub: "probe", role: UserRole.CUSTOMER }));
   const tokenLifetimeSeconds = probe ? probe.exp - probe.iat : 30 * 24 * 3600;
   const revokedKey = (userId: string) => `auth:revoked:${userId}`;
+  const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   /**
-   * Whether the token is valid and was issued after the user's last revocation. A Redis failure
+   * Whether the token is valid, not signed out, and issued after the user's last revocation. A Redis failure
    * throws instead of returning false, so an outage does not sign every app user out.
    */
   async function verify(request: FastifyRequest) {
@@ -27,12 +28,22 @@ export default fp(async (app) => {
     } catch {
       return false;
     }
-    const revokedAt = await app.redis.get(revokedKey(request.user.sub));
-    return !(revokedAt && request.user.iat <= Number(revokedAt));
+    const { sub, iat, jti } = request.user;
+    const [revokedAt, signedOut] = await app.redis.mget(jti ? [revokedKey(sub), revokedTokenKey(jti)] : [revokedKey(sub)]);
+    return !(revokedAt && iat <= Number(revokedAt)) && !signedOut;
   }
 
   app.decorate("revokeTokens", async (userId: string) => {
     await app.redis.set(revokedKey(userId), String(Math.floor(Date.now() / 1000)), "EX", tokenLifetimeSeconds + 60);
+  });
+
+  app.decorate("revokeToken", async (user: FastifyRequest["user"]) => {
+    if (!user.jti) {
+      await app.revokeTokens(user.sub);
+      return;
+    }
+    const secondsLeft = Math.max(user.exp - Math.floor(Date.now() / 1000), 0);
+    await app.redis.set(revokedTokenKey(user.jti), "1", "EX", secondsLeft + 60);
   });
 
   app.decorate("authenticate", async (request: FastifyRequest) => {
