@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFormAction } from "@/hooks/use-form-action";
 import { describeErrorPath, HOME_PAGE, pageTabs } from "@/lib/appearance";
-import type { AdminAppearance, Appearance, Brand, Category } from "@/lib/types";
+import type { AdminAppearance, Appearance, AppearanceProduct, Brand, Category } from "@/lib/types";
 
 function toConfig({ appName, logoUrl, theme, announcement, categoryTabs, homeSections }: Appearance): Appearance {
   return { appName, logoUrl, theme, announcement, categoryTabs, homeSections };
@@ -26,6 +26,7 @@ type AppearanceEditorProps = {
   initial: AdminAppearance;
   categories: Category[];
   brands: Brand[];
+  products: AppearanceProduct[];
   initialTab: EditorTab;
   initialExpanded: string | null;
   initialPage: string | null;
@@ -41,7 +42,7 @@ function syncUrl(tab: EditorTab, section: string | null, page: string) {
   window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
 }
 
-export function AppearanceEditor({ initial, categories, brands, initialTab, initialExpanded, initialPage }: AppearanceEditorProps) {
+export function AppearanceEditor({ initial, categories, brands, products, initialTab, initialExpanded, initialPage }: AppearanceEditorProps) {
   const [saved] = useState(() => toConfig(initial));
   const [draft, setDraft] = useState(saved);
   const [tab, setTabState] = useState<EditorTab>(initialTab);
@@ -121,6 +122,7 @@ export function AppearanceEditor({ initial, categories, brands, initialTab, init
               onChange={setDraft}
               categories={categories}
               brands={brands}
+              products={products}
               errors={fieldErrors}
               expanded={expanded}
               onExpand={setExpanded}

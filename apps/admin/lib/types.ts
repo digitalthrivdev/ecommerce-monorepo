@@ -427,6 +427,11 @@ export type PlatformSettings = {
   businessAddress: string | null;
   websiteTagline: string | null;
   playStoreUrl: string | null;
+  appStoreUrl: string | null;
+  appDownloadUrl: string | null;
+  deliveryPlayStoreUrl: string | null;
+  deliveryAppStoreUrl: string | null;
+  deliveryDownloadUrl: string | null;
   /** One customer number that signs in with a fixed code, for app store and payment gateway reviewers. */
   reviewLogin: { enabled: boolean; phone: string | null; codeSet: boolean };
   /** Gateway new online payments use; null means cash on delivery only. */
@@ -438,35 +443,6 @@ export type PlatformSettings = {
   /** Null until an admin first saves; the values are then the server defaults. */
   updatedById: string | null;
   updatedAt: string;
-};
-
-/** Business details on the public website; `name` falls back to the app name. */
-export type PolicyBusiness = {
-  appName: string;
-  logoUrl: string | null;
-  name: string;
-  address: string | null;
-  email: string | null;
-  phone: string | null;
-};
-
-/** The public website's home page details and policy page titles. */
-export type Website = {
-  business: PolicyBusiness;
-  tagline: string | null;
-  playStoreUrl: string | null;
-  /** Cities with an active store. */
-  cities: string[];
-  pages: { slug: string; title: string; updatedAt: string | null }[];
-};
-
-/** A public policy page with its placeholders filled in. `updatedAt` is null while it shows the template. */
-export type PolicyPage = {
-  slug: string;
-  title: string;
-  body: string;
-  updatedAt: string | null;
-  business: PolicyBusiness;
 };
 
 /** A policy page as an admin edits it: placeholders kept, plus the template to restore. */
@@ -518,7 +494,29 @@ export type HomeSection =
   | (SectionBase & { type: "category_deals"; title: string; description: string | null; categoryIds: string[] })
   | (SectionBase & { type: "image_tiles"; title: string | null; description: string | null; layout: "grid" | "carousel"; columns: 2 | 3; tiles: HomeTile[] })
   | (SectionBase & { type: "subcategory_grid"; title: string | null; description: string | null; categoryId: string; columns: 3 | 4; limit: number })
-  | (SectionBase & { type: "category_collection"; title: string | null; description: string | null; columns: 2 | 3 | 4 | 5; items: CollectionItem[] });
+  | (SectionBase & { type: "category_collection"; title: string | null; description: string | null; columns: 2 | 3 | 4 | 5; items: CollectionItem[] })
+  | (SectionBase & {
+      type: "sale_hero";
+      title: string;
+      subtitle: string | null;
+      tagline: string | null;
+      titleColor: string;
+      animateTitle: boolean;
+      effect: SaleHeroEffect;
+      /** A tab icon name shown beside the title; null for none. */
+      icon: string | null;
+      /** Heading on the cycling products card; null uses "Crazy deals". */
+      dealsLabel: string | null;
+      /** Products to cycle in the left card. Empty hides the card. */
+      productIds: string[];
+      /** Category tiles on the right. Empty hides the tiles. */
+      categoryIds: string[];
+    });
+
+export type SaleHeroEffect = "none" | "snow" | "sparkles" | "confetti" | "hearts";
+
+/** Enough to label a product in the appearance editor. */
+export type AppearanceProduct = { id: string; name: string; imageUrl: string | null; isActive: boolean };
 
 /** Null `imageUrl` and `label` use the category's own. */
 export type CollectionItem = { id: string; categoryId: string; imageUrl: string | null; label: string | null; badge: string | null };

@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Megaphone,
+  PartyPopper,
   Plus,
   RotateCcw,
   Rows3,
@@ -30,8 +31,9 @@ import { Fragment, useEffect, useState, type Dispatch, type SetStateAction } fro
 import { toast } from "sonner";
 
 import { AnnouncementEditor } from "@/components/appearance/announcement-editor";
-import { CategoryTabsEditor } from "@/components/appearance/category-tabs-editor";
+import { CategoryTabsEditor, IconPicker } from "@/components/appearance/category-tabs-editor";
 import { ColorField } from "@/components/appearance/color-field";
+import { ProductPickerField } from "@/components/appearance/product-picker-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageField } from "@/components/image-field";
@@ -55,6 +57,7 @@ import { duplicateSection, HOME_PAGE, newCollectionItem, newId, newSection, newT
 import type {
   Appearance,
   AppearanceLink,
+  AppearanceProduct,
   Brand,
   Category,
   CollectionItem,
@@ -62,6 +65,7 @@ import type {
   HomeSection,
   HomeSectionType,
   HomeTile,
+  SaleHeroEffect,
   SectionBackground,
   SectionEdge,
 } from "@/lib/types";
@@ -79,12 +83,17 @@ const SECTION_ICONS: Record<HomeSectionType, LucideIcon> = {
   image_tiles: Grid2x2,
   subcategory_grid: LayoutDashboard,
   category_collection: Shapes,
+  sale_hero: PartyPopper,
 };
+
+const EFFECT_LABELS: Record<SaleHeroEffect, string> = { none: "None", snow: "Falling snow", sparkles: "Twinkling sparkles", confetti: "Falling confetti", hearts: "Rising hearts" };
 
 const MAX_SECTIONS = 20;
 const MAX_BANNERS = 10;
 const MAX_TILES = 9;
 const MAX_COLLECTION_ITEMS = 24;
+const MAX_SALE_PRODUCTS = 8;
+const MAX_SALE_CATEGORIES = 4;
 const ALL_CATEGORIES = "all";
 
 type Errors = Record<string, string>;
@@ -440,6 +449,8 @@ function SectionFields({
   onChange,
   categories,
   brands,
+  products,
+  onProductKnown,
   errors,
   prefix,
 }: {
@@ -447,6 +458,8 @@ function SectionFields({
   onChange: (section: HomeSection) => void;
   categories: Category[];
   brands: Brand[];
+  products: AppearanceProduct[];
+  onProductKnown: (product: AppearanceProduct) => void;
   errors: Errors;
   prefix: string;
 }) {
@@ -787,6 +800,212 @@ function SectionFields({
         </FieldGroup>
       );
 
+    case "sale_hero":
+      return (
+        <FieldGroup>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextInput label="Title" maxLength={20} placeholder="HOUSEFULL" value={section.title} onChange={(title) => onChange({ ...section, title })} error={at("title")} />
+            <TextInput
+              label="Subtitle (optional)"
+              maxLength={20}
+              placeholder="SALE"
+              value={section.subtitle ?? ""}
+              onChange={(subtitle) => onChange({ ...section, subtitle: subtitle || null })}
+              error={at("subtitle")}
+            />
+          </div>
+          <TextInput
+            label="Tagline (optional)"
+            maxLength={50}
+            placeholder="30th Nov – 7th Dec"
+            value={section.tagline ?? ""}
+            onChange={(tagline) => onChange({ ...section, tagline: tagline || null })}
+            error={at("tagline")}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ColorField
+              label="Title colour"
+              value={section.titleColor}
+              onChange={(titleColor) => onChange({ ...section, titleColor })}
+              error={at("titleColor")}
+              contrastWith={section.background ? { color: section.background.color, label: "the background" } : undefined}
+            />
+            <Field data-invalid={Boolean(at("effect"))}>
+              <FieldLabel htmlFor={`${section.id}-effect`}>Background effect</FieldLabel>
+              <Select value={section.effect} onValueChange={(effect) => onChange({ ...section, effect: effect as SaleHeroEffect })}>
+                <SelectTrigger id={`${section.id}-effect`} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(EFFECT_LABELS) as SaleHeroEffect[]).map((effect) => (
+                    <SelectItem key={effect} value={effect}>
+                      {EFFECT_LABELS[effect]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{at("effect")}</FieldError>
+            </Field>
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
+            <Field orientation="horizontal">
+              <Switch id={`${section.id}-wave`} checked={section.animateTitle} onCheckedChange={(animateTitle) => onChange({ ...section, animateTitle })} />
+              <FieldLabel htmlFor={`${section.id}-wave`}>Bounce title letters</FieldLabel>
+            </Field>
+            <Field orientation="horizontal">
+              <Switch id={`${section.id}-icon`} checked={section.icon !== null} onCheckedChange={(on) => onChange({ ...section, icon: on ? "zap" : null })} />
+              <FieldLabel htmlFor={`${section.id}-icon`}>Icons beside title</FieldLabel>
+            </Field>
+          </div>
+          {section.icon !== null && <IconPicker value={section.icon} onChange={(icon) => onChange({ ...section, icon })} error={at("icon")} />}
+
+          <div className="mt-2 space-y-3 border-t pt-5">
+            <div>
+              <p className="text-sm font-medium">Featured products</p>
+              <FieldDescription>These cycle in the left card. Add or remove them here; out-of-stock ones are skipped in the app.</FieldDescription>
+            </div>
+            {section.productIds.length > 0 && (
+              <TextInput
+                label="Card heading"
+                maxLength={20}
+                placeholder="Crazy deals"
+                value={section.dealsLabel ?? ""}
+                onChange={(dealsLabel) => onChange({ ...section, dealsLabel: dealsLabel || null })}
+                error={at("dealsLabel")}
+                description='Shown above the cycling product. Empty uses "Crazy deals".'
+              />
+            )}
+            {section.productIds.map((productId, index) => (
+              <div key={`${section.id}-product-${index}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Product {index + 1}</span>
+                  <div className="ml-auto flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={index === 0}
+                      onClick={() => onChange({ ...section, productIds: move(section.productIds, index, index - 1) })}
+                      aria-label="Move product up"
+                    >
+                      <ArrowUp />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={index === section.productIds.length - 1}
+                      onClick={() => onChange({ ...section, productIds: move(section.productIds, index, index + 1) })}
+                      aria-label="Move product down"
+                    >
+                      <ArrowDown />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => onChange({ ...section, productIds: section.productIds.filter((_, position) => position !== index) })}
+                      aria-label="Remove product"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </div>
+                <ProductPickerField
+                  label="Product"
+                  value={productId}
+                  known={products}
+                  excludeIds={section.productIds}
+                  onPick={(product) => {
+                    onProductKnown(product);
+                    onChange({ ...section, productIds: section.productIds.map((id, position) => (position === index ? product.id : id)) });
+                  }}
+                  error={at(`productIds.${index}`) ?? (index === 0 ? at("productIds") : undefined)}
+                />
+              </div>
+            ))}
+            {at("productIds") && !section.productIds.some((_, index) => at(`productIds.${index}`)) && <FieldError>{at("productIds")}</FieldError>}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              disabled={section.productIds.length >= MAX_SALE_PRODUCTS}
+              onClick={() => onChange({ ...section, productIds: [...section.productIds, ""] })}
+            >
+              <Plus />
+              Add product
+            </Button>
+          </div>
+
+          <div className="space-y-3 border-t pt-5">
+            <div>
+              <p className="text-sm font-medium">Featured categories</p>
+              <FieldDescription>Tiles on the right (up to 4). Add or remove them here; each shows its best discount when the store has one.</FieldDescription>
+            </div>
+            {section.categoryIds.map((categoryId, index) => (
+              <div key={`${section.id}-category-${index}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Category {index + 1}</span>
+                  <div className="ml-auto flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={index === 0}
+                      onClick={() => onChange({ ...section, categoryIds: move(section.categoryIds, index, index - 1) })}
+                      aria-label="Move category up"
+                    >
+                      <ArrowUp />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={index === section.categoryIds.length - 1}
+                      onClick={() => onChange({ ...section, categoryIds: move(section.categoryIds, index, index + 1) })}
+                      aria-label="Move category down"
+                    >
+                      <ArrowDown />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => onChange({ ...section, categoryIds: section.categoryIds.filter((_, position) => position !== index) })}
+                      aria-label="Remove category"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </div>
+                <CategorySelect
+                  label="Category"
+                  value={categoryId}
+                  onChange={(next) => onChange({ ...section, categoryIds: section.categoryIds.map((id, position) => (position === index ? next : id)) })}
+                  categories={categories.filter((category) => category.id === categoryId || !section.categoryIds.includes(category.id))}
+                  error={at(`categoryIds.${index}`) ?? (index === 0 ? at("categoryIds") : undefined)}
+                />
+              </div>
+            ))}
+            {at("categoryIds") && !section.categoryIds.some((_, index) => at(`categoryIds.${index}`)) && <FieldError>{at("categoryIds")}</FieldError>}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              disabled={section.categoryIds.length >= MAX_SALE_CATEGORIES}
+              onClick={() => onChange({ ...section, categoryIds: [...section.categoryIds, ""] })}
+            >
+              <Plus />
+              Add category
+            </Button>
+          </div>
+
+          <FieldDescription>Turn on a coloured background with a wave edge below for the full look.</FieldDescription>
+        </FieldGroup>
+      );
+
     case "subcategory_grid": {
       const parents = categories.filter((category) => !category.parentId);
       const parent = categories.find((category) => category.id === section.categoryId);
@@ -935,6 +1154,8 @@ function sectionSummary(section: HomeSection, categories: Category[]) {
       return section.title ?? categoryName(section.categoryId);
     case "category_collection":
       return `${section.title ?? count(section.items.map((item) => item.id), ["category", "categories"], "")} · ${section.columns} per row`;
+    case "sale_hero":
+      return `${section.title} · ${count(section.productIds, ["product", "products"], "No products")} · ${count(section.categoryIds, ["category", "categories"], "No categories")}`;
   }
 }
 
@@ -1061,6 +1282,8 @@ type HomeEditorProps = {
   onChange: Dispatch<SetStateAction<Appearance>>;
   categories: Category[];
   brands: Brand[];
+  /** Saved sale hero products, so their names show before any search. */
+  products: AppearanceProduct[];
   errors: Errors;
   expanded: string | null;
   onExpand: (id: string | null) => void;
@@ -1069,7 +1292,10 @@ type HomeEditorProps = {
   onPageChange: (page: string) => void;
 };
 
-export function HomeEditor({ value, onChange, categories, brands, errors, expanded, onExpand, page, onPageChange }: HomeEditorProps) {
+export function HomeEditor({ value, onChange, categories, brands, products: savedProducts, errors, expanded, onExpand, page, onPageChange }: HomeEditorProps) {
+  const [products, setProducts] = useState(savedProducts);
+  const rememberProduct = (product: AppearanceProduct) =>
+    setProducts((known) => (known.some((item) => item.id === product.id) ? known : [...known, product]));
   const pages = pageTabs(value, categories);
   const editing = pages.find((candidate) => candidate.tab.id === page) ?? null;
   const pageId = editing?.tab.id ?? HOME_PAGE;
@@ -1264,7 +1490,16 @@ export function HomeEditor({ value, onChange, categories, brands, errors, expand
                   </CardHeader>
                   {open && (
                     <CardContent>
-                      <SectionFields section={section} categories={categories} brands={brands} errors={errors} prefix={prefix} onChange={updateSection} />
+                      <SectionFields
+                        section={section}
+                        categories={categories}
+                        brands={brands}
+                        products={products}
+                        onProductKnown={rememberProduct}
+                        errors={errors}
+                        prefix={prefix}
+                        onChange={updateSection}
+                      />
                       <BackgroundFields section={section} colors={value.theme.colors} errors={errors} prefix={prefix} onChange={updateSection} />
                     </CardContent>
                   )}

@@ -2,6 +2,12 @@ import type { Appearance, AppearanceTheme, Category, CollectionItem, HomeSection
 
 type Colors = AppearanceTheme["colors"];
 
+/** Product ids referenced by sale hero sections on the All page and on tab pages. */
+export function appearanceProductIds(value: Appearance) {
+  const from = (sections: HomeSection[]) => sections.flatMap((section) => (section.type === "sale_hero" ? section.productIds : []));
+  return [...new Set([...from(value.homeSections), ...value.categoryTabs.tabs.flatMap((tab) => (tab.page ? from(tab.page.sections) : []))])];
+}
+
 export const COLOR_PRESETS: { id: string; name: string; colors: Colors }[] = [
   { id: "fresh", name: "Fresh", colors: { primary: "#0C831F", onPrimary: "#FFFFFF", accent: "#F8CB46", onAccent: "#1C1C1C" } },
   { id: "ocean", name: "Ocean", colors: { primary: "#0B6BCB", onPrimary: "#FFFFFF", accent: "#BAE6FD", onAccent: "#0C2A43" } },
@@ -22,6 +28,7 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   image_tiles: { name: "Image tiles", description: "Images in a grid, or a carousel with buttons" },
   subcategory_grid: { name: "Sub-category grid", description: "The sub-categories of one category, e.g. Hair, Skin & Face" },
   category_collection: { name: "Category collection", description: "Any categories you pick, with your own photos and badges" },
+  sale_hero: { name: "Sale hero", description: "An animated sale title with cycling deals and category discounts" },
 };
 
 export const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
@@ -108,6 +115,23 @@ export function newSection(type: HomeSectionType, categories: Category[], colors
       const picked = categories.filter((category) => category.isActive).slice(0, 4);
       return { id, type, enabled: true, background: null, title: "Shop by collection", description: null, columns: 4, items: picked.map((category) => newCollectionItem(category.id)) };
     }
+    case "sale_hero":
+      return {
+        id,
+        type,
+        enabled: true,
+        background: { color: colors.primary, textColor: colors.onPrimary, edge: "wave" },
+        title: "MEGA SALE",
+        subtitle: null,
+        tagline: null,
+        titleColor: "#FFFFFF",
+        animateTitle: true,
+        effect: "sparkles",
+        icon: "zap",
+        dealsLabel: "Crazy deals",
+        productIds: [],
+        categoryIds: [],
+      };
   }
 }
 
@@ -170,6 +194,10 @@ const FIELD_NAMES: Record<string, string> = {
   color: "Colour",
   gradientColor: "Gradient colour",
   edge: "Bottom edge",
+  titleColor: "Title colour",
+  dealsLabel: "Deals card heading",
+  productIds: "Featured products",
+  effect: "Background effect",
 };
 
 /**

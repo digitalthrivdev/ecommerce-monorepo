@@ -98,7 +98,7 @@ function TabHeaderFields({ tabId, header, onChange, errors, prefix }: { tabId: s
   );
 }
 
-function IconPicker({ value, onChange, error }: { value: string | null; onChange: (name: string) => void; error?: string }) {
+export function IconPicker({ value, onChange, error }: { value: string | null; onChange: (name: string) => void; error?: string }) {
   const [open, setOpen] = useState(false);
   const Current = value ? TAB_ICONS[value] : undefined;
   return (

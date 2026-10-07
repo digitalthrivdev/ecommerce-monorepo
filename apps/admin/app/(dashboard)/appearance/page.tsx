@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { loadAppearanceProducts } from "@/app/(dashboard)/appearance/actions";
 import { AppearanceEditor } from "@/components/appearance/appearance-editor";
 import { PageHeader } from "@/components/page-header";
+import { appearanceProductIds } from "@/lib/appearance";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
@@ -18,6 +20,7 @@ export default async function AppearancePage({ searchParams }: PageProps<"/appea
     apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
     getPublicSettings(),
   ]);
+  const products = await loadAppearanceProducts(appearanceProductIds(appearance));
 
   return (
     <>
@@ -30,9 +33,12 @@ export default async function AppearancePage({ searchParams }: PageProps<"/appea
         }
       />
       <div className="p-4 md:p-6">
-        <AppearanceEditor key={appearance.updatedAt ?? "defaults"} initial={appearance}
+        <AppearanceEditor
+          key={appearance.updatedAt ?? "defaults"}
+          initial={appearance}
           categories={categories.items}
           brands={brands.items}
+          products={products}
           initialTab={tab === "home" ? "home" : "brand"}
           initialExpanded={typeof section === "string" ? section : null}
           initialPage={typeof page === "string" ? page : null}

@@ -40,22 +40,55 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
   return { ok: true, message: "Settings saved" };
 }
 
+const playStoreUrl = optionalText(300).refine(
+  (url) => url === null || /^https:\/\/play\.google\.com\/\S+$/.test(url),
+  "Paste the app's link from play.google.com",
+);
+const appStoreUrl = optionalText(300).refine(
+  (url) => url === null || /^https:\/\/apps\.apple\.com\/\S+$/.test(url),
+  "Paste the app's link from apps.apple.com",
+);
+const downloadUrl = optionalText(500).refine(
+  (url) => url === null || (/^https:\/\/\S+$/.test(url) && URL.canParse(url)),
+  "Enter a full link starting with https://",
+);
+
 const websiteSchema = z.object({
   businessName: optionalText(200),
   businessAddress: optionalText(500),
   websiteTagline: optionalText(160),
-  playStoreUrl: optionalText(300).refine(
-    (url) => url === null || /^https:\/\/play\.google\.com\/\S+$/.test(url),
-    "Paste the app's link from play.google.com",
-  ),
 });
+
+const APP_LINK_FIELDS = ["playStoreUrl", "appStoreUrl", "appDownloadUrl", "deliveryPlayStoreUrl", "deliveryAppStoreUrl", "deliveryDownloadUrl"] as const;
+
+const appLinksSchema = z.object({
+  playStoreUrl,
+  appStoreUrl,
+  appDownloadUrl: downloadUrl,
+  deliveryPlayStoreUrl: playStoreUrl,
+  deliveryAppStoreUrl: appStoreUrl,
+  deliveryDownloadUrl: downloadUrl,
+});
+
+export async function updateAppLinks(formData: FormData): Promise<ActionResult> {
+  const parsed = appLinksSchema.safeParse(Object.fromEntries(APP_LINK_FIELDS.map((field) => [field, formText(formData, field)])));
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  try {
+    await apiFetch("/settings/platform", { method: "PATCH", body: parsed.data });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "App links saved" };
+}
 
 export async function updateWebsiteDetails(formData: FormData): Promise<ActionResult> {
   const parsed = websiteSchema.safeParse({
     businessName: formText(formData, "businessName"),
     businessAddress: formText(formData, "businessAddress"),
     websiteTagline: formText(formData, "websiteTagline"),
-    playStoreUrl: formText(formData, "playStoreUrl"),
   });
   if (!parsed.success) return validationFailure(parsed.error);
 

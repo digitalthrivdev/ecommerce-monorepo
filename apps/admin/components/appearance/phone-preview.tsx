@@ -381,6 +381,50 @@ function SectionPreview({
         </div>
       );
 
+    case "sale_hero": {
+      const Icon = section.icon ? TAB_ICONS[section.icon] : undefined;
+      const shadow = { textShadow: "0 1px 0 rgba(0,0,0,.3)", color: section.titleColor };
+      const tiles = section.categoryIds.flatMap((id) => categories.find((category) => category.id === id) ?? []);
+      const showDeals = section.productIds.some(Boolean);
+      return (
+        <div className="px-3">
+          <div className="flex items-center justify-center gap-1.5">
+            {Icon && <Icon className="size-4" style={{ color: section.titleColor, fill: section.titleColor }} />}
+            <p className="text-[22px] leading-tight font-black" style={shadow}>{section.title}</p>
+            {Icon && <Icon className="size-4" style={{ color: section.titleColor, fill: section.titleColor }} />}
+          </div>
+          {section.subtitle && <p className="text-center text-[13px] leading-tight font-black uppercase" style={shadow}>{section.subtitle}</p>}
+          {section.tagline && <p className="mt-0.5 text-center text-[9px] font-bold" style={{ color: onBand.muted }}>{section.tagline}</p>}
+          {(showDeals || tiles.length > 0) && (
+          <div className="mt-2 flex gap-1.5">
+            {showDeals && (
+              <div className="flex w-[30%] flex-col items-center gap-1 p-1.5" style={{ borderRadius: radius, backgroundColor: "rgba(0,0,0,.15)" }}>
+                <p className="text-center text-[9px] leading-tight font-black uppercase" style={shadow}>{section.dealsLabel ?? "Crazy deals"}</p>
+                <span className="rounded px-1 text-[9px] font-bold" style={{ backgroundColor: colors.primary, color: colors.onPrimary }}>₹199</span>
+                <div className="mt-auto aspect-square w-full rounded bg-white" />
+              </div>
+            )}
+            <div className="grid flex-1 grid-cols-2 gap-1.5">
+              {tiles.map((category, index) => (
+                <div key={category.id} className="flex flex-col items-center gap-0.5 overflow-hidden pb-1" style={card}>
+                  <span className="rounded-b px-1 text-[7px] font-extrabold" style={{ backgroundColor: colors.primary, color: colors.onPrimary }}>
+                    UP TO {[55, 40, 35, 25][index]}% OFF
+                  </span>
+                  <p className="line-clamp-2 px-1 text-center text-[8px] leading-tight font-bold" style={{ color: palette.text }}>{category.name}</p>
+                  <div className="mt-auto flex gap-0.5">
+                    {[0, 1, 2, 3].map((dot) => (
+                      <span key={dot} className="size-2.5 rounded-sm" style={{ backgroundColor: palette.placeholder }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
+        </div>
+      );
+    }
+
     case "offer_strip":
       return (
         <div className="px-3">

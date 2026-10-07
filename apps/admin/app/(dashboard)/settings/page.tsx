@@ -10,7 +10,7 @@ import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
 import { ReviewLoginForm } from "@/components/settings/review-login-form";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { SmsProviderForm, SmsProviderKeys } from "@/components/settings/sms-provider-form";
-import { PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/components/settings/website-settings";
+import { AppLinksForm, PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/components/settings/website-settings";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
@@ -87,16 +87,19 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   await requireAdmin();
   const { tab: tabParam } = await searchParams;
   const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "rules";
-  const [settings, deployment, policyPages, siteUrl] = await Promise.all([
+  const [settings, deployment, policyPages] = await Promise.all([
     apiFetch<PlatformSettings>("/settings/platform"),
     getPublicSettings(),
     tab === "website" ? apiFetch<EditablePolicyPage[]>("/settings/policy-pages") : null,
-    getSiteUrl(),
   ]);
+  const siteUrl = getSiteUrl();
   const siteLinks = [
     { title: "Website", url: siteUrl },
     ...(policyPages ?? []).map((page) => ({ title: page.title, url: `${siteUrl}/${page.slug}` })),
     { title: "Contact Us", url: `${siteUrl}/contact` },
+    ...(settings.deliveryPlayStoreUrl || settings.deliveryAppStoreUrl || settings.deliveryDownloadUrl
+      ? [{ title: "Delivery partner app", url: `${siteUrl}/partner` }]
+      : []),
   ];
 
   const activeGateway = settings.paymentGateways.find((gateway) => gateway.name === settings.paymentProvider);
@@ -181,18 +184,27 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               <a href={siteUrl} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-4">
                 {siteUrl.replace(/^https?:\/\//, "")}
               </a>
-              . Each policy starts from a template written for how this app works; read it and change anything that doesn’t match
-              your business, ideally with a legal adviser.
+              . The home page shows the banners and categories from{" "}
+              <Link href="/appearance" className="font-medium underline underline-offset-4">
+                Appearance
+              </Link>
+              , like the app. Each policy starts from a template written for how this app works; read it and change anything that
+              doesn’t match your business, ideally with a legal adviser.
             </Notice>
             <Section step={1} title="Your business and home page" hint="Shown on the home page, every policy page and the contact page.">
               <Panel className="p-5">
                 <WebsiteDetailsForm key={settings.updatedAt} settings={settings} />
               </Panel>
             </Section>
-            <Section step={2} title="Check the policy pages" hint="Open a page to read or change it.">
+            <Section step={2} title="Where to get the apps" hint="Download buttons appear only for the links you add.">
+              <Panel className="p-5">
+                <AppLinksForm key={settings.updatedAt} settings={settings} />
+              </Panel>
+            </Section>
+            <Section step={3} title="Check the policy pages" hint="Open a page to read or change it.">
               <PolicyEditors pages={policyPages} siteUrl={siteUrl} timezone={deployment.timezone} />
             </Section>
-            <Section step={3} title="Share the links" hint="Paste these where you are asked for a website, privacy policy or terms.">
+            <Section step={4} title="Share the links" hint="Paste these where you are asked for a website, privacy policy or terms.">
               <Panel>
                 <PolicyLinks links={siteLinks} />
               </Panel>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Copy, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { restorePolicyTemplate, savePolicyPage, updateWebsiteDetails } from "@/app/(dashboard)/settings/actions";
+import { restorePolicyTemplate, savePolicyPage, updateAppLinks, updateWebsiteDetails } from "@/app/(dashboard)/settings/actions";
 import { Pill } from "@/components/status-pill";
 import {
   AlertDialog,
@@ -46,20 +46,6 @@ export function WebsiteDetailsForm({ settings }: { settings: PlatformSettings })
           <FieldDescription>Leave empty to use the line shown above.</FieldDescription>
           <FieldError>{fieldErrors.websiteTagline}</FieldError>
         </Field>
-        <Field data-invalid={Boolean(fieldErrors.playStoreUrl)}>
-          <FieldLabel htmlFor="play-store-url">Customer app on Google Play</FieldLabel>
-          <Input
-            id="play-store-url"
-            name="playStoreUrl"
-            type="url"
-            defaultValue={settings.playStoreUrl ?? ""}
-            maxLength={300}
-            placeholder="https://play.google.com/store/apps/details?id=…"
-            aria-invalid={Boolean(fieldErrors.playStoreUrl)}
-          />
-          <FieldDescription>Adds a download button to the home page. Add it once the app is published.</FieldDescription>
-          <FieldError>{fieldErrors.playStoreUrl}</FieldError>
-        </Field>
         <Field data-invalid={Boolean(fieldErrors.businessName)}>
           <FieldLabel htmlFor="business-name">Registered business name</FieldLabel>
           <Input
@@ -98,6 +84,77 @@ export function WebsiteDetailsForm({ settings }: { settings: PlatformSettings })
         <Button type="submit" disabled={pending}>
           {pending && <Loader2 className="animate-spin" />}
           Save website details
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+type AppLinkField = (typeof APP_GROUPS)[number]["fields"][number]["name"];
+
+const APP_GROUPS = [
+  {
+    title: "Customer app",
+    hint: "Shown as download buttons on the home page.",
+    fields: [
+      { name: "playStoreUrl", label: "Google Play", placeholder: "https://play.google.com/store/apps/details?id=…" },
+      { name: "appStoreUrl", label: "App Store", placeholder: "https://apps.apple.com/in/app/…" },
+      { name: "appDownloadUrl", label: "Direct download", placeholder: "https://…/app.apk" },
+    ],
+  },
+  {
+    title: "Delivery partner app",
+    hint: "Shown on a separate partner page, linked from the footer. Send riders that page.",
+    fields: [
+      { name: "deliveryPlayStoreUrl", label: "Google Play", placeholder: "https://play.google.com/store/apps/details?id=…" },
+      { name: "deliveryAppStoreUrl", label: "App Store", placeholder: "https://apps.apple.com/in/app/…" },
+      { name: "deliveryDownloadUrl", label: "Direct download", placeholder: "https://…/partner.apk" },
+    ],
+  },
+] as const;
+
+export function AppLinksForm({ settings }: { settings: PlatformSettings }) {
+  const { pending, fieldErrors, onSubmit } = useFormAction(updateAppLinks);
+
+  return (
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
+      {APP_GROUPS.map((group) => (
+        <fieldset key={group.title} className="flex flex-col gap-4">
+          <div>
+            <legend className="font-semibold">{group.title}</legend>
+            <p className="text-sm text-muted-foreground">{group.hint}</p>
+          </div>
+          <FieldGroup>
+            {group.fields.map((field) => {
+              const id = `app-link-${field.name}`;
+              const error = fieldErrors[field.name as AppLinkField];
+              return (
+                <Field key={field.name} data-invalid={Boolean(error)}>
+                  <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
+                  <Input
+                    id={id}
+                    name={field.name}
+                    type="url"
+                    defaultValue={settings[field.name] ?? ""}
+                    maxLength={500}
+                    placeholder={field.placeholder}
+                    aria-invalid={Boolean(error)}
+                  />
+                  <FieldError>{error}</FieldError>
+                </Field>
+              );
+            })}
+          </FieldGroup>
+        </fieldset>
+      ))}
+      <p className="text-sm text-muted-foreground">
+        Fill in only what you have. A direct download link (for example an APK file) shows only while that app has no Google
+        Play or App Store link.
+      </p>
+      <div>
+        <Button type="submit" disabled={pending}>
+          {pending && <Loader2 className="animate-spin" />}
+          Save app links
         </Button>
       </div>
     </form>
