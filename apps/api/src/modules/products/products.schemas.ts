@@ -32,10 +32,36 @@ export const MAX_VARIANTS = 100;
 export const MAX_IMAGES = 20;
 const MAX_TAGS = 30;
 
-const gstRateSchema = z
+export const gstRateSchema = z
   .string()
   .trim()
   .regex(/^\d{1,2}(\.\d{1,2})?$/, 'GST rate must be a percentage with up to 2 decimal places, e.g. "5" or "18"');
+
+export const tagsSchema = z
+  .array(z.string().trim().toLowerCase().min(1).max(50))
+  .max(MAX_TAGS)
+  .transform((tags) => [...new Set(tags)]);
+
+export const hsnCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4,8}$/, "HSN code must be 4 to 8 digits");
+
+export const fssaiLicenseSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{14}$/, "FSSAI licence number must be 14 digits");
+
+export const skuSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/, "SKU must be letters, digits, dots, dashes or underscores");
+
+export const barcodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[0-9A-Za-z-]{4,32}$/, "Barcode must be 4-32 letters or digits");
 
 const productFieldsSchema = z.object({
   categoryId: idSchema,
@@ -43,47 +69,27 @@ const productFieldsSchema = z.object({
   name: z.string().trim().min(1).max(200),
   slug: slugSchema.optional(),
   description: optionalText(2000),
-  tags: z
-    .array(z.string().trim().toLowerCase().min(1).max(50))
-    .max(MAX_TAGS)
-    .transform((tags) => [...new Set(tags)])
-    .optional(),
-  hsnCode: z
-    .string()
-    .trim()
-    .regex(/^\d{4,8}$/, "HSN code must be 4 to 8 digits")
-    .nullish(),
+  tags: tagsSchema.optional(),
+  hsnCode: hsnCodeSchema.nullish(),
   gstRate: gstRateSchema.nullish(),
   isVeg: z.boolean().nullish(),
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
   countryOfOrigin: optionalText(100),
-  fssaiLicense: z
-    .string()
-    .trim()
-    .regex(/^\d{14}$/, "FSSAI licence number must be 14 digits")
-    .nullish(),
+  fssaiLicense: fssaiLicenseSchema.nullish(),
   shelfLife: optionalText(100),
   ingredients: optionalText(2000),
   isActive: z.boolean().optional(),
 });
 
-const optionNameSchema = z.string().trim().min(1).max(50);
-const optionValueSchema = z.string().trim().min(1).max(50);
+export const optionNameSchema = z.string().trim().min(1).max(50);
+export const optionValueSchema = z.string().trim().min(1).max(50);
 
 const variantInputSchema = z.object({
   /** Existing variant to update; omit to create one. */
   id: idSchema.optional(),
-  sku: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/, "SKU must be letters, digits, dots, dashes or underscores"),
-  barcode: z
-    .string()
-    .trim()
-    .regex(/^[0-9A-Za-z-]{4,32}$/, "Barcode must be 4-32 letters or digits")
-    .nullish(),
+  sku: skuSchema,
+  barcode: barcodeSchema.nullish(),
   unit: z.string().trim().min(1).max(20).nullish(),
   quantity: positiveDecimalSchema.nullish(),
   maxOrderQuantity: z.number().int().min(1).max(MAX_QUANTITY_PER_ITEM).nullish(),

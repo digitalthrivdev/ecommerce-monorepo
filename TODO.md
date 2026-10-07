@@ -32,7 +32,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Hand-picked products** on the home screen: product rails and banner/offer links can only point at a category today.
 - [ ] **Automatic tab pages:** build a category tab's page from its sub-categories and products instead of hand-made sections.
 - [ ] **Scheduled home content:** start/end dates for banners and offer strips (e.g. festival campaigns).
-- [ ] **Bulk import** of products, store prices and opening stock from CSV, for onboarding a new client's catalog.
 
 ## Stores
 

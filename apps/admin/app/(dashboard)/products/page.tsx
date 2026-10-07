@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { ImageIcon, Plus, Search, X } from "lucide-react";
+import { ImageIcon, Plus, Search, Upload, X } from "lucide-react";
 
 import { CategoryFilter } from "@/components/category-filter";
 import { PageHeader } from "@/components/page-header";
@@ -73,12 +73,20 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
         title="Products"
         description="The shared catalog. Prices and stock are set per store."
         actions={
-          <Button asChild>
-            <Link href="/products/new">
-              <Plus />
-              New product
-            </Link>
-          </Button>
+          <>
+            <Button asChild variant="outline">
+              <Link href="/products/import">
+                <Upload />
+                Import CSV
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/products/new">
+                <Plus />
+                New product
+              </Link>
+            </Button>
+          </>
         }
       />
 

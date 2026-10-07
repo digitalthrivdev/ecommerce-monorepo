@@ -48,7 +48,7 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
    - Settings: SMS provider keys (customers can't sign in without them) and payment gateway keys;
    - Settings → Website: business name and address, then read and adjust each policy page. Add app links (Google Play, App Store, or a direct download until the app is listed) for the customer app and the delivery partner app once they exist; the partner app gets its own page, `https://<SITE_DOMAIN>/partner`, to send riders;
    - Appearance: name, logo, colours, home screen;
-   - stores (location, radius, hours), categories, products, store prices and stock, delivery partners.
+   - stores (location, radius, hours), categories, products, store prices and stock, delivery partners. A whole catalog can be loaded from one CSV per store (Products → Import CSV; download the template there).
 8. **Monitoring:** add the client's uptime monitors (see "Error tracking and uptime").
 9. Add the client to the table above, then build their apps (below).
 

@@ -19,7 +19,7 @@ function findDuplicate(values: string[]) {
  * Checks the options and variants and returns, per variant, its option values spelled as in `options`.
  * Every variant needs one value of every option, and no two variants may share a combination.
  */
-function validate({ options, variants }: VariantsInput) {
+export function validateVariants({ options, variants }: VariantsInput) {
   const duplicateOption = findDuplicate(options.map((option) => option.name));
   if (duplicateOption) {
     throw new AppError(400, "DUPLICATE_OPTION", `Option "${duplicateOption}" is listed twice`);
@@ -92,7 +92,7 @@ async function deleteVariants(tx: Tx, variantIds: string[]) {
  * Must run inside a transaction.
  */
 export async function saveVariants(tx: Tx, productId: string, input: VariantsInput) {
-  const valuesByVariant = validate(input);
+  const valuesByVariant = validateVariants(input);
 
   const existing = await tx.productVariant.findMany({
     where: { productId },

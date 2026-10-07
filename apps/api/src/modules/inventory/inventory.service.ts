@@ -122,6 +122,30 @@ async function lockStock(tx: Prisma.TransactionClient, storeProductId: string) {
 }
 
 /**
+ * Sets a listing's stock to an exact quantity and logs the change. Returns the quantity before.
+ * Must run inside a transaction.
+ */
+export async function setStock(
+  tx: Prisma.TransactionClient,
+  storeProductId: string,
+  quantity: number,
+  details: { reason: InventoryAdjustmentReason; note: string | null; changedById: string | null },
+) {
+  const before = await lockStock(tx, storeProductId);
+  await tx.inventory.upsert({
+    where: { storeProductId },
+    update: { quantity },
+    create: { storeProductId, quantity },
+  });
+  if (quantity !== before) {
+    await tx.inventoryAdjustment.create({
+      data: { storeProductId, delta: quantity - before, quantityAfter: quantity, ...details },
+    });
+  }
+  return before;
+}
+
+/**
  * Sets a listing's stock to 0 because the shelf turned out empty while picking, and logs it.
  * Must run inside a transaction.
  */

@@ -30,13 +30,15 @@ type ApiOptions = {
   query?: Record<string, QueryValue>;
   /** Send the session token. An expired or rejected session redirects to sign-out. */
   auth?: boolean;
+  /** Read a successful response as text, e.g. a CSV file. */
+  as?: "json" | "text";
 };
 
 /**
  * Server-side API client. With `auth` it calls `redirect()`, which throws, so callers that
  * catch errors must rethrow anything that is not an `ApiError`.
  */
-export async function apiFetch<T>(path: string, { method = "GET", body, query, auth = true }: ApiOptions = {}): Promise<T> {
+export async function apiFetch<T>(path: string, { method = "GET", body, query, auth = true, as = "json" }: ApiOptions = {}): Promise<T> {
   const url = new URL(`${API_URL}${path}`);
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== undefined && value !== null && value !== "") {
@@ -75,6 +77,9 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, a
 
   if (response.status === 204) {
     return undefined as T;
+  }
+  if (as === "text" && response.ok) {
+    return (await response.text()) as T;
   }
 
   const data = await response.json().catch(() => null);

@@ -14,6 +14,7 @@ import redisPlugin from "./plugins/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import brandsRoutes from "./modules/brands/brands.routes.js";
 import cartRoutes from "./modules/cart/cart.routes.js";
+import catalogImportRoutes from "./modules/catalog-import/catalog-import.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import { adminComplaintsRoutes, customerComplaintsRoutes } from "./modules/complaints/complaints.routes.js";
 import cashRoutes from "./modules/delivery/cash.routes.js";
@@ -81,6 +82,7 @@ export async function buildApp() {
   await app.register(categoriesRoutes, { prefix: "/categories" });
   await app.register(brandsRoutes, { prefix: "/brands" });
   await app.register(productsRoutes, { prefix: "/products" });
+  await app.register(catalogImportRoutes, { prefix: "/catalog-imports" });
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
   await app.register(storeBrandsRoutes, { prefix: "/stores/:storeId/brands" });
   await app.register(storeVariantsRoutes, { prefix: "/stores/:storeId/variants" });

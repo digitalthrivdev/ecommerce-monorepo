@@ -796,3 +796,50 @@ export type DashboardStats = {
     store: { id: string; name: string };
   }>;
 };
+
+/** A problem in a CSV import file. `row` is the spreadsheet row (the header is row 1); null for the whole file. */
+export type ImportRowError = { row: number | null; column: string | null; message: string };
+
+/** What importing a CSV file would do; nothing is saved by the check. */
+export type ImportPreview = {
+  store: { id: string; name: string };
+  rows: number;
+  products: { create: number; update: number };
+  variants: { create: number; update: number };
+  categories: { create: string[] };
+  brands: { create: string[] };
+  stockRows: number;
+  imageRows: number;
+  errors: ImportRowError[];
+  errorCount: number;
+};
+
+export type ImportJob = {
+  id: string;
+  store: { id: string; name: string };
+  status: "running" | "done" | "failed" | "interrupted";
+  phase: "catalog" | "images" | "finished";
+  progress: { done: number; total: number };
+  startedAt: string;
+  finishedAt: string | null;
+  result: {
+    productsCreated: number;
+    productsUpdated: number;
+    variantsCreated: number;
+    variantsUpdated: number;
+    categoriesCreated: number;
+    brandsCreated: number;
+    stockChanged: number;
+    imagesAdded: number;
+    imagesSkipped: number;
+    imagesFailed: number;
+    failedProducts: ImportRowError[];
+    warnings: ImportRowError[];
+  };
+  error: string | null;
+};
+
+/** An import in the recent list, without its lists of problems. */
+export type ImportJobSummary = Omit<ImportJob, "result"> & {
+  result: Omit<ImportJob["result"], "failedProducts" | "warnings"> & { productsFailed: number };
+};
