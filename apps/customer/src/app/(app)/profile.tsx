@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
@@ -82,6 +82,9 @@ export default function ProfileScreen() {
             <Text className="text-xs text-muted-foreground">You log in with this number, so it cannot be changed here.</Text>
           </View>
         ) : null}
+        <Pressable onPress={() => router.push("/delete-account")} className="mt-6 self-start py-1" accessibilityRole="link">
+          <Text className="text-xs text-muted-foreground underline">Delete account</Text>
+        </Pressable>
       </ScrollView>
 
       <View className="gap-2 border-t border-border bg-card px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>

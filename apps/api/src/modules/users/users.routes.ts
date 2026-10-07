@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { Prisma, UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
+import { DELETABLE_ROLES, createAccountDeletionService } from "./account-deletion.js";
 import { createAddressBodySchema, updateAddressBodySchema } from "./addresses.schemas.js";
 import { createAddressesService } from "./addresses.service.js";
 import { updateProfileBodySchema } from "./users.schemas.js";
@@ -18,16 +19,23 @@ const meSelect = {
 
 const usersRoutes: FastifyPluginAsync = async (app) => {
   const addressesService = createAddressesService(app.prisma);
+  const accounts = createAccountDeletionService(app.prisma, app.revokeTokens);
   const requireCustomer = app.requireRole(UserRole.CUSTOMER);
 
   app.get("/me", { preHandler: app.authenticate }, async (request) => {
-    const user = await app.prisma.user.findUnique({ where: { id: request.user.sub }, select: meSelect });
+    const user = await app.prisma.user.findFirst({ where: { id: request.user.sub, deletedAt: null }, select: meSelect });
 
     if (!user) {
       throw new AppError(401, "UNAUTHORIZED", "User no longer exists");
     }
 
     return user;
+  });
+
+  // Required by the app stores. Dashboard accounts are removed by an admin instead.
+  app.delete("/me", { preHandler: app.requireRole(...DELETABLE_ROLES) }, async (request, reply) => {
+    await accounts.deleteAccount(request.user.sub, request.user.role);
+    return reply.status(204).send();
   });
 
   // Staff and partner names are managed by admins.

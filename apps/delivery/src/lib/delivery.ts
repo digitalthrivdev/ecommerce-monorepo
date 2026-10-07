@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiFetch } from "./api";
+import { useSession } from "./session";
 import type { CashDeposit, CashSummary, Earnings, Paginated, PartnerDelivery, PartnerProfile, PartnerStatus, PayoutPage } from "./types";
 
 const PROFILE_KEY = ["partner"] as const;
@@ -24,6 +25,15 @@ export function useSetPartnerStatus() {
   return useMutation({
     mutationFn: (status: Exclude<PartnerStatus, "BUSY">) => apiFetch<PartnerProfile>("/delivery/me/status", { method: "PATCH", body: { status } }),
     onSuccess: (profile) => queryClient.setQueryData(PROFILE_KEY, profile),
+  });
+}
+
+/** Deletes the account on the server, then ends the session on this phone. */
+export function useDeleteAccount() {
+  const { signOut } = useSession();
+  return useMutation({
+    mutationFn: () => apiFetch<void>("/users/me", { method: "DELETE" }),
+    onSuccess: () => signOut(),
   });
 }
 

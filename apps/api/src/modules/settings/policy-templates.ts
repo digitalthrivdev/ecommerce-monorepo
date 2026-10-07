@@ -83,7 +83,7 @@ We do not sell your personal information.
 We keep your account and order history while your account is active, and longer where the law requires it (for example, tax records). Delivery partner locations are kept only as needed to run and review deliveries.
 
 ## Your rights
-You can ask us to access, correct or delete your personal information, or to close your account, by contacting us below. Some records may have to be kept for legal reasons. We handle your information in line with India's Digital Personal Data Protection Act, 2023.
+You can ask us to access or correct your personal information by contacting us below. You can delete your account yourself in the app: open Account, tap your name to open Your profile, then tap Delete account at the bottom and confirm. The Delete Your Account page on our website explains the same steps. You can also ask us to delete it. Deleting it removes your name, email, phone number and saved addresses; records of past orders are kept where the law requires it (for example, tax records). We handle your information in line with India's Digital Personal Data Protection Act, 2023.
 
 ## Security
 We protect your information with access controls and encrypted connections. No system is completely secure, so please keep your phone and sign-in codes private.

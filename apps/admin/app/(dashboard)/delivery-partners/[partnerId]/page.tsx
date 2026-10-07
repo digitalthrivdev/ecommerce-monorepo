@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
+import { DeleteAccountButton } from "@/components/delete-account-button";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { PartnerForm } from "@/components/partners/partner-form";
@@ -23,6 +24,7 @@ import {
   formatTimeAgo,
   PAYMENT_METHOD_LABELS,
   PAYOUT_METHOD_LABELS,
+  personName,
   todayIn,
 } from "@/lib/format";
 import type { DeliveryPartnerDetails, Paginated, PartnerDelivery, PayoutList } from "@/lib/types";
@@ -87,9 +89,14 @@ export default async function PartnerPage({ params, searchParams }: PageProps<"/
     <>
       <PageHeader
         back={{ href: "/delivery-partners", label: "Riders" }}
-        title={partner.name ?? partner.phone}
-        description={[partner.phone, vehicle].filter(Boolean).join(" · ")}
+        title={personName(partner)}
+        description={
+          partner.deletedAt
+            ? `Deleted ${formatDateTime(partner.deletedAt, settings.timezone)}`
+            : [partner.phone, vehicle].filter(Boolean).join(" · ")
+        }
         status={<PartnerStatusBadge partner={partner} />}
+        actions={!partner.deletedAt && <DeleteAccountButton kind="rider" id={partner.id} name={personName(partner)} />}
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
@@ -212,7 +219,7 @@ export default async function PartnerPage({ params, searchParams }: PageProps<"/
                 <CardAction>
                   <RecordPayoutDialog
                     partnerId={partner.id}
-                    riderName={partner.name ?? partner.phone}
+                    riderName={personName(partner)}
                     unpaid={earnings.unpaid}
                     currency={earnings.currency}
                     today={todayIn(settings.timezone)}
@@ -283,7 +290,11 @@ export default async function PartnerPage({ params, searchParams }: PageProps<"/
                 <CardTitle>Details</CardTitle>
               </CardHeader>
               <CardContent>
-                <PartnerForm partner={partner} />
+                {partner.deletedAt ? (
+                  <p className="text-sm text-muted-foreground">This rider deleted their account. To take them back, add them again with their phone number.</p>
+                ) : (
+                  <PartnerForm partner={partner} />
+                )}
               </CardContent>
             </Card>
           </div>

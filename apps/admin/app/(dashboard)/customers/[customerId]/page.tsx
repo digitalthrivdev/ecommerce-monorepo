@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
 import { OrderStatusPill } from "@/components/status-pill";
+import { DeleteAccountButton } from "@/components/delete-account-button";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
-import { formatDateTime, formatMoney, formatTimeAgo, PAYMENT_METHOD_LABELS } from "@/lib/format";
+import { formatDateTime, formatMoney, formatTimeAgo, PAYMENT_METHOD_LABELS, personName } from "@/lib/format";
 import type { CustomerAddress, CustomerDetails, CustomerOrder, Paginated } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Customer" };
@@ -92,8 +93,13 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
     <>
       <PageHeader
         back={{ href: "/customers", label: "Customers" }}
-        title={customer.name ?? customer.phone}
-        description={[customer.name && customer.phone, customer.email].filter(Boolean).join(" · ") || undefined}
+        title={personName(customer)}
+        description={
+          customer.deletedAt
+            ? `Deleted ${formatDateTime(customer.deletedAt, settings.timezone)}. Orders keep the name and address they were placed with.`
+            : [customer.name && customer.phone, customer.email].filter(Boolean).join(" · ") || undefined
+        }
+        actions={!customer.deletedAt && <DeleteAccountButton kind="customer" id={customer.id} name={personName(customer)} />}
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">

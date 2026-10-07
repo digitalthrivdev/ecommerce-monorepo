@@ -12,25 +12,37 @@ export default fp(async (app) => {
     sign: { expiresIn: env.JWT_EXPIRES_IN },
   });
 
-  app.decorate("authenticate", async (request: FastifyRequest) => {
+  // A revocation only needs to outlive the tokens it rejects.
+  const probe = app.jwt.decode<{ iat: number; exp: number }>(app.jwt.sign({ sub: "probe", role: UserRole.CUSTOMER }));
+  const tokenLifetimeSeconds = probe ? probe.exp - probe.iat : 30 * 24 * 3600;
+  const revokedKey = (userId: string) => `auth:revoked:${userId}`;
+
+  /**
+   * Whether the token is valid and was issued after the user's last revocation. A Redis failure
+   * throws instead of returning false, so an outage does not sign every app user out.
+   */
+  async function verify(request: FastifyRequest) {
     try {
       await request.jwtVerify();
     } catch {
+      return false;
+    }
+    const revokedAt = await app.redis.get(revokedKey(request.user.sub));
+    return !(revokedAt && request.user.iat <= Number(revokedAt));
+  }
+
+  app.decorate("revokeTokens", async (userId: string) => {
+    await app.redis.set(revokedKey(userId), String(Math.floor(Date.now() / 1000)), "EX", tokenLifetimeSeconds + 60);
+  });
+
+  app.decorate("authenticate", async (request: FastifyRequest) => {
+    if (!(await verify(request))) {
       throw new AppError(401, "UNAUTHORIZED", "Missing or invalid access token");
     }
   });
 
   app.decorate("tryAuthenticate", async (request: FastifyRequest) => {
-    if (!request.headers.authorization) {
-      return false;
-    }
-
-    try {
-      await request.jwtVerify();
-      return true;
-    } catch {
-      return false;
-    }
+    return Boolean(request.headers.authorization) && (await verify(request));
   });
 
   app.decorate("requireRole", (...roles: UserRole[]) => {

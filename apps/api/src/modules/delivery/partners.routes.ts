@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
+import { AppError } from "../../shared/errors.js";
+import { createAccountDeletionService } from "../users/account-deletion.js";
 import {
   createPartnerBodySchema,
   depositsQuerySchema,
@@ -20,6 +22,7 @@ import { createTrackingService } from "./tracking.service.js";
 const partnersRoutes: FastifyPluginAsync = async (app) => {
   const partners = createPartnersService(app.prisma, createTrackingService(app.prisma, app.redis));
   const payouts = createPayoutsService(app.prisma);
+  const accounts = createAccountDeletionService(app.prisma, app.revokeTokens);
 
   app.addHook("preHandler", app.requireRole(UserRole.ADMIN));
 
@@ -48,6 +51,17 @@ const partnersRoutes: FastifyPluginAsync = async (app) => {
     const { id } = partnerParamsSchema.parse(request.params);
     const body = updatePartnerBodySchema.parse(request.body);
     return partners.updatePartner(id, body);
+  });
+
+  // For deletion requests that come by email or phone instead of through the app.
+  app.delete("/:id", async (request, reply) => {
+    const { id } = partnerParamsSchema.parse(request.params);
+    const partner = await app.prisma.deliveryPartner.findUnique({ where: { id }, select: { userId: true } });
+    if (!partner) {
+      throw new AppError(404, "PARTNER_NOT_FOUND", "Delivery partner not found");
+    }
+    await accounts.deleteAccount(partner.userId, UserRole.DELIVERY_PARTNER);
+    return reply.status(204).send();
   });
 
   app.get("/:id/payouts", async (request) => {

@@ -2938,6 +2938,7 @@ export const UserScalarFieldEnum = {
   role: 'role',
   passwordHash: 'passwordHash',
   storeId: 'storeId',
+  deletedAt: 'deletedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

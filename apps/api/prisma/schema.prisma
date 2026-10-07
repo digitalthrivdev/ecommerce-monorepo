@@ -25,6 +25,10 @@ model User {
   // Set only for STORE_STAFF: the store they work at.
   storeId String?
 
+  // Set when a customer or rider deletes their account. Personal details are wiped and the phone
+  // is replaced, so the number can sign up again as a new account; orders keep their snapshots.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

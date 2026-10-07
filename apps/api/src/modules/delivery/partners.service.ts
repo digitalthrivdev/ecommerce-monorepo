@@ -28,7 +28,7 @@ export const ACTIVE_DELIVERY_STATUSES: DeliveryStatus[] = [
 ];
 
 const partnerInclude = {
-  user: { select: { name: true, phone: true } },
+  user: { select: { name: true, phone: true, deletedAt: true } },
   deliveries: {
     where: { status: { in: ACTIVE_DELIVERY_STATUSES } },
     select: { status: true, acceptedAt: true, order: { select: { id: true, orderNumber: true, status: true } } },
@@ -57,6 +57,8 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
         userId: row.userId,
         name: row.user.name,
         phone: row.user.phone,
+        /** Set when the rider deleted their account; name and phone are gone. */
+        deletedAt: row.user.deletedAt,
         status: row.status,
         isActive: row.isActive,
         vehicleType: row.vehicleType,
@@ -231,12 +233,18 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
 
   async function updatePartner(id: string, { name, isActive, ...vehicle }: UpdatePartnerInput) {
     await prisma.$transaction(async (tx) => {
-      const [locked] = await tx.$queryRaw<{ status: DeliveryPartnerStatus; userId: string }[]>`
-        SELECT status, "userId" FROM "DeliveryPartner" WHERE id = ${id} FOR UPDATE
+      const [locked] = await tx.$queryRaw<{ status: DeliveryPartnerStatus; userId: string; deletedAt: Date | null }[]>`
+        SELECT p.status, p."userId", u."deletedAt"
+        FROM "DeliveryPartner" p JOIN "User" u ON u.id = p."userId"
+        WHERE p.id = ${id}
+        FOR UPDATE OF p
       `;
 
       if (!locked) {
         throw new AppError(404, "PARTNER_NOT_FOUND", "Delivery partner not found");
+      }
+      if (locked.deletedAt) {
+        throw new AppError(409, "ACCOUNT_DELETED", "This rider deleted their account. Add them again with their phone number if they return.");
       }
 
       if (isActive === false && locked.status === DeliveryPartnerStatus.BUSY) {

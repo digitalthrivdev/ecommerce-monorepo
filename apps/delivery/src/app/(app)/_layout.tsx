@@ -13,6 +13,7 @@ export default function AppLayout() {
         <Stack.Screen name="delivery/[id]" />
         <Stack.Screen name="cash" />
         <Stack.Screen name="payouts" />
+        <Stack.Screen name="delete-account" />
       </Stack>
       <IncomingDelivery />
     </>

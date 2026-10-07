@@ -32,6 +32,11 @@ export function formatTime(value: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat(LOCALE, { timeStyle: "short", timeZone }).format(new Date(value));
 }
 
+/** A customer's or rider's display name; deleted accounts have no name or phone left. */
+export function personName(person: { name: string | null; phone: string; deletedAt: string | null }) {
+  return person.deletedAt ? "Deleted account" : (person.name ?? person.phone);
+}
+
 /** "Amul Taaza Toned Milk (1 L)"; just the name for a product without variants. */
 export function productTitle(name: string, variantLabel: string | null | undefined) {
   return variantLabel ? `${name} (${variantLabel})` : name;

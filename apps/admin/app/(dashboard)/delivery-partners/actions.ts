@@ -77,3 +77,16 @@ export async function updatePartner(formData: FormData): Promise<ActionResult> {
   refresh();
   return { ok: true, message: "Partner updated" };
 }
+
+/** For deletion requests that come by email or phone instead of through the app. */
+export async function deletePartner(id: string): Promise<ActionResult> {
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid request" };
+  try {
+    await apiFetch(`/delivery-partners/${encodeURIComponent(parsed.data)}`, { method: "DELETE" });
+  } catch (error) {
+    return apiFailure(error);
+  }
+  refresh();
+  return { ok: true, message: "Account deleted" };
+}

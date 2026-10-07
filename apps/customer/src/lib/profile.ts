@@ -13,3 +13,12 @@ export function useUpdateProfile() {
     onSuccess: setUser,
   });
 }
+
+/** Deletes the account on the server, then ends the session on this phone. */
+export function useDeleteAccount() {
+  const { signOut } = useSession();
+  return useMutation({
+    mutationFn: () => apiFetch<void>("/users/me", { method: "DELETE" }),
+    onSuccess: () => signOut(),
+  });
+}

@@ -288,6 +288,8 @@ export type DeliveryPartner = {
   id: string;
   name: string | null;
   phone: string;
+  /** Set when the rider deleted their account; name and phone are gone. */
+  deletedAt: string | null;
   status: DeliveryPartnerStatus;
   isActive: boolean;
   vehicleType: string | null;
@@ -385,6 +387,8 @@ export type Customer = {
   phone: string;
   name: string | null;
   email: string | null;
+  /** Set when the account was deleted; name, email and phone are gone. */
+  deletedAt: string | null;
   createdAt: string;
 };
 

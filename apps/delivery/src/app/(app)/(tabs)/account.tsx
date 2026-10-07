@@ -122,6 +122,9 @@ export default function AccountScreen() {
         <Text className="text-center text-xs text-muted-foreground">
           {appName} Delivery · version {Constants.expoConfig?.version ?? "1.0.0"}
         </Text>
+        <Pressable onPress={() => router.push("/delete-account")} className="self-center px-3 py-1" accessibilityRole="link">
+          <Text className="text-xs text-muted-foreground underline">Delete account</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );

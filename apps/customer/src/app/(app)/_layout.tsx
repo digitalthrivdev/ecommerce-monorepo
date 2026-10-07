@@ -16,6 +16,7 @@ export default function AppLayout() {
         <Stack.Screen name="addresses" />
         <Stack.Screen name="address-form" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="delete-account" />
         <Stack.Screen name="category/[id]" />
         <Stack.Screen name="brand/[id]" />
         <Stack.Screen name="product/[id]" />

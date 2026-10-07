@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
-import { formatDateTime, formatMoney, formatNumber, formatTimeAgo } from "@/lib/format";
+import { formatDateTime, formatMoney, formatNumber, formatTimeAgo, personName } from "@/lib/format";
 import type { CustomerListItem, Paginated } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Customers" };
@@ -83,9 +83,9 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
                     <TableRow key={customer.id}>
                       <TableCell>
                         <Link href={`/customers/${customer.id}`} className="font-medium underline-offset-4 hover:underline">
-                          {customer.name ?? customer.phone}
+                          {personName(customer)}
                         </Link>
-                        {customer.name && <div className="text-xs text-muted-foreground">{customer.phone}</div>}
+                        {customer.name && !customer.deletedAt && <div className="text-xs text-muted-foreground">{customer.phone}</div>}
                       </TableCell>
                       <TableCell className="text-muted-foreground">{customer.email ?? "—"}</TableCell>
                       <TableCell className="text-right tabular-nums">{customer.orderCount}</TableCell>

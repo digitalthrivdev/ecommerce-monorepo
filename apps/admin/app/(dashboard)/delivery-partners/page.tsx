@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
-import { formatMoney, formatTimeAgo, ORDER_STATUS_LABELS } from "@/lib/format";
+import { formatMoney, formatTimeAgo, ORDER_STATUS_LABELS, personName } from "@/lib/format";
 import type { DeliveryPartnerStatus, PartnerList } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -119,9 +119,9 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
                     <TableRow key={partner.id}>
                       <TableCell>
                         <Link href={`/delivery-partners/${partner.id}`} className="font-medium underline-offset-4 hover:underline">
-                          {partner.name ?? partner.phone}
+                          {personName(partner)}
                         </Link>
-                        <div className="text-xs text-muted-foreground">{partner.phone}</div>
+                        {!partner.deletedAt && <div className="text-xs text-muted-foreground">{partner.phone}</div>}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {[partner.vehicleType, partner.vehicleNumber].filter(Boolean).join(" · ") || "—"}

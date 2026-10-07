@@ -11,7 +11,7 @@ type LastOrderRow = {
   createdAt: Date;
 };
 
-const customerSelect = { id: true, phone: true, name: true, email: true, createdAt: true } satisfies Prisma.UserSelect;
+const customerSelect = { id: true, phone: true, name: true, email: true, deletedAt: true, createdAt: true } satisfies Prisma.UserSelect;
 
 function notFound() {
   return new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found");

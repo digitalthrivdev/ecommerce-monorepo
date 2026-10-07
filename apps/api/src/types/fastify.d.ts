@@ -17,12 +17,15 @@ declare module "fastify" {
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;
     canManageStore: (request: FastifyRequest, storeId: string) => Promise<boolean>;
     requireStoreAccess: (request: FastifyRequest) => Promise<void>;
+    /** Rejects every token issued to the user until now, e.g. after the account is deleted. */
+    revokeTokens: (userId: string) => Promise<void>;
   }
 }
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: { sub: string; role: UserRole };
-    user: { sub: string; role: UserRole };
+    /** `iat` is set by the signer, in seconds. */
+    user: { sub: string; role: UserRole; iat: number };
   }
 }

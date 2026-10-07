@@ -429,10 +429,6 @@ export type NullableEnumOrderStatusFieldUpdateOperationsInput = {
   set?: $Enums.OrderStatus | null
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type OrderStatusHistoryCreateWithoutOrderInput = {
   id?: string
   fromStatus?: $Enums.OrderStatus | null
