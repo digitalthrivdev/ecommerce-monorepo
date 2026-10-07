@@ -6,7 +6,7 @@ import { z } from "zod";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getCurrentUser } from "@/lib/dal";
 import { getAttention, listOrders } from "@/lib/orders";
-import type { ActionResult, AttentionList, OrderAction } from "@/lib/types";
+import type { ActionResult, AttentionList, DeliveryFailure, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
 const targetSchema = z.object({ storeId: idSchema, orderId: idSchema });
@@ -87,13 +87,14 @@ export async function getNewOrders(): Promise<NewOrdersSnapshot> {
 
 const cancelSchema = targetSchema.extend({
   reason: z.string().trim().min(1, "Enter a reason for cancelling").max(300, "Keep the reason under 300 characters"),
+  failure: z.enum(["REFUSED", "UNREACHABLE", "OTHER"]).optional(),
 });
 
-export async function cancelOrder(input: { storeId: string; orderId: string; reason: string }): Promise<ActionResult> {
+export async function cancelOrder(input: { storeId: string; orderId: string; reason: string; failure?: DeliveryFailure }): Promise<ActionResult> {
   const parsed = cancelSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, orderId, reason } = parsed.data;
-  return run(orderPath(storeId, orderId, "cancel"), { reason }, "cancel");
+  const { storeId, orderId, reason, failure } = parsed.data;
+  return run(orderPath(storeId, orderId, "cancel"), { reason, failure }, "cancel");
 }
 
 const unavailableSchema = targetSchema.extend({

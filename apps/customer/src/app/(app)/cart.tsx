@@ -18,7 +18,7 @@ import { addressSummary, useAddresses } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { ProductRow } from "@/components/product-row";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { CART_KEY, checkoutBlocker, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
+import { CART_KEY, checkoutBlocker, codUnavailableText, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
@@ -225,6 +225,9 @@ function CartContent({ cart }: { cart: Cart }) {
   const orderable = items.filter((item) => item.issue === null);
   const address = location?.kind === "address" ? addresses.data?.find((saved) => saved.id === location.addressId) : undefined;
   const blocker = checkoutBlocker(cart, store, settings);
+  const methods = cart.checkout?.paymentMethods ?? payments.methods;
+  const payWith = methods.includes(method) ? method : (methods[0] ?? method);
+  const codNote = codUnavailableText(cart, currency);
   const otherStore = store && cart.store && cart.store.id !== store.id ? cart.store : null;
   const closed = store && !otherStore && !cart.storeIsOpen ? closedText(store, settings.timezone) : null;
   const promise = store && cart.store && !otherStore && cart.storeIsOpen ? (settings.deliveryPromiseMinutes ?? null) : null;
@@ -238,7 +241,7 @@ function CartContent({ cart }: { cart: Cart }) {
     }
     let order: OrderDetail;
     try {
-      order = await placeOrder.mutateAsync({ addressId: address.id, paymentMethod: method });
+      order = await placeOrder.mutateAsync({ addressId: address.id, paymentMethod: payWith });
     } catch (error) {
       showOrderError(error);
       queryClient.invalidateQueries({ queryKey: CART_KEY });
@@ -328,22 +331,22 @@ function CartContent({ cart }: { cart: Cart }) {
           <Text className="text-sm font-bold text-primary">{address ? "Change" : "Choose"}</Text>
         </Pressable>
 
-        {blocker && <Text className="px-4 pt-2 text-center text-xs text-muted-foreground">{blocker}</Text>}
+        {(blocker ?? codNote) && <Text className="px-4 pt-2 text-center text-xs text-muted-foreground">{blocker ?? codNote}</Text>}
 
         <View className="flex-row items-center gap-3 px-4 pt-2.5">
           <Pressable
             onPress={() => setChoosingPayment(true)}
-            disabled={payments.methods.length < 2}
+            disabled={methods.length < 2}
             className="min-w-24 shrink active:opacity-70"
             accessibilityLabel="Change payment method"
           >
             <View className="flex-row items-center gap-1">
-              <Icon as={PAYMENT_TEXT[method].icon} size={14} className="text-muted-foreground" />
+              <Icon as={PAYMENT_TEXT[payWith].icon} size={14} className="text-muted-foreground" />
               <Text className="text-[11px] font-semibold uppercase text-muted-foreground">Pay using</Text>
-              {payments.methods.length > 1 && <Icon as={ChevronUp} size={14} className="text-muted-foreground" />}
+              {methods.length > 1 && <Icon as={ChevronUp} size={14} className="text-muted-foreground" />}
             </View>
             <Text className="text-sm font-bold" numberOfLines={1}>
-              {PAYMENT_TEXT[method].title}
+              {PAYMENT_TEXT[payWith].title}
             </Text>
           </Pressable>
           <Button
@@ -363,7 +366,7 @@ function CartContent({ cart }: { cart: Cart }) {
               <ActivityIndicator color={colors.onPrimary} />
             ) : (
               <View className="flex-row items-center gap-0.5">
-                <Text className="text-base font-extrabold">{!address ? "Choose address" : method === "COD" ? "Place order" : "Pay & order"}</Text>
+                <Text className="text-base font-extrabold">{!address ? "Choose address" : payWith === "COD" ? "Place order" : "Pay & order"}</Text>
                 <Icon as={ChevronRight} size={18} className="text-primary-foreground" />
               </View>
             )}
@@ -373,8 +376,8 @@ function CartContent({ cart }: { cart: Cart }) {
 
       <PaymentSheet
         open={choosingPayment}
-        methods={payments.methods}
-        selected={method}
+        methods={methods}
+        selected={payWith}
         timeoutMinutes={payments.onlinePaymentTimeoutMinutes}
         onSelect={setMethod}
         onClose={() => setChoosingPayment(false)}

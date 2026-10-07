@@ -18,6 +18,7 @@ import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import {
   COMPLAINT_REASON_LABELS,
   COMPLAINT_STATUS_LABELS,
+  DELIVERY_FAILURE_LABELS,
   DELIVERY_STATUS_LABELS,
   formatDateTime,
   formatMoney,
@@ -98,6 +99,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               storeId={order.store.id}
               orderId={order.id}
               orderNumber={order.orderNumber}
+              status={order.status}
               canCancel={order.allowedActions.includes("cancel")}
               canUnassign={order.allowedActions.includes("unassign")}
               canMarkDelivered={order.allowedActions.includes("mark-delivered")}
@@ -129,7 +131,11 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
         )}
         {cancelEntry ? (
           <Notice tone="danger" title={`Cancelled ${date(cancelEntry.createdAt)}`}>
-            {[cancelEntry.note, cancelEntry.changedBy && `by ${cancelEntry.changedBy.name ?? ROLE_LABELS[cancelEntry.changedBy.role]}`]
+            {[
+              order.delivery?.failure && DELIVERY_FAILURE_LABELS[order.delivery.failure],
+              cancelEntry.note,
+              cancelEntry.changedBy && `by ${cancelEntry.changedBy.name ?? ROLE_LABELS[cancelEntry.changedBy.role]}`,
+            ]
               .filter(Boolean)
               .join(" · ") || undefined}
           </Notice>

@@ -18,6 +18,7 @@ import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../produc
 import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
+import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, transitionOrder } from "./order-status.js";
 import { includedTax } from "./tax.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
@@ -54,6 +55,7 @@ export const orderDetailInclude = {
       assignedAt: true,
       pickedUpAt: true,
       deliveredAt: true,
+      failure: true,
       partner: {
         select: { vehicleType: true, vehicleNumber: true, user: { select: { name: true, phone: true } } },
       },
@@ -239,6 +241,8 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
   }
 
   async function createOrder(userId: string, { addressId, paymentMethod }: CreateOrderInput) {
+    const block = await customerOrderBlock(prisma, userId);
+    assertCanOrder(block);
     if (paymentMethod === PaymentMethod.ONLINE && !(await activePaymentProvider(prisma, await getPlatformSettings(prisma)))) {
       throw new AppError(400, "ONLINE_PAYMENTS_DISABLED", "Online payments are not available");
     }
@@ -368,13 +372,17 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
 
         const subtotal = lines.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
         const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), new Prisma.Decimal(0));
-        const charges = calculateCharges(subtotal, await getPlatformSettings(tx));
+        const settings = await getPlatformSettings(tx);
+        const charges = calculateCharges(subtotal, settings);
 
         if (!charges.meetsMinimum) {
           throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${charges.minOrderValue.toFixed(2)}`, {
             minOrderValue: charges.minOrderValue.toFixed(2),
             subtotal: subtotal.toFixed(2),
           });
+        }
+        if (paymentMethod === PaymentMethod.COD) {
+          assertCodAllowed(settings, charges.total, block);
         }
 
         const { deliveryFee, discount, total } = charges;

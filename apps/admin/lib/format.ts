@@ -1,6 +1,8 @@
 import type {
   ComplaintReason,
   ComplaintStatus,
+  CustomerBlock,
+  DeliveryFailure,
   DeliveryPartnerStatus,
   DeliveryStatus,
   OrderAction,
@@ -139,6 +141,17 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
   OPEN: "Open",
   RESOLVED: "Resolved",
   REJECTED: "Rejected",
+};
+
+export const CUSTOMER_BLOCK_LABELS: Record<CustomerBlock, string> = {
+  COD: "No cash on delivery",
+  ALL: "Can't order",
+};
+
+export const DELIVERY_FAILURE_LABELS: Record<DeliveryFailure, string> = {
+  REFUSED: "Refused at the door",
+  UNREACHABLE: "Customer unreachable",
+  OTHER: "Other reason",
 };
 
 export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {

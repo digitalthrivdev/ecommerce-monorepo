@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, Prisma, type DeliveryFailure, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
@@ -39,6 +39,8 @@ const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [
   OrderStatus.OUT_FOR_DELIVERY,
 ];
 
+const WITH_RIDER: OrderStatus[] = [OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY];
+
 function cancellableFrom(isAdmin: boolean) {
   return isAdmin ? [...STORE_CANCELLABLE, ...ADMIN_ONLY_CANCELLABLE] : STORE_CANCELLABLE;
 }
@@ -58,7 +60,7 @@ function allowedActions(status: OrderStatus, isAdmin: boolean) {
   if (isAdmin && status === OrderStatus.ASSIGNED) {
     actions.push("reassign", "unassign");
   }
-  if (isAdmin && (status === OrderStatus.PICKED_UP || status === OrderStatus.OUT_FOR_DELIVERY)) {
+  if (isAdmin && WITH_RIDER.includes(status)) {
     actions.push("mark-delivered");
   }
 
@@ -179,6 +181,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     const refundable = actor.isAdmin ? payments.refundableAmount(order, order.payment) : new Prisma.Decimal(0);
     return {
       ...view,
+      delivery: view.delivery && { ...view.delivery, failure: order.delivery?.failure ?? null },
       reviewAccount: order.userId === reviewUserId,
       statusHistory: order.statusHistory.map(({ changedById, ...entry }) => ({
         ...entry,
@@ -212,9 +215,10 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     return getOrder(storeId, orderId, actor);
   }
 
-  async function cancelOrder(storeId: string, orderId: string, actor: Actor, reason: string) {
-    await prisma.$transaction((tx) =>
-      transitionOrder(tx, {
+  /** Cancelling after the rider picked the order up needs the delivery outcome, to spot repeat refusals. */
+  async function cancelOrder(storeId: string, orderId: string, actor: Actor, reason: string, failure?: DeliveryFailure) {
+    await prisma.$transaction(async (tx) => {
+      const { fromStatus } = await transitionOrder(tx, {
         orderId,
         scope: { storeId },
         hiddenStatuses: hiddenStatuses(actor.isAdmin),
@@ -223,8 +227,19 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         changedById: actor.userId,
         note: reason,
         notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
-      }),
-    );
+      });
+
+      if (!WITH_RIDER.includes(fromStatus)) {
+        if (failure) {
+          throw new AppError(400, "DELIVERY_OUTCOME_NOT_APPLICABLE", "A delivery outcome only applies once the rider has picked the order up");
+        }
+        return;
+      }
+      if (!failure) {
+        throw new AppError(400, "DELIVERY_OUTCOME_REQUIRED", "Choose what happened at delivery", { field: "failure" });
+      }
+      await tx.delivery.update({ where: { orderId }, data: { failure } });
+    });
     await payments.settleCancelledOrder(orderId);
 
     return getOrder(storeId, orderId, actor);

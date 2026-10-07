@@ -3164,6 +3164,10 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   storeId: 'storeId',
   deletedAt: 'deletedAt',
+  orderBlock: 'orderBlock',
+  orderBlockReason: 'orderBlockReason',
+  orderBlockedAt: 'orderBlockedAt',
+  orderBlockedById: 'orderBlockedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3597,6 +3601,7 @@ export const DeliveryScalarFieldEnum = {
   deliveredAt: 'deliveredAt',
   deliveryOtpHash: 'deliveryOtpHash',
   earning: 'earning',
+  failure: 'failure',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3622,6 +3627,7 @@ export const PlatformSettingsScalarFieldEnum = {
   minOrderValue: 'minOrderValue',
   deliveryPartnerFee: 'deliveryPartnerFee',
   riderCashLimit: 'riderCashLimit',
+  codMaxOrderValue: 'codMaxOrderValue',
   deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
@@ -3788,6 +3794,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CustomerBlock'
+ */
+export type EnumCustomerBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerBlock'>
+    
+
+
+/**
+ * Reference to a field of type 'CustomerBlock[]'
+ */
+export type ListEnumCustomerBlockFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerBlock[]'>
     
 
 
@@ -3977,6 +3997,20 @@ export type EnumDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'DeliveryStatus[]'
  */
 export type ListEnumDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DeliveryFailure'
+ */
+export type EnumDeliveryFailureFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryFailure'>
+    
+
+
+/**
+ * Reference to a field of type 'DeliveryFailure[]'
+ */
+export type ListEnumDeliveryFailureFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryFailure[]'>
     
 
 

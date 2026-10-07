@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 
+import { BlockCustomerDialog, UnblockButton } from "@/components/customers/customer-block";
 import { OrderStatusPill } from "@/components/status-pill";
 import { DeleteAccountButton } from "@/components/delete-account-button";
+import { Notice } from "@/components/notice";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +89,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const lastPage = Math.max(1, Math.ceil(orders.total / PAGE_SIZE));
   const pageHref = (target: number) => (target > 1 ? `/customers/${customer.id}?page=${target}` : `/customers/${customer.id}`);
-  const { stats } = customer;
+  const { stats, failedDeliveries: failed } = customer;
 
   return (
     <>
@@ -99,13 +101,57 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
             ? `Deleted ${formatDateTime(customer.deletedAt, settings.timezone)}. Orders keep the name and address they were placed with.`
             : [customer.name && customer.phone, customer.email].filter(Boolean).join(" · ") || undefined
         }
-        actions={!customer.deletedAt && <DeleteAccountButton kind="customer" id={customer.id} name={personName(customer)} />}
+        actions={
+          !customer.deletedAt && (
+            <>
+              <BlockCustomerDialog customerId={customer.id} current={customer.orderBlock} />
+              <DeleteAccountButton kind="customer" id={customer.id} name={personName(customer)} />
+            </>
+          )
+        }
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
+        {customer.orderBlock && (
+          <Notice
+            tone="danger"
+            title={customer.orderBlock === "COD" ? "Blocked from cash on delivery" : "Blocked from ordering"}
+          >
+            <p>
+              {customer.orderBlockReason}
+              {" · "}
+              {[customer.orderBlockedBy && `by ${customer.orderBlockedBy}`, customer.orderBlockedAt && formatDateTime(customer.orderBlockedAt, settings.timezone)]
+                .filter(Boolean)
+                .join(", ")}
+            </p>
+            {!customer.deletedAt && (
+              <div className="mt-2">
+                <UnblockButton customerId={customer.id} />
+              </div>
+            )}
+          </Notice>
+        )}
+        {!customer.orderBlock && customer.repeatRefusals && (
+          <Notice tone="warning" title={`Refused ${failed.refused} deliveries at the door`}>
+            Consider blocking cash on delivery, so their next orders are paid online.
+          </Notice>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Orders" value={String(stats.orders)} hint={stats.cancelled > 0 ? `${stats.cancelled} cancelled` : undefined} />
+          <Stat
+            label="Orders"
+            value={String(stats.orders)}
+            hint={
+              [
+                stats.cancelled > 0 && `${stats.cancelled} cancelled`,
+                failed.refused > 0 && `${failed.refused} refused at the door`,
+                failed.unreachable > 0 && `${failed.unreachable} unreachable`,
+                failed.other > 0 && `${failed.other} failed for other reasons`,
+              ]
+                .filter(Boolean)
+                .join(" · ") || undefined
+            }
+          />
           <Stat label="Delivered" value={String(stats.delivered)} />
           <Stat label="Total spent" value={money(stats.totalSpent)} hint="Delivered orders only" />
           <Stat

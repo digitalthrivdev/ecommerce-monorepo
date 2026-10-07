@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-import { UserRole } from "../../generated/prisma/client";
+import { DeliveryFailure, UserRole } from "../../generated/prisma/client";
 import { assignBodySchema } from "../delivery/delivery.schemas.js";
 import { createDeliveryService } from "../delivery/delivery.service.js";
 import { manageOrdersQuerySchema } from "./orders.schemas.js";
@@ -17,6 +17,11 @@ const actionBodySchema = z
 
 const reasonBodySchema = z.object({
   reason: z.string().trim().min(1).max(300),
+});
+
+const cancelBodySchema = reasonBodySchema.extend({
+  /** Required when the rider already has the order. */
+  failure: z.enum(DeliveryFailure).optional(),
 });
 
 const itemParamsSchema = orderParamsSchema.extend({ itemId: idSchema });
@@ -58,8 +63,8 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
 
   app.post("/:orderId/cancel", async (request) => {
     const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { reason } = reasonBodySchema.parse(request.body);
-    return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason);
+    const { reason, failure } = cancelBodySchema.parse(request.body);
+    return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason, failure);
   });
 
   app.post("/:orderId/items/:itemId/unavailable", async (request) => {

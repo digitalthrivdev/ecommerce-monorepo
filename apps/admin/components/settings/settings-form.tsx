@@ -124,6 +124,14 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
                 {...amount}
                 {...track("minOrderValue")}
               />
+              <TextField
+                name="codMaxOrderValue"
+                label="Largest cash-on-delivery order"
+                defaultValue={settings.codMaxOrderValue}
+                error={fieldErrors.codMaxOrderValue}
+                description="Bigger orders must be paid online. Leave empty for no limit."
+                {...amount}
+              />
             </div>
             <ChargesSummary values={charges} currency={currency} />
           </FieldGroup>

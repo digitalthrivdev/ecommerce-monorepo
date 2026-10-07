@@ -3,7 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { createAccountDeletionService } from "./account-deletion.js";
-import { customerOrdersQuerySchema, listCustomersQuerySchema } from "./customers.schemas.js";
+import { blockCustomerBodySchema, customerOrdersQuerySchema, listCustomersQuerySchema } from "./customers.schemas.js";
 import { createCustomersService } from "./customers.service.js";
 
 /** Customer views for admins. */
@@ -27,6 +27,16 @@ const customersRoutes: FastifyPluginAsync = async (app) => {
     const { id } = idParamsSchema.parse(request.params);
     const query = customerOrdersQuerySchema.parse(request.query);
     return customers.listOrders(id, query);
+  });
+
+  app.put("/:id/block", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return customers.blockCustomer(id, blockCustomerBodySchema.parse(request.body), request.user.sub);
+  });
+
+  app.delete("/:id/block", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return customers.unblockCustomer(id);
   });
 
   // For deletion requests that come by email or phone instead of through the app.

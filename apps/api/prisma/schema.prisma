@@ -29,9 +29,18 @@ model User {
   // is replaced, so the number can sign up again as a new account; orders keep their snapshots.
   deletedAt DateTime?
 
+  // Set only for CUSTOMER, by an admin: COD stops cash on delivery, ALL stops new orders. The
+  // customer can still sign in, see orders, report issues and delete the account.
+  orderBlock       CustomerBlock?
+  orderBlockReason String?
+  orderBlockedAt   DateTime?
+  orderBlockedById String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  orderBlockedBy       User?            @relation("CustomerBlockedBy", fields: [orderBlockedById], references: [id])
+  customersBlocked     User[]           @relation("CustomerBlockedBy")
   store                Store?           @relation(fields: [storeId], references: [id])
   addresses            Address[]
   cart                 Cart?
@@ -55,6 +64,11 @@ enum UserRole {
   ADMIN
   STORE_STAFF
   DELIVERY_PARTNER
+}
+
+enum CustomerBlock {
+  COD
+  ALL
 }
 
 // ─────────────────────────────────────────────
@@ -814,6 +828,9 @@ model Delivery {
   // Partner earning snapshot, set when delivered.
   earning Decimal? @db.Decimal(10, 2)
 
+  // Why it failed, when an admin cancels the order after the rider picked it up.
+  failure DeliveryFailure?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -824,6 +841,13 @@ model Delivery {
 
   @@index([partnerId, status])
   @@index([status])
+  @@index([failure])
+}
+
+enum DeliveryFailure {
+  REFUSED
+  UNREACHABLE
+  OTHER
 }
 
 enum DeliveryStatus {
@@ -866,6 +890,9 @@ model PlatformSettings {
 
   // A partner holding this much cash or more can't be assigned orders until they deposit; null means no limit.
   riderCashLimit Decimal? @db.Decimal(10, 2)
+
+  // Largest order total that can be paid cash on delivery; null means no limit.
+  codMaxOrderValue Decimal? @db.Decimal(10, 2)
 
   // "Delivery in about N minutes" in the customer app's home header and checkout; null hides it.
   deliveryPromiseMinutes Int?

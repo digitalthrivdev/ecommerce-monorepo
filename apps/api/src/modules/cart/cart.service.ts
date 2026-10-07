@@ -1,5 +1,6 @@
 import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { checkoutOptions, customerOrderBlock } from "../orders/checkout-rules.js";
 import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { customerVisible } from "../products/store-products.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
@@ -80,6 +81,7 @@ export function createCartService(prisma: PrismaClient) {
         itemCount: 0,
         subtotal: "0.00",
         bill: null,
+        checkout: null,
         isValid: false,
       };
     }
@@ -137,7 +139,8 @@ export function createCartService(prisma: PrismaClient) {
 
     const storeIsOpen = storeIsActive && isStoreOpen(cart.store?.hours ?? []);
 
-    const charges = calculateCharges(subtotal, await getPlatformSettings(prisma));
+    const [settings, block] = await Promise.all([getPlatformSettings(prisma), customerOrderBlock(prisma, userId)]);
+    const charges = calculateCharges(subtotal, settings);
 
     return {
       id: cart.id,
@@ -156,6 +159,7 @@ export function createCartService(prisma: PrismaClient) {
         meetsMinimum: charges.meetsMinimum,
         amountToFreeDelivery: charges.amountToFreeDelivery?.toFixed(2) ?? null,
       },
+      checkout: await checkoutOptions(prisma, settings, charges.total, block),
       isValid: storeIsOpen && items.every((item) => item.issue === null),
     };
   }

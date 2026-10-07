@@ -114,6 +114,10 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   storeId: 'storeId',
   deletedAt: 'deletedAt',
+  orderBlock: 'orderBlock',
+  orderBlockReason: 'orderBlockReason',
+  orderBlockedAt: 'orderBlockedAt',
+  orderBlockedById: 'orderBlockedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -547,6 +551,7 @@ export const DeliveryScalarFieldEnum = {
   deliveredAt: 'deliveredAt',
   deliveryOtpHash: 'deliveryOtpHash',
   earning: 'earning',
+  failure: 'failure',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -572,6 +577,7 @@ export const PlatformSettingsScalarFieldEnum = {
   minOrderValue: 'minOrderValue',
   deliveryPartnerFee: 'deliveryPartnerFee',
   riderCashLimit: 'riderCashLimit',
+  codMaxOrderValue: 'codMaxOrderValue',
   deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',

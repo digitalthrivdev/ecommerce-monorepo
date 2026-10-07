@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { CustomerBlock } from "../../generated/prisma/client";
 import { paginationQuerySchema } from "../../shared/schemas.js";
 
 export const listCustomersQuerySchema = paginationQuerySchema.extend({
@@ -10,7 +11,18 @@ export const listCustomersQuerySchema = paginationQuerySchema.extend({
     .max(50)
     .optional()
     .transform((value) => value || undefined),
+  /** "refusals": refused REPEAT_REFUSALS or more deliveries. "blocked": blocked from COD or from ordering. */
+  filter: z.enum(["refusals", "blocked"]).optional(),
 });
+
+export const blockCustomerBodySchema = z
+  .object({
+    block: z.enum(CustomerBlock),
+    reason: z.string().trim().min(1, "Enter a reason").max(300),
+  })
+  .strict();
+
+export type BlockCustomerInput = z.infer<typeof blockCustomerBodySchema>;
 
 export const customerOrdersQuerySchema = paginationQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(50).default(20),

@@ -45,6 +45,7 @@ export type DeliveryMinAggregateOutputType = {
   deliveredAt: Date | null
   deliveryOtpHash: string | null
   earning: runtime.Decimal | null
+  failure: $Enums.DeliveryFailure | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +61,7 @@ export type DeliveryMaxAggregateOutputType = {
   deliveredAt: Date | null
   deliveryOtpHash: string | null
   earning: runtime.Decimal | null
+  failure: $Enums.DeliveryFailure | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -75,6 +77,7 @@ export type DeliveryCountAggregateOutputType = {
   deliveredAt: number
   deliveryOtpHash: number
   earning: number
+  failure: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -100,6 +103,7 @@ export type DeliveryMinAggregateInputType = {
   deliveredAt?: true
   deliveryOtpHash?: true
   earning?: true
+  failure?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -115,6 +119,7 @@ export type DeliveryMaxAggregateInputType = {
   deliveredAt?: true
   deliveryOtpHash?: true
   earning?: true
+  failure?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -130,6 +135,7 @@ export type DeliveryCountAggregateInputType = {
   deliveredAt?: true
   deliveryOtpHash?: true
   earning?: true
+  failure?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -232,6 +238,7 @@ export type DeliveryGroupByOutputType = {
   deliveredAt: Date | null
   deliveryOtpHash: string | null
   earning: runtime.Decimal | null
+  failure: $Enums.DeliveryFailure | null
   createdAt: Date
   updatedAt: Date
   _count: DeliveryCountAggregateOutputType | null
@@ -270,6 +277,7 @@ export type DeliveryWhereInput = {
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
   earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.EnumDeliveryFailureNullableFilter<"Delivery"> | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -288,6 +296,7 @@ export type DeliveryOrderByWithRelationInput = {
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrderInput | Prisma.SortOrder
   earning?: Prisma.SortOrderInput | Prisma.SortOrder
+  failure?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   order?: Prisma.OrderOrderByWithRelationInput
@@ -309,6 +318,7 @@ export type DeliveryWhereUniqueInput = Prisma.AtLeast<{
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
   earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.EnumDeliveryFailureNullableFilter<"Delivery"> | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -327,6 +337,7 @@ export type DeliveryOrderByWithAggregationInput = {
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrderInput | Prisma.SortOrder
   earning?: Prisma.SortOrderInput | Prisma.SortOrder
+  failure?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DeliveryCountOrderByAggregateInput
@@ -350,6 +361,7 @@ export type DeliveryScalarWhereWithAggregatesInput = {
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableWithAggregatesFilter<"Delivery"> | string | null
   earning?: Prisma.DecimalNullableWithAggregatesFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.EnumDeliveryFailureNullableWithAggregatesFilter<"Delivery"> | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Delivery"> | Date | string
 }
@@ -363,6 +375,7 @@ export type DeliveryCreateInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -381,6 +394,7 @@ export type DeliveryUncheckedCreateInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -395,6 +409,7 @@ export type DeliveryUpdateInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -413,6 +428,7 @@ export type DeliveryUncheckedUpdateInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -429,6 +445,7 @@ export type DeliveryCreateManyInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -442,6 +459,7 @@ export type DeliveryUpdateManyMutationInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -457,6 +475,7 @@ export type DeliveryUncheckedUpdateManyInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -487,6 +506,7 @@ export type DeliveryCountOrderByAggregateInput = {
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
   earning?: Prisma.SortOrder
+  failure?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -506,6 +526,7 @@ export type DeliveryMaxOrderByAggregateInput = {
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
   earning?: Prisma.SortOrder
+  failure?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -521,6 +542,7 @@ export type DeliveryMinOrderByAggregateInput = {
   deliveredAt?: Prisma.SortOrder
   deliveryOtpHash?: Prisma.SortOrder
   earning?: Prisma.SortOrder
+  failure?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -612,6 +634,10 @@ export type EnumDeliveryStatusFieldUpdateOperationsInput = {
   set?: $Enums.DeliveryStatus
 }
 
+export type NullableEnumDeliveryFailureFieldUpdateOperationsInput = {
+  set?: $Enums.DeliveryFailure | null
+}
+
 export type DeliveryCreateNestedOneWithoutLocationsInput = {
   create?: Prisma.XOR<Prisma.DeliveryCreateWithoutLocationsInput, Prisma.DeliveryUncheckedCreateWithoutLocationsInput>
   connectOrCreate?: Prisma.DeliveryCreateOrConnectWithoutLocationsInput
@@ -635,6 +661,7 @@ export type DeliveryCreateWithoutOrderInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   partner?: Prisma.DeliveryPartnerCreateNestedOneWithoutDeliveriesInput
@@ -651,6 +678,7 @@ export type DeliveryUncheckedCreateWithoutOrderInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -681,6 +709,7 @@ export type DeliveryUpdateWithoutOrderInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   partner?: Prisma.DeliveryPartnerUpdateOneWithoutDeliveriesNestedInput
@@ -697,6 +726,7 @@ export type DeliveryUncheckedUpdateWithoutOrderInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -711,6 +741,7 @@ export type DeliveryCreateWithoutPartnerInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -727,6 +758,7 @@ export type DeliveryUncheckedCreateWithoutPartnerInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   locations?: Prisma.DeliveryLocationUncheckedCreateNestedManyWithoutDeliveryInput
@@ -772,6 +804,7 @@ export type DeliveryScalarWhereInput = {
   deliveredAt?: Prisma.DateTimeNullableFilter<"Delivery"> | Date | string | null
   deliveryOtpHash?: Prisma.StringNullableFilter<"Delivery"> | string | null
   earning?: Prisma.DecimalNullableFilter<"Delivery"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.EnumDeliveryFailureNullableFilter<"Delivery"> | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Delivery"> | Date | string
 }
@@ -785,6 +818,7 @@ export type DeliveryCreateWithoutLocationsInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutDeliveryInput
@@ -802,6 +836,7 @@ export type DeliveryUncheckedCreateWithoutLocationsInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -831,6 +866,7 @@ export type DeliveryUpdateWithoutLocationsInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -848,6 +884,7 @@ export type DeliveryUncheckedUpdateWithoutLocationsInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -862,6 +899,7 @@ export type DeliveryCreateManyPartnerInput = {
   deliveredAt?: Date | string | null
   deliveryOtpHash?: string | null
   earning?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: $Enums.DeliveryFailure | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -875,6 +913,7 @@ export type DeliveryUpdateWithoutPartnerInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutDeliveryNestedInput
@@ -891,6 +930,7 @@ export type DeliveryUncheckedUpdateWithoutPartnerInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   locations?: Prisma.DeliveryLocationUncheckedUpdateManyWithoutDeliveryNestedInput
@@ -906,6 +946,7 @@ export type DeliveryUncheckedUpdateManyWithoutPartnerInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveryOtpHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   earning?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  failure?: Prisma.NullableEnumDeliveryFailureFieldUpdateOperationsInput | $Enums.DeliveryFailure | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -952,6 +993,7 @@ export type DeliverySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
   earning?: boolean
+  failure?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -971,6 +1013,7 @@ export type DeliverySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
   earning?: boolean
+  failure?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -988,6 +1031,7 @@ export type DeliverySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
   earning?: boolean
+  failure?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -1005,11 +1049,12 @@ export type DeliverySelectScalar = {
   deliveredAt?: boolean
   deliveryOtpHash?: boolean
   earning?: boolean
+  failure?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DeliveryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "partnerId" | "status" | "assignedAt" | "acceptedAt" | "pickedUpAt" | "deliveredAt" | "deliveryOtpHash" | "earning" | "createdAt" | "updatedAt", ExtArgs["result"]["delivery"]>
+export type DeliveryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "partnerId" | "status" | "assignedAt" | "acceptedAt" | "pickedUpAt" | "deliveredAt" | "deliveryOtpHash" | "earning" | "failure" | "createdAt" | "updatedAt", ExtArgs["result"]["delivery"]>
 export type DeliveryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   partner?: boolean | Prisma.Delivery$partnerArgs<ExtArgs>
@@ -1043,6 +1088,7 @@ export type $DeliveryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     deliveredAt: Date | null
     deliveryOtpHash: string | null
     earning: runtime.Decimal | null
+    failure: $Enums.DeliveryFailure | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["delivery"]>
@@ -1481,6 +1527,7 @@ export interface DeliveryFieldRefs {
   readonly deliveredAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly deliveryOtpHash: Prisma.FieldRef<"Delivery", 'String'>
   readonly earning: Prisma.FieldRef<"Delivery", 'Decimal'>
+  readonly failure: Prisma.FieldRef<"Delivery", 'DeliveryFailure'>
   readonly createdAt: Prisma.FieldRef<"Delivery", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Delivery", 'DateTime'>
 }

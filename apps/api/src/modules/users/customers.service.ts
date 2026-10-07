@@ -1,6 +1,6 @@
-import { OrderStatus, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
+import { DeliveryFailure, OrderStatus, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import type { CustomerOrdersQuery, ListCustomersQuery } from "./customers.schemas.js";
+import type { BlockCustomerInput, CustomerOrdersQuery, ListCustomersQuery } from "./customers.schemas.js";
 
 type LastOrderRow = {
   userId: string;
@@ -11,13 +11,39 @@ type LastOrderRow = {
   createdAt: Date;
 };
 
-const customerSelect = { id: true, phone: true, name: true, email: true, deletedAt: true, createdAt: true } satisfies Prisma.UserSelect;
+const customerSelect = { id: true, phone: true, name: true, email: true, deletedAt: true, orderBlock: true, createdAt: true } satisfies Prisma.UserSelect;
+
+/** Customers who refused this many deliveries are flagged for an admin to decide on a block. */
+export const REPEAT_REFUSALS = 2;
 
 function notFound() {
   return new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found");
 }
 
 export function createCustomersService(prisma: PrismaClient) {
+  async function refusalCounts(userIds: string[]) {
+    if (userIds.length === 0) return new Map<string, number>();
+
+    const rows = await prisma.$queryRaw<{ userId: string; refusals: number }[]>`
+      SELECT o."userId", count(*)::int AS refusals
+      FROM "Delivery" d JOIN "Order" o ON o.id = d."orderId"
+      WHERE d.failure = 'REFUSED' AND o."userId" IN (${Prisma.join(userIds)})
+      GROUP BY o."userId"
+    `;
+    return new Map(rows.map((row) => [row.userId, row.refusals]));
+  }
+
+  async function repeatRefuserIds() {
+    const rows = await prisma.$queryRaw<{ userId: string }[]>`
+      SELECT o."userId"
+      FROM "Delivery" d JOIN "Order" o ON o.id = d."orderId"
+      WHERE d.failure = 'REFUSED'
+      GROUP BY o."userId"
+      HAVING count(*) >= ${REPEAT_REFUSALS}
+    `;
+    return rows.map((row) => row.userId);
+  }
+
   /** Each customer's most recent order, via the (userId, createdAt) index. */
   async function lastOrders(userIds: string[]) {
     if (userIds.length === 0) return new Map<string, LastOrderRow>();
@@ -31,9 +57,11 @@ export function createCustomersService(prisma: PrismaClient) {
     return new Map(rows.map((row) => [row.userId, row]));
   }
 
-  async function listCustomers({ q, limit, offset }: ListCustomersQuery) {
+  async function listCustomers({ q, filter, limit, offset }: ListCustomersQuery) {
     const where: Prisma.UserWhereInput = {
       role: UserRole.CUSTOMER,
+      ...(filter === "refusals" && { id: { in: await repeatRefuserIds() } }),
+      ...(filter === "blocked" && { orderBlock: { not: null } }),
       ...(q && {
         OR: [
           { name: { contains: q, mode: "insensitive" } },
@@ -54,12 +82,14 @@ export function createCustomersService(prisma: PrismaClient) {
       prisma.user.count({ where }),
     ]);
 
-    const latest = await lastOrders(rows.map((row) => row.id));
+    const ids = rows.map((row) => row.id);
+    const [latest, refusals] = await Promise.all([lastOrders(ids), refusalCounts(ids)]);
     const items = rows.map(({ _count, ...customer }) => {
       const last = latest.get(customer.id);
       return {
         ...customer,
         orderCount: _count.orders,
+        refusals: refusals.get(customer.id) ?? 0,
         lastOrder: last
           ? { id: last.id, orderNumber: last.orderNumber, status: last.status, total: last.total.toFixed(2), createdAt: last.createdAt }
           : null,
@@ -74,6 +104,9 @@ export function createCustomersService(prisma: PrismaClient) {
       where: { id, role: UserRole.CUSTOMER },
       select: {
         ...customerSelect,
+        orderBlockReason: true,
+        orderBlockedAt: true,
+        orderBlockedBy: { select: { name: true } },
         addresses: {
           orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
           select: {
@@ -99,7 +132,7 @@ export function createCustomersService(prisma: PrismaClient) {
       throw notFound();
     }
 
-    const [byStatus, last] = await Promise.all([
+    const [byStatus, last, failures] = await Promise.all([
       prisma.order.groupBy({
         by: ["status"],
         where: { userId: id },
@@ -108,13 +141,28 @@ export function createCustomersService(prisma: PrismaClient) {
         _sum: { total: true },
       }),
       prisma.order.findFirst({ where: { userId: id }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+      prisma.delivery.groupBy({
+        by: ["failure"],
+        where: { failure: { not: null }, order: { userId: id } },
+        orderBy: { failure: "asc" },
+        _count: { _all: true },
+      }),
     ]);
 
     const countOf = (status: OrderStatus) => byStatus.find((row) => row.status === status)?._count._all ?? 0;
+    const failuresOf = (failure: DeliveryFailure) => failures.find((row) => row.failure === failure)?._count._all ?? 0;
     const spent = byStatus.find((row) => row.status === OrderStatus.DELIVERED)?._sum.total ?? new Prisma.Decimal(0);
+    const { orderBlockedBy, ...rest } = customer;
 
     return {
-      ...customer,
+      ...rest,
+      orderBlockedBy: orderBlockedBy?.name ?? null,
+      failedDeliveries: {
+        refused: failuresOf(DeliveryFailure.REFUSED),
+        unreachable: failuresOf(DeliveryFailure.UNREACHABLE),
+        other: failuresOf(DeliveryFailure.OTHER),
+      },
+      repeatRefusals: failuresOf(DeliveryFailure.REFUSED) >= REPEAT_REFUSALS,
       stats: {
         orders: byStatus.reduce((sum, row) => sum + row._count._all, 0),
         delivered: countOf(OrderStatus.DELIVERED),
@@ -166,5 +214,33 @@ export function createCustomersService(prisma: PrismaClient) {
     };
   }
 
-  return { listCustomers, getCustomer, listOrders };
+  async function findLiveCustomer(id: string) {
+    const customer = await prisma.user.findFirst({ where: { id, role: UserRole.CUSTOMER }, select: { deletedAt: true } });
+    if (!customer) {
+      throw notFound();
+    }
+    if (customer.deletedAt) {
+      throw new AppError(409, "CUSTOMER_DELETED", "This account has been deleted");
+    }
+  }
+
+  async function blockCustomer(id: string, { block, reason }: BlockCustomerInput, adminId: string) {
+    await findLiveCustomer(id);
+    await prisma.user.update({
+      where: { id },
+      data: { orderBlock: block, orderBlockReason: reason, orderBlockedAt: new Date(), orderBlockedById: adminId },
+    });
+    return getCustomer(id);
+  }
+
+  async function unblockCustomer(id: string) {
+    await findLiveCustomer(id);
+    await prisma.user.update({
+      where: { id },
+      data: { orderBlock: null, orderBlockReason: null, orderBlockedAt: null, orderBlockedById: null },
+    });
+    return getCustomer(id);
+  }
+
+  return { listCustomers, getCustomer, listOrders, blockCustomer, unblockCustomer };
 }

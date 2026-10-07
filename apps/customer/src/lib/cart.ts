@@ -5,6 +5,7 @@ import { Alert } from "react-native";
 import { ApiError, apiFetch, errorMessage } from "./api";
 import { useDeliveryLocation } from "./delivery-location";
 import { formatMoney, shortfall } from "./format";
+import { formatPhone } from "./phone";
 import { closedText } from "./store-hours";
 import type { Cart, CartItem, Store, StoreProduct, StoreVariant } from "./types";
 
@@ -52,7 +53,16 @@ export function useProductCartQuantity(productId: string) {
 export const visibleItems = (cart: Cart) => cart.items.filter((item) => item.quantity > 0);
 
 /** Why the cart can't be ordered yet, or null when checkout can go ahead. */
-export function checkoutBlocker(cart: Cart, store: Store | null, { currency, timezone }: { currency: string; timezone: string }) {
+type BlockerSettings = { currency: string; timezone: string; support: { phone: string | null; email: string | null } };
+
+function contactText({ phone, email }: BlockerSettings["support"]) {
+  if (phone) return ` Call us on ${formatPhone(phone)}.`;
+  if (email) return ` Email us at ${email}.`;
+  return "";
+}
+
+export function checkoutBlocker(cart: Cart, store: Store | null, { currency, timezone, support }: BlockerSettings) {
+  if (cart.checkout?.blocked) return `Your account can't place orders right now.${contactText(support)}`;
   if (!store) return "Choose a delivery location to check out.";
   if (cart.store?.id !== store.id) return "Your cart is from a store that doesn't deliver to this location.";
   if (!cart.storeIsOpen) return closedText(store, timezone);
@@ -60,7 +70,22 @@ export function checkoutBlocker(cart: Cart, store: Store | null, { currency, tim
   if (cart.bill && !cart.bill.meetsMinimum) {
     return `Add ${formatMoney(shortfall(cart.bill.minOrderValue, cart.bill.subtotal), currency)} more to reach the ${formatMoney(cart.bill.minOrderValue, currency)} minimum order.`;
   }
+  if (cart.checkout && cart.checkout.paymentMethods.length === 0) {
+    return cart.checkout.codUnavailable === "LIMIT" && cart.checkout.codMaxOrderValue
+      ? `Cash on delivery is available for orders up to ${formatMoney(cart.checkout.codMaxOrderValue, currency)}. Remove some items to order.`
+      : `Cash on delivery isn't available for your account.${contactText(support)}`;
+  }
   return null;
+}
+
+/** Why the cart can't be paid cash on delivery, shown in the payment choice; null when it can. */
+export function codUnavailableText(cart: Cart, currency: string) {
+  const checkout = cart.checkout;
+  if (!checkout || checkout.paymentMethods.includes("COD") || checkout.blocked) return null;
+  if (checkout.codUnavailable === "LIMIT" && checkout.codMaxOrderValue) {
+    return `Cash on delivery is available for orders up to ${formatMoney(checkout.codMaxOrderValue, currency)}.`;
+  }
+  return "Cash on delivery isn't available for your account.";
 }
 
 // Paise keep the optimistic preview free of float rounding; the server's totals replace it.
@@ -119,7 +144,7 @@ function previewQuantity(cart: Cart, { variantId, quantity, item, store }: Quant
   };
 }
 
-const emptyCart = (cart: Cart): Cart => ({ ...cart, store: null, storeIsOpen: false, items: [], itemCount: 0, subtotal: "0.00", bill: null, isValid: false });
+const emptyCart = (cart: Cart): Cart => ({ ...cart, store: null, storeIsOpen: false, items: [], itemCount: 0, subtotal: "0.00", bill: null, checkout: null, isValid: false });
 
 /** Keeps optimistic quantities but takes line ids from the server, so queued changes target the right lines. */
 function syncItemIds(cart: Cart, server: Cart): Cart {

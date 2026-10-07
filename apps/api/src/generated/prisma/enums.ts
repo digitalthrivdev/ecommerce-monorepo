@@ -19,6 +19,14 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
+export const CustomerBlock = {
+  COD: 'COD',
+  ALL: 'ALL'
+} as const
+
+export type CustomerBlock = (typeof CustomerBlock)[keyof typeof CustomerBlock]
+
+
 export const StoreStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'
@@ -119,6 +127,15 @@ export const DeliveryPartnerStatus = {
 } as const
 
 export type DeliveryPartnerStatus = (typeof DeliveryPartnerStatus)[keyof typeof DeliveryPartnerStatus]
+
+
+export const DeliveryFailure = {
+  REFUSED: 'REFUSED',
+  UNREACHABLE: 'UNREACHABLE',
+  OTHER: 'OTHER'
+} as const
+
+export type DeliveryFailure = (typeof DeliveryFailure)[keyof typeof DeliveryFailure]
 
 
 export const DeliveryStatus = {

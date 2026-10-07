@@ -28,6 +28,7 @@ export const updateSettingsBodySchema = z
     minOrderValue: decimalSchema,
     deliveryPartnerFee: decimalSchema,
     riderCashLimit: positiveDecimalSchema.nullable(),
+    codMaxOrderValue: positiveDecimalSchema.nullable(),
     deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
     supportPhone: phoneSchema.nullable(),
     supportEmail: z.email().max(200).nullable(),

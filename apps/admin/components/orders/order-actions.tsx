@@ -43,11 +43,11 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
+import { DELIVERY_FAILURE_LABELS, ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
 import { nextStep } from "@/lib/order-flow";
 import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
-import type { ActionResult, DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
+import type { ActionResult, DeliveryFailure, DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Target = { storeId: string; orderId: string };
@@ -115,19 +115,26 @@ export function NextStepButton({
   );
 }
 
-function CancelOrderDialog({ storeId, orderId, orderNumber, open, onOpenChange }: Target & {
+const WITH_RIDER: OrderStatus[] = ["PICKED_UP", "OUT_FOR_DELIVERY"];
+const FAILURES: DeliveryFailure[] = ["REFUSED", "UNREACHABLE", "OTHER"];
+
+function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpenChange }: Target & {
   orderNumber: string;
+  status: OrderStatus;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const [reason, setReason] = useState("");
+  const [failure, setFailure] = useState<DeliveryFailure | null>(null);
   const [pending, startTransition] = useTransition();
+  const failedDelivery = WITH_RIDER.includes(status);
 
   function submit() {
     startTransition(async () => {
-      if (toastResult(await cancelOrder({ storeId, orderId, reason }))) {
+      if (toastResult(await cancelOrder({ storeId, orderId, reason, failure: failure ?? undefined }))) {
         onOpenChange(false);
         setReason("");
+        setFailure(null);
       }
     });
   }
@@ -138,9 +145,29 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, open, onOpenChange }
         <DialogHeader>
           <DialogTitle>Cancel order {orderNumber}?</DialogTitle>
           <DialogDescription>
-            Stock is returned to the store and online payments are refunded automatically. This cannot be undone.
+            {failedDelivery
+              ? "The rider brings the items back to the store, and their stock is returned. Online payments are refunded automatically. This cannot be undone."
+              : "Stock is returned to the store and online payments are refunded automatically. This cannot be undone."}
           </DialogDescription>
         </DialogHeader>
+        {failedDelivery && (
+          <Field>
+            <FieldLabel htmlFor="cancel-failure">What happened at delivery?</FieldLabel>
+            <Select value={failure ?? ""} onValueChange={(value) => setFailure(value as DeliveryFailure)}>
+              <SelectTrigger id="cancel-failure" className="w-full">
+                <SelectValue placeholder="Choose one" />
+              </SelectTrigger>
+              <SelectContent>
+                {FAILURES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {DELIVERY_FAILURE_LABELS[value]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription>Refusals are counted on the customer&apos;s page, to spot repeat offenders.</FieldDescription>
+          </Field>
+        )}
         <Field>
           <FieldLabel htmlFor="cancel-reason">Reason</FieldLabel>
           <Textarea
@@ -156,7 +183,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, open, onOpenChange }
           <DialogClose asChild>
             <Button variant="outline">Keep order</Button>
           </DialogClose>
-          <Button variant="destructive" disabled={pending || reason.trim().length === 0} onClick={submit}>
+          <Button variant="destructive" disabled={pending || reason.trim().length === 0 || (failedDelivery && !failure)} onClick={submit}>
             {pending && <Loader2 className="animate-spin" />}
             Cancel order
           </Button>
@@ -228,8 +255,9 @@ function ReasonDialog({ open, onOpenChange, title, description, label, placehold
 }
 
 /** Less common actions, kept away from the main button so Cancel isn't tapped by mistake. */
-export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel, canUnassign, canMarkDelivered }: Target & {
+export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel, canUnassign, canMarkDelivered }: Target & {
   orderNumber: string;
+  status: OrderStatus;
   canCancel: boolean;
   canUnassign?: boolean;
   canMarkDelivered?: boolean;
@@ -282,6 +310,7 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, canCancel, canUna
           storeId={storeId}
           orderId={orderId}
           orderNumber={orderNumber}
+          status={status}
           open={cancelling}
           onOpenChange={setCancelling}
         />

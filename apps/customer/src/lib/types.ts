@@ -175,7 +175,18 @@ export type Cart = {
   itemCount: number;
   subtotal: string;
   bill: CartBill | null;
+  checkout: CheckoutOptions | null;
   isValid: boolean;
+};
+
+/** What this customer can do at checkout for the cart's total. */
+export type CheckoutOptions = {
+  /** An admin blocked this account from ordering. */
+  blocked: boolean;
+  paymentMethods: PaymentMethod[];
+  /** Why cash on delivery is missing: the account is blocked from it, or the total is over the limit. */
+  codUnavailable: "BLOCKED" | "LIMIT" | null;
+  codMaxOrderValue: string | null;
 };
 
 export type OrderStatus =

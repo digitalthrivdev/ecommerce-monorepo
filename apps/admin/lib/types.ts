@@ -180,6 +180,8 @@ export type OrderDetail = {
     assignedAt: string | null;
     pickedUpAt: string | null;
     deliveredAt: string | null;
+    /** Why it failed, when an admin cancelled the order after pickup. */
+    failure: DeliveryFailure | null;
   } | null;
   store: { id: string; name: string; phone: string | null };
   /** quantity and totalPrice are as ordered; unavailableQuantity units are not charged. */
@@ -472,11 +474,17 @@ export type Customer = {
   email: string | null;
   /** Set when the account was deleted; name, email and phone are gone. */
   deletedAt: string | null;
+  orderBlock: CustomerBlock | null;
   createdAt: string;
 };
 
+export type CustomerBlock = "COD" | "ALL";
+export type DeliveryFailure = "REFUSED" | "UNREACHABLE" | "OTHER";
+
 export type CustomerListItem = Customer & {
   orderCount: number;
+  /** Deliveries cancelled because the customer refused them at the door. */
+  refusals: number;
   lastOrder: { id: string; orderNumber: string; status: OrderStatus; total: string; createdAt: string } | null;
 };
 
@@ -497,6 +505,12 @@ export type CustomerAddress = {
 };
 
 export type CustomerDetails = Customer & {
+  orderBlockReason: string | null;
+  orderBlockedAt: string | null;
+  orderBlockedBy: string | null;
+  failedDeliveries: { refused: number; unreachable: number; other: number };
+  /** Refused enough deliveries for an admin to consider a block. */
+  repeatRefusals: boolean;
   addresses: CustomerAddress[];
   stats: { orders: number; delivered: number; cancelled: number; totalSpent: string; lastOrderAt: string | null };
 };
@@ -579,6 +593,7 @@ export type PlatformSettings = {
   deliveryPartnerFee: string;
   /** Riders holding this much cash can't be assigned orders until they deposit; null means no limit. */
   riderCashLimit: string | null;
+  codMaxOrderValue: string | null;
   supportPhone: string | null;
   supportEmail: string | null;
   /** Legal name and registered address, shown on the policy and contact pages. */
