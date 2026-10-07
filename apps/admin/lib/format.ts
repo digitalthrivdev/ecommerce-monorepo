@@ -1,4 +1,6 @@
 import type {
+  ComplaintReason,
+  ComplaintStatus,
   DeliveryPartnerStatus,
   DeliveryStatus,
   OrderAction,
@@ -6,6 +8,7 @@ import type {
   PaymentMethod,
   PaymentStatus,
   PayoutMethod,
+  RefundMethod,
   StockChangeReason,
   UserRole,
 } from "./types";
@@ -121,6 +124,27 @@ export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   "mark-delivered": "Mark delivered",
   cancel: "Cancel order",
   "mark-unavailable": "Item not found",
+  refund: "Refund",
+};
+
+export const COMPLAINT_REASON_LABELS: Record<ComplaintReason, string> = {
+  DAMAGED: "Damaged item",
+  WRONG_ITEM: "Wrong item",
+  MISSING: "Missing item",
+  EXPIRED: "Expired or poor quality",
+  OTHER: "Other problem",
+};
+
+export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
+  OPEN: "Open",
+  RESOLVED: "Resolved",
+  REJECTED: "Rejected",
+};
+
+export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
+  GATEWAY: "Payment gateway",
+  UPI: "UPI",
+  BANK_TRANSFER: "Bank transfer",
 };
 
 export const STOCK_REASON_LABELS: Record<StockChangeReason, string> = {

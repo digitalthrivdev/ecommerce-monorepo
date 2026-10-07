@@ -28,8 +28,10 @@ function loadNotifications() {
   return notificationsModule;
 }
 
+const ORDER_PUSH_TYPES: unknown[] = ["order_status", "complaint"];
+
 function orderIdOf(data: Record<string, unknown> | undefined) {
-  return data?.type === "order_status" && typeof data.orderId === "string" ? data.orderId : null;
+  return ORDER_PUSH_TYPES.includes(data?.type) && typeof data?.orderId === "string" ? data.orderId : null;
 }
 
 function refreshOrder(orderId: string) {

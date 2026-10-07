@@ -1,6 +1,21 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Bell, Bike, Check, CircleCheck, CircleX, Headset, KeyRound, MapPin, Phone, ShoppingBag, Wallet, type LucideIcon } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Bell,
+  Bike,
+  Check,
+  CircleCheck,
+  CircleX,
+  Headset,
+  KeyRound,
+  MapPin,
+  MessageSquareWarning,
+  Phone,
+  ShoppingBag,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,7 +33,7 @@ import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { formatDateTime, formatMoney, formatTime } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { mapsAvailable } from "@/lib/maps";
-import { isOrderFinished, ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder, useOrderTracking } from "@/lib/orders";
+import { COMPLAINT_REASON_TEXT, isOrderFinished, ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder, useOrderTracking } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
 import { useSettings } from "@/lib/settings";
@@ -171,15 +186,40 @@ function PaymentPending({ order }: { order: OrderDetail }) {
   );
 }
 
-function paymentText(order: OrderDetail, currency: string) {
+function paymentText(order: OrderDetail) {
   const status = order.payment?.status;
-  if (order.paymentMethod === "COD") return status === "PAID" ? "Paid on delivery" : "Cash on delivery";
-  if (status === "PAID" && order.payment && Number(order.payment.refundedAmount) > 0) {
-    return `Paid online · ${formatMoney(order.payment.refundedAmount, currency)} refunded for unavailable items`;
-  }
+  if (order.paymentMethod === "COD") return status === "PAID" || status === "REFUNDED" ? "Paid on delivery" : "Cash on delivery";
   if (status === "PAID") return "Paid online";
   if (status === "REFUNDED") return "Refunded";
   return "Online payment not completed";
+}
+
+const REFUND_METHOD_TEXT: Record<OrderDetail["refunds"][number]["method"], string> = {
+  GATEWAY: "to your original payment method",
+  UPI: "by UPI",
+  BANK_TRANSFER: "by bank transfer",
+};
+
+function ComplaintCard({ order }: { order: OrderDetail }) {
+  const complaint = order.complaint;
+  if (complaint) {
+    const title = complaint.status === "OPEN" ? "Issue reported" : complaint.status === "RESOLVED" ? "Issue resolved" : "Report closed";
+    const detail = complaint.status === "OPEN" ? `${COMPLAINT_REASON_TEXT[complaint.reason]} · We're looking into it.` : COMPLAINT_REASON_TEXT[complaint.reason];
+    return (
+      <InfoCard icon={MessageSquareWarning} title={title} detail={detail}>
+        {complaint.resolutionNote ? <Text className="text-sm text-muted-foreground">{complaint.resolutionNote}</Text> : null}
+      </InfoCard>
+    );
+  }
+  if (!order.canReportIssue) return null;
+  return (
+    <InfoCard
+      icon={MessageSquareWarning}
+      title="Something wrong with your order?"
+      detail="Tell us about damaged, wrong or missing items."
+      action={{ label: "Report an issue", onPress: () => router.push({ pathname: "/report-issue/[id]", params: { id: order.id } }) }}
+    />
+  );
 }
 
 function NotificationsCard() {
@@ -267,6 +307,8 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
 
+      <ComplaintCard order={order} />
+
       {order.deliveryOtp && (
         <Card className="flex-row items-center">
           <Icon as={KeyRound} size={22} className="text-primary" />
@@ -319,9 +361,21 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
         itemsMrp={mrpTotal(chargedLines)}
         totalLabel="Total"
         footer={
-          <View className="flex-row items-center gap-2 pt-1">
-            <Icon as={Wallet} size={16} className="text-muted-foreground" />
-            <Text className="flex-1 text-sm text-muted-foreground">{paymentText(order, currency)}</Text>
+          <View className="gap-2 pt-1">
+            <View className="flex-row items-center gap-2">
+              <Icon as={Wallet} size={16} className="text-muted-foreground" />
+              <Text className="flex-1 text-sm text-muted-foreground">{paymentText(order)}</Text>
+            </View>
+            {order.refunds.map((refund) => (
+              <View key={refund.id} className="gap-0.5 pl-6">
+                <Text className="text-sm font-semibold">
+                  {formatMoney(refund.amount, currency)} refunded {REFUND_METHOD_TEXT[refund.method]}
+                </Text>
+                <Text className="text-xs text-muted-foreground">
+                  {refund.reason} · {formatDateTime(refund.createdAt)}
+                </Text>
+              </View>
+            ))}
           </View>
         }
       />

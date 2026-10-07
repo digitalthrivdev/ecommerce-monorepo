@@ -13,6 +13,7 @@ import {
   House,
   LogOut,
   Menu,
+  MessageSquareWarning,
   Monitor,
   Moon,
   Package,
@@ -71,6 +72,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Home", href: "/", icon: House, roles: BOTH },
       { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH },
+      { title: "Complaints", href: "/complaints", icon: MessageSquareWarning, roles: ADMIN },
       { title: "Stock", href: "/inventory", icon: Boxes, roles: BOTH },
       { title: "Riders", href: "/delivery-partners", icon: Bike, roles: ADMIN },
       { title: "Rider cash", href: "/rider-cash", icon: Banknote, roles: BOTH },
@@ -135,9 +137,13 @@ function BrandMark({ brand, subtitle }: { brand: Brand; subtitle: string }) {
   );
 }
 
-type AppSidebarProps = { user: DashboardUser; brand: Brand; newOrders: number };
+type AppSidebarProps = { user: DashboardUser; brand: Brand; newOrders: number; openComplaints: number };
 
-export function AppSidebar({ user, brand, newOrders }: AppSidebarProps) {
+export function AppSidebar({ user, brand, newOrders, openComplaints }: AppSidebarProps) {
+  const badges: Record<string, { count: number; label: string }> = {
+    "/orders": { count: newOrders, label: "new" },
+    "/complaints": { count: openComplaints, label: "open" },
+  };
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -176,10 +182,10 @@ export function AppSidebar({ user, brand, newOrders }: AppSidebarProps) {
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
-                      {item.href === "/orders" && newOrders > 0 && (
+                      {(badges[item.href]?.count ?? 0) > 0 && (
                         <SidebarMenuBadge className="rounded-full bg-primary px-1.5 text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-active/menu-button:text-primary-foreground">
-                          {newOrders}
-                          <span className="sr-only"> new</span>
+                          {badges[item.href]!.count}
+                          <span className="sr-only"> {badges[item.href]!.label}</span>
                         </SidebarMenuBadge>
                       )}
                     </SidebarMenuItem>

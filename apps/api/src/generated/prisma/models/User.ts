@@ -232,6 +232,9 @@ export type UserWhereInput = {
   payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
   payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
+  complaints?: Prisma.ComplaintListRelationFilter
+  complaintsResolved?: Prisma.ComplaintListRelationFilter
+  refundsIssued?: Prisma.RefundListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -255,6 +258,9 @@ export type UserOrderByWithRelationInput = {
   payoutsRecorded?: Prisma.RiderPayoutOrderByRelationAggregateInput
   payoutsVoided?: Prisma.RiderPayoutOrderByRelationAggregateInput
   pushTokens?: Prisma.PushTokenOrderByRelationAggregateInput
+  complaints?: Prisma.ComplaintOrderByRelationAggregateInput
+  complaintsResolved?: Prisma.ComplaintOrderByRelationAggregateInput
+  refundsIssued?: Prisma.RefundOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -281,6 +287,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
   payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
+  complaints?: Prisma.ComplaintListRelationFilter
+  complaintsResolved?: Prisma.ComplaintListRelationFilter
+  refundsIssued?: Prisma.RefundListRelationFilter
 }, "id" | "phone" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -335,6 +344,9 @@ export type UserCreateInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -357,6 +369,9 @@ export type UserUncheckedCreateInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -379,6 +394,9 @@ export type UserUpdateInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -401,6 +419,9 @@ export type UserUncheckedUpdateInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -604,6 +625,52 @@ export type UserUpdateOneRequiredWithoutOrdersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOrdersInput, Prisma.UserUpdateWithoutOrdersInput>, Prisma.UserUncheckedUpdateWithoutOrdersInput>
 }
 
+export type UserCreateNestedOneWithoutRefundsIssuedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRefundsIssuedInput, Prisma.UserUncheckedCreateWithoutRefundsIssuedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRefundsIssuedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutRefundsIssuedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRefundsIssuedInput, Prisma.UserUncheckedCreateWithoutRefundsIssuedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRefundsIssuedInput
+  upsert?: Prisma.UserUpsertWithoutRefundsIssuedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutRefundsIssuedInput, Prisma.UserUpdateWithoutRefundsIssuedInput>, Prisma.UserUncheckedUpdateWithoutRefundsIssuedInput>
+}
+
+export type UserCreateNestedOneWithoutComplaintsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutComplaintsInput, Prisma.UserUncheckedCreateWithoutComplaintsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutComplaintsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutComplaintsResolvedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutComplaintsResolvedInput, Prisma.UserUncheckedCreateWithoutComplaintsResolvedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutComplaintsResolvedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutComplaintsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutComplaintsInput, Prisma.UserUncheckedCreateWithoutComplaintsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutComplaintsInput
+  upsert?: Prisma.UserUpsertWithoutComplaintsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutComplaintsInput, Prisma.UserUpdateWithoutComplaintsInput>, Prisma.UserUncheckedUpdateWithoutComplaintsInput>
+}
+
+export type UserUpdateOneWithoutComplaintsResolvedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutComplaintsResolvedInput, Prisma.UserUncheckedCreateWithoutComplaintsResolvedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutComplaintsResolvedInput
+  upsert?: Prisma.UserUpsertWithoutComplaintsResolvedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutComplaintsResolvedInput, Prisma.UserUpdateWithoutComplaintsResolvedInput>, Prisma.UserUncheckedUpdateWithoutComplaintsResolvedInput>
+}
+
 export type UserCreateNestedOneWithoutDeliveryPartnerInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutDeliveryPartnerInput, Prisma.UserUncheckedCreateWithoutDeliveryPartnerInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeliveryPartnerInput
@@ -711,6 +778,9 @@ export type UserCreateWithoutAddressesInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAddressesInput = {
@@ -732,6 +802,9 @@ export type UserUncheckedCreateWithoutAddressesInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAddressesInput = {
@@ -769,6 +842,9 @@ export type UserUpdateWithoutAddressesInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAddressesInput = {
@@ -790,6 +866,9 @@ export type UserUncheckedUpdateWithoutAddressesInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutStoreInput = {
@@ -811,6 +890,9 @@ export type UserCreateWithoutStoreInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutStoreInput = {
@@ -832,6 +914,9 @@ export type UserUncheckedCreateWithoutStoreInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutStoreInput = {
@@ -895,6 +980,9 @@ export type UserCreateWithoutCartInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCartInput = {
@@ -916,6 +1004,9 @@ export type UserUncheckedCreateWithoutCartInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCartInput = {
@@ -953,6 +1044,9 @@ export type UserUpdateWithoutCartInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCartInput = {
@@ -974,6 +1068,9 @@ export type UserUncheckedUpdateWithoutCartInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOrdersInput = {
@@ -995,6 +1092,9 @@ export type UserCreateWithoutOrdersInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOrdersInput = {
@@ -1016,6 +1116,9 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOrdersInput = {
@@ -1053,6 +1156,9 @@ export type UserUpdateWithoutOrdersInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -1074,6 +1180,345 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserCreateWithoutRefundsIssuedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserUncheckedCreateWithoutRefundsIssuedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserCreateOrConnectWithoutRefundsIssuedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutRefundsIssuedInput, Prisma.UserUncheckedCreateWithoutRefundsIssuedInput>
+}
+
+export type UserUpsertWithoutRefundsIssuedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutRefundsIssuedInput, Prisma.UserUncheckedUpdateWithoutRefundsIssuedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutRefundsIssuedInput, Prisma.UserUncheckedCreateWithoutRefundsIssuedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutRefundsIssuedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutRefundsIssuedInput, Prisma.UserUncheckedUpdateWithoutRefundsIssuedInput>
+}
+
+export type UserUpdateWithoutRefundsIssuedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutRefundsIssuedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserCreateWithoutComplaintsInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserUncheckedCreateWithoutComplaintsInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserCreateOrConnectWithoutComplaintsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutComplaintsInput, Prisma.UserUncheckedCreateWithoutComplaintsInput>
+}
+
+export type UserCreateWithoutComplaintsResolvedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserUncheckedCreateWithoutComplaintsResolvedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
+}
+
+export type UserCreateOrConnectWithoutComplaintsResolvedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutComplaintsResolvedInput, Prisma.UserUncheckedCreateWithoutComplaintsResolvedInput>
+}
+
+export type UserUpsertWithoutComplaintsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutComplaintsInput, Prisma.UserUncheckedUpdateWithoutComplaintsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutComplaintsInput, Prisma.UserUncheckedCreateWithoutComplaintsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutComplaintsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutComplaintsInput, Prisma.UserUncheckedUpdateWithoutComplaintsInput>
+}
+
+export type UserUpdateWithoutComplaintsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutComplaintsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUpsertWithoutComplaintsResolvedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutComplaintsResolvedInput, Prisma.UserUncheckedUpdateWithoutComplaintsResolvedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutComplaintsResolvedInput, Prisma.UserUncheckedCreateWithoutComplaintsResolvedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutComplaintsResolvedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutComplaintsResolvedInput, Prisma.UserUncheckedUpdateWithoutComplaintsResolvedInput>
+}
+
+export type UserUpdateWithoutComplaintsResolvedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutComplaintsResolvedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutDeliveryPartnerInput = {
@@ -1095,6 +1540,9 @@ export type UserCreateWithoutDeliveryPartnerInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDeliveryPartnerInput = {
@@ -1116,6 +1564,9 @@ export type UserUncheckedCreateWithoutDeliveryPartnerInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDeliveryPartnerInput = {
@@ -1153,6 +1604,9 @@ export type UserUpdateWithoutDeliveryPartnerInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeliveryPartnerInput = {
@@ -1174,6 +1628,9 @@ export type UserUncheckedUpdateWithoutDeliveryPartnerInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCashDepositsRecordedInput = {
@@ -1195,6 +1652,9 @@ export type UserCreateWithoutCashDepositsRecordedInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCashDepositsRecordedInput = {
@@ -1216,6 +1676,9 @@ export type UserUncheckedCreateWithoutCashDepositsRecordedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCashDepositsRecordedInput = {
@@ -1242,6 +1705,9 @@ export type UserCreateWithoutCashDepositsVoidedInput = {
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCashDepositsVoidedInput = {
@@ -1263,6 +1729,9 @@ export type UserUncheckedCreateWithoutCashDepositsVoidedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCashDepositsVoidedInput = {
@@ -1300,6 +1769,9 @@ export type UserUpdateWithoutCashDepositsRecordedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCashDepositsRecordedInput = {
@@ -1321,6 +1793,9 @@ export type UserUncheckedUpdateWithoutCashDepositsRecordedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutCashDepositsVoidedInput = {
@@ -1353,6 +1828,9 @@ export type UserUpdateWithoutCashDepositsVoidedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCashDepositsVoidedInput = {
@@ -1374,6 +1852,9 @@ export type UserUncheckedUpdateWithoutCashDepositsVoidedInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPayoutsRecordedInput = {
@@ -1395,6 +1876,9 @@ export type UserCreateWithoutPayoutsRecordedInput = {
   cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPayoutsRecordedInput = {
@@ -1416,6 +1900,9 @@ export type UserUncheckedCreateWithoutPayoutsRecordedInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPayoutsRecordedInput = {
@@ -1442,6 +1929,9 @@ export type UserCreateWithoutPayoutsVoidedInput = {
   cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPayoutsVoidedInput = {
@@ -1463,6 +1953,9 @@ export type UserUncheckedCreateWithoutPayoutsVoidedInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPayoutsVoidedInput = {
@@ -1500,6 +1993,9 @@ export type UserUpdateWithoutPayoutsRecordedInput = {
   cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPayoutsRecordedInput = {
@@ -1521,6 +2017,9 @@ export type UserUncheckedUpdateWithoutPayoutsRecordedInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutPayoutsVoidedInput = {
@@ -1553,6 +2052,9 @@ export type UserUpdateWithoutPayoutsVoidedInput = {
   cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPayoutsVoidedInput = {
@@ -1574,6 +2076,9 @@ export type UserUncheckedUpdateWithoutPayoutsVoidedInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPushTokensInput = {
@@ -1595,6 +2100,9 @@ export type UserCreateWithoutPushTokensInput = {
   cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
   payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPushTokensInput = {
@@ -1616,6 +2124,9 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
   payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
+  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
+  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPushTokensInput = {
@@ -1653,6 +2164,9 @@ export type UserUpdateWithoutPushTokensInput = {
   cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushTokensInput = {
@@ -1674,6 +2188,9 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyStoreInput = {
@@ -1707,6 +2224,9 @@ export type UserUpdateWithoutStoreInput = {
   payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStoreInput = {
@@ -1728,6 +2248,9 @@ export type UserUncheckedUpdateWithoutStoreInput = {
   payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
+  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
+  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutStoreInput = {
@@ -1755,6 +2278,9 @@ export type UserCountOutputType = {
   payoutsRecorded: number
   payoutsVoided: number
   pushTokens: number
+  complaints: number
+  complaintsResolved: number
+  refundsIssued: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1765,6 +2291,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   payoutsRecorded?: boolean | UserCountOutputTypeCountPayoutsRecordedArgs
   payoutsVoided?: boolean | UserCountOutputTypeCountPayoutsVoidedArgs
   pushTokens?: boolean | UserCountOutputTypeCountPushTokensArgs
+  complaints?: boolean | UserCountOutputTypeCountComplaintsArgs
+  complaintsResolved?: boolean | UserCountOutputTypeCountComplaintsResolvedArgs
+  refundsIssued?: boolean | UserCountOutputTypeCountRefundsIssuedArgs
 }
 
 /**
@@ -1826,6 +2355,27 @@ export type UserCountOutputTypeCountPushTokensArgs<ExtArgs extends runtime.Types
   where?: Prisma.PushTokenWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountComplaintsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ComplaintWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountComplaintsResolvedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ComplaintWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountRefundsIssuedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RefundWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1848,6 +2398,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
   payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
+  complaints?: boolean | Prisma.User$complaintsArgs<ExtArgs>
+  complaintsResolved?: boolean | Prisma.User$complaintsResolvedArgs<ExtArgs>
+  refundsIssued?: boolean | Prisma.User$refundsIssuedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1904,6 +2457,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
   payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
+  complaints?: boolean | Prisma.User$complaintsArgs<ExtArgs>
+  complaintsResolved?: boolean | Prisma.User$complaintsResolvedArgs<ExtArgs>
+  refundsIssued?: boolean | Prisma.User$refundsIssuedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1926,6 +2482,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     payoutsRecorded: Prisma.$RiderPayoutPayload<ExtArgs>[]
     payoutsVoided: Prisma.$RiderPayoutPayload<ExtArgs>[]
     pushTokens: Prisma.$PushTokenPayload<ExtArgs>[]
+    complaints: Prisma.$ComplaintPayload<ExtArgs>[]
+    complaintsResolved: Prisma.$ComplaintPayload<ExtArgs>[]
+    refundsIssued: Prisma.$RefundPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2342,6 +2901,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   payoutsRecorded<T extends Prisma.User$payoutsRecordedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsRecordedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   payoutsVoided<T extends Prisma.User$payoutsVoidedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsVoidedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pushTokens<T extends Prisma.User$pushTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  complaints<T extends Prisma.User$complaintsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$complaintsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  complaintsResolved<T extends Prisma.User$complaintsResolvedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$complaintsResolvedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  refundsIssued<T extends Prisma.User$refundsIssuedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refundsIssuedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3004,6 +3566,78 @@ export type User$pushTokensArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.PushTokenScalarFieldEnum | Prisma.PushTokenScalarFieldEnum[]
+}
+
+/**
+ * User.complaints
+ */
+export type User$complaintsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Complaint
+   */
+  select?: Prisma.ComplaintSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Complaint
+   */
+  omit?: Prisma.ComplaintOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ComplaintInclude<ExtArgs> | null
+  where?: Prisma.ComplaintWhereInput
+  orderBy?: Prisma.ComplaintOrderByWithRelationInput | Prisma.ComplaintOrderByWithRelationInput[]
+  cursor?: Prisma.ComplaintWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ComplaintScalarFieldEnum | Prisma.ComplaintScalarFieldEnum[]
+}
+
+/**
+ * User.complaintsResolved
+ */
+export type User$complaintsResolvedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Complaint
+   */
+  select?: Prisma.ComplaintSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Complaint
+   */
+  omit?: Prisma.ComplaintOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ComplaintInclude<ExtArgs> | null
+  where?: Prisma.ComplaintWhereInput
+  orderBy?: Prisma.ComplaintOrderByWithRelationInput | Prisma.ComplaintOrderByWithRelationInput[]
+  cursor?: Prisma.ComplaintWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ComplaintScalarFieldEnum | Prisma.ComplaintScalarFieldEnum[]
+}
+
+/**
+ * User.refundsIssued
+ */
+export type User$refundsIssuedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Refund
+   */
+  select?: Prisma.RefundSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Refund
+   */
+  omit?: Prisma.RefundOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RefundInclude<ExtArgs> | null
+  where?: Prisma.RefundWhereInput
+  orderBy?: Prisma.RefundOrderByWithRelationInput | Prisma.RefundOrderByWithRelationInput[]
+  cursor?: Prisma.RefundWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RefundScalarFieldEnum | Prisma.RefundScalarFieldEnum[]
 }
 
 /**

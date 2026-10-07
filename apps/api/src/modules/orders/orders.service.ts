@@ -63,9 +63,47 @@ export const orderDetailInclude = {
     orderBy: { createdAt: "asc" },
     select: { fromStatus: true, toStatus: true, note: true, changedById: true, createdAt: true },
   },
+  refunds: {
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      amount: true,
+      method: true,
+      reference: true,
+      reason: true,
+      complaintId: true,
+      createdAt: true,
+      createdBy: { select: { name: true } },
+    },
+  },
+  complaint: {
+    select: {
+      id: true,
+      reason: true,
+      note: true,
+      photoUrls: true,
+      status: true,
+      resolutionNote: true,
+      createdAt: true,
+      resolvedAt: true,
+      items: { select: { orderItemId: true, quantity: true } },
+    },
+  },
 } satisfies Prisma.OrderInclude;
 
 export type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
+
+/** How long after delivery a customer can report a problem (the refund policy page says 24 hours). */
+export const COMPLAINT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export function complaintDeadline(deliveredAt: Date | null | undefined) {
+  return deliveredAt ? new Date(deliveredAt.getTime() + COMPLAINT_WINDOW_MS) : null;
+}
+
+function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "delivery">) {
+  const deadline = complaintDeadline(order.delivery?.deliveredAt);
+  return order.status === OrderStatus.DELIVERED && !order.complaint && deadline !== null && deadline > new Date();
+}
 
 export function toDetailView(order: OrderDetail) {
   return {
@@ -134,6 +172,9 @@ export function toDetailView(order: OrderDetail) {
       longitude: order.longitude,
     },
     statusHistory: order.statusHistory.map(({ changedById: _changedById, ...entry }) => entry),
+    refunds: order.refunds.map(({ id, amount, method, reason, createdAt }) => ({ id, amount: amount.toFixed(2), method, reason, createdAt })),
+    complaint: order.complaint,
+    canReportIssue: canReportIssue(order),
     createdAt: order.createdAt,
   };
 }

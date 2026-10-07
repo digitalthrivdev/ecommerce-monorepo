@@ -175,7 +175,8 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     ]);
     const actorById = new Map(actors.map(({ id, ...user }) => [id, user]));
 
-    const { canCancel: _customerCanCancel, ...view } = toDetailView(order);
+    const { canCancel: _customerCanCancel, canReportIssue: _canReportIssue, ...view } = toDetailView(order);
+    const refundable = actor.isAdmin ? payments.refundableAmount(order, order.payment) : new Prisma.Decimal(0);
     return {
       ...view,
       reviewAccount: order.userId === reviewUserId,
@@ -183,7 +184,13 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         ...entry,
         changedBy: changedById ? (actorById.get(changedById) ?? null) : null,
       })),
-      allowedActions: allowedActions(order.status, actor.isAdmin),
+      refunds: order.refunds.map(({ amount, createdBy, ...refund }) => ({
+        ...refund,
+        amount: amount.toFixed(2),
+        createdBy: createdBy?.name ?? null,
+      })),
+      refundable: refundable.toFixed(2),
+      allowedActions: [...allowedActions(order.status, actor.isAdmin), ...(refundable.gt(0) ? ["refund"] : [])],
     };
   }
 

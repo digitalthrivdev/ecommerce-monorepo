@@ -1,7 +1,7 @@
 import type { FastifyBaseLogger } from "fastify";
 
 import type { OrderStatus, PrismaClient } from "../../generated/prisma/client";
-import { orderNotifications, type OrderContext } from "./order-notifications.js";
+import { orderNotifications, type Notification, type OrderContext } from "./order-notifications.js";
 import type { PushMessage, PushSender } from "./push-sender.js";
 import type { RegisterPushTokenInput } from "./notifications.schemas.js";
 
@@ -110,8 +110,13 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
       return order ? orderNotifications(change, order) : [];
     });
 
-    if (notifications.length === 0) {
-      return { claimed: changes.length, sent: 0 };
+    return { claimed: changes.length, sent: await send(notifications) };
+  }
+
+  /** Returns how many pushes were sent. Failures are logged, never thrown. */
+  async function send(notifications: Notification[]) {
+    if (!sender || notifications.length === 0) {
+      return 0;
     }
 
     const tokens = await prisma.pushToken.findMany({
@@ -123,7 +128,7 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
     );
 
     if (messages.length === 0) {
-      return { claimed: changes.length, sent: 0 };
+      return 0;
     }
 
     try {
@@ -133,13 +138,22 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
       }
     } catch (error) {
       log.error({ err: error, provider: sender.name, messages: messages.length }, "Failed to send push notifications");
-      return { claimed: changes.length, sent: 0 };
+      return 0;
     }
 
-    return { claimed: changes.length, sent: messages.length };
+    return messages.length;
   }
 
-  return { registerToken, unregisterToken, processPending };
+  /** Sends pushes that are not order status changes, right away. Call after the change is committed. */
+  async function notify(notifications: Notification[]) {
+    try {
+      await send(notifications);
+    } catch (error) {
+      log.error({ err: error }, "Failed to send push notifications");
+    }
+  }
+
+  return { registerToken, unregisterToken, processPending, notify };
 }
 
 export type NotificationsService = ReturnType<typeof createNotificationsService>;

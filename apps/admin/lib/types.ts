@@ -39,7 +39,86 @@ export type DeliveryStatus = "PENDING" | "ASSIGNED" | "PICKED_UP" | "OUT_FOR_DEL
 export type DeliveryPartnerStatus = "OFFLINE" | "ONLINE" | "BUSY";
 
 export type StoreOrderAction = "accept" | "start-picking" | "pack" | "ready";
-export type OrderAction = StoreOrderAction | "assign" | "reassign" | "unassign" | "mark-delivered" | "cancel" | "mark-unavailable";
+export type OrderAction = StoreOrderAction | "assign" | "reassign" | "unassign" | "mark-delivered" | "cancel" | "mark-unavailable" | "refund";
+
+export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
+export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
+export type ComplaintStatus = "OPEN" | "RESOLVED" | "REJECTED";
+
+export type Refund = {
+  id: string;
+  amount: string;
+  method: RefundMethod;
+  /** Gateway refund ID, or the UPI / bank reference. */
+  reference: string | null;
+  reason: string;
+  createdAt: string;
+  /** Null for automatic refunds (cancellation, unavailable items). */
+  createdBy: string | null;
+};
+
+export type ComplaintListItem = {
+  id: string;
+  reason: ComplaintReason;
+  status: ComplaintStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+  itemCount: number;
+  refunded: string;
+  order: {
+    id: string;
+    orderNumber: string;
+    paymentMethod: PaymentMethod;
+    total: string;
+    customerName: string;
+    customerPhone: string;
+    store: { id: string; name: string };
+  };
+};
+
+export type ComplaintList = Paginated<ComplaintListItem> & { statusCounts: Partial<Record<ComplaintStatus, number>> };
+
+export type ComplaintDetail = {
+  id: string;
+  reason: ComplaintReason;
+  note: string | null;
+  photoUrls: string[];
+  status: ComplaintStatus;
+  resolutionNote: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  customer: { id: string; name: string | null; phone: string; deletedAt: string | null; complaintCount: number } | null;
+  order: {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    paymentMethod: PaymentMethod;
+    total: string;
+    customerName: string;
+    customerPhone: string;
+    createdAt: string;
+    deliveredAt: string | null;
+    store: { id: string; name: string };
+  };
+  items: Array<{
+    orderItemId: string;
+    productName: string;
+    variantName: string;
+    sku: string;
+    imageUrl: string | null;
+    unitPrice: string;
+    deliveredQuantity: number;
+    /** Units the customer reported. */
+    quantity: number;
+    value: string;
+  }>;
+  refunds: Refund[];
+  /** What can still be refunded on the order. */
+  refundable: string;
+  /** The reported items' value, capped at what can still be refunded. */
+  suggestedRefund: string;
+};
 
 export type OrderListItem = {
   id: string;
@@ -151,6 +230,10 @@ export type OrderDetail = {
     createdAt: string;
     changedBy: { name: string | null; role: UserRole } | null;
   }>;
+  refunds: Array<Refund & { complaintId: string | null }>;
+  complaint: { id: string; reason: ComplaintReason; status: ComplaintStatus; createdAt: string } | null;
+  /** What an admin can still refund (delivered orders only). */
+  refundable: string;
   allowedActions: OrderAction[];
   createdAt: string;
 };

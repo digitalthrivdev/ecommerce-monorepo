@@ -73,6 +73,9 @@ export const ModelName = {
   InvoiceSequence: 'InvoiceSequence',
   OrderStatusHistory: 'OrderStatusHistory',
   Payment: 'Payment',
+  Refund: 'Refund',
+  Complaint: 'Complaint',
+  ComplaintItem: 'ComplaintItem',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -439,6 +442,49 @@ export const PaymentScalarFieldEnum = {
 } as const
 
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const RefundScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  paymentId: 'paymentId',
+  complaintId: 'complaintId',
+  amount: 'amount',
+  method: 'method',
+  reference: 'reference',
+  reason: 'reason',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
+
+
+export const ComplaintScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  userId: 'userId',
+  reason: 'reason',
+  note: 'note',
+  photoUrls: 'photoUrls',
+  status: 'status',
+  resolutionNote: 'resolutionNote',
+  resolvedById: 'resolvedById',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ComplaintScalarFieldEnum = (typeof ComplaintScalarFieldEnum)[keyof typeof ComplaintScalarFieldEnum]
+
+
+export const ComplaintItemScalarFieldEnum = {
+  complaintId: 'complaintId',
+  orderItemId: 'orderItemId',
+  quantity: 'quantity'
+} as const
+
+export type ComplaintItemScalarFieldEnum = (typeof ComplaintItemScalarFieldEnum)[keyof typeof ComplaintItemScalarFieldEnum]
 
 
 export const DeliveryPartnerScalarFieldEnum = {

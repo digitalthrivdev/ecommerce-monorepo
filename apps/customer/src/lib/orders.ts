@@ -6,7 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { OrderDetail, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
+import type { ComplaintReason, OrderDetail, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -120,6 +120,39 @@ export function useCancelOrder(id: string) {
     onSuccess: (order) => queryClient.setQueryData(orderKey(id), order),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ORDERS_KEY }),
   });
+}
+
+export const COMPLAINT_REASON_TEXT: Record<ComplaintReason, string> = {
+  DAMAGED: "Damaged item",
+  WRONG_ITEM: "Wrong item",
+  MISSING: "Missing item",
+  EXPIRED: "Expired or poor quality",
+  OTHER: "Something else",
+};
+
+export type ComplaintInput = {
+  reason: ComplaintReason;
+  note?: string;
+  items: { orderItemId: string; quantity: number }[];
+  photoUrls: string[];
+};
+
+export function useReportIssue(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ComplaintInput) => apiFetch<{ ok: true }>(`${orderPath(id)}/complaint`, { method: "POST", body: input }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: orderKey(id) }),
+  });
+}
+
+const PHOTO_UPLOAD_TIMEOUT_MS = 60_000;
+
+/** Uploads one photo for a report about the order; its URL is then sent with the report. */
+export function uploadComplaintPhoto(orderId: string, photo: { uri: string; mimeType?: string; fileName?: string | null }) {
+  const form = new FormData();
+  // React Native's FormData takes a file as { uri, name, type }.
+  form.append("file", { uri: photo.uri, name: photo.fileName ?? "photo.jpg", type: photo.mimeType ?? "image/jpeg" } as unknown as Blob);
+  return apiFetch<{ url: string; smallUrl: string }>(`${orderPath(orderId)}/complaint/photos`, { method: "POST", body: form, timeoutMs: PHOTO_UPLOAD_TIMEOUT_MS });
 }
 
 type PaymentSession = { provider: string; testMode: boolean; amount: string; expiresAt: string; checkoutUrl: string };

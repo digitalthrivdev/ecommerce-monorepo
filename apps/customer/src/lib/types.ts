@@ -262,9 +262,29 @@ export type OrderDetail = {
     postalCode: string;
   };
   statusHistory: { fromStatus: OrderStatus | null; toStatus: OrderStatus; note: string | null; createdAt: string }[];
+  /** Money paid back: automatically for cancelled or unavailable items, or by an admin after delivery. */
+  refunds: { id: string; amount: string; method: RefundMethod; reason: string; createdAt: string }[];
+  complaint: OrderComplaint | null;
+  /** Delivered recently enough to report a problem, and not reported yet. */
+  canReportIssue: boolean;
   createdAt: string;
   /** Shown once a partner is on the way; the customer reads it out at the door. */
   deliveryOtp: string | null;
+};
+
+export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
+export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
+
+export type OrderComplaint = {
+  id: string;
+  reason: ComplaintReason;
+  note: string | null;
+  photoUrls: string[];
+  status: "OPEN" | "RESOLVED" | "REJECTED";
+  resolutionNote: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  items: { orderItemId: string; quantity: number }[];
 };
 
 /** `GET /orders/:id/tracking`. */

@@ -419,6 +419,9 @@ export const ModelName = {
   InvoiceSequence: 'InvoiceSequence',
   OrderStatusHistory: 'OrderStatusHistory',
   Payment: 'Payment',
+  Refund: 'Refund',
+  Complaint: 'Complaint',
+  ComplaintItem: 'ComplaintItem',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -445,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2077,6 +2080,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Refund: {
+      payload: Prisma.$RefundPayload<ExtArgs>
+      fields: Prisma.RefundFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RefundFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RefundFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        findFirst: {
+          args: Prisma.RefundFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RefundFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        findMany: {
+          args: Prisma.RefundFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>[]
+        }
+        create: {
+          args: Prisma.RefundCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        createMany: {
+          args: Prisma.RefundCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RefundCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>[]
+        }
+        delete: {
+          args: Prisma.RefundDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        update: {
+          args: Prisma.RefundUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        deleteMany: {
+          args: Prisma.RefundDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RefundUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RefundUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>[]
+        }
+        upsert: {
+          args: Prisma.RefundUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RefundPayload>
+        }
+        aggregate: {
+          args: Prisma.RefundAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRefund>
+        }
+        groupBy: {
+          args: Prisma.RefundGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RefundGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RefundCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RefundCountAggregateOutputType> | number
+        }
+      }
+    }
+    Complaint: {
+      payload: Prisma.$ComplaintPayload<ExtArgs>
+      fields: Prisma.ComplaintFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ComplaintFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ComplaintFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        findFirst: {
+          args: Prisma.ComplaintFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ComplaintFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        findMany: {
+          args: Prisma.ComplaintFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>[]
+        }
+        create: {
+          args: Prisma.ComplaintCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        createMany: {
+          args: Prisma.ComplaintCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ComplaintCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>[]
+        }
+        delete: {
+          args: Prisma.ComplaintDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        update: {
+          args: Prisma.ComplaintUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        deleteMany: {
+          args: Prisma.ComplaintDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ComplaintUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ComplaintUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>[]
+        }
+        upsert: {
+          args: Prisma.ComplaintUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintPayload>
+        }
+        aggregate: {
+          args: Prisma.ComplaintAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateComplaint>
+        }
+        groupBy: {
+          args: Prisma.ComplaintGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ComplaintGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ComplaintCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ComplaintCountAggregateOutputType> | number
+        }
+      }
+    }
+    ComplaintItem: {
+      payload: Prisma.$ComplaintItemPayload<ExtArgs>
+      fields: Prisma.ComplaintItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ComplaintItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ComplaintItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        findFirst: {
+          args: Prisma.ComplaintItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ComplaintItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        findMany: {
+          args: Prisma.ComplaintItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>[]
+        }
+        create: {
+          args: Prisma.ComplaintItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        createMany: {
+          args: Prisma.ComplaintItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ComplaintItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>[]
+        }
+        delete: {
+          args: Prisma.ComplaintItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        update: {
+          args: Prisma.ComplaintItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.ComplaintItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ComplaintItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ComplaintItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.ComplaintItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ComplaintItemPayload>
+        }
+        aggregate: {
+          args: Prisma.ComplaintItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateComplaintItem>
+        }
+        groupBy: {
+          args: Prisma.ComplaintItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ComplaintItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ComplaintItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ComplaintItemCountAggregateOutputType> | number
+        }
+      }
+    }
     DeliveryPartner: {
       payload: Prisma.$DeliveryPartnerPayload<ExtArgs>
       fields: Prisma.DeliveryPartnerFieldRefs
@@ -3269,6 +3494,49 @@ export const PaymentScalarFieldEnum = {
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
+export const RefundScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  paymentId: 'paymentId',
+  complaintId: 'complaintId',
+  amount: 'amount',
+  method: 'method',
+  reference: 'reference',
+  reason: 'reason',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
+
+
+export const ComplaintScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  userId: 'userId',
+  reason: 'reason',
+  note: 'note',
+  photoUrls: 'photoUrls',
+  status: 'status',
+  resolutionNote: 'resolutionNote',
+  resolvedById: 'resolvedById',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ComplaintScalarFieldEnum = (typeof ComplaintScalarFieldEnum)[keyof typeof ComplaintScalarFieldEnum]
+
+
+export const ComplaintItemScalarFieldEnum = {
+  complaintId: 'complaintId',
+  orderItemId: 'orderItemId',
+  quantity: 'quantity'
+} as const
+
+export type ComplaintItemScalarFieldEnum = (typeof ComplaintItemScalarFieldEnum)[keyof typeof ComplaintItemScalarFieldEnum]
+
+
 export const DeliveryPartnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -3629,6 +3897,48 @@ export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'RefundMethod'
+ */
+export type EnumRefundMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundMethod'>
+    
+
+
+/**
+ * Reference to a field of type 'RefundMethod[]'
+ */
+export type ListEnumRefundMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundMethod[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ComplaintReason'
+ */
+export type EnumComplaintReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ComplaintReason'>
+    
+
+
+/**
+ * Reference to a field of type 'ComplaintReason[]'
+ */
+export type ListEnumComplaintReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ComplaintReason[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ComplaintStatus'
+ */
+export type EnumComplaintStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ComplaintStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ComplaintStatus[]'
+ */
+export type ListEnumComplaintStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ComplaintStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'DeliveryPartnerStatus'
  */
 export type EnumDeliveryPartnerStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryPartnerStatus'>
@@ -3884,6 +4194,9 @@ export type GlobalOmitConfig = {
   invoiceSequence?: Prisma.InvoiceSequenceOmit
   orderStatusHistory?: Prisma.OrderStatusHistoryOmit
   payment?: Prisma.PaymentOmit
+  refund?: Prisma.RefundOmit
+  complaint?: Prisma.ComplaintOmit
+  complaintItem?: Prisma.ComplaintItemOmit
   deliveryPartner?: Prisma.DeliveryPartnerOmit
   cashDeposit?: Prisma.CashDepositOmit
   riderPayout?: Prisma.RiderPayoutOmit

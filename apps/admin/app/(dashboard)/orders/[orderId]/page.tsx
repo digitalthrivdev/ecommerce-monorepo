@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Bike, ChevronDown, MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
+import { RefundDialog } from "@/components/complaints/refund-dialog";
 import { Notice } from "@/components/notice";
 import { Elapsed } from "@/components/orders/elapsed";
 import { NextStepButton, OrderMoreMenu, RiderPicker } from "@/components/orders/order-actions";
@@ -14,11 +16,14 @@ import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import {
+  COMPLAINT_REASON_LABELS,
+  COMPLAINT_STATUS_LABELS,
   DELIVERY_STATUS_LABELS,
   formatDateTime,
   formatMoney,
   ORDER_STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
+  REFUND_METHOD_LABELS,
   ROLE_LABELS,
 } from "@/lib/format";
 import { statusChangedAt } from "@/lib/order-flow";
@@ -109,6 +114,19 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
       />
 
       <PageBody className="max-w-6xl gap-6">
+        {order.complaint && user.role === "ADMIN" && (
+          <Notice
+            tone={order.complaint.status === "OPEN" ? "warning" : "info"}
+            title={
+              <Link href={`/complaints/${order.complaint.id}`} className="underline-offset-4 hover:underline">
+                {order.complaint.status === "OPEN" ? "Open complaint" : `Complaint ${COMPLAINT_STATUS_LABELS[order.complaint.status].toLowerCase()}`}:{" "}
+                {COMPLAINT_REASON_LABELS[order.complaint.reason].toLowerCase()}
+              </Link>
+            }
+          >
+            Reported {date(order.complaint.createdAt)}
+          </Notice>
+        )}
         {cancelEntry ? (
           <Notice tone="danger" title={`Cancelled ${date(cancelEntry.createdAt)}`}>
             {[cancelEntry.note, cancelEntry.changedBy && `by ${cancelEntry.changedBy.name ?? ROLE_LABELS[cancelEntry.changedBy.role]}`]
@@ -232,10 +250,39 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                     {!collectCash && <Row label="Amount">{money(order.payment.amount)}</Row>}
                     {order.payment.paidAt && <Row label="Paid">{date(order.payment.paidAt)}</Row>}
                     {Number(order.payment.refundedAmount) > 0 && <Row label="Refunded">{money(order.payment.refundedAmount)}</Row>}
-                    {order.payment.refundedAt && <Row label="Last refund">{date(order.payment.refundedAt)}</Row>}
                   </>
                 )}
               </dl>
+              {order.refunds.length > 0 && (
+                <ul className="flex flex-col gap-2 border-t pt-3 text-sm">
+                  {order.refunds.map((refund) => (
+                    <li key={refund.id}>
+                      <div className="flex justify-between gap-2">
+                        <span className="font-medium">
+                          {money(refund.amount)} · {REFUND_METHOD_LABELS[refund.method]}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{date(refund.createdAt)}</span>
+                      </div>
+                      <p className="text-muted-foreground">
+                        {refund.reason}
+                        {refund.reference && refund.method !== "GATEWAY" && ` · ${refund.reference}`}
+                        {` · ${refund.createdBy ?? "Automatic"}`}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {order.allowedActions.includes("refund") && (
+                <RefundDialog
+                  target={{ orderId: order.id }}
+                  paymentMethod={order.paymentMethod}
+                  defaultAmount=""
+                  refundable={order.refundable}
+                  currency={settings.currency}
+                  label="Refund part of the order"
+                  variant="outline"
+                />
+              )}
             </Block>
 
             <Block title="Rider">

@@ -22,6 +22,7 @@ const SUCCESS: Record<OrderAction, string> = {
   "mark-delivered": "Order marked as delivered",
   cancel: "Order cancelled",
   "mark-unavailable": "Item marked unavailable",
+  refund: "Refund issued",
 };
 
 /** The API authorises every call with the session token; these actions only validate shape. */

@@ -50,6 +50,14 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Photos you choose are attached to a report about a delivered order.",
+          "cameraPermission": "The camera is used to photograph a problem with a delivered order.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",

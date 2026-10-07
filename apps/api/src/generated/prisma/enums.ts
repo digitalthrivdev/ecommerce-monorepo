@@ -54,6 +54,35 @@ export const OrderStatus = {
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
 
 
+export const RefundMethod = {
+  GATEWAY: 'GATEWAY',
+  UPI: 'UPI',
+  BANK_TRANSFER: 'BANK_TRANSFER'
+} as const
+
+export type RefundMethod = (typeof RefundMethod)[keyof typeof RefundMethod]
+
+
+export const ComplaintReason = {
+  DAMAGED: 'DAMAGED',
+  WRONG_ITEM: 'WRONG_ITEM',
+  MISSING: 'MISSING',
+  EXPIRED: 'EXPIRED',
+  OTHER: 'OTHER'
+} as const
+
+export type ComplaintReason = (typeof ComplaintReason)[keyof typeof ComplaintReason]
+
+
+export const ComplaintStatus = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type ComplaintStatus = (typeof ComplaintStatus)[keyof typeof ComplaintStatus]
+
+
 export const PaymentMethod = {
   COD: 'COD',
   ONLINE: 'ONLINE'

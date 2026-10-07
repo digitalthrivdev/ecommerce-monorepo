@@ -42,6 +42,9 @@ model User {
   payoutsRecorded      RiderPayout[]    @relation("RiderPayoutRecordedBy")
   payoutsVoided        RiderPayout[]    @relation("RiderPayoutVoidedBy")
   pushTokens           PushToken[]
+  complaints           Complaint[]
+  complaintsResolved   Complaint[]      @relation("ComplaintResolvedBy")
+  refundsIssued        Refund[]         @relation("RefundCreatedBy")
 
   @@index([role])
   @@index([storeId])
@@ -464,9 +467,11 @@ model Order {
   store   Store    @relation(fields: [storeId], references: [id])
   address Address? @relation(fields: [addressId], references: [id])
 
-  items    OrderItem[]
-  payment  Payment?
-  delivery Delivery?
+  items     OrderItem[]
+  payment   Payment?
+  delivery  Delivery?
+  complaint Complaint?
+  refunds   Refund[]
 
   statusHistory OrderStatusHistory[]
 
@@ -515,9 +520,10 @@ model OrderItem {
 
   createdAt DateTime @default(now())
 
-  order   Order          @relation(fields: [orderId], references: [id])
-  product Product        @relation(fields: [productId], references: [id])
-  variant ProductVariant @relation(fields: [variantId], references: [id])
+  order          Order           @relation(fields: [orderId], references: [id])
+  product        Product         @relation(fields: [productId], references: [id])
+  variant        ProductVariant  @relation(fields: [variantId], references: [id])
+  complaintItems ComplaintItem[]
 
   @@index([orderId])
   @@index([variantId])
@@ -562,7 +568,7 @@ model Payment {
   status PaymentStatus @default(PENDING)
 
   amount         Decimal @db.Decimal(10, 2)
-  // Partial refunds (unavailable items) and the final refund on cancellation add up here.
+  // Every Refund of this payment adds up here: unavailable items, cancellation, complaints.
   refundedAmount Decimal @default(0) @db.Decimal(10, 2)
 
   provider         String?
@@ -577,10 +583,108 @@ model Payment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id])
+  order   Order    @relation(fields: [orderId], references: [id])
+  refunds Refund[]
 
   @@index([status])
   @@index([transactionId])
+}
+
+// Money paid back to a customer: gateway refunds of online payments (automatic ones for
+// cancellations and unavailable items, and those issued by admins), and cash-on-delivery refunds
+// the business paid by UPI or bank transfer. Never deleted. Amounts are always positive (database check).
+model Refund {
+  id          String  @id @default(cuid())
+  orderId     String
+  paymentId   String
+  complaintId String?
+
+  amount    Decimal      @db.Decimal(10, 2)
+  method    RefundMethod
+  // Gateway refund ID, or the UPI / bank transaction reference.
+  reference String?
+  reason    String
+
+  // Null for automatic refunds.
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  order     Order      @relation(fields: [orderId], references: [id])
+  payment   Payment    @relation(fields: [paymentId], references: [id])
+  complaint Complaint? @relation(fields: [complaintId], references: [id])
+  createdBy User?      @relation("RefundCreatedBy", fields: [createdById], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([createdAt])
+  @@index([complaintId])
+}
+
+enum RefundMethod {
+  GATEWAY
+  UPI
+  BANK_TRANSFER
+}
+
+// ─────────────────────────────────────────────
+// COMPLAINTS
+// ─────────────────────────────────────────────
+
+// A customer's report of a problem with a delivered order, at most one per order. An admin answers
+// it with a refund, a resolution without one (e.g. the item was replaced), or a rejection.
+model Complaint {
+  id      String @id @default(cuid())
+  orderId String @unique
+  userId  String
+
+  reason    ComplaintReason
+  note      String?
+  // Photos uploaded by the customer (URLs under /uploads/images), at most 3.
+  photoUrls String[]        @default([])
+
+  status         ComplaintStatus @default(OPEN)
+  // The admin's answer, shown to the customer.
+  resolutionNote String?
+  resolvedById   String?
+  resolvedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order      Order           @relation(fields: [orderId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+  resolvedBy User?           @relation("ComplaintResolvedBy", fields: [resolvedById], references: [id])
+  items      ComplaintItem[]
+  refunds    Refund[]
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+// An order item the complaint is about, and how many of its units.
+model ComplaintItem {
+  complaintId String
+  orderItemId String
+  quantity    Int
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@id([complaintId, orderItemId])
+  @@index([orderItemId])
+}
+
+enum ComplaintReason {
+  DAMAGED
+  WRONG_ITEM
+  MISSING
+  EXPIRED
+  OTHER
+}
+
+enum ComplaintStatus {
+  OPEN
+  RESOLVED
+  REJECTED
 }
 
 enum PaymentMethod {

@@ -27,9 +27,15 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler;
 }
 
-type RequestOptions = { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown; query?: Record<string, string | number | boolean | undefined> };
+type RequestOptions = {
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  /** JSON-encoded, except FormData, which is sent as multipart. */
+  body?: unknown;
+  query?: Record<string, string | number | boolean | undefined>;
+  timeoutMs?: number;
+};
 
-export async function apiFetch<T>(path: string, { method = "GET", body, query }: RequestOptions = {}): Promise<T> {
+export async function apiFetch<T>(path: string, { method = "GET", body, query, timeoutMs = TIMEOUT_MS }: RequestOptions = {}): Promise<T> {
   const search = Object.entries(query ?? {})
     .filter(([, value]) => value !== undefined)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
@@ -38,17 +44,18 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query }:
   const token = accessToken;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const json = body !== undefined && !(body instanceof FormData);
   let response: Response;
   try {
     response = await fetch(url, {
       method,
       headers: {
         accept: "application/json",
-        ...(body !== undefined && { "content-type": "application/json" }),
+        ...(json && { "content-type": "application/json" }),
         ...(token && { authorization: `Bearer ${token}` }),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: json ? JSON.stringify(body) : (body as FormData | undefined),
       signal: controller.signal,
     });
   } catch {

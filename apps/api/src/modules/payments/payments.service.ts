@@ -9,10 +9,12 @@ import {
   PaymentMethod,
   PaymentStatus,
   Prisma,
+  RefundMethod,
+  type Payment as RefundablePayment,
   type PrismaClient,
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import { transitionOrder } from "../orders/order-status.js";
+import { lockOrder, transitionOrder } from "../orders/order-status.js";
 import { getAppearance } from "../settings/appearance.service.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
 import { createCheckoutToken, readCheckoutToken } from "./checkout-token.js";
@@ -391,39 +393,143 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
           return false;
         }
 
-        const kept = payment.order.status === OrderStatus.CANCELLED ? new Prisma.Decimal(0) : payment.order.total;
+        const cancelled = payment.order.status === OrderStatus.CANCELLED;
+        const kept = cancelled ? new Prisma.Decimal(0) : payment.order.total;
         const due = payment.amount.minus(payment.refundedAmount).minus(kept);
         if (due.lte(0)) {
           return false;
         }
 
-        const provider = await providerFor(payment.provider);
-        if (!provider) {
-          throw new AppError(409, "PAYMENT_GATEWAY_NOT_CONFIGURED", `Gateway "${payment.provider}" is not configured`);
-        }
-
-        const { providerRefundId } = await provider.refund({
-          providerOrderId: payment.providerOrderId,
-          providerPaymentId: payment.transactionId,
-          amount: due,
-          // Stable across retries of the same refund, different for each later refund.
-          idempotencyKey: `${payment.id}_${toMinorUnits(payment.refundedAmount)}`,
-        });
-
-        const refundedAmount = payment.refundedAmount.plus(due);
-        await tx.payment.update({
-          where: { id: payment.id },
-          data: {
-            refundedAmount,
-            status: refundedAmount.eq(payment.amount) ? PaymentStatus.REFUNDED : PaymentStatus.PAID,
-            providerRefundId,
-            refundedAt: new Date(),
-          },
+        await refundThroughGateway(tx, payment, due, {
+          reason: cancelled ? "Order cancelled" : "Items unavailable",
+          complaintId: null,
+          createdById: null,
         });
         return true;
       },
       { timeout: 20_000 },
     );
+  }
+
+  type RefundRecord = { reason: string; complaintId: string | null; createdById: string | null };
+
+  /** The payment row must be locked by the caller. */
+  async function refundThroughGateway(tx: Prisma.TransactionClient, payment: RefundablePayment, amount: Prisma.Decimal, record: RefundRecord) {
+    if (!payment.transactionId || !payment.providerOrderId) {
+      throw new AppError(409, "PAYMENT_NOT_REFUNDABLE", "This payment has no gateway transaction to refund");
+    }
+    const provider = await providerFor(payment.provider);
+    if (!provider) {
+      throw new AppError(409, "PAYMENT_GATEWAY_NOT_CONFIGURED", `Gateway "${payment.provider}" is not configured`);
+    }
+
+    const { providerRefundId } = await provider.refund({
+      providerOrderId: payment.providerOrderId,
+      providerPaymentId: payment.transactionId,
+      amount,
+      // Stable across retries of the same refund, different for each later refund.
+      idempotencyKey: `${payment.id}_${toMinorUnits(payment.refundedAmount)}`,
+    });
+
+    return recordRefund(tx, payment, amount, { ...record, method: RefundMethod.GATEWAY, reference: providerRefundId });
+  }
+
+  async function recordRefund(
+    tx: Prisma.TransactionClient,
+    payment: RefundablePayment,
+    amount: Prisma.Decimal,
+    record: RefundRecord & { method: RefundMethod; reference: string | null },
+  ) {
+    const refundedAmount = payment.refundedAmount.plus(amount);
+    await tx.payment.update({
+      where: { id: payment.id },
+      data: {
+        refundedAmount,
+        status: refundedAmount.eq(payment.amount) ? PaymentStatus.REFUNDED : PaymentStatus.PAID,
+        ...(record.method === RefundMethod.GATEWAY && { providerRefundId: record.reference }),
+        refundedAt: new Date(),
+      },
+    });
+    return tx.refund.create({
+      data: { orderId: payment.orderId, paymentId: payment.id, amount, ...record },
+      select: { id: true, amount: true, method: true, reference: true, createdAt: true },
+    });
+  }
+
+  /**
+   * What an admin can still refund on a delivered order: whatever of the payment hasn't been paid
+   * back. Nothing while an automatic refund (unavailable items) is still pending, so the two can't mix.
+   */
+  function refundableAmount(order: { status: OrderStatus; total: Prisma.Decimal }, payment: Pick<RefundablePayment, "status" | "amount" | "refundedAmount"> | null) {
+    if (!payment || order.status !== OrderStatus.DELIVERED || payment.status !== PaymentStatus.PAID) {
+      return new Prisma.Decimal(0);
+    }
+    const remaining = payment.amount.minus(payment.refundedAmount);
+    return remaining.gt(order.total) ? new Prisma.Decimal(0) : remaining;
+  }
+
+  /**
+   * Pays back part or all of a delivered order. Online payments are refunded through the gateway
+   * that took them; cash-on-delivery refunds are paid by the business by UPI or bank transfer and
+   * only recorded here. Runs inside the caller's transaction (so a complaint can be resolved with it)
+   * and locks the order, then the payment.
+   */
+  async function refundDeliveredOrder(
+    tx: Prisma.TransactionClient,
+    input: {
+      orderId: string;
+      amount: Prisma.Decimal;
+      method?: RefundMethod;
+      reference?: string;
+      reason: string;
+      complaintId?: string;
+      createdById: string;
+    },
+  ) {
+    await lockOrder(tx, input.orderId);
+    await tx.$queryRaw`SELECT id FROM "Payment" WHERE "orderId" = ${input.orderId} FOR UPDATE`;
+    const payment = await tx.payment.findUnique({
+      where: { orderId: input.orderId },
+      include: { order: { select: { status: true, total: true } } },
+    });
+
+    if (!payment) {
+      throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    }
+    if (payment.order.status !== OrderStatus.DELIVERED) {
+      throw new AppError(409, "REFUND_NOT_ALLOWED", "Only delivered orders can be refunded here. Cancel the order or mark items unavailable instead.", {
+        status: payment.order.status,
+      });
+    }
+    if (payment.status === PaymentStatus.PAID && payment.amount.minus(payment.refundedAmount).gt(payment.order.total)) {
+      throw new AppError(409, "AUTOMATIC_REFUND_PENDING", "A refund for unavailable items is still being processed. Try again in a few minutes.");
+    }
+    const refundable = refundableAmount(payment.order, payment);
+    if (refundable.lte(0)) {
+      throw new AppError(409, "NOTHING_TO_REFUND", "This order has already been refunded in full");
+    }
+    if (input.amount.gt(refundable)) {
+      throw new AppError(400, "REFUND_TOO_LARGE", `At most ${refundable.toFixed(2)} can be refunded on this order`, {
+        refundable: refundable.toFixed(2),
+      });
+    }
+
+    const record = { reason: input.reason, complaintId: input.complaintId ?? null, createdById: input.createdById };
+
+    if (payment.method === PaymentMethod.ONLINE) {
+      if (input.method && input.method !== RefundMethod.GATEWAY) {
+        throw new AppError(400, "INVALID_REFUND_METHOD", "Online payments are refunded through the payment gateway");
+      }
+      return refundThroughGateway(tx, payment, input.amount, record);
+    }
+
+    if (input.method !== RefundMethod.UPI && input.method !== RefundMethod.BANK_TRANSFER) {
+      throw new AppError(400, "INVALID_REFUND_METHOD", "Cash on delivery orders are refunded by UPI or bank transfer");
+    }
+    if (!input.reference) {
+      throw new AppError(400, "REFUND_REFERENCE_REQUIRED", "Enter the UPI or bank transaction reference");
+    }
+    return recordRefund(tx, payment, input.amount, { ...record, method: input.method, reference: input.reference });
   }
 
   async function refundSafely(orderId: string) {
@@ -513,6 +619,8 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
     handleWebhook,
     settleCancelledOrder,
     settleReducedOrder,
+    refundableAmount,
+    refundDeliveredOrder,
     sweep,
   };
 }

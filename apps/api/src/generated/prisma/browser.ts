@@ -128,6 +128,21 @@ export type OrderStatusHistory = Prisma.OrderStatusHistoryModel
  */
 export type Payment = Prisma.PaymentModel
 /**
+ * Model Refund
+ * 
+ */
+export type Refund = Prisma.RefundModel
+/**
+ * Model Complaint
+ * 
+ */
+export type Complaint = Prisma.ComplaintModel
+/**
+ * Model ComplaintItem
+ * 
+ */
+export type ComplaintItem = Prisma.ComplaintItemModel
+/**
  * Model DeliveryPartner
  * 
  */
