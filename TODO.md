@@ -2,6 +2,14 @@
 
 Items intentionally postponed to finish the B1 MVP first. Move an item into active work only when it is needed.
 
+## Next features (before launch)
+
+Build in this order: coupons change the order discount and the GST on each item, which the invoice must show.
+
+- [ ] **Ratings.** After delivery, the customer rates the order once (delivery and items, optional comment). Admins see it on the order, an average per delivery partner, and a list of low ratings.
+- [ ] **Simple coupons.** One coupon type: a code with a flat or percent discount (percent with a maximum), minimum order, start/end dates, total and per-customer limits, optional first order only. Entered at checkout and validated by the server; fills the existing `Order.discount`. No stacking, no auto-applied offers.
+- [ ] **GST invoice and accounting exports.** Customers download a GST invoice PDF for a delivered order (customer app and dashboard). Admins export CSVs for the accountant: daily sales, GST summary by rate and HSN, online payments versus refunds.
+
 ## Before the first production launch
 
 - [ ] **Message Central go-live check.** Implemented from the VerifyNow guide but only tested against fake credentials. With a real account, add the keys under Settings → SMS provider keys, select it, and sign in with a real phone; confirm the token lifetime and whether `validateOtp` is GET or POST (both are handled).
@@ -32,6 +40,16 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Hand-picked products** on the home screen: product rails and banner/offer links can only point at a category today.
 - [ ] **Automatic tab pages:** build a category tab's page from its sub-categories and products instead of hand-made sections.
 - [ ] **Scheduled home content:** start/end dates for banners and offer strips (e.g. festival campaigns).
+
+## Growth (after launch)
+
+- [ ] Small-cart or handling fee (today only a delivery fee and a free-delivery threshold).
+- [ ] Rider tips.
+- [ ] WhatsApp or SMS order updates for customers who turned off notifications.
+- [ ] Hindi and other local languages in the apps and website.
+- [ ] Scheduled delivery slots.
+- [ ] Substitutions when an item is out of stock.
+- [ ] Wishlist.
 
 ## Auth
 
