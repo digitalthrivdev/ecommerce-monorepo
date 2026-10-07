@@ -425,6 +425,8 @@ export type PlatformSettings = {
   /** Legal name and registered address, shown on the policy and contact pages. */
   businessName: string | null;
   businessAddress: string | null;
+  /** "Delivery in about N minutes" in the customer app; null hides it. */
+  deliveryPromiseMinutes: number | null;
   websiteTagline: string | null;
   playStoreUrl: string | null;
   appStoreUrl: string | null;

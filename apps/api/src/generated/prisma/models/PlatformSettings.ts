@@ -31,6 +31,7 @@ export type PlatformSettingsAvgAggregateOutputType = {
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
   deliveryPartnerFee: runtime.Decimal | null
+  deliveryPromiseMinutes: number | null
 }
 
 export type PlatformSettingsSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type PlatformSettingsSumAggregateOutputType = {
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
   deliveryPartnerFee: runtime.Decimal | null
+  deliveryPromiseMinutes: number | null
 }
 
 export type PlatformSettingsMinAggregateOutputType = {
@@ -46,6 +48,7 @@ export type PlatformSettingsMinAggregateOutputType = {
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
   deliveryPartnerFee: runtime.Decimal | null
+  deliveryPromiseMinutes: number | null
   supportPhone: string | null
   supportEmail: string | null
   businessName: string | null
@@ -73,6 +76,7 @@ export type PlatformSettingsMaxAggregateOutputType = {
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
   deliveryPartnerFee: runtime.Decimal | null
+  deliveryPromiseMinutes: number | null
   supportPhone: string | null
   supportEmail: string | null
   businessName: string | null
@@ -100,6 +104,7 @@ export type PlatformSettingsCountAggregateOutputType = {
   freeDeliveryThreshold: number
   minOrderValue: number
   deliveryPartnerFee: number
+  deliveryPromiseMinutes: number
   supportPhone: number
   supportEmail: number
   businessName: number
@@ -128,6 +133,7 @@ export type PlatformSettingsAvgAggregateInputType = {
   freeDeliveryThreshold?: true
   minOrderValue?: true
   deliveryPartnerFee?: true
+  deliveryPromiseMinutes?: true
 }
 
 export type PlatformSettingsSumAggregateInputType = {
@@ -135,6 +141,7 @@ export type PlatformSettingsSumAggregateInputType = {
   freeDeliveryThreshold?: true
   minOrderValue?: true
   deliveryPartnerFee?: true
+  deliveryPromiseMinutes?: true
 }
 
 export type PlatformSettingsMinAggregateInputType = {
@@ -143,6 +150,7 @@ export type PlatformSettingsMinAggregateInputType = {
   freeDeliveryThreshold?: true
   minOrderValue?: true
   deliveryPartnerFee?: true
+  deliveryPromiseMinutes?: true
   supportPhone?: true
   supportEmail?: true
   businessName?: true
@@ -170,6 +178,7 @@ export type PlatformSettingsMaxAggregateInputType = {
   freeDeliveryThreshold?: true
   minOrderValue?: true
   deliveryPartnerFee?: true
+  deliveryPromiseMinutes?: true
   supportPhone?: true
   supportEmail?: true
   businessName?: true
@@ -197,6 +206,7 @@ export type PlatformSettingsCountAggregateInputType = {
   freeDeliveryThreshold?: true
   minOrderValue?: true
   deliveryPartnerFee?: true
+  deliveryPromiseMinutes?: true
   supportPhone?: true
   supportEmail?: true
   businessName?: true
@@ -311,6 +321,7 @@ export type PlatformSettingsGroupByOutputType = {
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal
   deliveryPartnerFee: runtime.Decimal
+  deliveryPromiseMinutes: number | null
   supportPhone: string | null
   supportEmail: string | null
   businessName: string | null
@@ -361,6 +372,7 @@ export type PlatformSettingsWhereInput = {
   freeDeliveryThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.IntNullableFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   businessName?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -388,6 +400,7 @@ export type PlatformSettingsOrderByWithRelationInput = {
   freeDeliveryThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   supportEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   businessName?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -418,6 +431,7 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   freeDeliveryThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.IntNullableFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   businessName?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -445,6 +459,7 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   freeDeliveryThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   supportEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   businessName?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -480,6 +495,7 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   freeDeliveryThreshold?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.IntNullableWithAggregatesFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   supportEmail?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   businessName?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -507,6 +523,7 @@ export type PlatformSettingsCreateInput = {
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
   supportEmail?: string | null
   businessName?: string | null
@@ -534,6 +551,7 @@ export type PlatformSettingsUncheckedCreateInput = {
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
   supportEmail?: string | null
   businessName?: string | null
@@ -561,6 +579,7 @@ export type PlatformSettingsUpdateInput = {
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -588,6 +607,7 @@ export type PlatformSettingsUncheckedUpdateInput = {
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -615,6 +635,7 @@ export type PlatformSettingsCreateManyInput = {
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
   supportEmail?: string | null
   businessName?: string | null
@@ -642,6 +663,7 @@ export type PlatformSettingsUpdateManyMutationInput = {
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -669,6 +691,7 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supportEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   businessName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -696,6 +719,7 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
   businessName?: Prisma.SortOrder
@@ -722,6 +746,7 @@ export type PlatformSettingsAvgOrderByAggregateInput = {
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrder
 }
 
 export type PlatformSettingsMaxOrderByAggregateInput = {
@@ -730,6 +755,7 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
   businessName?: Prisma.SortOrder
@@ -757,6 +783,7 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
   supportEmail?: Prisma.SortOrder
   businessName?: Prisma.SortOrder
@@ -783,6 +810,7 @@ export type PlatformSettingsSumOrderByAggregateInput = {
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
   deliveryPartnerFee?: Prisma.SortOrder
+  deliveryPromiseMinutes?: Prisma.SortOrder
 }
 
 
@@ -793,6 +821,7 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
   deliveryPartnerFee?: boolean
+  deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
   businessName?: boolean
@@ -820,6 +849,7 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
   deliveryPartnerFee?: boolean
+  deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
   businessName?: boolean
@@ -847,6 +877,7 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
   deliveryPartnerFee?: boolean
+  deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
   businessName?: boolean
@@ -874,6 +905,7 @@ export type PlatformSettingsSelectScalar = {
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
   deliveryPartnerFee?: boolean
+  deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
   supportEmail?: boolean
   businessName?: boolean
@@ -895,7 +927,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "deliveryPlayStoreUrl" | "deliveryAppStoreUrl" | "deliveryDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "deliveryPlayStoreUrl" | "deliveryAppStoreUrl" | "deliveryDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -906,6 +938,7 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     freeDeliveryThreshold: runtime.Decimal | null
     minOrderValue: runtime.Decimal
     deliveryPartnerFee: runtime.Decimal
+    deliveryPromiseMinutes: number | null
     supportPhone: string | null
     supportEmail: string | null
     businessName: string | null
@@ -1353,6 +1386,7 @@ export interface PlatformSettingsFieldRefs {
   readonly freeDeliveryThreshold: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly minOrderValue: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly deliveryPartnerFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
+  readonly deliveryPromiseMinutes: Prisma.FieldRef<"PlatformSettings", 'Int'>
   readonly supportPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly supportEmail: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly businessName: Prisma.FieldRef<"PlatformSettings", 'String'>

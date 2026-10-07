@@ -130,6 +130,23 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
         </Panel>
       </Section>
 
+      <Section title="Delivery time" hint="Shown at the top of the customer app's home page and at checkout while the store is open.">
+        <Panel className="p-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField
+              name="deliveryPromiseMinutes"
+              label="Delivery in about"
+              defaultValue={settings.deliveryPromiseMinutes?.toString()}
+              error={fieldErrors.deliveryPromiseMinutes}
+              description="Minutes, from 5 to 180. Leave empty to hide it."
+              inputMode="numeric"
+              maxLength={3}
+              placeholder="15"
+            />
+          </div>
+        </Panel>
+      </Section>
+
       <Section title="What riders earn" hint="Paid for each delivered order. Past deliveries keep their old amount.">
         <Panel className="p-5">
           <div className="grid gap-5 sm:grid-cols-2">

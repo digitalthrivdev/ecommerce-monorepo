@@ -10,11 +10,19 @@ import type { ActionResult } from "@/lib/types";
 
 const AMOUNT = "Enter an amount like 25 or 25.50";
 
+/** Same range as the API. Empty hides the promise in the app. */
+const deliveryPromiseMinutes = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || (/^\d{1,3}$/.test(value) && Number(value) >= 5 && Number(value) <= 180), "Enter minutes from 5 to 180")
+  .transform((value) => (value ? Number(value) : null));
+
 const settingsSchema = z.object({
   deliveryFee: decimal(AMOUNT),
   freeDeliveryThreshold: optionalDecimal(AMOUNT),
   minOrderValue: decimal(AMOUNT),
   deliveryPartnerFee: decimal(AMOUNT),
+  deliveryPromiseMinutes,
   supportPhone: optionalPhoneInput,
   supportEmail: optionalEmail,
 });
@@ -25,6 +33,7 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
     freeDeliveryThreshold: formText(formData, "freeDeliveryThreshold"),
     minOrderValue: formText(formData, "minOrderValue"),
     deliveryPartnerFee: formText(formData, "deliveryPartnerFee"),
+    deliveryPromiseMinutes: formText(formData, "deliveryPromiseMinutes"),
     supportPhone: formText(formData, "supportPhone"),
     supportEmail: formText(formData, "supportEmail"),
   });

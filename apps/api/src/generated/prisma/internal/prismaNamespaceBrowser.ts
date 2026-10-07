@@ -487,6 +487,7 @@ export const PlatformSettingsScalarFieldEnum = {
   freeDeliveryThreshold: 'freeDeliveryThreshold',
   minOrderValue: 'minOrderValue',
   deliveryPartnerFee: 'deliveryPartnerFee',
+  deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
   businessName: 'businessName',

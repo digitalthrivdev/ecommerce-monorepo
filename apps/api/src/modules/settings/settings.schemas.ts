@@ -27,6 +27,7 @@ export const updateSettingsBodySchema = z
     freeDeliveryThreshold: decimalSchema.nullable(),
     minOrderValue: decimalSchema,
     deliveryPartnerFee: decimalSchema,
+    deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
     supportPhone: phoneSchema.nullable(),
     supportEmail: z.email().max(200).nullable(),
     businessName: z.string().trim().min(1).max(200).nullable(),

@@ -684,6 +684,9 @@ model PlatformSettings {
   minOrderValue         Decimal  @db.Decimal(10, 2)
   deliveryPartnerFee    Decimal  @db.Decimal(10, 2)
 
+  // "Delivery in about N minutes" in the customer app's home header and checkout; null hides it.
+  deliveryPromiseMinutes Int?
+
   supportPhone String?
   supportEmail String?
 
