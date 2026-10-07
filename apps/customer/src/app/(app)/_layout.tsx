@@ -1,10 +1,12 @@
 import { Stack } from "expo-router";
 
 import { DeliveryLocationProvider } from "@/lib/delivery-location";
+import { useOpenOrderWhenRiderAccepts } from "@/lib/orders";
 import { usePushNotifications } from "@/lib/push";
 
 export default function AppLayout() {
   usePushNotifications();
+  useOpenOrderWhenRiderAccepts();
 
   return (
     <DeliveryLocationProvider>

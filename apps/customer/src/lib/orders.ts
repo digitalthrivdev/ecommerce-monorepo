@@ -1,5 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
+import { router, usePathname } from "expo-router";
+import { useEffect, useRef } from "react";
 import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
@@ -33,6 +35,27 @@ export function useActiveOrders() {
     staleTime: 10_000,
     refetchInterval: (query) => (query.state.data?.total ? LIVE_REFRESH_MS : false),
   });
+}
+
+/**
+ * Opens an order when its rider accepts it while the app is open. Orders accepted before the app
+ * loaded them are left alone, so starting the app doesn't jump to an order.
+ */
+export function useOpenOrderWhenRiderAccepts() {
+  const active = useActiveOrders();
+  const pathname = usePathname();
+  const seen = useRef<{ data: unknown; accepted: Map<string, boolean> } | null>(null);
+
+  useEffect(() => {
+    const data = active.data;
+    if (!data || seen.current?.data === data) return;
+    const previous = seen.current?.accepted;
+    seen.current = { data, accepted: new Map(data.items.map((order) => [order.id, order.riderAcceptedAt !== null])) };
+    const order = previous && data.items.find((candidate) => candidate.riderAcceptedAt !== null && previous.get(candidate.id) === false);
+    if (order && pathname !== `/order/${order.id}`) {
+      router.push({ pathname: "/order/[id]", params: { id: order.id } });
+    }
+  }, [active.data, pathname]);
 }
 
 export const buyAgainKey = (storeId: string | null) => [...ORDERS_KEY, "buy-again", storeId] as const;
@@ -73,13 +96,20 @@ export function useOrderTracking(id: string, status: OrderStatus | undefined) {
   });
 }
 
-/** The server rebuilds the order from the cart, so the cart is refetched whether or not it succeeds. */
+/**
+ * The server rebuilds the order from the cart, so the cart is refetched whether or not it succeeds.
+ * The refetch is not awaited: the emptied cart would replace the checkout before the caller could
+ * open the new order.
+ */
 export function usePlaceOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: { addressId: string; paymentMethod: PaymentMethod }) => apiFetch<OrderDetail>("/orders", { method: "POST", body: input }),
     onSuccess: (order) => queryClient.setQueryData(orderKey(order.id), order),
-    onSettled: () => Promise.all([queryClient.invalidateQueries({ queryKey: CART_KEY }), queryClient.invalidateQueries({ queryKey: ORDERS_KEY })]),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: CART_KEY });
+      void queryClient.invalidateQueries({ queryKey: ORDERS_KEY });
+    },
   });
 }
 

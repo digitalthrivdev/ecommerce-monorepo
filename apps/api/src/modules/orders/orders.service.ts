@@ -175,6 +175,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           total: true,
           createdAt: true,
           store: { select: { id: true, name: true } },
+          delivery: { select: { acceptedAt: true } },
           _count: { select: { items: true } },
         },
       }),
@@ -182,10 +183,12 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     ]);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, delivery, ...order }) => ({
         ...order,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
+        // When the current rider accepted; the app opens the order then.
+        riderAcceptedAt: delivery?.acceptedAt ?? null,
         canCancel: CUSTOMER_CANCELLABLE_STATUSES.includes(order.status),
       })),
       total,

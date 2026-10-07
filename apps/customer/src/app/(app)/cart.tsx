@@ -27,7 +27,7 @@ import { usePlaceOrder } from "@/lib/orders";
 import { useAlsoBought } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 import { closedText } from "@/lib/store-hours";
-import type { Cart, CartItem, PaymentMethod } from "@/lib/types";
+import type { Cart, CartItem, OrderDetail, PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const CART_CHANGED_ERRORS = ["CART_EMPTY", "CART_INVALID", "INSUFFICIENT_STOCK", "QUANTITY_LIMIT", "MIN_ORDER_NOT_MET"];
@@ -230,25 +230,23 @@ function CartContent({ cart }: { cart: Cart }) {
   const promise = store && cart.store && !otherStore && cart.storeIsOpen ? (settings.deliveryPromiseMinutes ?? null) : null;
   const changeAddress = () => router.push("/location");
 
-  function submit() {
+  // mutateAsync, not mutate callbacks: those are dropped if this screen unmounts first.
+  async function submit() {
     if (!address) {
       changeAddress();
       return;
     }
-    placeOrder.mutate(
-      { addressId: address.id, paymentMethod: method },
-      {
-        onSuccess: (order) => {
-          router.dismissAll();
-          router.push({ pathname: "/order/[id]", params: { id: order.id, placed: "1" } });
-          if (order.status === "PENDING_PAYMENT") router.push({ pathname: "/pay/[id]", params: { id: order.id } });
-        },
-        onError: (error) => {
-          showOrderError(error);
-          queryClient.invalidateQueries({ queryKey: CART_KEY });
-        },
-      },
-    );
+    let order: OrderDetail;
+    try {
+      order = await placeOrder.mutateAsync({ addressId: address.id, paymentMethod: method });
+    } catch (error) {
+      showOrderError(error);
+      queryClient.invalidateQueries({ queryKey: CART_KEY });
+      return;
+    }
+    router.dismissAll();
+    router.push({ pathname: "/order/[id]", params: { id: order.id, placed: "1" } });
+    if (order.status === "PENDING_PAYMENT") router.push({ pathname: "/pay/[id]", params: { id: order.id } });
   }
 
   return (

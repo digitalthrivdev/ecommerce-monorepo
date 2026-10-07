@@ -205,6 +205,8 @@ export type OrderSummary = {
   store: { id: string; name: string };
   itemCount: number;
   canCancel: boolean;
+  /** When the current rider accepted the delivery; null until then, and again after a reassignment. */
+  riderAcceptedAt: string | null;
 };
 
 /** `GET /orders/:id`. Items, prices and address are snapshots taken when the order was placed. */
