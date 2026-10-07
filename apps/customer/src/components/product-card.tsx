@@ -35,11 +35,13 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
             <Text className="text-3xl font-extrabold text-primary">{product.name.charAt(0)}</Text>
           )}
         </View>
-        {soldOut && (
+        {soldOut ? (
           <View className="absolute rounded-md bg-foreground/80 px-2 py-1">
             <Text className="text-[11px] font-bold text-background">Out of stock</Text>
           </View>
-        )}
+        ) : discount ? (
+          <DiscountRibbon percent={discount} />
+        ) : null}
         {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute bottom-1 right-1" />}
       </View>
       <View className="flex-row items-start justify-between gap-1">
@@ -53,12 +55,21 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
           <Text className="text-[15px] font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
           {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.mrp!, currency)}</Text>}
         </View>
-        {discount && <Text className="text-[11px] font-bold text-primary">{discount}% OFF on MRP</Text>}
       </View>
       <Text className="text-[13px] font-semibold leading-tight" numberOfLines={2}>
         {product.name}
       </Text>
     </Pressable>
+  );
+}
+
+/** A tag hanging from the image's top-left corner, e.g. "20% OFF". */
+function DiscountRibbon({ percent }: { percent: number }) {
+  return (
+    <View className="absolute left-1.5 top-0 items-center rounded-b-md bg-primary px-1.5 pb-1 pt-0.5" accessibilityLabel={`${percent}% off`}>
+      <Text className="text-[11px] font-black leading-tight text-primary-foreground">{percent}%</Text>
+      <Text className="text-[9px] font-extrabold leading-none text-primary-foreground">OFF</Text>
+    </View>
   );
 }
 

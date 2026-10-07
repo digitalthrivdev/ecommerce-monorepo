@@ -19,6 +19,8 @@ export type PublicSettings = {
   currency: string;
   timezone: string;
   pricing: { deliveryFee: string; freeDeliveryThreshold: string | null; minOrderValue: string };
+  /** "Delivery in about N minutes"; null when the admin hasn't set it, missing from older servers. */
+  deliveryPromiseMinutes?: number | null;
   payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
   support: { phone: string | null; email: string | null };
   /** Links to the public website and its policy pages; null when it is not set up, missing from older servers. */

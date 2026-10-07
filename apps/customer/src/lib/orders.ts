@@ -38,10 +38,10 @@ export function useActiveOrders() {
 export const buyAgainKey = (storeId: string | null) => [...ORDERS_KEY, "buy-again", storeId] as const;
 
 /** Products from the customer's past orders that are in stock at the store, most often ordered first. */
-export function useBuyAgain(storeId: string | undefined) {
+export function useBuyAgain(storeId: string | undefined, { limit = 12 }: { limit?: number } = {}) {
   return useQuery({
-    queryKey: buyAgainKey(storeId ?? null),
-    queryFn: () => apiFetch<{ items: StoreProduct[] }>("/orders/buy-again", { query: { storeId, limit: 12 } }),
+    queryKey: [...buyAgainKey(storeId ?? null), limit],
+    queryFn: () => apiFetch<{ items: StoreProduct[] }>("/orders/buy-again", { query: { storeId, limit } }),
     staleTime: 5 * 60_000,
     enabled: Boolean(storeId),
   });

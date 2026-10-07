@@ -4,6 +4,7 @@ import { router, useFocusEffect } from "expo-router";
 import { ChevronDown, Clock, LocateFixed, MapPinOff, Search, UserRound } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ActiveOrderBar } from "@/components/active-order-bar";
@@ -24,6 +25,7 @@ import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { useDeliveryLocation, useLocateMe } from "@/lib/delivery-location";
 import { useHomeFeed, useHomeTabPage } from "@/lib/queries";
+import { useRotatingSearchHint } from "@/lib/search-hints";
 import { useSettings } from "@/lib/settings";
 import { closedText } from "@/lib/store-hours";
 import type { CategoryTab, Store, TabHeader } from "@/lib/types";
@@ -32,18 +34,27 @@ import { cn } from "@/lib/utils";
 const openLocationPicker = () => router.push("/location");
 
 function HomeHeader() {
-  const { location } = useDeliveryLocation();
+  const { location, store } = useDeliveryLocation();
+  const { deliveryPromiseMinutes } = useSettings();
+  const promise = store?.isOpen && deliveryPromiseMinutes ? deliveryPromiseMinutes : null;
 
   return (
     <View className="flex-row items-start justify-between gap-3 px-4 pb-3 pt-2">
       <Pressable onPress={openLocationPicker} className="flex-1 gap-0.5 active:opacity-80" accessibilityLabel="Change delivery location">
         <BrandMark textClassName="text-highlight-foreground text-sm" />
-        <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
-          {location ? location.label : "Deliver to"}
-        </Text>
+        {promise && location ? (
+          <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
+            <Text className="text-sm font-semibold text-highlight-foreground">Delivery in about </Text>
+            {promise} minutes
+          </Text>
+        ) : (
+          <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
+            {location ? location.label : "Deliver to"}
+          </Text>
+        )}
         <View className="flex-row items-center gap-1">
           <Text className="shrink text-sm font-semibold text-highlight-foreground" numberOfLines={1}>
-            {location ? location.summary : "Set your delivery location"}
+            {location ? (promise ? `${location.label} · ${location.summary}` : location.summary) : "Set your delivery location"}
           </Text>
           <Icon as={ChevronDown} size={16} className="text-highlight-foreground" />
         </View>
@@ -73,15 +84,22 @@ function SearchBar({ tabs, selectedId, onSelect }: { tabs: CategoryTab[]; select
 }
 
 function SearchField() {
+  const hint = useRotatingSearchHint();
+
   return (
     <Pressable
       onPress={() => router.push("/search")}
-      className="h-12 flex-row items-center gap-2.5 rounded-lg border border-border bg-card px-3.5 active:opacity-80"
+      className="h-12 flex-row items-center gap-2.5 overflow-hidden rounded-lg border border-border bg-card px-3.5 active:opacity-80"
       accessibilityRole="search"
       accessibilityLabel="Search products"
     >
       <Icon as={Search} size={18} className="text-muted-foreground" />
-      <Text className="text-[15px] text-muted-foreground">Search for &quot;milk&quot;</Text>
+      <Text className="text-[15px] text-muted-foreground">Search for</Text>
+      <Animated.View key={hint} entering={FadeInDown.duration(250)} style={{ flexShrink: 1 }}>
+        <Text className="text-[15px] text-muted-foreground" numberOfLines={1}>
+          &quot;{hint}&quot;
+        </Text>
+      </Animated.View>
     </Pressable>
   );
 }

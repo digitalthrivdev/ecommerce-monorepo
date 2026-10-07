@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { House, LayoutGrid, UserRound } from "lucide-react-native";
+import { House, LayoutGrid, RotateCcw, UserRound } from "lucide-react-native";
 
 import { useAppTheme } from "@/lib/app-theme";
 
@@ -17,6 +17,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color, size }) => <House color={color} size={size - 2} /> }} />
+      <Tabs.Screen name="order-again" options={{ title: "Order Again", tabBarIcon: ({ color, size }) => <RotateCcw color={color} size={size - 2} /> }} />
       <Tabs.Screen name="categories" options={{ title: "Categories", tabBarIcon: ({ color, size }) => <LayoutGrid color={color} size={size - 2} /> }} />
       <Tabs.Screen name="account" options={{ title: "Account", tabBarIcon: ({ color, size }) => <UserRound color={color} size={size - 2} /> }} />
     </Tabs>

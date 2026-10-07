@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Banknote, ChevronRight, ChevronUp, CreditCard, House, Info, ShoppingBag, Trash2, TriangleAlert, X, type LucideIcon } from "lucide-react-native";
+import { Banknote, ChevronRight, ChevronUp, Clock, CreditCard, House, Info, ShoppingBag, Trash2, TriangleAlert, X, type LucideIcon } from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -227,6 +227,7 @@ function CartContent({ cart }: { cart: Cart }) {
   const blocker = checkoutBlocker(cart, store, settings);
   const otherStore = store && cart.store && cart.store.id !== store.id ? cart.store : null;
   const closed = store && !otherStore && !cart.storeIsOpen ? closedText(store, settings.timezone) : null;
+  const promise = store && cart.store && !otherStore && cart.storeIsOpen ? (settings.deliveryPromiseMinutes ?? null) : null;
   const changeAddress = () => router.push("/location");
 
   function submit() {
@@ -275,11 +276,14 @@ function CartContent({ cart }: { cart: Cart }) {
         <View className={cn("mx-4 rounded-lg px-3", surface)}>
           <View className="flex-row items-center gap-3 pt-3">
             <View className="size-9 items-center justify-center rounded-full bg-primary/10">
-              <Icon as={ShoppingBag} size={18} className="text-primary" />
+              <Icon as={promise ? Clock : ShoppingBag} size={18} className="text-primary" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-extrabold">{cart.store ? `From ${cart.store.name}` : "Your items"}</Text>
+              <Text className="text-base font-extrabold">
+                {promise ? `Delivery in about ${promise} minutes` : cart.store ? `From ${cart.store.name}` : "Your items"}
+              </Text>
               <Text className="text-xs text-muted-foreground">
+                {promise && cart.store ? `From ${cart.store.name} · ` : ""}
                 {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"}
               </Text>
             </View>
