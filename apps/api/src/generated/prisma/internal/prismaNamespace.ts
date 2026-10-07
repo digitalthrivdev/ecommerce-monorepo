@@ -422,6 +422,7 @@ export const ModelName = {
   Refund: 'Refund',
   Complaint: 'Complaint',
   ComplaintItem: 'ComplaintItem',
+  OrderRating: 'OrderRating',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -448,7 +449,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "orderRating" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2302,6 +2303,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderRating: {
+      payload: Prisma.$OrderRatingPayload<ExtArgs>
+      fields: Prisma.OrderRatingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderRatingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderRatingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderRatingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderRatingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        findMany: {
+          args: Prisma.OrderRatingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>[]
+        }
+        create: {
+          args: Prisma.OrderRatingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        createMany: {
+          args: Prisma.OrderRatingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderRatingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderRatingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        update: {
+          args: Prisma.OrderRatingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderRatingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderRatingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderRatingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderRatingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderRatingPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderRatingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderRating>
+        }
+        groupBy: {
+          args: Prisma.OrderRatingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderRatingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderRatingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderRatingCountAggregateOutputType> | number
+        }
+      }
+    }
     DeliveryPartner: {
       payload: Prisma.$DeliveryPartnerPayload<ExtArgs>
       fields: Prisma.DeliveryPartnerFieldRefs
@@ -3541,6 +3616,18 @@ export const ComplaintItemScalarFieldEnum = {
 export type ComplaintItemScalarFieldEnum = (typeof ComplaintItemScalarFieldEnum)[keyof typeof ComplaintItemScalarFieldEnum]
 
 
+export const OrderRatingScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  deliveryRating: 'deliveryRating',
+  itemsRating: 'itemsRating',
+  comment: 'comment',
+  createdAt: 'createdAt'
+} as const
+
+export type OrderRatingScalarFieldEnum = (typeof OrderRatingScalarFieldEnum)[keyof typeof OrderRatingScalarFieldEnum]
+
+
 export const DeliveryPartnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -4231,6 +4318,7 @@ export type GlobalOmitConfig = {
   refund?: Prisma.RefundOmit
   complaint?: Prisma.ComplaintOmit
   complaintItem?: Prisma.ComplaintItemOmit
+  orderRating?: Prisma.OrderRatingOmit
   deliveryPartner?: Prisma.DeliveryPartnerOmit
   cashDeposit?: Prisma.CashDepositOmit
   riderPayout?: Prisma.RiderPayoutOmit

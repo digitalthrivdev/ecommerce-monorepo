@@ -177,7 +177,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     ]);
     const actorById = new Map(actors.map(({ id, ...user }) => [id, user]));
 
-    const { canCancel: _customerCanCancel, canReportIssue: _canReportIssue, ...view } = toDetailView(order);
+    const { canCancel: _customerCanCancel, canReportIssue: _canReportIssue, canRate: _canRate, ...view } = toDetailView(order);
     const refundable = actor.isAdmin ? payments.refundableAmount(order, order.payment) : new Prisma.Decimal(0);
     return {
       ...view,

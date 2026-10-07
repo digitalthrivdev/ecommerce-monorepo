@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { AddPartnerDialog } from "@/components/partners/add-partner-dialog";
 import { PartnerStatusBadge } from "@/components/partners/partner-status-badge";
+import { RatingSummary } from "@/components/stars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,6 +112,7 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
                     <TableHead>Status</TableHead>
                     <TableHead>Current delivery</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Rating</TableHead>
                     <TableHead className="text-right">Unpaid earnings</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -156,6 +158,9 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
                         ) : (
                           <span className="text-muted-foreground">No recent location</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <RatingSummary rating={partner.rating} />
                       </TableCell>
                       <TableCell className={cn("text-right tabular-nums", Number(partner.unpaidEarnings) === 0 && "text-muted-foreground")}>
                         {formatMoney(partner.unpaidEarnings, currency)}

@@ -91,6 +91,7 @@ export const orderDetailInclude = {
       items: { select: { orderItemId: true, quantity: true } },
     },
   },
+  rating: { select: { deliveryRating: true, itemsRating: true, comment: true, createdAt: true } },
 } satisfies Prisma.OrderInclude;
 
 export type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
@@ -105,6 +106,18 @@ export function complaintDeadline(deliveredAt: Date | null | undefined) {
 function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "delivery">) {
   const deadline = complaintDeadline(order.delivery?.deliveredAt);
   return order.status === OrderStatus.DELIVERED && !order.complaint && deadline !== null && deadline > new Date();
+}
+
+/** How long after delivery a customer can rate the order. */
+export const RATING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function ratingDeadline(deliveredAt: Date | null | undefined) {
+  return deliveredAt ? new Date(deliveredAt.getTime() + RATING_WINDOW_MS) : null;
+}
+
+function canRate(order: { status: OrderStatus; rating: unknown; delivery: { deliveredAt: Date | null } | null }) {
+  const deadline = ratingDeadline(order.delivery?.deliveredAt);
+  return order.status === OrderStatus.DELIVERED && !order.rating && deadline !== null && deadline > new Date();
 }
 
 export function toDetailView(order: OrderDetail) {
@@ -177,6 +190,8 @@ export function toDetailView(order: OrderDetail) {
     refunds: order.refunds.map(({ id, amount, method, reason, createdAt }) => ({ id, amount: amount.toFixed(2), method, reason, createdAt })),
     complaint: order.complaint,
     canReportIssue: canReportIssue(order),
+    rating: order.rating,
+    canRate: canRate(order),
     createdAt: order.createdAt,
   };
 }
@@ -218,7 +233,8 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           total: true,
           createdAt: true,
           store: { select: { id: true, name: true } },
-          delivery: { select: { acceptedAt: true } },
+          delivery: { select: { acceptedAt: true, deliveredAt: true } },
+          rating: { select: { id: true } },
           _count: { select: { items: true } },
         },
       }),
@@ -226,13 +242,14 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     ]);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, delivery, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, delivery, rating, ...order }) => ({
         ...order,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
         // When the current rider accepted; the app opens the order then.
         riderAcceptedAt: delivery?.acceptedAt ?? null,
         canCancel: CUSTOMER_CANCELLABLE_STATUSES.includes(order.status),
+        canRate: canRate({ status: order.status, rating, delivery }),
       })),
       total,
       limit,

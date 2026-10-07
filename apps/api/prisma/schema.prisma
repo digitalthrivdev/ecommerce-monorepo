@@ -485,6 +485,7 @@ model Order {
   payment   Payment?
   delivery  Delivery?
   complaint Complaint?
+  rating    OrderRating?
   refunds   Refund[]
 
   statusHistory OrderStatusHistory[]
@@ -699,6 +700,28 @@ enum ComplaintStatus {
   OPEN
   RESOLVED
   REJECTED
+}
+
+// ─────────────────────────────────────────────
+// RATINGS
+// ─────────────────────────────────────────────
+
+// A customer's rating of a delivered order, at most one per order and never shown publicly. The
+// delivery rating counts towards the rider who delivered it (Order → Delivery → partner).
+// Stars are 1 to 5 (database checks).
+model OrderRating {
+  id      String @id @default(cuid())
+  orderId String @unique
+
+  deliveryRating Int
+  itemsRating    Int?
+  comment        String?
+
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([createdAt])
 }
 
 enum PaymentMethod {

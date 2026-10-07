@@ -13,6 +13,7 @@ import {
   MessageSquareWarning,
   Phone,
   ShoppingBag,
+  Star,
   Store,
   Wallet,
   type LucideIcon,
@@ -23,8 +24,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BillDetails, mrpTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
+import { FormField } from "@/components/form-field";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
+import { StarRating } from "@/components/star-rating";
 import { TrackingMap } from "@/components/tracking-map";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -34,7 +37,17 @@ import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { formatDateTime, formatMoney, formatTime } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { mapsAvailable } from "@/lib/maps";
-import { COMPLAINT_REASON_TEXT, isOrderFinished, ORDER_STATUS_TEXT, ORDER_STEPS, orderStep, useCancelOrder, useOrder, useOrderTracking } from "@/lib/orders";
+import {
+  COMPLAINT_REASON_TEXT,
+  isOrderFinished,
+  ORDER_STATUS_TEXT,
+  ORDER_STEPS,
+  orderStep,
+  useCancelOrder,
+  useOrder,
+  useOrderTracking,
+  useRateOrder,
+} from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
 import { useSettings } from "@/lib/settings";
@@ -223,6 +236,82 @@ function ComplaintCard({ order }: { order: OrderDetail }) {
   );
 }
 
+const DELIVERY_RATING_TEXT = ["", "Very poor", "Poor", "Okay", "Good", "Excellent"] as const;
+
+function RatingCard({ order }: { order: OrderDetail }) {
+  const rate = useRateOrder(order.id);
+  const [deliveryRating, setDeliveryRating] = useState(0);
+  const [itemsRating, setItemsRating] = useState(0);
+  const [comment, setComment] = useState("");
+
+  const rating = order.rating;
+  if (rating) {
+    return (
+      <Card>
+        <View className="flex-row items-center gap-3">
+          <Icon as={Star} size={22} className="text-primary" />
+          <Text className="flex-1 text-base font-bold">Thanks for your rating</Text>
+        </View>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-sm text-muted-foreground">Delivery</Text>
+          <StarRating value={rating.deliveryRating} label="Delivery" size={18} />
+        </View>
+        {rating.itemsRating ? (
+          <View className="flex-row items-center justify-between">
+            <Text className="text-sm text-muted-foreground">Items</Text>
+            <StarRating value={rating.itemsRating} label="Items" size={18} />
+          </View>
+        ) : null}
+        {rating.comment ? <Text className="text-sm text-muted-foreground">“{rating.comment}”</Text> : null}
+      </Card>
+    );
+  }
+  if (!order.canRate) return null;
+
+  const submit = () =>
+    rate.mutate(
+      { deliveryRating, ...(itemsRating > 0 && { itemsRating }), ...(comment.trim() && { comment: comment.trim() }) },
+      { onError: (error) => Alert.alert("Couldn't send your rating", errorMessage(error)) },
+    );
+
+  return (
+    <Card>
+      <View className="gap-0.5">
+        <Text className="text-base font-bold">Rate your order</Text>
+        <Text className="text-sm text-muted-foreground">How was the delivery?</Text>
+      </View>
+      <View className="flex-row items-center gap-3">
+        <StarRating value={deliveryRating} onChange={setDeliveryRating} label="Delivery rating" />
+        {deliveryRating > 0 && <Text className="text-sm font-semibold text-muted-foreground">{DELIVERY_RATING_TEXT[deliveryRating]}</Text>}
+      </View>
+      {deliveryRating > 0 && (
+        <>
+          <View className="gap-1.5">
+            <Text className="text-sm font-semibold">
+              And the items?<Text className="text-sm font-normal text-muted-foreground"> (optional)</Text>
+            </Text>
+            <StarRating value={itemsRating} onChange={(value) => setItemsRating(value === itemsRating ? 0 : value)} label="Items rating" size={28} />
+          </View>
+          <FormField
+            label="Anything to add?"
+            optional
+            value={comment}
+            onChangeText={setComment}
+            placeholder="The rider was quick and polite"
+            multiline
+            maxLength={500}
+            textAlignVertical="top"
+            className="h-20 py-3"
+          />
+          <Button onPress={submit} disabled={rate.isPending} className="h-11 rounded-lg">
+            <Text className="font-semibold">{rate.isPending ? "Sending…" : "Submit rating"}</Text>
+          </Button>
+        </>
+      )}
+    </Card>
+  );
+}
+
 function NotificationsCard() {
   const { blocked, enable } = useNotificationsBlocked();
   if (!blocked) return null;
@@ -307,6 +396,8 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
       {live ? <StepsCard order={order} tracking={tracking} /> : <StatusCard order={order} />}
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
+
+      <RatingCard order={order} />
 
       <ComplaintCard order={order} />
 
@@ -467,6 +558,7 @@ export default function OrderScreen() {
         <ScrollView
           contentContainerClassName="gap-4 pt-4"
           contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+          keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         >
           <OrderBody order={order.data} tracking={tracking.data} />

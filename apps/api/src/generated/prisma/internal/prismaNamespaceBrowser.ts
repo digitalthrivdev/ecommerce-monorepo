@@ -76,6 +76,7 @@ export const ModelName = {
   Refund: 'Refund',
   Complaint: 'Complaint',
   ComplaintItem: 'ComplaintItem',
+  OrderRating: 'OrderRating',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -489,6 +490,18 @@ export const ComplaintItemScalarFieldEnum = {
 } as const
 
 export type ComplaintItemScalarFieldEnum = (typeof ComplaintItemScalarFieldEnum)[keyof typeof ComplaintItemScalarFieldEnum]
+
+
+export const OrderRatingScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  deliveryRating: 'deliveryRating',
+  itemsRating: 'itemsRating',
+  comment: 'comment',
+  createdAt: 'createdAt'
+} as const
+
+export type OrderRatingScalarFieldEnum = (typeof OrderRatingScalarFieldEnum)[keyof typeof OrderRatingScalarFieldEnum]
 
 
 export const DeliveryPartnerScalarFieldEnum = {

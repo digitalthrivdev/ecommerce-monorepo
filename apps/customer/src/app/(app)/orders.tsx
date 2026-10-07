@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { ChevronRight, Package } from "lucide-react-native";
+import { ChevronRight, Package, Star } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +46,12 @@ function OrderRow({ order, currency }: { order: OrderSummary; currency: string }
           {order.itemCount} {order.itemCount === 1 ? "item" : "items"} · {formatDateTime(order.createdAt)}
         </Text>
         <Text className="text-sm font-extrabold">{formatMoney(order.total, currency)}</Text>
+        {order.canRate && (
+          <View className="flex-row items-center gap-1">
+            <Icon as={Star} size={13} className="text-primary" />
+            <Text className="text-xs font-semibold text-primary">How was this order? Tap to rate it</Text>
+          </View>
+        )}
       </View>
       <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
     </Pressable>

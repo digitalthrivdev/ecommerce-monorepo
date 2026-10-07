@@ -69,6 +69,7 @@ export function createAccountDeletionService(prisma: PrismaClient, revokeTokens:
       }
       await tx.address.deleteMany({ where: { userId } });
       await tx.complaint.updateMany({ where: { userId }, data: { note: null, photoUrls: [] } });
+      await tx.orderRating.updateMany({ where: { order: { userId } }, data: { comment: null } });
       await tx.pushToken.deleteMany({ where: { userId } });
       await tx.user.update({
         where: { id: userId },

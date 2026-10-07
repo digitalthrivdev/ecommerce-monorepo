@@ -10,6 +10,7 @@ import { PartnerForm } from "@/components/partners/partner-form";
 import { PartnerStatusBadge } from "@/components/partners/partner-status-badge";
 import { RecordPayoutDialog } from "@/components/partners/record-payout-dialog";
 import { VoidPayoutDialog } from "@/components/partners/void-payout-dialog";
+import { RatingSummary } from "@/components/stars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,6 +125,9 @@ export default async function PartnerPage({ params, searchParams }: PageProps<"/
             ) : (
               <span className="text-muted-foreground">No recent location</span>
             )}
+            <span className="px-2">
+              <RatingSummary rating={partner.rating} />
+            </span>
           </div>
         </div>
 

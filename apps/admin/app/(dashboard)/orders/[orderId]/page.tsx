@@ -11,6 +11,7 @@ import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
 import { PageHeader } from "@/components/page-header";
 import { Block, PageBody, Panel, Section } from "@/components/section";
+import { Stars } from "@/components/stars";
 import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
@@ -337,6 +338,20 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 />
               )}
             </Block>
+
+            {order.rating && (
+              <Block title="Customer rating" hint={`Rated ${date(order.rating.createdAt)}`}>
+                <dl className="flex flex-col gap-2">
+                  <Row label="Delivery">
+                    <Stars value={order.rating.deliveryRating} />
+                  </Row>
+                  <Row label="Items">
+                    {order.rating.itemsRating ? <Stars value={order.rating.itemsRating} /> : <span className="text-muted-foreground">Not rated</span>}
+                  </Row>
+                </dl>
+                {order.rating.comment && <p className="border-t pt-3 text-sm whitespace-pre-line">“{order.rating.comment}”</p>}
+              </Block>
+            )}
           </div>
         </div>
       </PageBody>

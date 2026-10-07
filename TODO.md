@@ -6,7 +6,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 Build in this order: coupons change the order discount and the GST on each item, which the invoice must show.
 
-- [ ] **Ratings.** After delivery, the customer rates the order once (delivery and items, optional comment). Admins see it on the order, an average per delivery partner, and a list of low ratings.
 - [ ] **Simple coupons.** One coupon type: a code with a flat or percent discount (percent with a maximum), minimum order, start/end dates, total and per-customer limits, optional first order only. Entered at checkout and validated by the server; fills the existing `Order.discount`. No stacking, no auto-applied offers.
 - [ ] **GST invoice and accounting exports.** Customers download a GST invoice PDF for a delivered order (customer app and dashboard). Admins export CSVs for the accountant: daily sales, GST summary by rate and HSN, online payments versus refunds.
 

@@ -218,7 +218,12 @@ export type OrderSummary = {
   canCancel: boolean;
   /** When the current rider accepted the delivery; null until then, and again after a reassignment. */
   riderAcceptedAt: string | null;
+  /** Delivered in the last 7 days and not rated yet. */
+  canRate: boolean;
 };
+
+/** 1 to 5 stars; the items rating and comment are optional. */
+export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
 /** `GET /orders/:id`. Items, prices and address are snapshots taken when the order was placed. */
 export type OrderDetail = {
@@ -278,6 +283,9 @@ export type OrderDetail = {
   complaint: OrderComplaint | null;
   /** Delivered recently enough to report a problem, and not reported yet. */
   canReportIssue: boolean;
+  rating: OrderRating | null;
+  /** Delivered in the last 7 days and not rated yet. */
+  canRate: boolean;
   createdAt: string;
   /** Shown once a partner is on the way; the customer reads it out at the door. */
   deliveryOtp: string | null;

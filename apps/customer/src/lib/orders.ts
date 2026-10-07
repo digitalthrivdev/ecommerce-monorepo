@@ -6,7 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { ComplaintReason, OrderDetail, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
+import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -142,6 +142,16 @@ export function useReportIssue(id: string) {
   return useMutation({
     mutationFn: (input: ComplaintInput) => apiFetch<{ ok: true }>(`${orderPath(id)}/complaint`, { method: "POST", body: input }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: orderKey(id) }),
+  });
+}
+
+export type RatingInput = { deliveryRating: number; itemsRating?: number; comment?: string };
+
+export function useRateOrder(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: RatingInput) => apiFetch<OrderRating>(`${orderPath(id)}/rating`, { method: "POST", body: input }),
+    onSettled: () => Promise.all([queryClient.invalidateQueries({ queryKey: orderKey(id) }), queryClient.invalidateQueries({ queryKey: ORDERS_KEY })]),
   });
 }
 

@@ -8,6 +8,7 @@ import {
 import { AppError } from "../../shared/errors.js";
 import { roleConflictError } from "../../shared/roles.js";
 import { startOfTodaySql } from "../../shared/time.js";
+import { partnerRatingSummaries } from "../ratings/ratings.service.js";
 import { cashSummaries } from "./cash.service.js";
 import { earningsSummaries } from "./payouts.service.js";
 import type { CreatePartnerInput, ListPartnersQuery, UpdatePartnerInput } from "./delivery.schemas.js";
@@ -43,10 +44,11 @@ type Tracking = ReturnType<typeof createTrackingService>;
 export function createPartnersService(prisma: PrismaClient, tracking: Tracking) {
   async function toViews(rows: PartnerRow[]) {
     const ids = rows.map((row) => row.id);
-    const [locations, cash, earnings] = await Promise.all([
+    const [locations, cash, earnings, ratings] = await Promise.all([
       tracking.getPartnerLocations(ids),
       cashSummaries(prisma, ids),
       earningsSummaries(prisma, ids),
+      partnerRatingSummaries(prisma, ids),
     ]);
 
     return rows.map((row) => {
@@ -74,6 +76,8 @@ export function createPartnersService(prisma: PrismaClient, tracking: Tracking) 
         lastLocation: locations.get(row.id) ?? null,
         cash: { inHand: balance?.inHand ?? "0.00", limitReached: balance?.limitReached ?? false },
         unpaidEarnings: earnings.get(row.id)?.unpaid ?? "0.00",
+        /** Average delivery rating from customers; null until the first rating. */
+        rating: ratings.get(row.id) ?? { average: null, count: 0 },
         createdAt: row.createdAt,
       };
     });

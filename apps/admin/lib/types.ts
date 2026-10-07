@@ -234,6 +234,8 @@ export type OrderDetail = {
   }>;
   refunds: Array<Refund & { complaintId: string | null }>;
   complaint: { id: string; reason: ComplaintReason; status: ComplaintStatus; createdAt: string } | null;
+  /** The customer's rating after delivery, at most one per order. */
+  rating: OrderRating | null;
   /** What an admin can still refund (delivered orders only). */
   refundable: string;
   allowedActions: OrderAction[];
@@ -386,7 +388,19 @@ export type DeliveryPartner = {
   cash: { inHand: string; limitReached: boolean };
   /** Delivery earnings not paid out yet. */
   unpaidEarnings: string;
+  /** Average delivery rating from customers (one decimal); null until the first rating. */
+  rating: { average: string | null; count: number };
   createdAt: string;
+};
+
+/** 1 to 5 stars; the items rating and comment are optional. */
+export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
+
+/** `GET /admin/ratings` and `/stores/:storeId/ratings` row: a rating with 1 or 2 stars for the delivery or the items. */
+export type LowRating = OrderRating & {
+  id: string;
+  order: { id: string; orderNumber: string; customerName: string; customerPhone: string; store: { id: string; name: string }; deliveredAt: string | null };
+  rider: { id: string; name: string | null; phone: string } | null;
 };
 
 export type PayoutMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "OTHER";
