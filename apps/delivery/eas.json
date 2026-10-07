@@ -33,7 +33,8 @@
         "APP_NAME": "Moozy Partner",
         "APP_ID": "in.moozy.partner",
         "APP_SCHEME": "moozy-partner",
-        "EXPO_PUBLIC_API_URL": "https://api.moozy.in"
+        "EXPO_PUBLIC_API_URL": "https://api.moozy.in",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://c714c6fc2c721561ad9738bcc8fbf9d2@o4512215749951488.ingest.de.sentry.io/4512215776755792"
       }
     },
     "moozy-production": {
@@ -43,7 +44,8 @@
         "APP_NAME": "Moozy Partner",
         "APP_ID": "in.moozy.partner",
         "APP_SCHEME": "moozy-partner",
-        "EXPO_PUBLIC_API_URL": "https://api.moozy.in"
+        "EXPO_PUBLIC_API_URL": "https://api.moozy.in",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://c714c6fc2c721561ad9738bcc8fbf9d2@o4512215749951488.ingest.de.sentry.io/4512215776755792"
       }
     }
   },
