@@ -289,6 +289,8 @@ const formatDistance = (km: number) => (km < 1 ? `${Math.max(10, Math.round(km *
 
 type RiderOption = { partner: DeliveryPartner; distanceKm: number | null };
 
+const canAssign = (partner: DeliveryPartner) => partner.status === "ONLINE" && !partner.cash.limitReached;
+
 /**
  * Free riders first, nearest to the store first (straight line from their last position, which is
  * at most 10 minutes old); riders without a recent position come after those with one.
@@ -306,7 +308,7 @@ function riderOptions(partners: DeliveryPartner[], store: StoreLocation | null):
 /** The free rider closest to the store, if any has shared a position. */
 function nearestFreeRider(partners: DeliveryPartner[], store: StoreLocation | null) {
   const [first] = riderOptions(partners, store);
-  return first && first.partner.status === "ONLINE" && first.distanceKm !== null ? first.partner.id : "";
+  return first && canAssign(first.partner) && first.distanceKm !== null ? first.partner.id : "";
 }
 
 function riderLabel({ partner, distanceKm }: RiderOption, nearest: boolean, store: StoreLocation | null) {
@@ -314,7 +316,8 @@ function riderLabel({ partner, distanceKm }: RiderOption, nearest: boolean, stor
   if (partner.vehicleNumber) parts.push(partner.vehicleNumber);
   if (partner.status === "BUSY") parts.push(`Busy${partner.activeDelivery ? ` with ${partner.activeDelivery.orderNumber}` : ""}`);
   if (partner.status === "OFFLINE") parts.push("Offline");
-  if (partner.status === "ONLINE" && store) {
+  if (partner.cash.limitReached) parts.push("Cash limit reached");
+  else if (partner.status === "ONLINE" && store) {
     parts.push(distanceKm === null ? "location unknown" : `${formatDistance(distanceKm)} from store${nearest ? " (nearest)" : ""}`);
   }
   return parts.join(" · ");
@@ -335,7 +338,7 @@ function PartnerSelect({ id, partners, store, value, onChange }: {
       </SelectTrigger>
       <SelectContent>
         {riderOptions(partners, store).map((option) => (
-          <SelectItem key={option.partner.id} value={option.partner.id} disabled={option.partner.status !== "ONLINE"}>
+          <SelectItem key={option.partner.id} value={option.partner.id} disabled={!canAssign(option.partner)}>
             {riderLabel(option, option.partner.id === nearest, store)}
           </SelectItem>
         ))}
@@ -346,7 +349,10 @@ function PartnerSelect({ id, partners, store, value, onChange }: {
 
 function noRidersText(partners: DeliveryPartner[]) {
   if (partners.length === 0) return "No riders yet. Add one on the Riders page.";
-  if (partners.some((partner) => partner.status === "ONLINE")) return null;
+  if (partners.some(canAssign)) return null;
+  if (partners.some((partner) => partner.status === "ONLINE")) {
+    return "Every free rider has reached the cash limit. Record their deposit on the Rider cash page.";
+  }
   return "No rider is free right now. Busy riders become free when they finish or decline their delivery; offline riders need to go online in the rider app.";
 }
 

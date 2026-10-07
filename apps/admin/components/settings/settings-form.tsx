@@ -158,6 +158,14 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
               required
               {...amount}
             />
+            <TextField
+              name="riderCashLimit"
+              label="Cash a rider can hold"
+              defaultValue={settings.riderCashLimit}
+              error={fieldErrors.riderCashLimit}
+              description="From cash-on-delivery orders. At this amount they get no new orders until they deposit. Leave empty for no limit."
+              {...amount}
+            />
           </div>
         </Panel>
       </Section>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useTheme } from "next-themes";
 import {
   Award,
+  Banknote,
   Bike,
   Boxes,
   ChevronsUpDown,
@@ -72,6 +73,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH },
       { title: "Stock", href: "/inventory", icon: Boxes, roles: BOTH },
       { title: "Riders", href: "/delivery-partners", icon: Bike, roles: ADMIN },
+      { title: "Rider cash", href: "/rider-cash", icon: Banknote, roles: BOTH },
     ],
   },
   {

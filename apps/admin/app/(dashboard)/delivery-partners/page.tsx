@@ -14,9 +14,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
-import { requireAdmin } from "@/lib/dal";
-import { formatTimeAgo, ORDER_STATUS_LABELS } from "@/lib/format";
+import { getPublicSettings, requireAdmin } from "@/lib/dal";
+import { formatMoney, formatTimeAgo, ORDER_STATUS_LABELS } from "@/lib/format";
 import type { DeliveryPartnerStatus, PartnerList } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Riders" };
 
@@ -43,9 +44,12 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
   const q = first(params.q)?.trim().slice(0, 50) || undefined;
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const partners = await apiFetch<PartnerList>("/delivery-partners", {
-    query: { status: tab.status, isActive: tab.isActive, q, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
-  });
+  const [partners, { currency }] = await Promise.all([
+    apiFetch<PartnerList>("/delivery-partners", {
+      query: { status: tab.status, isActive: tab.isActive, q, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
+    }),
+    getPublicSettings(),
+  ]);
 
   const href = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
@@ -107,6 +111,7 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
                     <TableHead>Status</TableHead>
                     <TableHead>Current delivery</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Unpaid earnings</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -151,6 +156,9 @@ export default async function DeliveryPartnersPage({ searchParams }: PageProps<"
                         ) : (
                           <span className="text-muted-foreground">No recent location</span>
                         )}
+                      </TableCell>
+                      <TableCell className={cn("text-right tabular-nums", Number(partner.unpaidEarnings) === 0 && "text-muted-foreground")}>
+                        {formatMoney(partner.unpaidEarnings, currency)}
                       </TableCell>
                     </TableRow>
                   ))}

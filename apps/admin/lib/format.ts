@@ -5,6 +5,7 @@ import type {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  PayoutMethod,
   StockChangeReason,
   UserRole,
 } from "./types";
@@ -21,6 +22,10 @@ export function formatDateTime(value: string | Date, timeZone: string) {
     timeStyle: "short",
     timeZone,
   }).format(new Date(value));
+}
+
+export function formatDate(value: string | Date, timeZone: string) {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeZone }).format(new Date(value));
 }
 
 export function formatTime(value: string | Date, timeZone: string) {
@@ -87,6 +92,18 @@ export const PARTNER_STATUS_LABELS: Record<DeliveryPartnerStatus, string> = {
   BUSY: "On a delivery",
   OFFLINE: "Off duty",
 };
+
+export const PAYOUT_METHOD_LABELS: Record<PayoutMethod, string> = {
+  CASH: "Cash",
+  UPI: "UPI",
+  BANK_TRANSFER: "Bank transfer",
+  OTHER: "Other",
+};
+
+/** Today's date ("2026-10-07") in the business time zone, for date inputs. */
+export function todayIn(timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+}
 
 export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   accept: "Accept order",

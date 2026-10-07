@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
 import { ApiError, apiFetch } from "@/lib/api";
-import { decimal, formChecked, formText, optionalDecimal, optionalEmail, optionalPhoneInput, optionalText, text } from "@/lib/form-schemas";
+import { decimal, formChecked, formText, optionalDecimal, optionalEmail, optionalPositiveDecimal, optionalPhoneInput, optionalText, text } from "@/lib/form-schemas";
 import type { ActionResult } from "@/lib/types";
 
 const AMOUNT = "Enter an amount like 25 or 25.50";
@@ -22,6 +22,7 @@ const settingsSchema = z.object({
   freeDeliveryThreshold: optionalDecimal(AMOUNT),
   minOrderValue: decimal(AMOUNT),
   deliveryPartnerFee: decimal(AMOUNT),
+  riderCashLimit: optionalPositiveDecimal("Enter an amount above 0, or leave it empty for no limit"),
   deliveryPromiseMinutes,
   supportPhone: optionalPhoneInput,
   supportEmail: optionalEmail,
@@ -33,6 +34,7 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
     freeDeliveryThreshold: formText(formData, "freeDeliveryThreshold"),
     minOrderValue: formText(formData, "minOrderValue"),
     deliveryPartnerFee: formText(formData, "deliveryPartnerFee"),
+    riderCashLimit: formText(formData, "riderCashLimit"),
     deliveryPromiseMinutes: formText(formData, "deliveryPromiseMinutes"),
     supportPhone: formText(formData, "supportPhone"),
     supportEmail: formText(formData, "supportEmail"),

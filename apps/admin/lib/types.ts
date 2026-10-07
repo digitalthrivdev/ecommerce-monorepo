@@ -279,7 +279,61 @@ export type DeliveryPartner = {
   activeDelivery: { orderId: string; orderNumber: string; orderStatus: OrderStatus; accepted: boolean } | null;
   /** Latest reported position; only kept for a few minutes. */
   lastLocation: { latitude: number; longitude: number; updatedAt: string } | null;
+  /** Cash from cash-on-delivery orders not yet deposited; at the limit the rider can't be assigned. */
+  cash: { inHand: string; limitReached: boolean };
+  /** Delivery earnings not paid out yet. */
+  unpaidEarnings: string;
   createdAt: string;
+};
+
+export type PayoutMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "OTHER";
+
+export type EarningsSummary = { currency: string; since: string; earned: string; paid: string; unpaid: string };
+
+export type RiderPayout = {
+  id: string;
+  amount: string;
+  method: PayoutMethod;
+  note: string | null;
+  paidAt: string;
+  createdAt: string;
+  recordedBy: string | null;
+  voided: { at: string; reason: string | null; by: string | null } | null;
+};
+
+export type PayoutList = Paginated<RiderPayout> & { earnings: EarningsSummary };
+
+export type CashSummary = {
+  currency: string;
+  inHand: string;
+  collected: string;
+  deposited: string;
+  limit: string | null;
+  limitReached: boolean;
+};
+
+export type RiderCashRow = {
+  id: string;
+  name: string | null;
+  phone: string;
+  status: DeliveryPartnerStatus;
+  isActive: boolean;
+  lastDepositAt: string | null;
+  cash: CashSummary;
+};
+
+export type RiderCashList = Paginated<RiderCashRow> & { totalInHand: string; cashLimit: string | null; currency: string };
+
+export type RiderCashDetails = Omit<RiderCashRow, "lastDepositAt"> & { cashSince: string };
+
+export type CashDeposit = {
+  id: string;
+  amount: string;
+  note: string | null;
+  createdAt: string;
+  store: { id: string; name: string } | null;
+  recordedBy: string | null;
+  voided: { at: string; reason: string | null; by: string | null } | null;
 };
 
 export type PartnerList = Paginated<DeliveryPartner> & {
@@ -420,6 +474,8 @@ export type PlatformSettings = {
   freeDeliveryThreshold: string | null;
   minOrderValue: string;
   deliveryPartnerFee: string;
+  /** Riders holding this much cash can't be assigned orders until they deposit; null means no limit. */
+  riderCashLimit: string | null;
   supportPhone: string | null;
   supportEmail: string | null;
   /** Legal name and registered address, shown on the policy and contact pages. */
