@@ -248,6 +248,7 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
             </>
           )}
         </View>
+        {discount && <Text className="text-sm font-bold text-primary">{discount}% OFF on MRP</Text>}
         <Text className="text-xs text-muted-foreground">Inclusive of all taxes</Text>
 
         <VariantChoices product={product} variant={variant} onSelect={onSelect} />

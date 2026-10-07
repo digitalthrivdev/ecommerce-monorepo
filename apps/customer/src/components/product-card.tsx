@@ -55,6 +55,7 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
           <Text className="text-[15px] font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
           {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.mrp!, currency)}</Text>}
         </View>
+        {discount && <Text className="text-[11px] font-bold text-primary">{discount}% OFF on MRP</Text>}
       </View>
       <Text className="text-[13px] font-semibold leading-tight" numberOfLines={2}>
         {product.name}

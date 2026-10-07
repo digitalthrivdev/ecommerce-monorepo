@@ -42,19 +42,16 @@ function HomeHeader() {
     <View className="flex-row items-start justify-between gap-3 px-4 pb-3 pt-2">
       <Pressable onPress={openLocationPicker} className="flex-1 gap-0.5 active:opacity-80" accessibilityLabel="Change delivery location">
         <BrandMark textClassName="text-highlight-foreground text-sm" />
-        {promise && location ? (
-          <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
-            <Text className="text-sm font-semibold text-highlight-foreground">Delivery in about </Text>
-            {promise} minutes
-          </Text>
-        ) : (
-          <Text className="text-2xl font-extrabold text-highlight-foreground" numberOfLines={1}>
-            {location ? location.label : "Deliver to"}
-          </Text>
-        )}
+        <Text
+          className="text-2xl font-extrabold text-highlight-foreground"
+          numberOfLines={1}
+          accessibilityLabel={promise && location ? `Delivery in about ${promise} minutes` : undefined}
+        >
+          {promise && location ? `${promise} minutes` : location ? location.label : "Deliver to"}
+        </Text>
         <View className="flex-row items-center gap-1">
           <Text className="shrink text-sm font-semibold text-highlight-foreground" numberOfLines={1}>
-            {location ? (promise ? `${location.label} · ${location.summary}` : location.summary) : "Set your delivery location"}
+            {location ? location.summary : "Set your delivery location"}
           </Text>
           <Icon as={ChevronDown} size={16} className="text-highlight-foreground" />
         </View>
