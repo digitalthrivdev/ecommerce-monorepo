@@ -62,6 +62,8 @@ Push to GitHub first; the server pulls from there.
 4. **Deploy:** `cd ~/<client> && git pull && cd deploy && docker compose up -d --build`. The `migrate` service applies migrations before the API starts. On a 1-CPU server the build takes about 5 minutes.
 5. **Verify:** `docker compose ps` (api, admin and web healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
 
+If the update changed `deploy/nginx/templates/`, re-render and reload Nginx; it only reads the template when its container starts, and `up -d` doesn't restart it: `docker compose exec nginx sh -c "/docker-entrypoint.d/20-envsubst-on-templates.sh && nginx -t && nginx -s reload"`.
+
 With several clients, update every server before releasing new app builds: a new app may call endpoints an older server doesn't have.
 
 **Adding the website to a server set up before it existed:** `docker compose up` stops with "Set SITE_DOMAIN in .env" until it's configured.

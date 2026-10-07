@@ -22,5 +22,6 @@ docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/
   -d "$API_DOMAIN" -d "$ADMIN_DOMAIN" -d "$SITE_DOMAIN" -d "www.$SITE_DOMAIN" \
   --email "$LETSENCRYPT_EMAIL" --agree-tos --no-eff-email --non-interactive --expand ${STAGING:+--staging}
 
-docker compose exec nginx nginx -s reload
+# Re-render the template too: Nginx only reads it when its container starts.
+docker compose exec nginx sh -c "/docker-entrypoint.d/20-envsubst-on-templates.sh >/dev/null && nginx -t && nginx -s reload"
 echo "Done. Website: https://$SITE_DOMAIN  Admin: https://$ADMIN_DOMAIN  API: https://$API_DOMAIN/health"
