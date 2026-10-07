@@ -91,6 +91,7 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
     minOrderValue: settings.minOrderValue.toFixed(2),
     deliveryPartnerFee: settings.deliveryPartnerFee.toFixed(2),
+    riderCashLimit: settings.riderCashLimit?.toFixed(2) ?? null,
     deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
     supportPhone: settings.supportPhone,
     supportEmail: settings.supportEmail,

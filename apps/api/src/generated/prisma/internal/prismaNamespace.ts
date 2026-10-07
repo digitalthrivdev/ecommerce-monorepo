@@ -420,6 +420,8 @@ export const ModelName = {
   OrderStatusHistory: 'OrderStatusHistory',
   Payment: 'Payment',
   DeliveryPartner: 'DeliveryPartner',
+  CashDeposit: 'CashDeposit',
+  RiderPayout: 'RiderPayout',
   Delivery: 'Delivery',
   DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
@@ -443,7 +445,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "deliveryPartner" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2149,6 +2151,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CashDeposit: {
+      payload: Prisma.$CashDepositPayload<ExtArgs>
+      fields: Prisma.CashDepositFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CashDepositFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CashDepositFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        findFirst: {
+          args: Prisma.CashDepositFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CashDepositFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        findMany: {
+          args: Prisma.CashDepositFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>[]
+        }
+        create: {
+          args: Prisma.CashDepositCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        createMany: {
+          args: Prisma.CashDepositCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CashDepositCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>[]
+        }
+        delete: {
+          args: Prisma.CashDepositDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        update: {
+          args: Prisma.CashDepositUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        deleteMany: {
+          args: Prisma.CashDepositDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CashDepositUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CashDepositUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>[]
+        }
+        upsert: {
+          args: Prisma.CashDepositUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CashDepositPayload>
+        }
+        aggregate: {
+          args: Prisma.CashDepositAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCashDeposit>
+        }
+        groupBy: {
+          args: Prisma.CashDepositGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CashDepositGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CashDepositCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CashDepositCountAggregateOutputType> | number
+        }
+      }
+    }
+    RiderPayout: {
+      payload: Prisma.$RiderPayoutPayload<ExtArgs>
+      fields: Prisma.RiderPayoutFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RiderPayoutFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RiderPayoutFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        findFirst: {
+          args: Prisma.RiderPayoutFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RiderPayoutFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        findMany: {
+          args: Prisma.RiderPayoutFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>[]
+        }
+        create: {
+          args: Prisma.RiderPayoutCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        createMany: {
+          args: Prisma.RiderPayoutCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RiderPayoutCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>[]
+        }
+        delete: {
+          args: Prisma.RiderPayoutDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        update: {
+          args: Prisma.RiderPayoutUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        deleteMany: {
+          args: Prisma.RiderPayoutDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RiderPayoutUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RiderPayoutUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>[]
+        }
+        upsert: {
+          args: Prisma.RiderPayoutUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RiderPayoutPayload>
+        }
+        aggregate: {
+          args: Prisma.RiderPayoutAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRiderPayout>
+        }
+        groupBy: {
+          args: Prisma.RiderPayoutGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RiderPayoutGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RiderPayoutCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RiderPayoutCountAggregateOutputType> | number
+        }
+      }
+    }
     Delivery: {
       payload: Prisma.$DeliveryPayload<ExtArgs>
       fields: Prisma.DeliveryFieldRefs
@@ -3125,11 +3275,46 @@ export const DeliveryPartnerScalarFieldEnum = {
   isActive: 'isActive',
   vehicleType: 'vehicleType',
   vehicleNumber: 'vehicleNumber',
+  cashSince: 'cashSince',
+  earningsSince: 'earningsSince',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type DeliveryPartnerScalarFieldEnum = (typeof DeliveryPartnerScalarFieldEnum)[keyof typeof DeliveryPartnerScalarFieldEnum]
+
+
+export const CashDepositScalarFieldEnum = {
+  id: 'id',
+  partnerId: 'partnerId',
+  amount: 'amount',
+  storeId: 'storeId',
+  note: 'note',
+  recordedById: 'recordedById',
+  createdAt: 'createdAt',
+  voidedAt: 'voidedAt',
+  voidedById: 'voidedById',
+  voidReason: 'voidReason'
+} as const
+
+export type CashDepositScalarFieldEnum = (typeof CashDepositScalarFieldEnum)[keyof typeof CashDepositScalarFieldEnum]
+
+
+export const RiderPayoutScalarFieldEnum = {
+  id: 'id',
+  partnerId: 'partnerId',
+  amount: 'amount',
+  method: 'method',
+  note: 'note',
+  paidAt: 'paidAt',
+  recordedById: 'recordedById',
+  createdAt: 'createdAt',
+  voidedAt: 'voidedAt',
+  voidedById: 'voidedById',
+  voidReason: 'voidReason'
+} as const
+
+export type RiderPayoutScalarFieldEnum = (typeof RiderPayoutScalarFieldEnum)[keyof typeof RiderPayoutScalarFieldEnum]
 
 
 export const DeliveryScalarFieldEnum = {
@@ -3167,6 +3352,7 @@ export const PlatformSettingsScalarFieldEnum = {
   freeDeliveryThreshold: 'freeDeliveryThreshold',
   minOrderValue: 'minOrderValue',
   deliveryPartnerFee: 'deliveryPartnerFee',
+  riderCashLimit: 'riderCashLimit',
   deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
   supportEmail: 'supportEmail',
@@ -3456,6 +3642,20 @@ export type ListEnumDeliveryPartnerStatusFieldRefInput<$PrismaModel> = FieldRefI
 
 
 /**
+ * Reference to a field of type 'PayoutMethod'
+ */
+export type EnumPayoutMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PayoutMethod'>
+    
+
+
+/**
+ * Reference to a field of type 'PayoutMethod[]'
+ */
+export type ListEnumPayoutMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PayoutMethod[]'>
+    
+
+
+/**
  * Reference to a field of type 'DeliveryStatus'
  */
 export type EnumDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryStatus'>
@@ -3684,6 +3884,8 @@ export type GlobalOmitConfig = {
   orderStatusHistory?: Prisma.OrderStatusHistoryOmit
   payment?: Prisma.PaymentOmit
   deliveryPartner?: Prisma.DeliveryPartnerOmit
+  cashDeposit?: Prisma.CashDepositOmit
+  riderPayout?: Prisma.RiderPayoutOmit
   delivery?: Prisma.DeliveryOmit
   deliveryLocation?: Prisma.DeliveryLocationOmit
   platformSettings?: Prisma.PlatformSettingsOmit

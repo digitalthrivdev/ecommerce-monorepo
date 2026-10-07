@@ -6,17 +6,22 @@ import {
   declineBodySchema,
   deliveredBodySchema,
   deliveryOrderParamsSchema,
+  depositsQuerySchema,
   earningsQuerySchema,
   historyQuerySchema,
   locationBodySchema,
   partnerStatusBodySchema,
 } from "./delivery.schemas.js";
+import { createCashService } from "./cash.service.js";
 import { createDeliveryService } from "./delivery.service.js";
+import { createPayoutsService } from "./payouts.service.js";
 import { createTrackingService } from "./tracking.service.js";
 
 /** Delivery partner app. */
 const deliveryRoutes: FastifyPluginAsync = async (app) => {
   const delivery = createDeliveryService(app.prisma, app.redis);
+  const cash = createCashService(app.prisma);
+  const payouts = createPayoutsService(app.prisma);
   const tracking = createTrackingService(app.prisma, app.redis);
 
   app.addHook("preHandler", app.requireRole(UserRole.DELIVERY_PARTNER));
@@ -80,6 +85,23 @@ const deliveryRoutes: FastifyPluginAsync = async (app) => {
   app.get("/earnings", async (request) => {
     const range = earningsQuerySchema.parse(request.query);
     return delivery.earnings(request.user.sub, range);
+  });
+
+  app.get("/cash", async (request) => {
+    const partner = await delivery.resolvePartner(request.user.sub);
+    return cash.summary(partner.id);
+  });
+
+  app.get("/cash/deposits", async (request) => {
+    const query = depositsQuerySchema.parse(request.query);
+    const partner = await delivery.resolvePartner(request.user.sub);
+    return cash.listDeposits(partner.id, query);
+  });
+
+  app.get("/payouts", async (request) => {
+    const query = depositsQuerySchema.parse(request.query);
+    const partner = await delivery.resolvePartner(request.user.sub);
+    return payouts.listPayouts(partner.id, query);
   });
 };
 

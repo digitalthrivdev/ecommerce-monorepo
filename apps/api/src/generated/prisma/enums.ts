@@ -73,6 +73,16 @@ export const PaymentStatus = {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 
+export const PayoutMethod = {
+  CASH: 'CASH',
+  UPI: 'UPI',
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  OTHER: 'OTHER'
+} as const
+
+export type PayoutMethod = (typeof PayoutMethod)[keyof typeof PayoutMethod]
+
+
 export const DeliveryPartnerStatus = {
   OFFLINE: 'OFFLINE',
   ONLINE: 'ONLINE',

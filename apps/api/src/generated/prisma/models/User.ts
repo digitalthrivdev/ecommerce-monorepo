@@ -219,6 +219,10 @@ export type UserWhereInput = {
   cart?: Prisma.XOR<Prisma.CartNullableScalarRelationFilter, Prisma.CartWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
   deliveryPartner?: Prisma.XOR<Prisma.DeliveryPartnerNullableScalarRelationFilter, Prisma.DeliveryPartnerWhereInput> | null
+  cashDepositsRecorded?: Prisma.CashDepositListRelationFilter
+  cashDepositsVoided?: Prisma.CashDepositListRelationFilter
+  payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
+  payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
 }
 
@@ -237,6 +241,10 @@ export type UserOrderByWithRelationInput = {
   cart?: Prisma.CartOrderByWithRelationInput
   orders?: Prisma.OrderOrderByRelationAggregateInput
   deliveryPartner?: Prisma.DeliveryPartnerOrderByWithRelationInput
+  cashDepositsRecorded?: Prisma.CashDepositOrderByRelationAggregateInput
+  cashDepositsVoided?: Prisma.CashDepositOrderByRelationAggregateInput
+  payoutsRecorded?: Prisma.RiderPayoutOrderByRelationAggregateInput
+  payoutsVoided?: Prisma.RiderPayoutOrderByRelationAggregateInput
   pushTokens?: Prisma.PushTokenOrderByRelationAggregateInput
 }
 
@@ -258,6 +266,10 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   cart?: Prisma.XOR<Prisma.CartNullableScalarRelationFilter, Prisma.CartWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
   deliveryPartner?: Prisma.XOR<Prisma.DeliveryPartnerNullableScalarRelationFilter, Prisma.DeliveryPartnerWhereInput> | null
+  cashDepositsRecorded?: Prisma.CashDepositListRelationFilter
+  cashDepositsVoided?: Prisma.CashDepositListRelationFilter
+  payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
+  payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
 }, "id" | "phone" | "email">
 
@@ -305,6 +317,10 @@ export type UserCreateInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -322,6 +338,10 @@ export type UserUncheckedCreateInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -339,6 +359,10 @@ export type UserUpdateInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -356,6 +380,10 @@ export type UserUncheckedUpdateInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -443,6 +471,11 @@ export type UserListRelationFilter = {
 
 export type UserOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -559,6 +592,66 @@ export type UserUpdateOneRequiredWithoutDeliveryPartnerNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeliveryPartnerInput, Prisma.UserUpdateWithoutDeliveryPartnerInput>, Prisma.UserUncheckedUpdateWithoutDeliveryPartnerInput>
 }
 
+export type UserCreateNestedOneWithoutCashDepositsRecordedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsRecordedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutCashDepositsVoidedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsVoidedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCashDepositsRecordedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsRecordedInput
+  upsert?: Prisma.UserUpsertWithoutCashDepositsRecordedInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashDepositsRecordedInput, Prisma.UserUpdateWithoutCashDepositsRecordedInput>, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
+}
+
+export type UserUpdateOneWithoutCashDepositsVoidedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsVoidedInput
+  upsert?: Prisma.UserUpsertWithoutCashDepositsVoidedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashDepositsVoidedInput, Prisma.UserUpdateWithoutCashDepositsVoidedInput>, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
+}
+
+export type UserCreateNestedOneWithoutPayoutsRecordedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsRecordedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutPayoutsVoidedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsVoidedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPayoutsRecordedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsRecordedInput
+  upsert?: Prisma.UserUpsertWithoutPayoutsRecordedInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPayoutsRecordedInput, Prisma.UserUpdateWithoutPayoutsRecordedInput>, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
+}
+
+export type UserUpdateOneWithoutPayoutsVoidedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsVoidedInput
+  upsert?: Prisma.UserUpsertWithoutPayoutsVoidedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPayoutsVoidedInput, Prisma.UserUpdateWithoutPayoutsVoidedInput>, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
+}
+
 export type UserCreateNestedOneWithoutPushTokensInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutPushTokensInput, Prisma.UserUncheckedCreateWithoutPushTokensInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushTokensInput
@@ -586,6 +679,10 @@ export type UserCreateWithoutAddressesInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -602,6 +699,10 @@ export type UserUncheckedCreateWithoutAddressesInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -634,6 +735,10 @@ export type UserUpdateWithoutAddressesInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -650,6 +755,10 @@ export type UserUncheckedUpdateWithoutAddressesInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -666,6 +775,10 @@ export type UserCreateWithoutStoreInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -682,6 +795,10 @@ export type UserUncheckedCreateWithoutStoreInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -739,6 +856,10 @@ export type UserCreateWithoutCartInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -755,6 +876,10 @@ export type UserUncheckedCreateWithoutCartInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -787,6 +912,10 @@ export type UserUpdateWithoutCartInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -803,6 +932,10 @@ export type UserUncheckedUpdateWithoutCartInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -819,6 +952,10 @@ export type UserCreateWithoutOrdersInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -835,6 +972,10 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -867,6 +1008,10 @@ export type UserUpdateWithoutOrdersInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -883,6 +1028,10 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -899,6 +1048,10 @@ export type UserCreateWithoutDeliveryPartnerInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
 }
 
@@ -915,6 +1068,10 @@ export type UserUncheckedCreateWithoutDeliveryPartnerInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -947,6 +1104,10 @@ export type UserUpdateWithoutDeliveryPartnerInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -963,6 +1124,394 @@ export type UserUncheckedUpdateWithoutDeliveryPartnerInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCashDepositsRecordedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCashDepositsRecordedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCashDepositsRecordedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
+}
+
+export type UserCreateWithoutCashDepositsVoidedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCashDepositsVoidedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCashDepositsVoidedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
+}
+
+export type UserUpsertWithoutCashDepositsRecordedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCashDepositsRecordedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
+}
+
+export type UserUpdateWithoutCashDepositsRecordedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCashDepositsRecordedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithoutCashDepositsVoidedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCashDepositsVoidedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
+}
+
+export type UserUpdateWithoutCashDepositsVoidedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCashDepositsVoidedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPayoutsRecordedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPayoutsRecordedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPayoutsRecordedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
+}
+
+export type UserCreateWithoutPayoutsVoidedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPayoutsVoidedInput = {
+  id?: string
+  phone: string
+  name?: string | null
+  email?: string | null
+  role?: $Enums.UserRole
+  passwordHash?: string | null
+  storeId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPayoutsVoidedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
+}
+
+export type UserUpsertWithoutPayoutsRecordedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsRecordedInput, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPayoutsRecordedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsRecordedInput, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
+}
+
+export type UserUpdateWithoutPayoutsRecordedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPayoutsRecordedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUpsertWithoutPayoutsVoidedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsVoidedInput, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPayoutsVoidedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsVoidedInput, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
+}
+
+export type UserUpdateWithoutPayoutsVoidedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPayoutsVoidedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -980,6 +1529,10 @@ export type UserCreateWithoutPushTokensInput = {
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
 }
 
 export type UserUncheckedCreateWithoutPushTokensInput = {
@@ -996,6 +1549,10 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
 }
 
 export type UserCreateOrConnectWithoutPushTokensInput = {
@@ -1028,6 +1585,10 @@ export type UserUpdateWithoutPushTokensInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushTokensInput = {
@@ -1044,6 +1605,10 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
 }
 
 export type UserCreateManyStoreInput = {
@@ -1070,6 +1635,10 @@ export type UserUpdateWithoutStoreInput = {
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
 }
 
@@ -1086,6 +1655,10 @@ export type UserUncheckedUpdateWithoutStoreInput = {
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
+  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
+  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
+  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
+  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -1108,12 +1681,20 @@ export type UserUncheckedUpdateManyWithoutStoreInput = {
 export type UserCountOutputType = {
   addresses: number
   orders: number
+  cashDepositsRecorded: number
+  cashDepositsVoided: number
+  payoutsRecorded: number
+  payoutsVoided: number
   pushTokens: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   addresses?: boolean | UserCountOutputTypeCountAddressesArgs
   orders?: boolean | UserCountOutputTypeCountOrdersArgs
+  cashDepositsRecorded?: boolean | UserCountOutputTypeCountCashDepositsRecordedArgs
+  cashDepositsVoided?: boolean | UserCountOutputTypeCountCashDepositsVoidedArgs
+  payoutsRecorded?: boolean | UserCountOutputTypeCountPayoutsRecordedArgs
+  payoutsVoided?: boolean | UserCountOutputTypeCountPayoutsVoidedArgs
   pushTokens?: boolean | UserCountOutputTypeCountPushTokensArgs
 }
 
@@ -1144,6 +1725,34 @@ export type UserCountOutputTypeCountOrdersArgs<ExtArgs extends runtime.Types.Ext
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountCashDepositsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CashDepositWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCashDepositsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CashDepositWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPayoutsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RiderPayoutWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPayoutsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RiderPayoutWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountPushTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PushTokenWhereInput
 }
@@ -1164,6 +1773,10 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   cart?: boolean | Prisma.User$cartArgs<ExtArgs>
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   deliveryPartner?: boolean | Prisma.User$deliveryPartnerArgs<ExtArgs>
+  cashDepositsRecorded?: boolean | Prisma.User$cashDepositsRecordedArgs<ExtArgs>
+  cashDepositsVoided?: boolean | Prisma.User$cashDepositsVoidedArgs<ExtArgs>
+  payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
+  payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -1213,6 +1826,10 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   cart?: boolean | Prisma.User$cartArgs<ExtArgs>
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   deliveryPartner?: boolean | Prisma.User$deliveryPartnerArgs<ExtArgs>
+  cashDepositsRecorded?: boolean | Prisma.User$cashDepositsRecordedArgs<ExtArgs>
+  cashDepositsVoided?: boolean | Prisma.User$cashDepositsVoidedArgs<ExtArgs>
+  payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
+  payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -1231,6 +1848,10 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     cart: Prisma.$CartPayload<ExtArgs> | null
     orders: Prisma.$OrderPayload<ExtArgs>[]
     deliveryPartner: Prisma.$DeliveryPartnerPayload<ExtArgs> | null
+    cashDepositsRecorded: Prisma.$CashDepositPayload<ExtArgs>[]
+    cashDepositsVoided: Prisma.$CashDepositPayload<ExtArgs>[]
+    payoutsRecorded: Prisma.$RiderPayoutPayload<ExtArgs>[]
+    payoutsVoided: Prisma.$RiderPayoutPayload<ExtArgs>[]
     pushTokens: Prisma.$PushTokenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1642,6 +2263,10 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   cart<T extends Prisma.User$cartArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cartArgs<ExtArgs>>): Prisma.Prisma__CartClient<runtime.Types.Result.GetResult<Prisma.$CartPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   orders<T extends Prisma.User$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deliveryPartner<T extends Prisma.User$deliveryPartnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deliveryPartnerArgs<ExtArgs>>): Prisma.Prisma__DeliveryPartnerClient<runtime.Types.Result.GetResult<Prisma.$DeliveryPartnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  cashDepositsRecorded<T extends Prisma.User$cashDepositsRecordedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashDepositsRecordedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashDepositPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  cashDepositsVoided<T extends Prisma.User$cashDepositsVoidedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashDepositsVoidedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashDepositPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  payoutsRecorded<T extends Prisma.User$payoutsRecordedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsRecordedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  payoutsVoided<T extends Prisma.User$payoutsVoidedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsVoidedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pushTokens<T extends Prisma.User$pushTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2184,6 +2809,102 @@ export type User$deliveryPartnerArgs<ExtArgs extends runtime.Types.Extensions.In
    */
   include?: Prisma.DeliveryPartnerInclude<ExtArgs> | null
   where?: Prisma.DeliveryPartnerWhereInput
+}
+
+/**
+ * User.cashDepositsRecorded
+ */
+export type User$cashDepositsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CashDeposit
+   */
+  select?: Prisma.CashDepositSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CashDeposit
+   */
+  omit?: Prisma.CashDepositOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CashDepositInclude<ExtArgs> | null
+  where?: Prisma.CashDepositWhereInput
+  orderBy?: Prisma.CashDepositOrderByWithRelationInput | Prisma.CashDepositOrderByWithRelationInput[]
+  cursor?: Prisma.CashDepositWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CashDepositScalarFieldEnum | Prisma.CashDepositScalarFieldEnum[]
+}
+
+/**
+ * User.cashDepositsVoided
+ */
+export type User$cashDepositsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CashDeposit
+   */
+  select?: Prisma.CashDepositSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CashDeposit
+   */
+  omit?: Prisma.CashDepositOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CashDepositInclude<ExtArgs> | null
+  where?: Prisma.CashDepositWhereInput
+  orderBy?: Prisma.CashDepositOrderByWithRelationInput | Prisma.CashDepositOrderByWithRelationInput[]
+  cursor?: Prisma.CashDepositWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CashDepositScalarFieldEnum | Prisma.CashDepositScalarFieldEnum[]
+}
+
+/**
+ * User.payoutsRecorded
+ */
+export type User$payoutsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RiderPayout
+   */
+  select?: Prisma.RiderPayoutSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RiderPayout
+   */
+  omit?: Prisma.RiderPayoutOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RiderPayoutInclude<ExtArgs> | null
+  where?: Prisma.RiderPayoutWhereInput
+  orderBy?: Prisma.RiderPayoutOrderByWithRelationInput | Prisma.RiderPayoutOrderByWithRelationInput[]
+  cursor?: Prisma.RiderPayoutWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RiderPayoutScalarFieldEnum | Prisma.RiderPayoutScalarFieldEnum[]
+}
+
+/**
+ * User.payoutsVoided
+ */
+export type User$payoutsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RiderPayout
+   */
+  select?: Prisma.RiderPayoutSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RiderPayout
+   */
+  omit?: Prisma.RiderPayoutOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RiderPayoutInclude<ExtArgs> | null
+  where?: Prisma.RiderPayoutWhereInput
+  orderBy?: Prisma.RiderPayoutOrderByWithRelationInput | Prisma.RiderPayoutOrderByWithRelationInput[]
+  cursor?: Prisma.RiderPayoutWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RiderPayoutScalarFieldEnum | Prisma.RiderPayoutScalarFieldEnum[]
 }
 
 /**

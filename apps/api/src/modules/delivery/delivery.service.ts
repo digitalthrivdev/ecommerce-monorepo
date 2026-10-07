@@ -13,6 +13,7 @@ import {
 import { AppError } from "../../shared/errors.js";
 import { lockOrder, transitionOrder } from "../orders/order-status.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
+import { assertUnderCashLimit } from "./cash.service.js";
 import { deliveryOtp, hashDeliveryOtp, verifyDeliveryOtp } from "./delivery-otp.js";
 import { ACTIVE_DELIVERY_STATUSES } from "./partners.service.js";
 import { readPartnerLocation, travelEstimate, type PartnerLocation } from "./tracking.service.js";
@@ -438,6 +439,7 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
         });
       }
       const partner = assertAvailable((await lockPartners(tx, [partnerId])).get(partnerId));
+      await assertUnderCashLimit(tx, partnerId);
 
       await transitionOrder(tx, {
         orderId,
@@ -481,6 +483,7 @@ export function createDeliveryService(prisma: PrismaClient, redis: Redis) {
 
       const partners = await lockPartners(tx, delivery.partnerId ? [partnerId, delivery.partnerId] : [partnerId]);
       const partner = assertAvailable(partners.get(partnerId));
+      await assertUnderCashLimit(tx, partnerId);
 
       await transitionOrder(tx, {
         orderId,

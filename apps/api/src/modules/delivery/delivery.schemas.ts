@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { DeliveryPartnerStatus } from "../../generated/prisma/client";
-import { paginationQuerySchema, phoneSchema } from "../../shared/schemas.js";
+import { DeliveryPartnerStatus, PayoutMethod } from "../../generated/prisma/client";
+import { paginationQuerySchema, phoneSchema, positiveDecimalSchema } from "../../shared/schemas.js";
 
 const idSchema = z.string().trim().min(1).max(64);
 const vehicleType = z.string().trim().min(1).max(30);
@@ -92,6 +92,52 @@ export const earningsQuerySchema = z
   })
   .refine(({ from, to }) => from < to, "from must be before to")
   .refine(({ from, to }) => to.getTime() - from.getTime() <= 92 * 24 * 60 * 60 * 1000, "Range can be at most 92 days");
+
+export const cashPartnerParamsSchema = z.object({ partnerId: idSchema });
+
+export const cashDepositParamsSchema = z.object({ depositId: idSchema });
+
+export const listCashQuerySchema = paginationQuerySchema.extend({
+  q: listPartnersQuerySchema.shape.q,
+});
+
+export const depositsQuerySchema = paginationQuerySchema.extend({
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const recordDepositBodySchema = z.object({
+  amount: positiveDecimalSchema,
+  note: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((value) => value || undefined),
+});
+
+export const voidDepositBodySchema = z.object({
+  reason: z.string().trim().min(1, "Say why this deposit is being voided").max(300),
+});
+
+export const payoutParamsSchema = z.object({ payoutId: idSchema });
+
+/** A small allowance for the admin's clock; payments can't be dated in the future. */
+const PAID_AT_SKEW_MS = 5 * 60 * 1000;
+
+export const recordPayoutBodySchema = z.object({
+  amount: positiveDecimalSchema,
+  method: z.enum(PayoutMethod),
+  note: recordDepositBodySchema.shape.note,
+  paidAt: z.iso
+    .datetime({ offset: true })
+    .transform((value) => new Date(value))
+    .refine((date) => date.getTime() <= Date.now() + PAID_AT_SKEW_MS, "The payment date can't be in the future")
+    .optional(),
+});
+
+export const voidPayoutBodySchema = z.object({
+  reason: z.string().trim().min(1, "Say why this payout is being voided").max(300),
+});
 
 export type ListPartnersQuery = z.infer<typeof listPartnersQuerySchema>;
 export type CreatePartnerInput = z.infer<typeof createPartnerBodySchema>;

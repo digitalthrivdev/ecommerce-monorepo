@@ -14,6 +14,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import brandsRoutes from "./modules/brands/brands.routes.js";
 import cartRoutes from "./modules/cart/cart.routes.js";
 import categoriesRoutes from "./modules/categories/categories.routes.js";
+import cashRoutes from "./modules/delivery/cash.routes.js";
 import deliveryRoutes from "./modules/delivery/delivery.routes.js";
 import partnersRoutes from "./modules/delivery/partners.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
@@ -83,6 +84,7 @@ export async function buildApp() {
   await app.register(adminOrdersRoutes, { prefix: "/admin/orders" });
   await app.register(customersRoutes, { prefix: "/admin/customers" });
   await app.register(partnersRoutes, { prefix: "/delivery-partners" });
+  await app.register(cashRoutes, { prefix: "/rider-cash" });
   await app.register(deliveryRoutes, { prefix: "/delivery" });
   await app.register(settingsRoutes, { prefix: "/settings" });
   await app.register(homeRoutes, { prefix: "/home" });

@@ -133,6 +133,16 @@ export type Payment = Prisma.PaymentModel
  */
 export type DeliveryPartner = Prisma.DeliveryPartnerModel
 /**
+ * Model CashDeposit
+ * 
+ */
+export type CashDeposit = Prisma.CashDepositModel
+/**
+ * Model RiderPayout
+ * 
+ */
+export type RiderPayout = Prisma.RiderPayoutModel
+/**
  * Model Delivery
  * 
  */

@@ -28,12 +28,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store           Store?           @relation(fields: [storeId], references: [id])
-  addresses       Address[]
-  cart            Cart?
-  orders          Order[]
-  deliveryPartner DeliveryPartner?
-  pushTokens      PushToken[]
+  store                Store?           @relation(fields: [storeId], references: [id])
+  addresses            Address[]
+  cart                 Cart?
+  orders               Order[]
+  deliveryPartner      DeliveryPartner?
+  cashDepositsRecorded CashDeposit[]    @relation("CashDepositRecordedBy")
+  cashDepositsVoided   CashDeposit[]    @relation("CashDepositVoidedBy")
+  payoutsRecorded      RiderPayout[]    @relation("RiderPayoutRecordedBy")
+  payoutsVoided        RiderPayout[]    @relation("RiderPayoutVoidedBy")
+  pushTokens           PushToken[]
 
   @@index([role])
   @@index([storeId])
@@ -104,11 +108,12 @@ model Store {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products StoreProduct[]
-  orders   Order[]
-  carts    Cart[]
-  staff    User[]
-  hours    StoreHours[]
+  products     StoreProduct[]
+  orders       Order[]
+  carts        Cart[]
+  staff        User[]
+  hours        StoreHours[]
+  cashDeposits CashDeposit[]
 
   @@index([status])
 }
@@ -602,13 +607,80 @@ model DeliveryPartner {
   vehicleType   String?
   vehicleNumber String?
 
+  // Cash-on-delivery orders delivered from this time count towards cash in hand. Partners that
+  // existed before cash tracking start at the time it was added.
+  cashSince     DateTime @default(now())
+  // Delivery earnings from this time count towards what the partner is owed; earlier ones were
+  // settled before payouts were recorded.
+  earningsSince DateTime @default(now())
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user       User       @relation(fields: [userId], references: [id])
-  deliveries Delivery[]
+  user         User          @relation(fields: [userId], references: [id])
+  deliveries   Delivery[]
+  cashDeposits CashDeposit[]
+  payouts      RiderPayout[]
 
   @@index([status])
+}
+
+// Cash a partner handed over from cash-on-delivery orders. Never deleted: a mistake is voided
+// with a reason and stays in the log. Amounts are always positive (database check).
+model CashDeposit {
+  id        String  @id @default(cuid())
+  partnerId String
+  amount    Decimal @db.Decimal(10, 2)
+  // The store whose staff received it; null when an admin recorded it.
+  storeId   String?
+  note      String?
+
+  recordedById String
+  createdAt    DateTime @default(now())
+
+  voidedAt   DateTime?
+  voidedById String?
+  voidReason String?
+
+  partner    DeliveryPartner @relation(fields: [partnerId], references: [id])
+  store      Store?          @relation(fields: [storeId], references: [id])
+  recordedBy User            @relation("CashDepositRecordedBy", fields: [recordedById], references: [id])
+  voidedBy   User?           @relation("CashDepositVoidedBy", fields: [voidedById], references: [id])
+
+  @@index([partnerId, createdAt])
+  @@index([storeId, createdAt])
+}
+
+enum PayoutMethod {
+  CASH
+  UPI
+  BANK_TRANSFER
+  OTHER
+}
+
+// Earnings an admin paid a partner. Never deleted: a mistake is voided with a reason and stays
+// in the log. Amounts are always positive (database check).
+model RiderPayout {
+  id        String       @id @default(cuid())
+  partnerId String
+  amount    Decimal      @db.Decimal(10, 2)
+  method    PayoutMethod
+  // Transaction or receipt reference, or anything else worth keeping.
+  note      String?
+  paidAt    DateTime
+
+  recordedById String
+  createdAt    DateTime @default(now())
+
+  voidedAt   DateTime?
+  voidedById String?
+  voidReason String?
+
+  partner    DeliveryPartner @relation(fields: [partnerId], references: [id])
+  recordedBy User            @relation("RiderPayoutRecordedBy", fields: [recordedById], references: [id])
+  voidedBy   User?           @relation("RiderPayoutVoidedBy", fields: [voidedById], references: [id])
+
+  @@index([partnerId, paidAt])
 }
 
 enum DeliveryPartnerStatus {
@@ -683,6 +755,9 @@ model PlatformSettings {
   freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
   minOrderValue         Decimal  @db.Decimal(10, 2)
   deliveryPartnerFee    Decimal  @db.Decimal(10, 2)
+
+  // A partner holding this much cash or more can't be assigned orders until they deposit; null means no limit.
+  riderCashLimit Decimal? @db.Decimal(10, 2)
 
   // "Delivery in about N minutes" in the customer app's home header and checkout; null hides it.
   deliveryPromiseMinutes Int?

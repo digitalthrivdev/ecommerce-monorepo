@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { decimalSchema, phoneSchema } from "../../shared/schemas.js";
+import { decimalSchema, phoneSchema, positiveDecimalSchema } from "../../shared/schemas.js";
 import { OTP_LENGTH } from "../auth/otp-provider.js";
 
 const playStoreUrlSchema = z
@@ -27,6 +27,7 @@ export const updateSettingsBodySchema = z
     freeDeliveryThreshold: decimalSchema.nullable(),
     minOrderValue: decimalSchema,
     deliveryPartnerFee: decimalSchema,
+    riderCashLimit: positiveDecimalSchema.nullable(),
     deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
     supportPhone: phoneSchema.nullable(),
     supportEmail: z.email().max(200).nullable(),
