@@ -7,11 +7,13 @@ RUN corepack enable
 WORKDIR /repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
+# Loaded as TypeScript source at runtime too (Node strips the types).
+COPY packages/validation packages/validation
 
 FROM base AS build
 RUN pnpm install --frozen-lockfile --filter @grocery/api --config.node-linker=isolated
 COPY apps/api apps/api
-RUN cd apps/api && node_modules/.bin/tsc
+RUN cd apps/api && node_modules/.bin/tsc -p tsconfig.build.json
 
 # Keeps the Prisma CLI (a dev dependency) for `prisma migrate deploy`.
 FROM build AS migrate
@@ -20,7 +22,11 @@ CMD ["node_modules/.bin/prisma", "migrate", "deploy"]
 
 FROM base AS runtime
 ENV NODE_ENV=production
-RUN pnpm install --frozen-lockfile --prod --filter @grocery/api --config.node-linker=isolated && pnpm store prune
+COPY apps/api/scripts/prune-runtime-deps.mjs /tmp/
+# The pnpm store is hard-linked into node_modules, so it goes too, in the same layer.
+RUN pnpm install --frozen-lockfile --prod --filter @grocery/api --config.node-linker=isolated \
+  && node /tmp/prune-runtime-deps.mjs \
+  && rm -rf /tmp/prune-runtime-deps.mjs "$(pnpm store path)" /root/.cache
 COPY --from=build /repo/apps/api/dist apps/api/dist
 # Owned by the API user, so a new uploads volume mounted here starts out writable.
 RUN mkdir -p apps/api/uploads && chown node:node apps/api/uploads

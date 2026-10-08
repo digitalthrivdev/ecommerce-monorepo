@@ -13,11 +13,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Push go-live check.** Expo Push is implemented (`PUSH_PROVIDER=expo`); confirm on a real device with a preview build that the push token registers and order updates arrive.
 - [ ] **Off-site backups.** `deploy/` keeps daily database dumps and a copy of uploaded images on the server only (`deploy/backups`); copy them to object storage or another machine (e.g. a nightly rclone/rsync job).
 
-## Deployment
-
-- [ ] Build images in CI and push them to a registry, so small VPSs do not have to build (the admin build needs about 1.5 GB of RAM).
-- [ ] Smaller API image (about 800 MB): the Prisma CLI and Studio are pulled into production dependencies as a peer of `@prisma/client`.
-
 ## Delivery
 
 - [ ] **Live tracking over WebSockets.** Push partner location and order status to the customer app (`@fastify/websocket`, Redis pub/sub so it works across API instances). Today the customer app polls `GET /orders/:id/tracking` every 10 seconds and glides the partner's marker on the map between updates; WebSockets are only worth it at much higher order volumes.
@@ -54,7 +49,5 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Engineering
 
-- [ ] Automated test runner and CI (current verification uses throwaway scripts against the dev database).
-- [ ] Readable app stack traces in Sentry: upload source maps from EAS builds (Sentry's Expo plugin and a `SENTRY_AUTH_TOKEN` EAS secret).
-- [ ] Report browser errors in the dashboard (only its server errors are reported today).
-- [ ] Share validation rules (phone, money, slugs) between the API and admin through `packages/validation` instead of duplicating them.
+- [ ] More API tests: payments (webhooks, refunds), delivery assignment and the partner flow, inventory adjustments, coupons. `apps/api/test` covers auth, checkout, cancellation, products and GST today.
+- [ ] Use `@grocery/validation` in the customer and delivery apps too (they still keep their own copy of the state list); needs Metro to resolve the workspace package.

@@ -29,7 +29,7 @@ Add a row for every new client.
 
 ## New client: server
 
-Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
+Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. With prebuilt images (see "Updating a server") nothing is built on the server, and 1 GB plus swap is enough. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
 
 1. **DNS:** point the API and dashboard domains, the client's main domain (`SITE_DOMAIN`, the public website) and its `www` (A records) at the server. Open ports 80 and 443.
 2. **Code:** `git clone git@github.com:piyushGupta20/grocery-app-monorepo.git <client>` then `cd <client>/deploy && cp .env.example .env && cp api.env.example api.env`.
@@ -59,23 +59,35 @@ Push to GitHub first; the server pulls from there.
 1. **What's deployed now:** `ssh <server> 'cd ~/<client> && git log -1 --oneline'`.
 2. **Pending migrations:** from the repository, `git diff --name-only <deployed>..origin/main -- apps/api/prisma/migrations`. Read each new `migration.sql`. Migrations that only add tables or columns are safe. If one moves data, drops a column or adds `NOT NULL`, check it against the live data and take a backup first.
 3. **Backup:** `docker compose exec backup sh /usr/local/bin/backup.sh` (in `deploy/`).
-4. **Deploy:** `cd ~/<client> && git pull && cd deploy && docker compose up -d --build`. The `migrate` service applies migrations before the API starts. On a 1-CPU server the build takes about 5 minutes.
+4. **Deploy:** `~/<client>/deploy/update.sh`. It pulls the code, then either pulls the images CI built for that commit (with `IMAGE_PREFIX`, below) or builds them on the server (about 5 minutes on 1 CPU). The `migrate` service applies migrations before the API starts.
 5. **Verify:** `docker compose ps` (api, admin and web healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
 
 If the update changed `deploy/nginx/templates/`, re-render and reload Nginx; it only reads the template when its container starts, and `up -d` doesn't restart it: `docker compose exec nginx sh -c "/docker-entrypoint.d/20-envsubst-on-templates.sh && nginx -t && nginx -s reload"`.
 
 With several clients, update every server before releasing new app builds: a new app may call endpoints an older server doesn't have.
 
+### Prebuilt images (recommended for small servers)
+
+Every push to `main` runs CI (`.github/workflows/ci.yml`): typecheck, lint and the API tests, then, if they pass, it builds the `api`, `migrate`, `admin` and `web` images and pushes them to GitHub Container Registry, tagged with the commit. The images hold no client settings, so every client uses the same ones. Wait for the run to finish (GitHub → Actions) before updating a server.
+
+One-time setup per server:
+
+1. On GitHub, create a classic personal access token with only `read:packages` (Settings → Developer settings → Personal access tokens). Use a separate token per server so one can be revoked alone.
+2. On the server: `docker login ghcr.io -u <github user>` and paste the token when asked (never in chat or a file in the repository).
+3. In `deploy/.env`: `IMAGE_PREFIX=ghcr.io/<github owner, lowercase>/grocery` (for this repository, `ghcr.io/piyushgupta20/grocery`).
+
+From then on `update.sh` pulls instead of building. If CI hasn't finished or failed for the pulled commit, it stops without changing anything; run it again once the images exist. Blank `IMAGE_PREFIX` goes back to building on the server.
+
 **Adding the website to a server set up before it existed:** `docker compose up` stops with "Set SITE_DOMAIN in .env" until it's configured.
 
 1. Point the main domain and its `www` at the server (A records) and wait until `dig +short <domain>` shows the server's IP.
 2. Add `SITE_DOMAIN=<domain>` to `deploy/.env`.
-3. Deploy as above (`docker compose up -d --build`).
+3. Deploy as above (`./update.sh`).
 4. Run `./request-certificate.sh`, which adds the website to the certificate and reloads Nginx.
 
 ## Rollback and restore
 
-- **Code only (no new migrations):** `git checkout <previous commit>` in the client folder, then `docker compose up -d --build`. Return with `git checkout main && git pull`.
+- **Code only (no new migrations):** `git checkout <previous commit>` in the client folder, then `docker compose up -d --build` in `deploy/` (this builds on the server even with `IMAGE_PREFIX`). Return with `git checkout main && deploy/update.sh`.
 - **After migrations:** Prisma migrations don't roll back. Restore the backup taken before the update, using the steps at the top of `deploy/backup.sh` (stop api and admin, `pg_restore`, copy images, start again), then deploy the old code.
 
 Backups are daily dumps in `deploy/backups`, kept `BACKUP_KEEP_DAYS` days, plus copies of uploaded images. They stay on the same server; copying them elsewhere is still on `TODO.md`.
@@ -88,11 +100,19 @@ Backups are daily dumps in `deploy/backups`, kept `BACKUP_KEEP_DAYS` days, plus 
 - Apps: `"EXPO_PUBLIC_SENTRY_DSN": "<dsn>"` in the client's build profiles, then rebuild. The DSN is not a secret (it only allows sending reports), so it is fine in `eas.json`.
 - Blank turns reporting off. Development builds and Metro never report.
 
-What is reported: everything the API logs at error level (500s, failed payment sweeps and refunds, SMS and push failures, crashes), server errors in the dashboard and website, and JavaScript and native crashes in the apps. Not reported: 4xx responses, browser errors in the dashboard and website, performance data.
+What is reported: everything the API logs at error level (500s, failed payment sweeps and refunds, SMS and push failures, crashes), server errors in the dashboard and website, browser errors in the dashboard, and JavaScript and native crashes in the apps. Not reported: 4xx responses, browser errors on the website, performance data.
 
-Personal data stays out: no request bodies, headers, cookies, query strings or user IDs; phone numbers and email addresses in error messages are replaced. Each server process sends at most 60 reports an hour and each phone at most 10, so one broken client can't use up the shared quota. Also leave Sentry's spike protection on, and set a rate limit per DSN if the plan offers it (Project → Settings → Client Keys → Configure).
+Personal data stays out: no request bodies, headers, cookies, query strings, console output or user IDs; phone numbers and email addresses in error messages are replaced. Each server process sends at most 60 reports an hour, each dashboard browser tab and each phone at most 10, so one broken client can't use up the shared quota. Also leave Sentry's spike protection on, and set a rate limit per DSN if the plan offers it (Project → Settings → Client Keys → Configure).
 
-App stack traces are minified, because source maps are not uploaded (that needs Sentry's Expo plugin and an auth token in EAS). The error message, screen and device still show.
+**Readable app stack traces.** Builds upload their source maps to Sentry when these are set; without them the build still works, but app stack traces are minified (the message, screen and device still show).
+
+- Once, in both app folders' EAS environments (`preview` and `production`), shared by every client: `SENTRY_AUTH_TOKEN` (an organisation auth token from Sentry → Settings → Auth Tokens, visibility `secret`), `SENTRY_ORG` (the organisation slug) and, for an EU organisation, `SENTRY_URL=https://de.sentry.io/`.
+  ```bash
+  cd apps/customer   # then again in apps/delivery
+  npx eas-cli@latest env:create --name SENTRY_AUTH_TOKEN --value <token> --environment preview --environment production --visibility secret
+  ```
+- Per client, in its build profiles next to the DSN: `"SENTRY_PROJECT": "<project slug>"`. Never in an EAS environment: another client's crashes would be symbolicated against the wrong project.
+- `APP_BRAND=acme SENTRY_PROJECT=x SENTRY_AUTH_TOKEN=x SENTRY_ORG=y npx expo config --type public` shows the `@sentry/react-native/expo` plugin when everything is set.
 
 To move to GlitchTip later (hosted or self-hosted, Sentry-compatible): create the projects there and swap the DSNs. No code changes.
 
@@ -181,7 +201,7 @@ Add `<brand>-preview` and `<brand>-production` to both `eas.json` files:
 
 - **`APP_ID`** is the Android package and iOS bundle ID. It's permanent once the app is on a store, and must differ between clients and between the two apps (e.g. `com.acme.grocery` and `com.acme.partner`).
 - **`APP_SCHEME`** brings the customer back from the payment page; use a unique one per client.
-- **`EXPO_PUBLIC_SENTRY_DSN`** is the client's Sentry project (optional; blank turns error reporting off).
+- **`EXPO_PUBLIC_SENTRY_DSN`** is the client's Sentry project (optional; blank turns error reporting off). Add `SENTRY_PROJECT` (the project slug) too for readable stack traces (see "Error tracking and uptime").
 - **Values here are public.** They are bundled into the app, so they are safe to commit. Never put a secret in `eas.json` or in any `EXPO_PUBLIC_` variable.
 - **Optional:** `EAS_PROJECT_ID`, `EXPO_OWNER` and `APP_SLUG` move a client to their own EAS project.
 
@@ -195,7 +215,7 @@ The EAS environments (`preview`, `production`) are shared by every client, so th
 
 Without a matching Firebase entry the build still works, but without push notifications (the build log warns about it).
 
-Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND`, `EXPO_PUBLIC_API_URL` or `EXPO_PUBLIC_SENTRY_DSN` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
+Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SENTRY_DSN` or `SENTRY_PROJECT` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
 
 ### Google Maps key (Android)
 

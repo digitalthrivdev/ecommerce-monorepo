@@ -15,7 +15,7 @@ Other folders:
 
 - `docker/`: PostgreSQL and Redis for local development.
 - `deploy/`: the production stack (Docker Compose, Nginx, Let's Encrypt, daily backups).
-- `packages/`: reserved for shared code; currently empty.
+- `packages/validation`: validation rules shared by the API and the dashboard (phone, money, SKU and code patterns, Indian states, GSTIN checks). Plain TypeScript with no dependencies, loaded as source (no build step).
 - `AGENTS.md`: product scope, architecture and coding rules. Read it before making larger changes.
 - `docs/deployment.md`: deploying a client's server and building their apps.
 - `TODO.md`: known gaps and planned work.
@@ -110,10 +110,17 @@ Run these from the repository root:
 pnpm dev          # API and dashboard in watch mode
 pnpm typecheck    # all apps
 pnpm lint         # all apps
+pnpm test         # API tests (needs the dev PostgreSQL and Redis running)
 pnpm build        # all apps
 ```
 
 For a single app, add a filter: `pnpm --filter @grocery/api typecheck`, `pnpm --filter admin lint`, and so on.
+
+### Tests
+
+The API tests (`apps/api/test`, Vitest) call the API in-process, without a server. Each run creates its own database (`grocery_test_<timestamp>`) on the dev PostgreSQL, applies the migrations and the seed, and drops it at the end; Redis database 15 is used and flushed. They never touch the dev database or `apps/api/.env`, and OTPs are only logged. Run one file with `pnpm --filter @grocery/api test orders`, or watch with `pnpm --filter @grocery/api test:watch`.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the Prisma checks, typecheck, lint and tests on every push and pull request, and on `main` also builds the production images (see [docs/deployment.md](docs/deployment.md#prebuilt-images-recommended-for-small-servers)).
 
 ### Changing the database schema
 
@@ -176,7 +183,7 @@ Each client gets its own server (or Compose project) running `deploy/compose.yml
 - a volume for uploaded images, served by Nginx;
 - a daily `pg_dump` backup kept for 14 days, plus a copy of new images.
 
-To update a server: `git pull && docker compose up -d --build` in `deploy/`. Migrations run automatically.
+To update a server: `deploy/update.sh`. It pulls the code and either the images CI built for that commit (`IMAGE_PREFIX` in `deploy/.env`) or builds them on the server. Migrations run automatically.
 
 **[docs/deployment.md](docs/deployment.md)** is the full runbook: setting up a new client, updating safely (pending migrations, backups), rollback and restore, and the launch checklist.
 

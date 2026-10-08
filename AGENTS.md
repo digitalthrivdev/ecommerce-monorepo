@@ -12,7 +12,7 @@ A white-label quick-commerce grocery platform (a simplified Blinkit). One codeba
 - `apps/admin`: Next.js 16 dashboard for admins and store staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
 - `apps/web`: Next.js 16 public website on the client's main domain: home page built from the Appearance home sections (like the customer app), policy pages and app download links. Read-only for now; web ordering would follow the app's flow through the same API. It calls the API only from the server (`API_URL`).
 - `apps/customer`, `apps/delivery`: Expo / React Native apps.
-- `deploy/`: production stack. `docker/`: dev PostgreSQL and Redis. `packages/`: reserved, currently empty.
+- `deploy/`: production stack. `docker/`: dev PostgreSQL and Redis. `packages/validation`: validation patterns, Indian states and GSTIN checks shared by the API and admin (TypeScript source, no dependencies, no build).
 - pnpm workspaces and Turborepo. Do not split the backend into microservices.
 
 ## B1 scope
