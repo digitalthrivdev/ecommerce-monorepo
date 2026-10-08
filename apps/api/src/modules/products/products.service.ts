@@ -101,6 +101,7 @@ export function createProductsService(prisma: PrismaClient) {
                 },
               }
             : {},
+          query.missingTax ? { OR: [{ gstRate: null }, { hsnCode: null }] } : {},
         ]
       : [];
     const where: Prisma.ProductWhereInput = {

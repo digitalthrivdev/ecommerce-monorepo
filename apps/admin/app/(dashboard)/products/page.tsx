@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ImageIcon, Plus, Search, Upload, X } from "lucide-react";
 
 import { CategoryFilter } from "@/components/category-filter";
+import { Notice } from "@/components/notice";
 import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
@@ -36,9 +37,10 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
   const status = oneOf(first(params.status), STATUSES);
   const selling = oneOf(first(params.selling), SELLING);
   const outOfStock = first(params.stock) === "out";
+  const missingTax = first(params.tax) === "missing";
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const [products, categories, brands] = await Promise.all([
+  const [products, categories, brands, untaxed] = await Promise.all([
     apiFetch<Paginated<ProductListItem>>("/products", {
       query: {
         includeInactive: true,
@@ -48,15 +50,17 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
         status,
         selling,
         outOfStock: outOfStock || undefined,
+        missingTax: missingTax || undefined,
         limit: PAGE_SIZE,
         offset: (page - 1) * PAGE_SIZE,
       },
     }),
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
     apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
+    missingTax ? null : apiFetch<Paginated<ProductListItem>>("/products", { query: { includeInactive: true, missingTax: true, limit: 1 } }),
   ]);
 
-  const current = { q, categoryId, brandId, status, selling, stock: outOfStock ? "out" : undefined };
+  const current = { q, categoryId, brandId, status, selling, stock: outOfStock ? "out" : undefined, tax: missingTax ? "missing" : undefined };
   const href = (changes: Partial<typeof current> & { page?: number }) => {
     const next = new URLSearchParams();
     for (const [key, value] of Object.entries({ ...current, ...changes, page: undefined })) if (value) next.set(key, String(value));
@@ -65,7 +69,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
     return query ? `/products?${query}` : "/products";
   };
   const lastPage = Math.max(1, Math.ceil(products.total / PAGE_SIZE));
-  const filtered = Boolean(q || categoryId || brandId || selling || outOfStock);
+  const filtered = Boolean(q || categoryId || brandId || selling || outOfStock || missingTax);
 
   return (
     <>
@@ -91,6 +95,11 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
       />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
+        {untaxed && untaxed.total > 0 && (
+          <Notice tone="warning" title={`${untaxed.total} ${untaxed.total === 1 ? "product has" : "products have"} no GST rate or HSN code`}>
+            Products without a GST rate are sold with no GST on their invoices. <Link href="/products?tax=missing" className="font-medium underline underline-offset-4">Show them</Link>
+          </Notice>
+        )}
         <PageTabs
           label="Show products"
           active={status ?? "all"}
@@ -126,6 +135,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
             ]}
           />
           <ParamSelect param="stock" label="Filter by stock" allLabel="Any stock" options={[{ value: "out", label: "Out of stock somewhere" }]} />
+          <ParamSelect param="tax" label="Filter by GST details" allLabel="Any GST details" options={[{ value: "missing", label: "Missing GST rate or HSN" }]} />
           {filtered && (
             <Button asChild variant="ghost" size="sm">
               <Link href={status ? `/products?status=${status}` : "/products"}>

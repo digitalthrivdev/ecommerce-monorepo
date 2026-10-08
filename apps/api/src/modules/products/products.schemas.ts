@@ -33,7 +33,7 @@ export const MAX_IMAGES = 20;
 const MAX_TAGS = 30;
 
 export const gstRateSchema = z
-  .string()
+  .string({ error: 'Give the GST rate as a percentage, e.g. "5" or "18", or "0" for exempt goods' })
   .trim()
   .regex(/^\d{1,2}(\.\d{1,2})?$/, 'GST rate must be a percentage with up to 2 decimal places, e.g. "5" or "18"');
 
@@ -71,7 +71,8 @@ const productFieldsSchema = z.object({
   description: optionalText(2000),
   tags: tagsSchema.optional(),
   hsnCode: hsnCodeSchema.nullish(),
-  gstRate: gstRateSchema.nullish(),
+  // Decides the GST on every sale, so it can't be left out ("0" for exempt goods) or cleared.
+  gstRate: gstRateSchema,
   isVeg: z.boolean().nullish(),
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
@@ -125,6 +126,8 @@ export const listProductsQuerySchema = paginationQuerySchema.extend({
   status: z.enum(["active", "hidden"]).optional(),
   selling: z.enum(["yes", "no"]).optional(),
   outOfStock: booleanQuery,
+  /** Products without a GST rate or HSN code. */
+  missingTax: booleanQuery,
 });
 
 export const productImageParamsSchema = z.object({

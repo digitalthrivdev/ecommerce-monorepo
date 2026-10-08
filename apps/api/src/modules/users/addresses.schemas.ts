@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { stateSchema } from "../../shared/gst.js";
 import { phoneSchema } from "../../shared/schemas.js";
 
 const addressBodySchema = z.object({
@@ -10,7 +11,7 @@ const addressBodySchema = z.object({
   addressLine2: z.string().trim().max(200).nullish(),
   landmark: z.string().trim().max(200).nullish(),
   city: z.string().trim().min(1).max(100),
-  state: z.string().trim().min(1).max(100),
+  state: stateSchema,
   postalCode: z.string().trim().min(3).max(12),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),

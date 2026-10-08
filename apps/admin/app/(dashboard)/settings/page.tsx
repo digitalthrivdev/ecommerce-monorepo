@@ -15,7 +15,7 @@ import { AppLinksForm, PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
-import type { EditablePolicyPage, PlatformSettings } from "@/lib/types";
+import type { EditablePolicyPage, Paginated, PlatformSettings, StoreDetails } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/website";
 
@@ -88,11 +88,13 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   await requireAdmin();
   const { tab: tabParam } = await searchParams;
   const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "rules";
-  const [settings, deployment, policyPages] = await Promise.all([
+  const [settings, deployment, policyPages, stores] = await Promise.all([
     apiFetch<PlatformSettings>("/settings/platform"),
     getPublicSettings(),
     tab === "website" ? apiFetch<EditablePolicyPage[]>("/settings/policy-pages") : null,
+    tab === "invoices" ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
   ]);
+  const storesWithoutGstin = (stores?.items ?? []).filter((store) => !store.invoiceGstin);
   const siteUrl = getSiteUrl();
   const siteLinks = [
     { title: "Website", url: siteUrl },
@@ -184,6 +186,21 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             {!settings.gstin && (
               <Notice tone="warning" title="Invoices have no GSTIN yet">
                 Delivered orders get an invoice the customer can download. Add your GSTIN so it can be used as a tax invoice.
+              </Notice>
+            )}
+            {settings.gstin && storesWithoutGstin.length > 0 && (
+              <Notice tone="warning" title="Some stores are in another state than this GSTIN">
+                Their invoices have no GSTIN until you add each store&apos;s own GSTIN on its page:{" "}
+                {storesWithoutGstin.map((store, index) => (
+                  <span key={store.id}>
+                    {index > 0 && ", "}
+                    <Link href={`/stores/${store.id}`} className="font-medium underline underline-offset-4">
+                      {store.name}
+                    </Link>{" "}
+                    ({store.state})
+                  </span>
+                ))}
+                .
               </Notice>
             )}
             <Section title="Seller on invoices" hint="Printed on the invoice of each order when it is delivered. Changes apply to orders delivered later.">

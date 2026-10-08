@@ -1,7 +1,8 @@
 import { StoreStatus, UserRole, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import { gstinMatchesState } from "../../shared/gst.js";
+import { gstinMatchesState, storeInvoiceGstin } from "../../shared/gst.js";
 import { ACTIVE_ORDER_STATUSES } from "../orders/order-status.js";
+import { getPlatformSettings } from "../settings/settings.service.js";
 import { distanceKmSql } from "./geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen, type OpeningHours } from "./store-hours.js";
 import type { CreateStoreInput, StoreHoursInput, UpdateStoreInput } from "./stores.schemas.js";
@@ -26,8 +27,15 @@ function withOpenState<T extends { hours: OpeningHours[] }>(store: T) {
   return { ...store, isOpen: isStoreOpen(store.hours) };
 }
 
-function withCounts({ _count, ...store }: StoreWithCounts) {
-  return withOpenState({ ...store, staffCount: _count.staff, productCount: _count.products, activeOrderCount: _count.orders });
+/** `invoiceGstin`: the GSTIN its invoices will carry, null when none applies to the store's state. */
+function withCounts({ _count, ...store }: StoreWithCounts, settingsGstin: string | null) {
+  return withOpenState({
+    ...store,
+    invoiceGstin: storeInvoiceGstin(store, settingsGstin),
+    staffCount: _count.staff,
+    productCount: _count.products,
+    activeOrderCount: _count.orders,
+  });
 }
 
 /** A GSTIN's first two digits are the state it is registered in. */
@@ -48,7 +56,8 @@ export function createStoresService(prisma: PrismaClient) {
         prisma.store.findMany({ ...page, include: adminCountsInclude }),
         prisma.store.count(),
       ]);
-      return { items: items.map(withCounts), total, limit: params.limit, offset: params.offset };
+      const { gstin } = await getPlatformSettings(prisma);
+      return { items: items.map((store) => withCounts(store, gstin)), total, limit: params.limit, offset: params.offset };
     }
 
     const where = { status: StoreStatus.ACTIVE };
@@ -62,7 +71,9 @@ export function createStoresService(prisma: PrismaClient) {
 
   async function getStore(id: string, options: { includeInactive: boolean }) {
     const store = options.includeInactive
-      ? await prisma.store.findUnique({ where: { id }, include: adminCountsInclude }).then((found) => found && withCounts(found))
+      ? await prisma.store
+          .findUnique({ where: { id }, include: adminCountsInclude })
+          .then(async (found) => found && withCounts(found, (await getPlatformSettings(prisma)).gstin))
       : await prisma.store
           .findFirst({ where: { id, status: StoreStatus.ACTIVE }, include: hoursInclude })
           .then((found) => found && withOpenState(found));

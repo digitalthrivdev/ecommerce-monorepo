@@ -4,11 +4,14 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { saveStore } from "@/app/(dashboard)/stores/actions";
+import { Notice } from "@/components/notice";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useFormAction } from "@/hooks/use-form-action";
+import { INDIAN_STATES } from "@/lib/indian-states";
 import type { StoreDetails } from "@/lib/types";
 
 import { StoreLocationPicker } from "./store-location-picker";
@@ -82,7 +85,22 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
             <TextField name="addressLine2" label="Area or landmark" defaultValue={store?.addressLine2} error={fieldErrors.addressLine2} maxLength={200} />
             <div className="grid gap-4 sm:grid-cols-3">
               <TextField name="city" label="City" defaultValue={store?.city} error={fieldErrors.city} maxLength={100} required />
-              <TextField name="state" label="State" defaultValue={store?.state} error={fieldErrors.state} maxLength={100} required />
+              <Field data-invalid={Boolean(fieldErrors.state)}>
+                <FieldLabel htmlFor="store-state">State</FieldLabel>
+                <Select name="state" defaultValue={INDIAN_STATES.find((state) => state === store?.state)} required>
+                  <SelectTrigger id="store-state" className="w-full" aria-invalid={Boolean(fieldErrors.state)}>
+                    <SelectValue placeholder="Choose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDIAN_STATES.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldError>{fieldErrors.state}</FieldError>
+              </Field>
               <TextField name="postalCode" label="Postal code" defaultValue={store?.postalCode} error={fieldErrors.postalCode} maxLength={12} required />
             </div>
           </FieldGroup>
@@ -98,6 +116,11 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
           className="uppercase"
           description="Only if this store is registered in another state than the GSTIN in Settings. Its invoices then show this one."
         />
+        {store && !store.invoiceGstin && (
+          <Notice tone="warning" title="Invoices from this store have no GSTIN" className="-mt-3">
+            The GSTIN in Settings → GST invoices is missing or registered in another state. Add it there, or this store&apos;s own GSTIN above.
+          </Notice>
+        )}
 
         <FieldSet>
           <FieldLegend>Delivery area</FieldLegend>

@@ -233,8 +233,8 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
         </div>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li>
-            Required columns: <code>name</code>, <code>category</code>, <code>sku</code> and <code>price</code>. Leave out a column to keep what is saved
-            today.
+            Required columns: <code>name</code>, <code>category</code>, <code>sku</code> and <code>price</code>, and <code>gst_rate</code> for new
+            products (0 for exempt goods). Leave out a column to keep what is saved today.
           </li>
           <li>
             Rows with the same <code>product_handle</code> are one product; its sizes differ by <code>option1_name</code>/<code>option1_value</code> (up to 3

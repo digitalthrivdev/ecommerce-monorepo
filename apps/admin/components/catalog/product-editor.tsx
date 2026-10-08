@@ -535,7 +535,7 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
 
           <Block title="Tax (GST)" hint="Your prices already include GST.">
             <div className="grid grid-cols-2 gap-4">
-              <TextField label="GST rate (%)" inputMode="decimal" placeholder="e.g. 5" {...field("gstRate")} />
+              <TextField label="GST rate (%)" inputMode="decimal" placeholder="e.g. 5" description="0 for exempt goods." required {...field("gstRate")} />
               <TextField label="HSN code" inputMode="numeric" maxLength={8} placeholder="e.g. 0401" {...field("hsnCode")} />
             </div>
           </Block>

@@ -809,6 +809,8 @@ export type StoreDetails = Store & {
   serviceRadiusKm: string;
   /** Only for a store registered in another state than the GSTIN in settings. */
   gstin: string | null;
+  /** The GSTIN its invoices carry: its own, else the one in settings if registered in its state. */
+  invoiceGstin: string | null;
   /** Weekly hours in the deployment time zone; empty means always open. */
   hours: StoreHours[];
   isOpen: boolean;

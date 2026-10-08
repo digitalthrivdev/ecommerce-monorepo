@@ -46,7 +46,7 @@ const storeSchema = z.object({
   addressLine1: text(200).min(1, "Enter the street address"),
   addressLine2: optionalText(200),
   city: text(100).min(1, "Enter the city"),
-  state: text(100).min(1, "Enter the state"),
+  state: text(100).min(1, "Choose the state"),
   postalCode: text(12).min(3, "Enter the postal code"),
   latitude: coordinate("latitude", 90),
   longitude: coordinate("longitude", 180),

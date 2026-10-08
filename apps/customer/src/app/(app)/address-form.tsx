@@ -9,6 +9,7 @@ import { FormField } from "@/components/form-field";
 import { MapPinPicker } from "@/components/map-pin-picker";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
+import { StatePicker } from "@/components/state-picker";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { PHONE_COUNTRY_CODE, PHONE_NATIONAL_LENGTH } from "@/lib/config";
 import { useDeliveryLocation } from "@/lib/delivery-location";
+import { matchState } from "@/lib/indian-states";
 import { describePlace, getCurrentCoordinates, type PlaceDetails } from "@/lib/location";
 import { mapsAvailable } from "@/lib/maps";
 import { isValidNationalNumber, toE164 } from "@/lib/phone";
@@ -49,7 +51,8 @@ function initialFields(address: Address | undefined, user: { name: string | null
     addressLine2: address?.addressLine2 ?? "",
     landmark: address?.landmark ?? "",
     city: address?.city ?? "",
-    state: address?.state ?? "",
+    // An older address may hold a name that isn't on the list; the customer then chooses it again.
+    state: matchState(address?.state) ?? "",
     postalCode: address?.postalCode ?? "",
     name: address?.name ?? user?.name ?? "",
     phone: nationalPart(address?.phone ?? user?.phone ?? ""),
@@ -61,7 +64,7 @@ function validate(fields: Fields, coordinates: Coordinates | null): FieldErrors 
   if (!coordinates) errors.location = "We need your location to check that we deliver there.";
   if (!fields.addressLine1.trim()) errors.addressLine1 = "Enter your house or flat number";
   if (!fields.city.trim()) errors.city = "Enter the city";
-  if (!fields.state.trim()) errors.state = "Enter the state";
+  if (!fields.state) errors.state = "Choose your state";
   if (fields.postalCode.trim().length < 3) errors.postalCode = "Enter the PIN code";
   if (!fields.name.trim()) errors.name = "Enter the receiver's name";
   if (!isValidNationalNumber(fields.phone)) errors.phone = `Enter a ${PHONE_NATIONAL_LENGTH}-digit phone number`;
@@ -99,7 +102,7 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
         ...current,
         addressLine2: current.addressLine2 || place.area || "",
         city: current.city || place.city || "",
-        state: current.state || place.state || "",
+        state: current.state || matchState(place.state) || "",
         postalCode: current.postalCode || place.postalCode || "",
       }));
     }
@@ -236,7 +239,7 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
             <FormField label="PIN code" value={fields.postalCode} onChangeText={set("postalCode")} error={errors.postalCode} keyboardType="number-pad" maxLength={12} />
           </View>
         </View>
-        <FormField label="State" value={fields.state} onChangeText={set("state")} error={errors.state} autoCapitalize="words" />
+        <StatePicker value={fields.state} onChange={set("state")} error={errors.state} />
 
         <Text className="pt-2 text-base font-bold">Receiver details</Text>
         <FormField label="Name" value={fields.name} onChangeText={set("name")} error={errors.name} autoCapitalize="words" autoComplete="name" />

@@ -546,6 +546,11 @@ export function createCatalogImportService(prisma: PrismaClient) {
         claimedBy.set(productId, group);
         group.existingId = productId;
       }
+      // Without a gst_rate column an existing product keeps its rate; a new one, or a blank cell, has none.
+      if (has(columns, "gst_rate") ? !data.gst_rate : !productId) {
+        errors.push({ row: group.first.row, column: "gst_rate", message: "Required: the product's GST rate, e.g. 0, 5 or 18" });
+        continue;
+      }
       resolved.push(group);
     }
 

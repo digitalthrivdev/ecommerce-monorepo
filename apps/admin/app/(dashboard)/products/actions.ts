@@ -60,7 +60,10 @@ const productSchema = z.object({
     .pipe(z.array(z.string().max(50, "Keep each tag under 50 characters")).max(30, "Use at most 30 tags")),
   isVeg: z.enum(["", NONE, "veg", "non-veg"]).transform((value) => (value === "veg" ? true : value === "non-veg" ? false : null)),
   hsnCode: optionalPattern(/^\d{4,8}$/, "Enter 4 to 8 digits"),
-  gstRate: optionalPattern(/^\d{1,2}(\.\d{1,2})?$/, "Enter a percentage like 5 or 18"),
+  gstRate: z
+    .string()
+    .trim()
+    .regex(/^\d{1,2}(\.\d{1,2})?$/, "Enter the GST rate, e.g. 5 or 18, or 0 for exempt goods"),
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
   countryOfOrigin: optionalText(100),
