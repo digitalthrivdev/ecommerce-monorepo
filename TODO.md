@@ -4,7 +4,6 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Next features (before launch)
 
-- [ ] **GST invoice and accounting exports.** Customers download a GST invoice PDF for a delivered order (customer app and dashboard). Admins export CSVs for the accountant: daily sales, GST summary by rate and HSN, online payments versus refunds. Each line's coupon share (`OrderItem.discount`) reduces its taxable value; `taxAmount` is already the GST after it.
 - [ ] **Shareable product links.** The product screen's Share button sends a custom-scheme link (`<scheme>://product/<id>`), which many apps (e.g. WhatsApp) don't make tappable and which does nothing when the app isn't installed. Share `https://<SITE_DOMAIN>/p/<id>` instead: Android App Links and iOS Universal Links open it in the app (domain per client in `eas.json` and `app.config.js`, plus `/.well-known/assetlinks.json` and `apple-app-site-association` served by `apps/web`); without the app, `apps/web` shows a read-only product page (name, image, price) with the Google Play / App Store links from Settings → Website. Needs one app rebuild per client.
 
 ## Before the first production launch

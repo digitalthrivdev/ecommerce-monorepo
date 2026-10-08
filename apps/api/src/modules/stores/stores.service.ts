@@ -1,5 +1,6 @@
 import { StoreStatus, UserRole, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { gstinMatchesState } from "../../shared/gst.js";
 import { ACTIVE_ORDER_STATUSES } from "../orders/order-status.js";
 import { distanceKmSql } from "./geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen, type OpeningHours } from "./store-hours.js";
@@ -27,6 +28,15 @@ function withOpenState<T extends { hours: OpeningHours[] }>(store: T) {
 
 function withCounts({ _count, ...store }: StoreWithCounts) {
   return withOpenState({ ...store, staffCount: _count.staff, productCount: _count.products, activeOrderCount: _count.orders });
+}
+
+/** A GSTIN's first two digits are the state it is registered in. */
+function assertGstinState(gstin: string | null | undefined, state: string) {
+  if (gstin && !gstinMatchesState(gstin, state)) {
+    throw new AppError(400, "GSTIN_STATE_MISMATCH", `This GSTIN is not registered in ${state}. Its first two digits are the state code.`, {
+      field: "gstin",
+    });
+  }
 }
 
 export function createStoresService(prisma: PrismaClient) {
@@ -65,15 +75,17 @@ export function createStoresService(prisma: PrismaClient) {
   }
 
   async function createStore(data: CreateStoreInput) {
+    assertGstinState(data.gstin, data.state);
     return withOpenState(await prisma.store.create({ data, include: hoursInclude }));
   }
 
   async function updateStore(id: string, data: UpdateStoreInput) {
-    const existing = await prisma.store.findUnique({ where: { id }, select: { id: true } });
+    const existing = await prisma.store.findUnique({ where: { id }, select: { id: true, gstin: true, state: true } });
 
     if (!existing) {
       throw new AppError(404, "STORE_NOT_FOUND", "Store not found");
     }
+    assertGstinState(data.gstin === undefined ? existing.gstin : data.gstin, data.state ?? existing.state);
 
     return withOpenState(await prisma.store.update({ where: { id }, data, include: hoursInclude }));
   }

@@ -271,6 +271,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         select: {
           orderNumber: true,
           deliveryFee: true,
+          deliveryFeeTax: true,
           discount: true,
           paymentMethod: true,
           items: true,
@@ -310,7 +311,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         discount: shares[index]!,
         taxAmount: includedTax(amounts[index]!.minus(shares[index]!), candidate.gstRate),
       }));
-      const taxTotal = repriced.reduce((sum, line) => sum.plus(line.taxAmount), new Prisma.Decimal(0));
+      const taxTotal = repriced.reduce((sum, line) => sum.plus(line.taxAmount), order.deliveryFeeTax);
 
       for (const line of repriced.filter((candidate) => candidate.changed)) {
         await tx.orderItem.update({

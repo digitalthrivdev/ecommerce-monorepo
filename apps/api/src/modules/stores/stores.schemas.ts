@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { StoreStatus } from "../../generated/prisma/client";
+import { gstinSchema } from "../../shared/gst.js";
 import { booleanQuery, paginationQuerySchema, phoneSchema } from "../../shared/schemas.js";
 
 const queryNumber = (min: number, max: number) =>
@@ -23,6 +24,8 @@ const storeBodySchema = z.object({
   longitude: z.number().min(-180).max(180),
   serviceRadiusKm: z.number().gt(0).max(50).optional(),
   status: z.enum(StoreStatus).optional(),
+  // Only for a store registered in another state than the GSTIN in settings.
+  gstin: gstinSchema.nullish(),
 });
 
 export const createStoreBodySchema = storeBodySchema;

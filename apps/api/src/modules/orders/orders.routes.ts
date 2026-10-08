@@ -3,6 +3,8 @@ import type { FastifyPluginAsync } from "fastify";
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { createTrackingService } from "../delivery/tracking.service.js";
+import { sendPdf } from "../invoices/invoices.routes.js";
+import { createInvoicesService } from "../invoices/invoices.service.js";
 import { startPaymentBodySchema } from "../payments/payments.schemas.js";
 import { createDiscoveryService } from "../products/discovery.service.js";
 import { buyAgainQuerySchema } from "../products/products.schemas.js";
@@ -14,6 +16,7 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   const ordersService = createOrdersService(app.prisma, app.payments);
   const tracking = createTrackingService(app.prisma, app.redis);
   const discovery = createDiscoveryService(app.prisma);
+  const invoices = createInvoicesService(app.prisma);
 
   app.addHook("preHandler", app.requireRole(UserRole.CUSTOMER));
 
@@ -36,6 +39,17 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   app.get("/:id", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return ordersService.getOrder(request.user.sub, id);
+  });
+
+  app.get("/:id/invoice", async (request, reply) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return sendPdf(reply, await invoices.forCustomer(request.user.sub, id), "attachment");
+  });
+
+  /** For the app: a link the phone's browser can open without the access token. */
+  app.post("/:id/invoice-link", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return invoices.customerLink(request.user.sub, id, publicBaseUrl(request));
   });
 
   app.get("/:id/tracking", async (request) => {

@@ -100,6 +100,8 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     supportEmail: settings.supportEmail,
     businessName: settings.businessName,
     businessAddress: settings.businessAddress,
+    gstin: settings.gstin,
+    deliveryFeeGstRate: settings.deliveryFeeGstRate.toFixed(2),
     websiteTagline: settings.websiteTagline,
     playStoreUrl: settings.playStoreUrl,
     appStoreUrl: settings.appStoreUrl,

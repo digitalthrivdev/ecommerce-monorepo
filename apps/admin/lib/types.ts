@@ -215,6 +215,9 @@ export type OrderDetail = {
   total: string;
   /** GST included in the total. */
   taxTotal: string;
+  /** GST rate included in the delivery fee; null for orders placed before it was recorded. */
+  deliveryFeeGstRate: string | null;
+  deliveryFeeTax: string;
   /** Assigned when the order is delivered. */
   invoiceNumber: string | null;
   deliveryAddress: {
@@ -644,9 +647,13 @@ export type PlatformSettings = {
   codMaxOrderValue: string | null;
   supportPhone: string | null;
   supportEmail: string | null;
-  /** Legal name and registered address, shown on the policy and contact pages. */
+  /** Legal name and registered address, shown on the policy and contact pages. The legal name is also the seller on invoices. */
   businessName: string | null;
   businessAddress: string | null;
+  /** GSTIN on invoices, unless the store has its own. */
+  gstin: string | null;
+  /** GST rate included in the delivery fee, e.g. "18.00". */
+  deliveryFeeGstRate: string;
   /** "Delivery in about N minutes" in the customer app; null hides it. */
   deliveryPromiseMinutes: number | null;
   websiteTagline: string | null;
@@ -800,6 +807,8 @@ export type StoreDetails = Store & {
   latitude: string;
   longitude: string;
   serviceRadiusKm: string;
+  /** Only for a store registered in another state than the GSTIN in settings. */
+  gstin: string | null;
   /** Weekly hours in the deployment time zone; empty means always open. */
   hours: StoreHours[];
   isOpen: boolean;

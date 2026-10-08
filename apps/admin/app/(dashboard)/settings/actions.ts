@@ -5,7 +5,18 @@ import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
 import { ApiError, apiFetch } from "@/lib/api";
-import { decimal, formChecked, formText, optionalDecimal, optionalEmail, optionalPositiveDecimal, optionalPhoneInput, optionalText, text } from "@/lib/form-schemas";
+import {
+  decimal,
+  formChecked,
+  formText,
+  optionalDecimal,
+  optionalEmail,
+  optionalGstin,
+  optionalPositiveDecimal,
+  optionalPhoneInput,
+  optionalText,
+  text,
+} from "@/lib/form-schemas";
 import type { ActionResult } from "@/lib/types";
 
 const AMOUNT = "Enter an amount like 25 or 25.50";
@@ -113,6 +124,33 @@ export async function updateWebsiteDetails(formData: FormData): Promise<ActionRe
 
   refresh();
   return { ok: true, message: "Website details saved" };
+}
+
+const invoiceSchema = z.object({
+  businessName: optionalText(200),
+  gstin: optionalGstin,
+  deliveryFeeGstRate: z
+    .string()
+    .trim()
+    .regex(/^\d{1,2}(\.\d{1,2})?$/, "Enter a percentage like 18 or 5"),
+});
+
+export async function updateInvoiceSettings(formData: FormData): Promise<ActionResult> {
+  const parsed = invoiceSchema.safeParse({
+    businessName: formText(formData, "businessName"),
+    gstin: formText(formData, "gstin"),
+    deliveryFeeGstRate: formText(formData, "deliveryFeeGstRate"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+
+  try {
+    await apiFetch("/settings/platform", { method: "PATCH", body: parsed.data });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Invoice details saved" };
 }
 
 const reviewLoginSchema = z.object({

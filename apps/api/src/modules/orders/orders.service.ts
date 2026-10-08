@@ -175,8 +175,10 @@ export function toDetailView(order: OrderDetail) {
     discount: order.discount.toFixed(2),
     couponCode: order.couponCode,
     total: order.total.toFixed(2),
-    // GST included in the item prices.
+    // GST included in the item prices and the delivery fee.
     taxTotal: order.taxTotal.toFixed(2),
+    deliveryFeeGstRate: order.deliveryFeeGstRate?.toFixed(2) ?? null,
+    deliveryFeeTax: order.deliveryFeeTax.toFixed(2),
     invoiceNumber: order.invoiceNumber,
     deliveryAddress: {
       name: order.customerName,
@@ -403,7 +405,8 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           discount: shares[index]!,
           taxAmount: includedTax(line.totalPrice.minus(shares[index]!), line.gstRate),
         }));
-        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), new Prisma.Decimal(0));
+        const deliveryFeeTax = includedTax(charges.deliveryFee, settings.deliveryFeeGstRate);
+        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), deliveryFeeTax);
 
         if (!charges.meetsMinimum) {
           throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${charges.minOrderValue.toFixed(2)}`, {
@@ -453,6 +456,8 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             discount,
             total,
             taxTotal,
+            deliveryFeeGstRate: settings.deliveryFeeGstRate,
+            deliveryFeeTax,
             ...(coupon && { couponId: coupon.coupon.id, couponCode: coupon.coupon.code }),
             paymentMethod,
             customerName: address.name,

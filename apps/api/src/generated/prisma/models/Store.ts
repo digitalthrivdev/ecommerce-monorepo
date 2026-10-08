@@ -52,6 +52,7 @@ export type StoreMinAggregateOutputType = {
   latitude: runtime.Decimal | null
   longitude: runtime.Decimal | null
   serviceRadiusKm: runtime.Decimal | null
+  gstin: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,6 +71,7 @@ export type StoreMaxAggregateOutputType = {
   latitude: runtime.Decimal | null
   longitude: runtime.Decimal | null
   serviceRadiusKm: runtime.Decimal | null
+  gstin: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -88,6 +90,7 @@ export type StoreCountAggregateOutputType = {
   latitude: number
   longitude: number
   serviceRadiusKm: number
+  gstin: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -120,6 +123,7 @@ export type StoreMinAggregateInputType = {
   latitude?: true
   longitude?: true
   serviceRadiusKm?: true
+  gstin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -138,6 +142,7 @@ export type StoreMaxAggregateInputType = {
   latitude?: true
   longitude?: true
   serviceRadiusKm?: true
+  gstin?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -156,6 +161,7 @@ export type StoreCountAggregateInputType = {
   latitude?: true
   longitude?: true
   serviceRadiusKm?: true
+  gstin?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -261,6 +267,7 @@ export type StoreGroupByOutputType = {
   latitude: runtime.Decimal
   longitude: runtime.Decimal
   serviceRadiusKm: runtime.Decimal
+  gstin: string | null
   createdAt: Date
   updatedAt: Date
   _count: StoreCountAggregateOutputType | null
@@ -302,6 +309,7 @@ export type StoreWhereInput = {
   latitude?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.StringNullableFilter<"Store"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   products?: Prisma.StoreProductListRelationFilter
@@ -326,6 +334,7 @@ export type StoreOrderByWithRelationInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   serviceRadiusKm?: Prisma.SortOrder
+  gstin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   products?: Prisma.StoreProductOrderByRelationAggregateInput
@@ -353,6 +362,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   latitude?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.StringNullableFilter<"Store"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   products?: Prisma.StoreProductListRelationFilter
@@ -377,6 +387,7 @@ export type StoreOrderByWithAggregationInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   serviceRadiusKm?: Prisma.SortOrder
+  gstin?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StoreCountOrderByAggregateInput
@@ -403,6 +414,7 @@ export type StoreScalarWhereWithAggregatesInput = {
   latitude?: Prisma.DecimalWithAggregatesFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalWithAggregatesFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalWithAggregatesFilter<"Store"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.StringNullableWithAggregatesFilter<"Store"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Store"> | Date | string
 }
@@ -421,6 +433,7 @@ export type StoreCreateInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -445,6 +458,7 @@ export type StoreUncheckedCreateInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -469,6 +483,7 @@ export type StoreUpdateInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -493,6 +508,7 @@ export type StoreUncheckedUpdateInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -517,6 +533,7 @@ export type StoreCreateManyInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -535,6 +552,7 @@ export type StoreUpdateManyMutationInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -553,6 +571,7 @@ export type StoreUncheckedUpdateManyInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -576,6 +595,7 @@ export type StoreCountOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   serviceRadiusKm?: Prisma.SortOrder
+  gstin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -600,6 +620,7 @@ export type StoreMaxOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   serviceRadiusKm?: Prisma.SortOrder
+  gstin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -618,6 +639,7 @@ export type StoreMinOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   serviceRadiusKm?: Prisma.SortOrder
+  gstin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -749,6 +771,7 @@ export type StoreCreateWithoutStaffInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -772,6 +795,7 @@ export type StoreUncheckedCreateWithoutStaffInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -811,6 +835,7 @@ export type StoreUpdateWithoutStaffInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -834,6 +859,7 @@ export type StoreUncheckedUpdateWithoutStaffInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -857,6 +883,7 @@ export type StoreCreateWithoutHoursInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -880,6 +907,7 @@ export type StoreUncheckedCreateWithoutHoursInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -919,6 +947,7 @@ export type StoreUpdateWithoutHoursInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -942,6 +971,7 @@ export type StoreUncheckedUpdateWithoutHoursInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -965,6 +995,7 @@ export type StoreCreateWithoutProductsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   orders?: Prisma.OrderCreateNestedManyWithoutStoreInput
@@ -988,6 +1019,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutStoreInput
@@ -1027,6 +1059,7 @@ export type StoreUpdateWithoutProductsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUpdateManyWithoutStoreNestedInput
@@ -1050,6 +1083,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutStoreNestedInput
@@ -1073,6 +1107,7 @@ export type StoreCreateWithoutCartsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -1096,6 +1131,7 @@ export type StoreUncheckedCreateWithoutCartsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -1135,6 +1171,7 @@ export type StoreUpdateWithoutCartsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -1158,6 +1195,7 @@ export type StoreUncheckedUpdateWithoutCartsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -1181,6 +1219,7 @@ export type StoreCreateWithoutOrdersInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -1204,6 +1243,7 @@ export type StoreUncheckedCreateWithoutOrdersInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -1243,6 +1283,7 @@ export type StoreUpdateWithoutOrdersInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -1266,6 +1307,7 @@ export type StoreUncheckedUpdateWithoutOrdersInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -1289,6 +1331,7 @@ export type StoreCreateWithoutCashDepositsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductCreateNestedManyWithoutStoreInput
@@ -1312,6 +1355,7 @@ export type StoreUncheckedCreateWithoutCashDepositsInput = {
   latitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude: runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   products?: Prisma.StoreProductUncheckedCreateNestedManyWithoutStoreInput
@@ -1351,6 +1395,7 @@ export type StoreUpdateWithoutCashDepositsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUpdateManyWithoutStoreNestedInput
@@ -1374,6 +1419,7 @@ export type StoreUncheckedUpdateWithoutCashDepositsInput = {
   latitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   longitude?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   serviceRadiusKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  gstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   products?: Prisma.StoreProductUncheckedUpdateManyWithoutStoreNestedInput
@@ -1473,6 +1519,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   latitude?: boolean
   longitude?: boolean
   serviceRadiusKm?: boolean
+  gstin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
@@ -1498,6 +1545,7 @@ export type StoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   latitude?: boolean
   longitude?: boolean
   serviceRadiusKm?: boolean
+  gstin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["store"]>
@@ -1516,6 +1564,7 @@ export type StoreSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   latitude?: boolean
   longitude?: boolean
   serviceRadiusKm?: boolean
+  gstin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["store"]>
@@ -1534,11 +1583,12 @@ export type StoreSelectScalar = {
   latitude?: boolean
   longitude?: boolean
   serviceRadiusKm?: boolean
+  gstin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "code" | "phone" | "status" | "addressLine1" | "addressLine2" | "city" | "state" | "postalCode" | "latitude" | "longitude" | "serviceRadiusKm" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
+export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "code" | "phone" | "status" | "addressLine1" | "addressLine2" | "city" | "state" | "postalCode" | "latitude" | "longitude" | "serviceRadiusKm" | "gstin" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
 export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
   orders?: boolean | Prisma.Store$ordersArgs<ExtArgs>
@@ -1575,6 +1625,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     latitude: runtime.Decimal
     longitude: runtime.Decimal
     serviceRadiusKm: runtime.Decimal
+    gstin: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["store"]>
@@ -2019,6 +2070,7 @@ export interface StoreFieldRefs {
   readonly latitude: Prisma.FieldRef<"Store", 'Decimal'>
   readonly longitude: Prisma.FieldRef<"Store", 'Decimal'>
   readonly serviceRadiusKm: Prisma.FieldRef<"Store", 'Decimal'>
+  readonly gstin: Prisma.FieldRef<"Store", 'String'>
   readonly createdAt: Prisma.FieldRef<"Store", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Store", 'DateTime'>
 }

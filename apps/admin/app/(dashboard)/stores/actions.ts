@@ -11,6 +11,7 @@ import {
   formChecked,
   formText,
   idSchema,
+  optionalGstin,
   optionalPhoneInput,
   optionalText,
   passwordInput,
@@ -53,6 +54,7 @@ const storeSchema = z.object({
     .refine((value) => Number(value) <= 50, "Keep the radius at 50 km or less")
     .transform(Number),
   status: z.enum(["ACTIVE", "INACTIVE"]),
+  gstin: optionalGstin,
 });
 
 export async function saveStore(formData: FormData): Promise<ActionResult> {
@@ -70,6 +72,7 @@ export async function saveStore(formData: FormData): Promise<ActionResult> {
     longitude: formText(formData, "longitude"),
     serviceRadiusKm: formText(formData, "serviceRadiusKm"),
     status: formChecked(formData, "active") ? "ACTIVE" : "INACTIVE",
+    gstin: formText(formData, "gstin"),
   });
   if (!parsed.success) return validationFailure(parsed.error);
 
@@ -82,6 +85,9 @@ export async function saveStore(formData: FormData): Promise<ActionResult> {
       body,
     });
   } catch (error) {
+    if (error instanceof ApiError && error.code === "GSTIN_STATE_MISMATCH") {
+      return { ok: false, error: error.message, fieldErrors: { gstin: error.message } };
+    }
     return apiFailure(error, { field: "code", message: "Another store already uses this code" });
   }
 

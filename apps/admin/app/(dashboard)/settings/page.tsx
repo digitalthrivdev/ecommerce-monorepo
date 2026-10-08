@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
 import { PageBody, Panel, Section } from "@/components/section";
 import { GatewayKeys } from "@/components/settings/gateway-keys";
+import { InvoiceSettingsForm } from "@/components/settings/invoice-settings-form";
 import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
 import { ReviewLoginForm } from "@/components/settings/review-login-form";
 import { SettingsForm } from "@/components/settings/settings-form";
@@ -20,7 +21,7 @@ import { getSiteUrl } from "@/lib/website";
 
 export const metadata: Metadata = { title: "Settings" };
 
-const TABS = ["rules", "payments", "sms", "website", "about"] as const;
+const TABS = ["rules", "payments", "sms", "invoices", "website", "about"] as const;
 type Tab = (typeof TABS)[number];
 
 function Dot({ ok }: { ok: boolean }) {
@@ -119,6 +120,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             { id: "rules", label: "Shop rules", href: "/settings" },
             { id: "payments", label: "Online payments", href: "/settings?tab=payments", badge: <Dot ok={paymentsOk} /> },
             { id: "sms", label: "SMS sign-in", href: "/settings?tab=sms", badge: <Dot ok={smsOk} /> },
+            { id: "invoices", label: "GST invoices", href: "/settings?tab=invoices", badge: <Dot ok={Boolean(settings.gstin)} /> },
             { id: "website", label: "Website", href: "/settings?tab=website" },
             { id: "about", label: "About this setup", href: "/settings?tab=about" },
           ]}
@@ -172,6 +174,21 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             >
               <Panel className="p-5">
                 <ReviewLoginForm key={settings.updatedAt} reviewLogin={settings.reviewLogin} />
+              </Panel>
+            </Section>
+          </div>
+        )}
+
+        {tab === "invoices" && (
+          <div className="flex flex-col gap-8 pb-12">
+            {!settings.gstin && (
+              <Notice tone="warning" title="Invoices have no GSTIN yet">
+                Delivered orders get an invoice the customer can download. Add your GSTIN so it can be used as a tax invoice.
+              </Notice>
+            )}
+            <Section title="Seller on invoices" hint="Printed on the invoice of each order when it is delivered. Changes apply to orders delivered later.">
+              <Panel className="p-5">
+                <InvoiceSettingsForm key={settings.updatedAt} settings={settings} />
               </Panel>
             </Section>
           </div>

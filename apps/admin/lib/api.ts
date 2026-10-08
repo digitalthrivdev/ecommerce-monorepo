@@ -30,8 +30,8 @@ type ApiOptions = {
   query?: Record<string, QueryValue>;
   /** Send the session token. An expired or rejected session redirects to sign-out. */
   auth?: boolean;
-  /** Read a successful response as text, e.g. a CSV file. */
-  as?: "json" | "text";
+  /** Read a successful response as text, e.g. a CSV file, or return it as is to pass a file through. */
+  as?: "json" | "text" | "response";
 };
 
 /**
@@ -80,6 +80,9 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, a
   }
   if (as === "text" && response.ok) {
     return (await response.text()) as T;
+  }
+  if (as === "response" && response.ok) {
+    return response as T;
   }
 
   const data = await response.json().catch(() => null);

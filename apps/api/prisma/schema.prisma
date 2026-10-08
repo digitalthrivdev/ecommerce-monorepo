@@ -126,6 +126,10 @@ model Store {
 
   serviceRadiusKm Decimal @default(3) @db.Decimal(5, 2)
 
+  // GST registration of a store in another state than the business's main one. Overrides the
+  // GSTIN in PlatformSettings on this store's invoices.
+  gstin String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -455,11 +459,25 @@ model Order {
   deliveryFee Decimal @db.Decimal(10, 2)
   discount    Decimal @default(0) @db.Decimal(10, 2)
   total       Decimal @db.Decimal(10, 2)
-  // GST included in the item prices.
+  // GST included in the item prices and, for orders placed since the delivery fee GST rate was
+  // added, in the delivery fee.
   taxTotal    Decimal @default(0) @db.Decimal(10, 2)
+
+  // GST rate of the delivery fee and the tax included in it. Null rate: placed before it was recorded.
+  deliveryFeeGstRate Decimal? @db.Decimal(5, 2)
+  deliveryFeeTax     Decimal  @default(0) @db.Decimal(10, 2)
 
   // Assigned when the order is delivered, e.g. INV/2026-27/000123.
   invoiceNumber String? @unique
+
+  // Seller snapshot for the invoice, taken with the invoice number: legal name, GSTIN (null when
+  // none was set) and the store's address. interStateSupply is true when the store and the
+  // delivery address are in different states (IGST), false for CGST + SGST. All null for orders
+  // delivered before seller details were recorded.
+  sellerName       String?
+  sellerGstin      String?
+  sellerAddress    String?
+  interStateSupply Boolean?
 
   // The coupon that gave `discount`, and its code as entered.
   couponId   String?
@@ -614,6 +632,7 @@ model Payment {
 
   @@index([status])
   @@index([transactionId])
+  @@index([paidAt])
 }
 
 // Money paid back to a customer: gateway refunds of online payments (automatic ones for
@@ -924,6 +943,7 @@ model Delivery {
   @@index([partnerId, status])
   @@index([status])
   @@index([failure])
+  @@index([deliveredAt])
 }
 
 enum DeliveryFailure {
@@ -983,8 +1003,14 @@ model PlatformSettings {
   supportEmail String?
 
   // Legal name and registered address of the business, shown on the public policy and contact pages.
+  // The legal name is also the seller on GST invoices.
   businessName    String?
   businessAddress String?
+
+  // GSTIN on invoices, unless the order's store has its own.
+  gstin              String?
+  // GST rate included in the delivery fee.
+  deliveryFeeGstRate Decimal @default(18) @db.Decimal(5, 2)
 
   // Public website on SITE_DOMAIN: home page tagline and where to get the customer and delivery
   // partner apps. A direct download link only shows while that app has no store listing.

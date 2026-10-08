@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bike, ChevronDown, MapPin, Phone } from "lucide-react";
+import { Bike, ChevronDown, FileText, MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RefundDialog } from "@/components/complaints/refund-dialog";
@@ -89,13 +89,21 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
         description={[
           user.role === "ADMIN" && order.store.name,
           `Placed ${date(order.createdAt)}`,
-          order.invoiceNumber && `Bill ${order.invoiceNumber}`,
+          order.invoiceNumber && `Invoice ${order.invoiceNumber}`,
           order.paymentExpiresAt && `Payment due by ${date(order.paymentExpiresAt)}`,
         ]
           .filter(Boolean)
           .join(" · ")}
         actions={
           <>
+            {order.invoiceNumber && (
+              <Button asChild variant="outline">
+                <a href={`/orders/${encodeURIComponent(order.id)}/invoice`} download>
+                  <FileText />
+                  Invoice
+                </a>
+              </Button>
+            )}
             <OrderMoreMenu
               storeId={order.store.id}
               orderId={order.id}

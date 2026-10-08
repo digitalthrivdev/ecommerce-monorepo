@@ -155,6 +155,16 @@ export function useRateOrder(id: string) {
   });
 }
 
+/** Opens the invoice PDF in the browser through a link that works for a few minutes, so the app needs no file access. */
+export function useOpenInvoice(id: string) {
+  return useMutation({
+    mutationFn: async () => {
+      const link = await apiFetch<{ url: string; expiresAt: string }>(`${orderPath(id)}/invoice-link`, { method: "POST" });
+      await Linking.openURL(link.url);
+    },
+  });
+}
+
 const PHOTO_UPLOAD_TIMEOUT_MS = 60_000;
 
 /** Uploads one photo for a report about the order; its URL is then sent with the report. */

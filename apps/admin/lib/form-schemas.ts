@@ -70,5 +70,13 @@ export const phoneInput = z
 
 export const optionalPhoneInput = z.union([z.literal("").transform(() => null), phoneInput]);
 
+/** The format only; the API also checks the state code and the last (check) character. */
+export const optionalGstin = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .refine((value) => value === "" || /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(value), "Enter the 15-character GSTIN, e.g. 29ABCDE1234F1ZW")
+  .transform((value) => value || null);
+
 export const formText = (formData: FormData, name: string) => String(formData.get(name) ?? "");
 export const formChecked = (formData: FormData, name: string) => formData.get(name) === "on";

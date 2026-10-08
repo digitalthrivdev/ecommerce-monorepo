@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+import { gstinSchema } from "../../shared/gst.js";
 import { decimalSchema, phoneSchema, positiveDecimalSchema } from "../../shared/schemas.js";
 import { OTP_LENGTH } from "../auth/otp-provider.js";
+import { gstRateSchema } from "../products/products.schemas.js";
 
 const playStoreUrlSchema = z
   .url()
@@ -34,6 +36,8 @@ export const updateSettingsBodySchema = z
     supportEmail: z.email().max(200).nullable(),
     businessName: z.string().trim().min(1).max(200).nullable(),
     businessAddress: z.string().trim().min(1).max(500).nullable(),
+    gstin: gstinSchema.nullable(),
+    deliveryFeeGstRate: gstRateSchema,
     websiteTagline: z.string().trim().min(1).max(160).nullable(),
     playStoreUrl: playStoreUrlSchema,
     appStoreUrl: appStoreUrlSchema,

@@ -7,6 +7,7 @@ import {
   Check,
   CircleCheck,
   CircleX,
+  FileText,
   Headset,
   KeyRound,
   MapPin,
@@ -44,6 +45,7 @@ import {
   ORDER_STEPS,
   orderStep,
   useCancelOrder,
+  useOpenInvoice,
   useOrder,
   useOrderTracking,
   useRateOrder,
@@ -378,6 +380,7 @@ function OrderItemRow({ item, currency }: { item: OrderDetail["items"][number]; 
 function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
   const { currency } = useSettings();
   const cancel = useCancelOrder(order.id);
+  const invoice = useOpenInvoice(order.id);
   const partner = order.delivery?.partner;
   const address = order.deliveryAddress;
   const live = isLive(order);
@@ -491,6 +494,18 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
         <Text className="text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</Text>
         {order.invoiceNumber && <Text className="text-xs text-muted-foreground">Invoice {order.invoiceNumber}</Text>}
       </View>
+
+      {order.invoiceNumber && (
+        <Button
+          variant="outline"
+          onPress={() => invoice.mutate(undefined, { onError: (error) => Alert.alert("Couldn't open the invoice", errorMessage(error)) })}
+          disabled={invoice.isPending}
+          className="mx-4 h-11 rounded-lg"
+        >
+          <Icon as={FileText} size={16} />
+          <Text className="font-semibold">{invoice.isPending ? "Opening…" : "Download invoice"}</Text>
+        </Button>
+      )}
 
       {order.canCancel && (
         <Pressable onPress={confirmCancel} disabled={cancel.isPending} className="mx-4 items-center rounded-lg py-3 active:bg-accent">
