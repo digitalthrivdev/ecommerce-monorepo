@@ -18,6 +18,9 @@ const path = require("node:path");
  *                         Without it Android builds show no map on the delivery screen.
  *   GOOGLE_SERVICES_JSON  Firebase config for APP_ID (an EAS file variable), needed for Android push.
  *                         Falls back to ./google-services.json, which is kept out of git.
+ *   SENTRY_PROJECT        The client's Sentry project slug. With SENTRY_AUTH_TOKEN and SENTRY_ORG (plus
+ *                         SENTRY_URL for an EU organisation) in the EAS environment, builds upload their
+ *                         source maps, so crash reports show readable stack traces.
  *
  * Colors and logo inside the app come from the API's settings at runtime, not from here.
  */
@@ -124,6 +127,15 @@ function applyBrand(config, brand) {
   };
 }
 
+/** Uploads source maps during native builds. Skipped without a token, because the upload would fail the build. */
+function sentryPlugin() {
+  const project = setting("SENTRY_PROJECT");
+  if (!project || !process.env.SENTRY_AUTH_TOKEN?.trim()) return undefined;
+  const organization = setting("SENTRY_ORG");
+  if (!organization) throw new Error("SENTRY_AUTH_TOKEN and SENTRY_PROJECT are set but SENTRY_ORG is not");
+  return ["@sentry/react-native/expo", { organization, project, url: setting("SENTRY_URL") }];
+}
+
 module.exports = ({ config: baseConfig }) => {
   const brand = setting("APP_BRAND", BRAND_PATTERN);
   const config = brand ? applyBrand(baseConfig, brand) : baseConfig;
@@ -131,10 +143,15 @@ module.exports = ({ config: baseConfig }) => {
   const projectId = setting("EAS_PROJECT_ID");
   const googleServicesFile = googleServicesFor(appId);
   const mapsKey = setting("GOOGLE_MAPS_ANDROID_API_KEY");
+  const sentry = sentryPlugin();
 
   return {
     ...config,
-    plugins: mapsKey ? [...(config.plugins ?? []), ["react-native-maps", { androidGoogleMapsApiKey: mapsKey }]] : config.plugins,
+    plugins: [
+      ...(config.plugins ?? []),
+      ...(mapsKey ? [["react-native-maps", { androidGoogleMapsApiKey: mapsKey }]] : []),
+      ...(sentry ? [sentry] : []),
+    ],
     name: setting("APP_NAME") ?? config.name,
     slug: setting("APP_SLUG") ?? config.slug,
     owner: setting("EXPO_OWNER") ?? config.owner,
