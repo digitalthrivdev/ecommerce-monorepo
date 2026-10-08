@@ -64,7 +64,7 @@ For a manual update:
 4. **Deploy:** `~/<client>/deploy/update.sh`. It pulls the code, then either pulls the images CI built for that commit (with `IMAGE_PREFIX`, below) or builds them on the server (about 5 minutes on 1 CPU). The `migrate` service applies migrations before the API starts.
 5. **Verify:** `docker compose ps` (api, admin and web healthy), `curl https://API_DOMAIN/health`, and `docker compose logs --tail 50 api` if anything is off.
 
-If the update changed `deploy/nginx/templates/`, re-render and reload Nginx; it only reads the template when its container starts, and `up -d` doesn't restart it: `docker compose exec nginx sh -c "/docker-entrypoint.d/20-envsubst-on-templates.sh && nginx -t && nginx -s reload"`.
+`update.sh` also re-renders and reloads Nginx, which keeps running across updates, so changes to `deploy/nginx/templates/` apply too. After a plain `docker compose up -d` instead, do it by hand: `docker compose exec nginx sh -c "/docker-entrypoint.d/20-envsubst-on-templates.sh && nginx -t && nginx -s reload"`.
 
 With several clients, update every server before releasing new app builds: a new app may call endpoints an older server doesn't have.
 

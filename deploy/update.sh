@@ -11,8 +11,16 @@ git pull --ff-only
 commit=$(git rev-parse HEAD)
 prefix=$(sed -n 's/^[[:space:]]*IMAGE_PREFIX=//p' .env | tail -n 1 | tr -d "\"' ")
 
+# Nginx keeps running across updates and reads its template only when it starts, so template
+# changes are rendered and loaded here.
+reload_nginx() {
+  docker compose exec -T nginx sh -c \
+    '/docker-entrypoint.d/20-envsubst-on-templates.sh > /dev/null && nginx -t -q && nginx -s reload'
+}
+
 if [ -z "$prefix" ]; then
   docker compose up -d --build
+  reload_nginx
   exit 0
 fi
 
@@ -29,5 +37,6 @@ for image in migrate api admin web; do
 done
 
 docker compose up -d --no-build
+reload_nginx
 docker image prune -f > /dev/null
 echo "Updated to $commit"
