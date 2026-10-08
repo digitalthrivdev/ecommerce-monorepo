@@ -88,7 +88,8 @@ export function renderInvoicePdf(invoice: Invoice): Promise<Buffer> {
   const text = (value: string, x: number, y: number, options: PDFKit.Mixins.TextOptions = {}) => doc.text(printable(value), x, y, options);
 
   // Seller and title
-  const title = invoice.seller ? "TAX INVOICE" : "INVOICE";
+  // Only a GST-registered seller may issue a tax invoice.
+  const title = invoice.seller?.gstin ? "TAX INVOICE" : "INVOICE";
   doc.font("Helvetica-Bold").fontSize(16).fillColor("black");
   text(title, left, MARGIN, { width, align: "right" });
   doc.fontSize(12);
