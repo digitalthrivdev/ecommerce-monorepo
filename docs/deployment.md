@@ -139,8 +139,11 @@ Personal data stays out: no request bodies, headers, cookies, query strings, con
 - Once, in both app folders' EAS environments (`preview` and `production`), shared by every client: `SENTRY_AUTH_TOKEN` (an organisation auth token from Sentry → Settings → Auth Tokens, visibility `secret`), `SENTRY_ORG` (the organisation slug) and, for an EU organisation, `SENTRY_URL=https://de.sentry.io/`.
   ```bash
   cd apps/customer   # then again in apps/delivery
-  npx eas-cli@latest env:create --name SENTRY_AUTH_TOKEN --value <token> --environment preview --environment production --visibility secret
+  npx eas-cli@latest env:set --name SENTRY_AUTH_TOKEN --environment preview --environment production --visibility secret
+  npx eas-cli@latest env:set --name SENTRY_ORG --value <org slug> --environment preview --environment production --visibility plaintext
+  npx eas-cli@latest env:set --name SENTRY_URL --value https://de.sentry.io/ --environment preview --environment production --visibility plaintext
   ```
+  Without `--value` the CLI asks for the token, so it stays out of the shell history.
 - Per client, in its build profiles next to the DSN: `"SENTRY_PROJECT": "<project slug>"`. Never in an EAS environment: another client's crashes would be symbolicated against the wrong project.
 - `APP_BRAND=acme SENTRY_PROJECT=x SENTRY_AUTH_TOKEN=x SENTRY_ORG=y npx expo config --type public` shows the `@sentry/react-native/expo` plugin when everything is set.
 
