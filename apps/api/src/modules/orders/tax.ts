@@ -1,6 +1,6 @@
 import { env } from "../../config/env.js";
 import { Prisma } from "../../generated/prisma/client";
-import { isSameState } from "../../shared/gst.js";
+import { isSameState, storeInvoiceGstin } from "../../shared/gst.js";
 import { getAppearance } from "../settings/appearance.service.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
 
@@ -38,8 +38,8 @@ export function financialYear(date: Date, timeZone = env.TIMEZONE) {
 
 /**
  * Gives the order the next invoice number of the current financial year, e.g. INV/2026-27/000123,
- * and copies the seller onto it: legal name, GSTIN (the store's own, else the one in settings), the
- * store's address, and whether the supply is inter-state. Invoices only ever read this snapshot.
+ * and copies the seller onto it: legal name, GSTIN (see storeInvoiceGstin), the store's address, and
+ * whether the supply is inter-state. Invoices only ever read this snapshot.
  */
 export async function assignInvoiceNumber(tx: Tx, orderId: string) {
   const year = financialYear(new Date());
@@ -64,7 +64,7 @@ export async function assignInvoiceNumber(tx: Tx, orderId: string) {
     data: {
       invoiceNumber,
       sellerName: settings.businessName ?? (await getAppearance(tx)).appearance.appName,
-      sellerGstin: store.gstin ?? settings.gstin,
+      sellerGstin: storeInvoiceGstin(store, settings.gstin),
       sellerAddress: [store.addressLine1, store.addressLine2, store.city, `${store.state} ${store.postalCode}`].filter(Boolean).join(", "),
       interStateSupply: !isSameState(store.state, order.state),
     },

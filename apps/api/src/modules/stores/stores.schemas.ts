@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { StoreStatus } from "../../generated/prisma/client";
-import { gstinSchema } from "../../shared/gst.js";
+import { gstinSchema, stateSchema } from "../../shared/gst.js";
 import { booleanQuery, paginationQuerySchema, phoneSchema } from "../../shared/schemas.js";
 
 const queryNumber = (min: number, max: number) =>
@@ -18,7 +18,7 @@ const storeBodySchema = z.object({
   addressLine1: z.string().trim().min(1).max(200),
   addressLine2: z.string().trim().max(200).nullish(),
   city: z.string().trim().min(1).max(100),
-  state: z.string().trim().min(1).max(100),
+  state: stateSchema,
   postalCode: z.string().trim().min(3).max(12),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
