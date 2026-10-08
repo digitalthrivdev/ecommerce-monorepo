@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DECIMAL_PATTERN } from "@grocery/validation";
 import { Loader2 } from "lucide-react";
 
 import { updatePlatformSettings } from "@/app/(dashboard)/settings/actions";
@@ -55,7 +56,7 @@ function currencySymbol(currency: string) {
   }
 }
 
-const isAmount = (value: string) => /^\d+(\.\d{1,2})?$/.test(value.trim());
+const isAmount = (value: string) => DECIMAL_PATTERN.test(value.trim());
 
 /** "Orders under ₹199 pay ₹25 delivery. …" from what is typed right now. */
 function ChargesSummary({ values, currency }: { values: Record<"deliveryFee" | "freeDeliveryThreshold" | "minOrderValue", string>; currency: string }) {

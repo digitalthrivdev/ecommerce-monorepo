@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Dependencies are hoisted to the monorepo root, so trace files from there.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
+  // Shipped as TypeScript source (packages/validation).
+  transpilePackages: ["@grocery/validation"],
   poweredByHeader: false,
   experimental: {
     // Image uploads go through a server action; the API accepts up to 10 MB. Nginx allows 12 MB.

@@ -1,3 +1,5 @@
+import { DECIMAL_PATTERN } from "@grocery/validation";
+
 import type { Listing, ProductDetail, ProductListings, Store } from "./types";
 import type { Draft, VariantDraft } from "./variant-drafts";
 
@@ -151,7 +153,6 @@ export function closestVariant(draft: Draft, target: VariantDraft, eligible: (va
 export type PriceRow = { storeId: string; variantId: string; sku?: string; sellingPrice: string; mrp: string; isAvailable: boolean };
 export type StockRow = { storeId: string; variantId: string; sku?: string; delta: number };
 
-const PRICE_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
 
 /**
  * Turns a size's price draft into rows for the API, or field errors keyed
@@ -166,9 +167,9 @@ export function priceRows(variantId: string, draft: PriceDraft, stores: Store[])
   function check(scope: string, price: string, mrp: string) {
     const p = price.trim();
     const m = mrp.trim();
-    if (!PRICE_PATTERN.test(p) || Number(p) <= 0) errors[key(scope, "price")] = "Enter a price like 68 or 68.50";
-    if (m && (!PRICE_PATTERN.test(m) || Number(m) <= 0)) errors[key(scope, "mrp")] = "Enter the MRP like 70, or leave it empty";
-    else if (m && PRICE_PATTERN.test(p) && Number(m) < Number(p)) errors[key(scope, "mrp")] = "MRP can't be lower than your price";
+    if (!DECIMAL_PATTERN.test(p) || Number(p) <= 0) errors[key(scope, "price")] = "Enter a price like 68 or 68.50";
+    if (m && (!DECIMAL_PATTERN.test(m) || Number(m) <= 0)) errors[key(scope, "mrp")] = "Enter the MRP like 70, or leave it empty";
+    else if (m && DECIMAL_PATTERN.test(p) && Number(m) < Number(p)) errors[key(scope, "mrp")] = "MRP can't be lower than your price";
   }
 
   if (draft.same && draft.price.trim() === "" && draft.mrp.trim() === "") {
@@ -208,7 +209,7 @@ export function priceRows(variantId: string, draft: PriceDraft, stores: Store[])
 export function draftPriceRange(draft: PriceDraft | undefined) {
   if (!draft) return null;
   const typed = draft.same ? [draft.price] : Object.values(draft.stores).map((row) => row.price);
-  const prices = typed.filter((price) => PRICE_PATTERN.test(price.trim()) && Number(price) > 0).map(Number);
+  const prices = typed.filter((price) => DECIMAL_PATTERN.test(price.trim()) && Number(price) > 0).map(Number);
   if (prices.length === 0) return null;
   return { min: Math.min(...prices), max: Math.max(...prices) };
 }

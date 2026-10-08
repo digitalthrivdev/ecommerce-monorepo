@@ -1,3 +1,5 @@
+import { HEX_COLOR_PATTERN } from "@grocery/validation";
+
 import type { Appearance, AppearanceTheme, Category, CollectionItem, HomeSection, HomeSectionType, HomeTile, TabHeader, TabPage } from "./types";
 
 type Colors = AppearanceTheme["colors"];
@@ -31,7 +33,7 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   sale_hero: { name: "Sale hero", description: "An animated sale title with cycling deals and category discounts" },
 };
 
-export const isHexColor = (value: string) => /^#[0-9A-Fa-f]{6}$/.test(value);
+export const isHexColor = (value: string) => HEX_COLOR_PATTERN.test(value);
 
 function luminance(hex: string) {
   const channel = (offset: number) => {

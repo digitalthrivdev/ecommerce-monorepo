@@ -8,6 +8,7 @@ WORKDIR /repo
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin/package.json apps/admin/
+COPY packages/validation packages/validation
 RUN pnpm install --frozen-lockfile --filter admin --config.node-linker=isolated
 COPY apps/admin apps/admin
 RUN cd apps/admin && node_modules/.bin/next build

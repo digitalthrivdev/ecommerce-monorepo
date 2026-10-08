@@ -1,7 +1,5 @@
+import { DECIMAL_PATTERN, gstinProblem, PHONE_PATTERN, SLUG_PATTERN } from "@grocery/validation";
 import { z } from "zod";
-
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const DECIMAL_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
 
 export const idSchema = z.string().trim().min(1).max(64);
 
@@ -66,16 +64,24 @@ export const passwordInput = z.string().min(8, "Use at least 8 characters").max(
 export const phoneInput = z
   .string()
   .transform((value) => value.replace(/[\s()-]/g, ""))
-  .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter the number with country code, e.g. +919876543210"));
+  .pipe(z.string().regex(PHONE_PATTERN, "Enter the number with country code, e.g. +919876543210"));
 
 export const optionalPhoneInput = z.union([z.literal("").transform(() => null), phoneInput]);
 
-/** The format only; the API also checks the state code and the last (check) character. */
+const GSTIN_MESSAGES = {
+  format: "Enter the 15-character GSTIN, e.g. 29ABCDE1234F1ZW",
+  "state-code": "The first two digits are not a GST state code",
+  "check-character": "This GSTIN has a typo: its last character does not match",
+};
+
 export const optionalGstin = z
   .string()
   .trim()
   .toUpperCase()
-  .refine((value) => value === "" || /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(value), "Enter the 15-character GSTIN, e.g. 29ABCDE1234F1ZW")
+  .superRefine((value, ctx) => {
+    const problem = value && gstinProblem(value);
+    if (problem) ctx.addIssue({ code: "custom", message: GSTIN_MESSAGES[problem] });
+  })
   .transform((value) => value || null);
 
 export const formText = (formData: FormData, name: string) => String(formData.get(name) ?? "");

@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { COUPON_CODE_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
@@ -22,7 +23,7 @@ const couponSchema = z
       .string()
       .trim()
       .toUpperCase()
-      .regex(/^[A-Z0-9]{3,20}$/, "Use 3 to 20 letters and numbers, no spaces"),
+      .regex(COUPON_CODE_PATTERN, "Use 3 to 20 letters and numbers, no spaces"),
     description: optionalText(200),
     discountType: z.enum(["FLAT", "PERCENT"]),
     discountValue: positiveDecimal("Enter an amount above 0"),

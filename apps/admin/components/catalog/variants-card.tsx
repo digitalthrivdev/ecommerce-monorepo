@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronRight, ImageIcon, Plus, Trash2, X } from "lucide-react";
+import { DECIMAL_PATTERN } from "@grocery/validation";
 import { toast } from "sonner";
 
 import { MoneyInput } from "@/components/money-input";
@@ -36,7 +37,6 @@ import {
 const ALL = "all";
 /** Tick box, size, then price, MRP, stock and actions as columns from sm up. */
 const ROW_GRID = "grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[1.25rem_minmax(0,1fr)_6.5rem_6.5rem_4.5rem_4.5rem]";
-const PRICE_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
 
 const FIELD_LABELS: Record<string, string> = {
   sku: "product code",
@@ -230,8 +230,8 @@ function BulkBar({
   function applyPrice() {
     const p = price.trim();
     const m = mrp.trim();
-    if (!PRICE_PATTERN.test(p) || Number(p) <= 0) return toast.error("Enter a price like 68 or 68.50");
-    if (m && (!PRICE_PATTERN.test(m) || Number(m) < Number(p))) return toast.error("MRP must be a number no lower than the price");
+    if (!DECIMAL_PATTERN.test(p) || Number(p) <= 0) return toast.error("Enter a price like 68 or 68.50");
+    if (m && (!DECIMAL_PATTERN.test(m) || Number(m) < Number(p))) return toast.error("MRP must be a number no lower than the price");
     onPrice(p, m);
     setPrice("");
     setMrp("");

@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { STORE_CODE_PATTERN, TIME_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
@@ -41,7 +42,7 @@ const storeSchema = z.object({
     .string()
     .trim()
     .toUpperCase()
-    .regex(/^[A-Z0-9-]{2,32}$/, "Use 2–32 letters, digits and dashes, e.g. BLR-KRM-01"),
+    .regex(STORE_CODE_PATTERN, "Use 2–32 letters, digits and dashes, e.g. BLR-KRM-01"),
   phone: optionalPhoneInput,
   addressLine1: text(200).min(1, "Enter the street address"),
   addressLine2: optionalText(200),
@@ -98,7 +99,7 @@ export async function saveStore(formData: FormData): Promise<ActionResult> {
   return { ok: true, message: "Store updated" };
 }
 
-const timeInput = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a time like 07:00");
+const timeInput = z.string().regex(TIME_PATTERN, "Enter a time like 07:00");
 
 const storeHoursSchema = z.object({
   storeId: idSchema,

@@ -43,6 +43,7 @@ import usersRoutes from "./modules/users/users.routes.js";
 export async function buildApp() {
   const app = Fastify({
     logger: {
+      level: env.LOG_LEVEL,
       hooks: {
         logMethod(args, method, level) {
           if (level >= 50) reportLoggedError(args);

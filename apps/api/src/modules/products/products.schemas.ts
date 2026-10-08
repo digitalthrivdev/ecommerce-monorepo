@@ -1,3 +1,4 @@
+import { BARCODE_PATTERN, FSSAI_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import {
@@ -35,7 +36,7 @@ const MAX_TAGS = 30;
 export const gstRateSchema = z
   .string({ error: 'Give the GST rate as a percentage, e.g. "5" or "18", or "0" for exempt goods' })
   .trim()
-  .regex(/^\d{1,2}(\.\d{1,2})?$/, 'GST rate must be a percentage with up to 2 decimal places, e.g. "5" or "18"');
+  .regex(GST_RATE_PATTERN, 'GST rate must be a percentage with up to 2 decimal places, e.g. "5" or "18"');
 
 export const tagsSchema = z
   .array(z.string().trim().toLowerCase().min(1).max(50))
@@ -45,23 +46,23 @@ export const tagsSchema = z
 export const hsnCodeSchema = z
   .string()
   .trim()
-  .regex(/^\d{4,8}$/, "HSN code must be 4 to 8 digits");
+  .regex(HSN_PATTERN, "HSN code must be 4 to 8 digits");
 
 export const fssaiLicenseSchema = z
   .string()
   .trim()
-  .regex(/^\d{14}$/, "FSSAI licence number must be 14 digits");
+  .regex(FSSAI_PATTERN, "FSSAI licence number must be 14 digits");
 
 export const skuSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/, "SKU must be letters, digits, dots, dashes or underscores");
+  .regex(SKU_PATTERN, "SKU must be letters, digits, dots, dashes or underscores");
 
 export const barcodeSchema = z
   .string()
   .trim()
-  .regex(/^[0-9A-Za-z-]{4,32}$/, "Barcode must be 4-32 letters or digits");
+  .regex(BARCODE_PATTERN, "Barcode must be 4-32 letters or digits");
 
 const productFieldsSchema = z.object({
   categoryId: idSchema,

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:seed": "prisma db seed",
     "admin:create": "tsx src/scripts/create-admin.ts",
     "postinstall": "prisma skills sync || exit 0"
@@ -18,6 +20,7 @@
     "@fastify/jwt": "^10.2.2",
     "@fastify/multipart": "^10.1.2",
     "@fastify/static": "^10.1.5",
+    "@grocery/validation": "workspace:*",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@sentry/node": "^10.75.2",
@@ -36,6 +39,7 @@
     "@types/pg": "^8.23.1",
     "prisma": "7.10.0",
     "tsx": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "vitest": "^5.0.3"
   }
 }

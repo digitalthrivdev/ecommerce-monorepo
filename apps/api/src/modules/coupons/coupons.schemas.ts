@@ -1,3 +1,4 @@
+import { COUPON_CODE_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { CouponDiscountType } from "../../generated/prisma/client";
@@ -8,7 +9,7 @@ export const couponCodeSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z0-9]{3,20}$/, "Use 3 to 20 letters and numbers");
+  .regex(COUPON_CODE_PATTERN, "Use 3 to 20 letters and numbers");
 
 export const applyCouponBodySchema = z.object({
   // Anything a customer might type; an unknown code is answered with "not valid", not a validation error.

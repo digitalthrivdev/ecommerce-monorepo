@@ -1,9 +1,10 @@
 import "dotenv/config";
+import { DECIMAL_PATTERN, HEX_COLOR_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
-const moneyEnv = z.string().regex(/^\d{1,8}(\.\d{1,2})?$/, "Must be a decimal amount, e.g. 25.00");
+const moneyEnv = z.string().regex(DECIMAL_PATTERN, "Must be a decimal amount, e.g. 25.00");
 
-const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a hex colour, e.g. #0C831F");
+const hexColor = z.string().regex(HEX_COLOR_PATTERN, "Must be a hex colour, e.g. #0C831F");
 
 /** Blank values (e.g. `RAZORPAY_KEY_ID=`) count as not set. */
 const optionalSecret = z.preprocess(
@@ -32,6 +33,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
 
   HOST: z.string().default("0.0.0.0"),
+
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 
   // Which proxies may set X-Forwarded-For, so the API sees the real client IP (used for rate
   // limits): unset when clients connect directly, the number of proxy hops (e.g. 1 for one Nginx),

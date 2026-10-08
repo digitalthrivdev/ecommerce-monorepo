@@ -1,5 +1,6 @@
 "use client";
 
+import { INDIAN_STATES } from "@grocery/validation";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -11,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useFormAction } from "@/hooks/use-form-action";
-import { INDIAN_STATES } from "@/lib/indian-states";
 import type { StoreDetails } from "@/lib/types";
 
 import { StoreLocationPicker } from "./store-location-picker";
@@ -87,14 +87,14 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
               <TextField name="city" label="City" defaultValue={store?.city} error={fieldErrors.city} maxLength={100} required />
               <Field data-invalid={Boolean(fieldErrors.state)}>
                 <FieldLabel htmlFor="store-state">State</FieldLabel>
-                <Select name="state" defaultValue={INDIAN_STATES.find((state) => state === store?.state)} required>
+                <Select name="state" defaultValue={INDIAN_STATES.find((state) => state.name === store?.state)?.name} required>
                   <SelectTrigger id="store-state" className="w-full" aria-invalid={Boolean(fieldErrors.state)}>
                     <SelectValue placeholder="Choose" />
                   </SelectTrigger>
                   <SelectContent>
-                    {INDIAN_STATES.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
+                    {INDIAN_STATES.map(({ name }) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { GST_RATE_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
@@ -132,7 +133,7 @@ const invoiceSchema = z.object({
   deliveryFeeGstRate: z
     .string()
     .trim()
-    .regex(/^\d{1,2}(\.\d{1,2})?$/, "Enter a percentage like 18 or 5"),
+    .regex(GST_RATE_PATTERN, "Enter a percentage like 18 or 5"),
 });
 
 export async function updateInvoiceSettings(formData: FormData): Promise<ActionResult> {

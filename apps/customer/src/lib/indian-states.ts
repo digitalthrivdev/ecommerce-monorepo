@@ -1,4 +1,4 @@
-/** The names the API accepts for an address's state; the API's list is in shared/gst.ts. */
+/** The names the API accepts for an address's state; the shared list is in packages/validation. */
 export const INDIAN_STATES = [
   "Andaman and Nicobar Islands",
   "Andhra Pradesh",

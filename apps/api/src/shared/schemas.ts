@@ -1,3 +1,4 @@
+import { DECIMAL_PATTERN, PHONE_PATTERN, SLUG_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { Prisma } from "../generated/prisma/client";
@@ -5,7 +6,7 @@ import { Prisma } from "../generated/prisma/client";
 export const phoneSchema = z
   .string()
   .trim()
-  .regex(/^\+[1-9]\d{7,14}$/, "Phone must be in E.164 format, e.g. +919876543210");
+  .regex(PHONE_PATTERN, "Phone must be in E.164 format, e.g. +919876543210");
 
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address").max(200));
 
@@ -27,10 +28,8 @@ export const slugSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, digits and single dashes")
+  .regex(SLUG_PATTERN, "Slug must be lowercase letters, digits and single dashes")
   .max(100);
-
-const DECIMAL_PATTERN = /^\d{1,8}(\.\d{1,2})?$/;
 
 export const decimalSchema = z
   .string()

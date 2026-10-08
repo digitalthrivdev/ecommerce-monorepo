@@ -1,3 +1,4 @@
+import { STORE_CODE_PATTERN, TIME_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { StoreStatus } from "../../generated/prisma/client";
@@ -13,7 +14,7 @@ const storeBodySchema = z.object({
     .string()
     .trim()
     .toUpperCase()
-    .regex(/^[A-Z0-9-]{2,32}$/, "Code must be 2-32 characters: letters, digits and dashes"),
+    .regex(STORE_CODE_PATTERN, "Code must be 2-32 characters: letters, digits and dashes"),
   phone: phoneSchema.nullish(),
   addressLine1: z.string().trim().min(1).max(200),
   addressLine2: z.string().trim().max(200).nullish(),
@@ -43,7 +44,7 @@ export const serviceabilityQuerySchema = z.object({
   longitude: queryNumber(-180, 180),
 });
 
-const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must be "HH:mm" in 24-hour format');
+const timeSchema = z.string().regex(TIME_PATTERN, 'Time must be "HH:mm" in 24-hour format');
 
 /** Weekly hours, at most one entry per day. Days left out are closed; an empty list means always open. */
 export const storeHoursBodySchema = z.object({

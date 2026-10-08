@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { refresh } from "next/cache";
+import { BARCODE_PATTERN, FSSAI_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
@@ -42,7 +43,7 @@ const skuInput = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z0-9][A-Z0-9._-]{0,63}$/, "Use letters, digits, dots, dashes or underscores, e.g. AMUL-MILK-1L");
+  .regex(SKU_PATTERN, "Use letters, digits, dots, dashes or underscores, e.g. AMUL-MILK-1L");
 
 const productSchema = z.object({
   categoryId: z.string().trim().min(1, "Choose a category").max(64),
@@ -59,21 +60,21 @@ const productSchema = z.object({
     .transform((value) => [...new Set(value.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean))])
     .pipe(z.array(z.string().max(50, "Keep each tag under 50 characters")).max(30, "Use at most 30 tags")),
   isVeg: z.enum(["", NONE, "veg", "non-veg"]).transform((value) => (value === "veg" ? true : value === "non-veg" ? false : null)),
-  hsnCode: optionalPattern(/^\d{4,8}$/, "Enter 4 to 8 digits"),
+  hsnCode: optionalPattern(HSN_PATTERN, "Enter 4 to 8 digits"),
   gstRate: z
     .string()
     .trim()
-    .regex(/^\d{1,2}(\.\d{1,2})?$/, "Enter the GST rate, e.g. 5 or 18, or 0 for exempt goods"),
+    .regex(GST_RATE_PATTERN, "Enter the GST rate, e.g. 5 or 18, or 0 for exempt goods"),
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
   countryOfOrigin: optionalText(100),
-  fssaiLicense: optionalPattern(/^\d{14}$/, "Enter the 14-digit licence number"),
+  fssaiLicense: optionalPattern(FSSAI_PATTERN, "Enter the 14-digit licence number"),
   shelfLife: optionalText(100),
   ingredients: optionalText(2000),
   isActive: z.boolean(),
 });
 
-const barcodeInput = optionalPattern(/^[0-9A-Za-z-]{4,32}$/, "Use 4 to 32 letters or digits");
+const barcodeInput = optionalPattern(BARCODE_PATTERN, "Use 4 to 32 letters or digits");
 
 /** A new product starts with one variant; more sizes are added on the product page. */
 const firstVariantSchema = z.object({

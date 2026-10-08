@@ -1,9 +1,10 @@
+import { HEX_COLOR_PATTERN } from "@grocery/validation";
 import { z } from "zod";
 
 const hexColor = z
   .string()
   .trim()
-  .regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex colour like #0C831F")
+  .regex(HEX_COLOR_PATTERN, "Use a hex colour like #0C831F")
   .transform((value) => value.toUpperCase());
 
 const imageUrl = z
