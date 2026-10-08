@@ -93,7 +93,7 @@ export function StoreForm({ store }: { store?: StoreDetails }) {
           label="Store GSTIN"
           defaultValue={store?.gstin}
           error={fieldErrors.gstin}
-          maxLength={15}
+          maxLength={20}
           placeholder="29ABCDE1234F1ZW"
           className="uppercase"
           description="Only if this store is registered in another state than the GSTIN in Settings. Its invoices then show this one."

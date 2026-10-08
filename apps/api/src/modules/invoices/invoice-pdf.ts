@@ -32,7 +32,7 @@ export function formatAmount(amount: Prisma.Decimal) {
 
 const rate = (value: Prisma.Decimal | null) => (value === null ? "-" : `${value.toDecimalPlaces(2).toString()}%`);
 
-function columns(invoice: Invoice, width: number): Column[] {
+function columns(doc: PDFKit.PDFDocument, invoice: Invoice, width: number): Column[] {
   const taxColumns: Column[] =
     invoice.interState === false
       ? [
@@ -54,8 +54,17 @@ function columns(invoice: Invoice, width: number): Column[] {
     ...taxColumns,
     { label: "Total", width: 50, align: "right", value: (line) => formatAmount(line.total) },
   ];
-  const used = fixed.reduce((sum, column) => sum + column.width, 0);
-  return fixed.map((column) => (column.label === "Item" ? { ...column, width: width - used } : column));
+  // Amounts never wrap: a column widens to its longest value or header word, and the item column takes what is left.
+  const fit = (column: Column) => {
+    doc.font("Helvetica").fontSize(TABLE_FONT_SIZE);
+    const values = invoice.lines.map((line, index) => doc.widthOfString(printable(column.value(line, index))));
+    doc.font("Helvetica-Bold");
+    const words = column.label.split(" ").map((word) => doc.widthOfString(word));
+    return Math.max(column.width, Math.ceil(Math.max(...values, ...words)) + CELL_PADDING * 2);
+  };
+  const sized = fixed.map((column) => (column.label === "Item" ? column : { ...column, width: fit(column) }));
+  const used = sized.reduce((sum, column) => sum + column.width, 0);
+  return sized.map((column) => (column.label === "Item" ? { ...column, width: width - used } : column));
 }
 
 /** Renders the GST invoice as an A4 PDF. */
@@ -63,6 +72,7 @@ export function renderInvoicePdf(invoice: Invoice): Promise<Buffer> {
   const doc = new PDFDocument({
     size: "A4",
     margin: MARGIN,
+    bufferPages: true,
     info: { Title: `Invoice ${invoice.invoiceNumber}`, Author: printable(invoice.seller?.name ?? "") },
   });
   const chunks: Buffer[] = [];
@@ -139,7 +149,7 @@ export function renderInvoicePdf(invoice: Invoice): Promise<Buffer> {
   }
 
   // Lines
-  const cols = columns(invoice, width);
+  const cols = columns(doc, invoice, width);
   const drawRow = (cells: string[], header: boolean) => {
     const font = header ? "Helvetica-Bold" : "Helvetica";
     doc.font(font).fontSize(TABLE_FONT_SIZE);
@@ -202,6 +212,17 @@ export function renderInvoicePdf(invoice: Invoice): Promise<Buffer> {
   y = doc.y + 14;
   doc.fontSize(7.5).fillColor(MUTED);
   text("Prices include GST. This is a computer-generated invoice and needs no signature.", left, y, { width });
+
+  const pages = doc.bufferedPageRange();
+  if (pages.count > 1) {
+    for (let index = 0; index < pages.count; index++) {
+      doc.switchToPage(pages.start + index);
+      // Writing inside the bottom margin would otherwise start a new page.
+      doc.page.margins.bottom = 0;
+      doc.font("Helvetica").fontSize(7.5).fillColor(MUTED);
+      text(`${invoice.invoiceNumber} · Page ${index + 1} of ${pages.count}`, left, doc.page.height - MARGIN + 12, { width, align: "right" });
+    }
+  }
 
   doc.end();
   return done;

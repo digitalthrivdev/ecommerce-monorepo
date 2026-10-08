@@ -35,7 +35,7 @@ export function InvoiceSettingsForm({ settings }: { settings: PlatformSettings }
               id="invoice-gstin"
               name="gstin"
               defaultValue={settings.gstin ?? ""}
-              maxLength={15}
+              maxLength={20}
               placeholder="29ABCDE1234F1ZW"
               className="uppercase"
               aria-invalid={Boolean(fieldErrors.gstin)}
