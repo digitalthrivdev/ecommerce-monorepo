@@ -54,7 +54,9 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
 
 ## Updating a server
 
-Push to GitHub first; the server pulls from there.
+Push to GitHub first; the server pulls from there. Servers with automatic deploys (below; moozy today) update themselves after each push to `main`. Since migrations then apply without a manual step, read every new `migration.sql` before pushing it (step 2), and push risky ones separately.
+
+For a manual update:
 
 1. **What's deployed now:** `ssh <server> 'cd ~/<client> && git log -1 --oneline'`.
 2. **Pending migrations:** from the repository, `git diff --name-only <deployed>..origin/main -- apps/api/prisma/migrations`. Read each new `migration.sql`. Migrations that only add tables or columns are safe. If one moves data, drops a column or adds `NOT NULL`, check it against the live data and take a backup first.
@@ -77,6 +79,34 @@ One-time setup per server:
 3. In `deploy/.env`: `IMAGE_PREFIX=ghcr.io/<github owner, lowercase>/grocery` (for this repository, `ghcr.io/piyushgupta20/grocery`).
 
 From then on `update.sh` pulls instead of building. If CI hasn't finished or failed for the pulled commit, it stops without changing anything; run it again once the images exist. Blank `IMAGE_PREFIX` goes back to building on the server.
+
+Servers with automatic deploys skip steps 1 and 2: each deploy signs in with GitHub's short-lived job token instead, so no token is stored on the server. A manual `update.sh` there needs the login above first, or re-run the deploy job in GitHub → Actions.
+
+### Automatic deploys
+
+After CI passes on `main` and the images are pushed, the `deploy-moozy` job in `.github/workflows/ci.yml` updates the moozy server:
+
+1. It connects over SSH with a key used only by GitHub. On the server that key is restricted (`restrict,command=…` in `~/.ssh/authorized_keys`): whatever it asks for, the server only runs `git pull` and `deploy/ci-deploy.sh`. It can't open a shell or forward ports.
+2. `ci-deploy.sh` checks that the commit is the latest on `main` (an older run skips; the newer run deploys), signs in to the registry with the job's token (kept in a temporary folder and deleted at the end), takes a backup, runs `update.sh`, waits up to 5 minutes for api, admin and web to report healthy, then checks `https://API_DOMAIN/health`.
+3. Any failure turns the job red and GitHub emails you. Logs: GitHub → Actions → the run → `deploy-moozy`.
+
+Pushing to `main` takes about 7 minutes to go live. Two deploys never overlap. To redeploy, open the run and use "Re-run jobs".
+
+**Setting it up for a server** (done for moozy; the secrets are repository secrets named `<CLIENT>_SSH_KEY`, `<CLIENT>_SSH_HOST`, `<CLIENT>_SSH_KNOWN_HOSTS`):
+
+1. Generate a key without a passphrase on your machine: `ssh-keygen -t ed25519 -N "" -C github-actions-deploy-<client> -f deploy_key`.
+2. On the server, add one line to `~/.ssh/authorized_keys`:
+   `restrict,command="cd ~/<client> && git pull --ff-only -q && exec sh deploy/ci-deploy.sh" <contents of deploy_key.pub>`
+3. Store the secrets, and check that the scanned host keys match the ones in your own `~/.ssh/known_hosts` for that server:
+   ```bash
+   gh secret set <CLIENT>_SSH_KEY < deploy_key
+   ssh-keyscan <server ip> | gh secret set <CLIENT>_SSH_KNOWN_HOSTS
+   printf 'deploy@<server ip>' | gh secret set <CLIENT>_SSH_HOST
+   rm deploy_key deploy_key.pub
+   ```
+4. Set `IMAGE_PREFIX` in the server's `deploy/.env`, then copy the `deploy-moozy` job in the workflow with the new names.
+
+To stop automatic deploys for a server, delete its line in `authorized_keys` (immediate) and remove its job from the workflow.
 
 **Adding the website to a server set up before it existed:** `docker compose up` stops with "Set SITE_DOMAIN in .env" until it's configured.
 

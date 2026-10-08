@@ -102,3 +102,29 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           # The cache only speeds up the next build; a failed upload must not fail a pushed image.
           cache-to: type=gha,mode=max,scope=${{ matrix.name }},ignore-error=true
+
+  # Updates the test client's server to this commit (docs/deployment.md, "Automatic deploys").
+  # The SSH key can only run deploy/ci-deploy.sh; the job token lets the server pull the images.
+  deploy-moozy:
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-moozy
+      cancel-in-progress: false
+    permissions:
+      packages: read
+    steps:
+      - name: Deploy
+        env:
+          SSH_KEY: ${{ secrets.MOOZY_SSH_KEY }}
+          SSH_HOST: ${{ secrets.MOOZY_SSH_HOST }}
+          SSH_KNOWN_HOSTS: ${{ secrets.MOOZY_SSH_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$SSH_HOST" "$GITHUB_SHA $GITHUB_ACTOR"

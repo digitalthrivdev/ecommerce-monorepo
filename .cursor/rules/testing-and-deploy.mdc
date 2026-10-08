@@ -23,11 +23,7 @@ Follow `docs/deployment.md` (runbook and the table of current clients). The rule
 
 # Production VPS (test client "moozy")
 - Connect with `ssh grocery-vps` (key-based, `deploy` user with passwordless sudo). The stack is in `~/moozy/deploy`; domains are `api.moozy.in` and `admin.moozy.in`.
-- Deploy after the developer pushes (and, with `IMAGE_PREFIX` set on the server, after CI has built the images):
-  ```bash
-  ssh grocery-vps '~/moozy/deploy/update.sh'
-  ```
-  Building on the server (no `IMAGE_PREFIX`) takes about 5 minutes on 1 CPU. Don't poll it repeatedly; check once with `docker compose ps`.
+- Moozy deploys automatically: every push to `main` that passes CI runs the `deploy-moozy` job (`deploy/ci-deploy.sh` through a restricted SSH key). So before the developer pushes a migration, flag anything that moves data, drops columns or adds `NOT NULL`. Check a deploy with `gh run list` / `gh run view <id>`, not by polling the server. A manual `update.sh` on moozy needs a GHCR login (`IMAGE_PREFIX` is set); prefer "Re-run jobs" on the run.
 - API tests: `pnpm test` (per-run test database; needs the dev PostgreSQL and Redis). Don't run it alongside a Docker or Next.js build.
 - Never print values from `deploy/.env` or `deploy/api.env`; show variable names only. Never ask for passwords in chat.
 - Before anything destructive on the server (deleting volumes, data, containers), back up, explain, and get confirmation.
