@@ -17,6 +17,8 @@ type BillDetailsProps = {
   /** The usual delivery fee, shown struck through when this bill's delivery is free. */
   regularDeliveryFee?: string;
   totalLabel?: string;
+  /** Names the discount row. */
+  couponCode?: string | null;
   /** Faded while the amounts are being recalculated. */
   stale?: boolean;
   footer?: ReactNode;
@@ -52,7 +54,7 @@ function Struck({ was, now, highlight = false }: { was: string; now: string; hig
   );
 }
 
-export function BillDetails({ bill, itemsMrp, regularDeliveryFee, totalLabel = "To pay", stale = false, footer }: BillDetailsProps) {
+export function BillDetails({ bill, itemsMrp, regularDeliveryFee, totalLabel = "To pay", couponCode, stale = false, footer }: BillDetailsProps) {
   const { currency } = useSettings();
   const surface = useCardSurface();
   const free = toPaise(bill.deliveryFee) === 0;
@@ -89,7 +91,9 @@ export function BillDetails({ bill, itemsMrp, regularDeliveryFee, totalLabel = "
             )
           }
         />
-        {toPaise(bill.discount) > 0 && <BillRow label="Discount" value={`−${formatMoney(bill.discount, currency)}`} />}
+        {toPaise(bill.discount) > 0 && (
+          <BillRow label={couponCode ? `Coupon ${couponCode}` : "Discount"} value={`−${formatMoney(bill.discount, currency)}`} />
+        )}
         <View className="h-px bg-border" />
         <BillRow label={totalLabel} value={formatMoney(bill.total, currency)} strong />
         {bill.taxTotal && toPaise(bill.taxTotal) > 0 ? (

@@ -9,6 +9,7 @@ import {
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
+import { checkCoupon } from "../coupons/coupons.service.js";
 import { deliveryOtp } from "../delivery/delivery-otp.js";
 import { reserveStock } from "../inventory/inventory.service.js";
 import { activePaymentProvider } from "../payments/gateway-registry.js";
@@ -20,7 +21,7 @@ import { storeServesLocation } from "../stores/geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, transitionOrder } from "./order-status.js";
-import { includedTax } from "./tax.js";
+import { discountShares, includedTax } from "./tax.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
 export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
@@ -165,11 +166,14 @@ export function toDetailView(order: OrderDetail) {
       chargedTotal: item.unitPrice.mul(item.quantity - item.unavailableQuantity).toFixed(2),
       hsnCode: item.hsnCode,
       gstRate: item.gstRate?.toFixed(2) ?? null,
+      // Share of the coupon discount; taxAmount is the GST in chargedTotal minus this.
+      discount: item.discount.toFixed(2),
       taxAmount: item.taxAmount.toFixed(2),
     })),
     subtotal: order.subtotal.toFixed(2),
     deliveryFee: order.deliveryFee.toFixed(2),
     discount: order.discount.toFixed(2),
+    couponCode: order.couponCode,
     total: order.total.toFixed(2),
     // GST included in the item prices.
     taxTotal: order.taxTotal.toFixed(2),
@@ -365,10 +369,9 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           );
         }
 
-        const lines = cart.items.map((item) => {
+        const priced = cart.items.map((item) => {
           const { variant } = item;
           const storeProduct = byVariantId.get(item.variantId)!;
-          const totalPrice = storeProduct.sellingPrice.mul(item.quantity);
           return {
             storeProductId: storeProduct.id,
             productId: variant.product.id,
@@ -380,17 +383,27 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             mrp: storeProduct.mrp,
             quantity: item.quantity,
             unitPrice: storeProduct.sellingPrice,
-            totalPrice,
+            totalPrice: storeProduct.sellingPrice.mul(item.quantity),
             hsnCode: variant.product.hsnCode,
             gstRate: variant.product.gstRate,
-            taxAmount: includedTax(totalPrice, variant.product.gstRate),
           };
         });
 
-        const subtotal = lines.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
-        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), new Prisma.Decimal(0));
+        const subtotal = priced.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
+        const coupon = cart.couponCode ? await checkCoupon(tx, { code: cart.couponCode, userId, subtotal, lock: true }) : null;
         const settings = await getPlatformSettings(tx);
-        const charges = calculateCharges(subtotal, settings);
+        const charges = calculateCharges(subtotal, settings, coupon?.discount);
+
+        const shares = discountShares(
+          priced.map((line) => line.totalPrice),
+          charges.discount,
+        );
+        const lines = priced.map((line, index) => ({
+          ...line,
+          discount: shares[index]!,
+          taxAmount: includedTax(line.totalPrice.minus(shares[index]!), line.gstRate),
+        }));
+        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), new Prisma.Decimal(0));
 
         if (!charges.meetsMinimum) {
           throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${charges.minOrderValue.toFixed(2)}`, {
@@ -440,6 +453,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             discount,
             total,
             taxTotal,
+            ...(coupon && { couponId: coupon.coupon.id, couponCode: coupon.coupon.code }),
             paymentMethod,
             customerName: address.name,
             customerPhone: address.phone,
@@ -463,7 +477,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         });
 
         await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-        await tx.cart.update({ where: { id: cart.id }, data: { storeId: null } });
+        await tx.cart.update({ where: { id: cart.id }, data: { storeId: null, couponCode: null } });
 
         return order.id;
       },

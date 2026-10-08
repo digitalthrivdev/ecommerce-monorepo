@@ -127,7 +127,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/print/orde
           <dd className="text-right">{Number(order.deliveryFee) === 0 ? "Free" : money(order.deliveryFee)}</dd>
           {Number(order.discount) > 0 && (
             <>
-              <dt>Discount</dt>
+              <dt>{order.couponCode ? `Coupon ${order.couponCode}` : "Discount"}</dt>
               <dd className="text-right">−{money(order.discount)}</dd>
             </>
           )}

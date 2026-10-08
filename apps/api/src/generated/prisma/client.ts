@@ -165,6 +165,11 @@ export type Complaint = Prisma.ComplaintModel
  */
 export type ComplaintItem = Prisma.ComplaintItemModel
 /**
+ * Model Coupon
+ * 
+ */
+export type Coupon = Prisma.CouponModel
+/**
  * Model OrderRating
  * 
  */

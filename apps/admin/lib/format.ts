@@ -33,6 +33,11 @@ export function formatDate(value: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeZone }).format(new Date(value));
 }
 
+/** A calendar day ("2026-10-07") that is already in the business time zone. */
+export function formatDay(day: string) {
+  return new Intl.DateTimeFormat(LOCALE, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(day));
+}
+
 export function formatTime(value: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat(LOCALE, { timeStyle: "short", timeZone }).format(new Date(value));
 }

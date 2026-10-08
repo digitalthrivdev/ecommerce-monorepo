@@ -32,6 +32,11 @@ export function startOfDay(day: string, timeZone = env.TIMEZONE) {
   return new Date(utcMidnight.getTime() - zoneOffsetMs(guess, timeZone));
 }
 
+/** The calendar day (`YYYY-MM-DD`) of a moment in the client's time zone. */
+export function dayOf(date: Date, timeZone = env.TIMEZONE) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
+}
+
 /** Midnight at the end of a calendar day (`YYYY-MM-DD`) in the client's time zone. */
 export function endOfDay(day: string, timeZone = env.TIMEZONE) {
   const next = new Date(`${day}T00:00:00Z`);

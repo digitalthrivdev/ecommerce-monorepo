@@ -24,6 +24,7 @@ import {
   Store,
   Sun,
   Tags,
+  TicketPercent,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -93,6 +94,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Stores", href: "/stores", icon: Store, roles: ADMIN },
       { title: "Customers", href: "/customers", icon: Users, roles: ADMIN },
+      { title: "Coupons", href: "/coupons", icon: TicketPercent, roles: ADMIN },
       { title: "Appearance", href: "/appearance", icon: Palette, roles: ADMIN },
       { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN },
     ],

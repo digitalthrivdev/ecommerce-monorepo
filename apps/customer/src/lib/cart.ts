@@ -144,7 +144,18 @@ function previewQuantity(cart: Cart, { variantId, quantity, item, store }: Quant
   };
 }
 
-const emptyCart = (cart: Cart): Cart => ({ ...cart, store: null, storeIsOpen: false, items: [], itemCount: 0, subtotal: "0.00", bill: null, checkout: null, isValid: false });
+const emptyCart = (cart: Cart): Cart => ({
+  ...cart,
+  store: null,
+  storeIsOpen: false,
+  items: [],
+  itemCount: 0,
+  subtotal: "0.00",
+  bill: null,
+  checkout: null,
+  isValid: false,
+  coupon: null,
+});
 
 /** Keeps optimistic quantities but takes line ids from the server, so queued changes target the right lines. */
 function syncItemIds(cart: Cart, server: Cart): Cart {
@@ -207,6 +218,22 @@ function useCartMutation<T>(mutationFn: (variables: T) => Promise<Cart>, preview
       if (isLast()) queryClient.invalidateQueries({ queryKey: CART_KEY });
     },
   });
+}
+
+/** Applies or removes the cart's coupon. Errors are left to the caller, which shows them next to the code. */
+export function useCouponActions() {
+  const queryClient = useQueryClient();
+  const options = {
+    mutationKey: CART_KEY,
+    scope: { id: "cart" },
+    onSuccess: (server: Cart) =>
+      queryClient.setQueryData<Cart>(CART_KEY, (cart) =>
+        queryClient.isMutating({ mutationKey: CART_KEY }) === 1 || !cart ? server : { ...cart, coupon: server.coupon },
+      ),
+  };
+  const apply = useMutation({ ...options, mutationFn: (code: string) => apiFetch<Cart>("/cart/coupon", { method: "PUT", body: { code } }) });
+  const remove = useMutation({ ...options, mutationFn: () => apiFetch<Cart>("/cart/coupon", { method: "DELETE" }) });
+  return { apply, remove };
 }
 
 export function useCartActions() {

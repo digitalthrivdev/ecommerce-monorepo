@@ -1,7 +1,21 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Banknote, ChevronRight, ChevronUp, Clock, CreditCard, House, Info, ShoppingBag, Trash2, TriangleAlert, X, type LucideIcon } from "lucide-react-native";
+import {
+  Banknote,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  CreditCard,
+  House,
+  Info,
+  ShoppingBag,
+  TicketPercent,
+  Trash2,
+  TriangleAlert,
+  X,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,12 +27,13 @@ import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { addressSummary, useAddresses } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { ProductRow } from "@/components/product-row";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { CART_KEY, checkoutBlocker, codUnavailableText, useCart, useCartActions, useCartUpdating, visibleItems } from "@/lib/cart";
+import { CART_KEY, checkoutBlocker, codUnavailableText, useCart, useCartActions, useCartUpdating, useCouponActions, visibleItems } from "@/lib/cart";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
@@ -27,7 +42,7 @@ import { usePlaceOrder } from "@/lib/orders";
 import { useAlsoBought } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 import { closedText } from "@/lib/store-hours";
-import type { Cart, CartItem, OrderDetail, PaymentMethod } from "@/lib/types";
+import type { Cart, CartCoupon, CartItem, OrderDetail, PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const CART_CHANGED_ERRORS = ["CART_EMPTY", "CART_INVALID", "INSUFFICIENT_STOCK", "QUANTITY_LIMIT", "MIN_ORDER_NOT_MET"];
@@ -51,6 +66,10 @@ function showOrderError(error: unknown) {
   }
   if (error instanceof ApiError && error.code === "STORE_CLOSED") {
     Alert.alert("Store closed", error.message);
+    return;
+  }
+  if (error instanceof ApiError && error.code.startsWith("COUPON_")) {
+    Alert.alert("Coupon can't be used", `${error.message}. Remove it to order without the discount.`);
     return;
   }
   Alert.alert("Couldn't place your order", errorMessage(error));
@@ -201,6 +220,75 @@ function PaymentSheet({ open, methods, selected, timeoutMinutes, onSelect, onClo
   );
 }
 
+function CouponCard({ coupon, discount, currency }: { coupon: CartCoupon | null; discount: string | null; currency: string }) {
+  const surface = useCardSurface();
+  const { apply, remove } = useCouponActions();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  if (coupon) {
+    const saving = coupon.applied && discount && Number(discount) > 0 ? `You save ${formatMoney(discount, currency)}` : null;
+    return (
+      <View className={cn("mx-4 flex-row items-center gap-3 rounded-lg p-4", surface)}>
+        <Icon as={TicketPercent} size={20} className={coupon.applied ? "text-primary" : "text-muted-foreground"} />
+        <View className="flex-1 gap-0.5">
+          <Text className="text-sm font-bold">{coupon.code}</Text>
+          {coupon.applied ? (
+            <Text className="text-xs text-muted-foreground">{[saving, coupon.description].filter(Boolean).join(" · ")}</Text>
+          ) : (
+            <Text className="text-xs font-semibold text-destructive">{coupon.message}</Text>
+          )}
+        </View>
+        <Pressable onPress={() => remove.mutate()} disabled={remove.isPending} hitSlop={8} className="active:opacity-70">
+          <Text className="text-sm font-bold text-primary">Remove</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const submit = () => {
+    const value = code.trim();
+    if (!value) return;
+    apply.mutate(value, {
+      onSuccess: () => {
+        setCode("");
+        setError(null);
+      },
+      onError: (failure) => setError(errorMessage(failure)),
+    });
+  };
+
+  return (
+    <View className={cn("mx-4 gap-2 rounded-lg p-4", surface)}>
+      <View className="flex-row items-center gap-2">
+        <Icon as={TicketPercent} size={20} className="text-primary" />
+        <Text className="text-base font-bold">Coupon</Text>
+      </View>
+      <View className="flex-row gap-2">
+        <Input
+          value={code}
+          onChangeText={(text) => {
+            setCode(text.toUpperCase());
+            setError(null);
+          }}
+          onSubmitEditing={submit}
+          placeholder="Enter coupon code"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={20}
+          returnKeyType="done"
+          className={cn("h-11 flex-1 rounded-lg bg-card", error && "border-destructive")}
+          aria-invalid={Boolean(error)}
+        />
+        <Button variant="outline" onPress={submit} disabled={!code.trim() || apply.isPending} className="h-11 rounded-lg px-4">
+          {apply.isPending ? <ActivityIndicator /> : <Text className="text-sm font-bold">Apply</Text>}
+        </Button>
+      </View>
+      {error && <Text className="text-xs text-destructive">{error}</Text>}
+    </View>
+  );
+}
+
 function CartSuggestions({ storeId, items }: { storeId: string | undefined; items: CartItem[] }) {
   const query = useAlsoBought(storeId, [...new Set(items.map((item) => item.productId))]);
   return <ProductRow title="You might also like" products={query.data?.items ?? []} />;
@@ -298,7 +386,17 @@ function CartContent({ cart }: { cart: Cart }) {
 
         {!otherStore && <CartSuggestions storeId={store?.id} items={items} />}
 
-        {cart.bill && <BillDetails bill={cart.bill} itemsMrp={mrpTotal(orderable)} regularDeliveryFee={pricing.deliveryFee} stale={updating} />}
+        {!otherStore && <CouponCard coupon={cart.coupon} discount={cart.bill?.discount ?? null} currency={currency} />}
+
+        {cart.bill && (
+          <BillDetails
+            bill={cart.bill}
+            itemsMrp={mrpTotal(orderable)}
+            regularDeliveryFee={pricing.deliveryFee}
+            couponCode={cart.coupon?.applied ? cart.coupon.code : null}
+            stale={updating}
+          />
+        )}
 
         <View className={cn("mx-4 flex-row gap-3 rounded-lg p-4", surface)}>
           <Icon as={Info} size={18} className="mt-0.5 text-muted-foreground" />

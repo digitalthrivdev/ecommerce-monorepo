@@ -76,6 +76,7 @@ export const ModelName = {
   Refund: 'Refund',
   Complaint: 'Complaint',
   ComplaintItem: 'ComplaintItem',
+  Coupon: 'Coupon',
   OrderRating: 'OrderRating',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
@@ -333,6 +334,7 @@ export const CartScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   storeId: 'storeId',
+  couponCode: 'couponCode',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -365,6 +367,8 @@ export const OrderScalarFieldEnum = {
   total: 'total',
   taxTotal: 'taxTotal',
   invoiceNumber: 'invoiceNumber',
+  couponId: 'couponId',
+  couponCode: 'couponCode',
   paymentMethod: 'paymentMethod',
   customerName: 'customerName',
   customerPhone: 'customerPhone',
@@ -398,6 +402,7 @@ export const OrderItemScalarFieldEnum = {
   totalPrice: 'totalPrice',
   hsnCode: 'hsnCode',
   gstRate: 'gstRate',
+  discount: 'discount',
   taxAmount: 'taxAmount',
   unavailableQuantity: 'unavailableQuantity',
   createdAt: 'createdAt'
@@ -490,6 +495,27 @@ export const ComplaintItemScalarFieldEnum = {
 } as const
 
 export type ComplaintItemScalarFieldEnum = (typeof ComplaintItemScalarFieldEnum)[keyof typeof ComplaintItemScalarFieldEnum]
+
+
+export const CouponScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  description: 'description',
+  discountType: 'discountType',
+  discountValue: 'discountValue',
+  maxDiscount: 'maxDiscount',
+  minOrderValue: 'minOrderValue',
+  startsAt: 'startsAt',
+  endsAt: 'endsAt',
+  totalLimit: 'totalLimit',
+  perCustomerLimit: 'perCustomerLimit',
+  firstOrderOnly: 'firstOrderOnly',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CouponScalarFieldEnum = (typeof CouponScalarFieldEnum)[keyof typeof CouponScalarFieldEnum]
 
 
 export const OrderRatingScalarFieldEnum = {

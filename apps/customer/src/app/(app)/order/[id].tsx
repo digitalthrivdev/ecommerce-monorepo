@@ -466,6 +466,7 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
         bill={order}
         itemsMrp={mrpTotal(chargedLines)}
         totalLabel="Total"
+        couponCode={order.couponCode}
         footer={
           <View className="gap-2 pt-1">
             <View className="flex-row items-center gap-2">

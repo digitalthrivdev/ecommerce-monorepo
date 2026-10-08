@@ -41,12 +41,14 @@ export async function getPlatformSettings(db: Db) {
 
 export type PlatformSettings = Awaited<ReturnType<typeof getPlatformSettings>>;
 
-/** Delivery fee and totals for a subtotal. Used for the cart preview and at checkout so they always agree. */
-export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSettings) {
+/**
+ * Delivery fee and totals for a subtotal and coupon discount. Used for the cart preview and at
+ * checkout so they always agree. The minimum order and free delivery use the subtotal before the discount.
+ */
+export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSettings, discount = new Prisma.Decimal(0)) {
   const freeDelivery =
     settings.freeDeliveryThreshold !== null && subtotal.gte(settings.freeDeliveryThreshold);
   const deliveryFee = freeDelivery ? new Prisma.Decimal(0) : settings.deliveryFee;
-  const discount = new Prisma.Decimal(0);
 
   return {
     subtotal,

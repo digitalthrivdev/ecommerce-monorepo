@@ -177,7 +177,11 @@ export type Cart = {
   bill: CartBill | null;
   checkout: CheckoutOptions | null;
   isValid: boolean;
+  coupon: CartCoupon | null;
 };
+
+/** The code saved on the cart. When `applied` is false, `message` says why it doesn't apply right now. */
+export type CartCoupon = { code: string; description: string | null; applied: boolean; message: string | null };
 
 /** What this customer can do at checkout for the cart's total. */
 export type CheckoutOptions = {
@@ -262,6 +266,8 @@ export type OrderDetail = {
   subtotal: string;
   deliveryFee: string;
   discount: string;
+  /** The coupon that gave the discount. */
+  couponCode: string | null;
   total: string;
   /** GST included in the item prices. */
   taxTotal: string;

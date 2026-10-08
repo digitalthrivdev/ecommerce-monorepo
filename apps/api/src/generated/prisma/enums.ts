@@ -91,6 +91,14 @@ export const ComplaintStatus = {
 export type ComplaintStatus = (typeof ComplaintStatus)[keyof typeof ComplaintStatus]
 
 
+export const CouponDiscountType = {
+  FLAT: 'FLAT',
+  PERCENT: 'PERCENT'
+} as const
+
+export type CouponDiscountType = (typeof CouponDiscountType)[keyof typeof CouponDiscountType]
+
+
 export const PaymentMethod = {
   COD: 'COD',
   ONLINE: 'ONLINE'

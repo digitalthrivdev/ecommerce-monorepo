@@ -28,7 +28,7 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   /** JSON-encoded, except FormData, which is sent as multipart. */
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined>;

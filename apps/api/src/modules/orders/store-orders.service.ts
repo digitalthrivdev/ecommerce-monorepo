@@ -1,11 +1,12 @@
 import { OrderStatus, PaymentMethod, Prisma, type DeliveryFailure, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { couponDiscount } from "../coupons/coupons.service.js";
 import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
 import { reviewAccountUserId } from "../settings/settings.service.js";
 import { lockOrder, transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
-import { includedTax } from "./tax.js";
+import { discountShares, includedTax } from "./tax.js";
 
 export const STORE_ACTIONS = {
   accept: { from: [OrderStatus.CONFIRMED], to: OrderStatus.STORE_ACCEPTED },
@@ -267,7 +268,14 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
 
       const order = await tx.order.findUniqueOrThrow({
         where: { id: orderId },
-        select: { orderNumber: true, deliveryFee: true, discount: true, paymentMethod: true, items: true },
+        select: {
+          orderNumber: true,
+          deliveryFee: true,
+          discount: true,
+          paymentMethod: true,
+          items: true,
+          coupon: { select: { discountType: true, discountValue: true, maxDiscount: true } },
+        },
       });
       const item = order.items.find((candidate) => candidate.id === itemId);
       if (!item) {
@@ -290,23 +298,27 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         throw new AppError(409, "ORDER_WOULD_BE_EMPTY", "Every item would be unavailable. Cancel the order instead.");
       }
 
-      const subtotal = items.reduce(
-        (sum, candidate) => sum.plus(candidate.unitPrice.mul(candidate.quantity - candidate.unavailableQuantity)),
-        new Prisma.Decimal(0),
-      );
-      const total = Prisma.Decimal.max(subtotal.plus(order.deliveryFee).minus(order.discount), 0);
-      const charged = item.quantity - item.unavailableQuantity - units;
-      const taxAmount = includedTax(item.unitPrice.mul(charged), item.gstRate);
-      const taxTotal = items.reduce(
-        (sum, candidate) => sum.plus(candidate.id === itemId ? taxAmount : candidate.taxAmount),
-        new Prisma.Decimal(0),
-      );
+      const amounts = items.map((candidate) => candidate.unitPrice.mul(candidate.quantity - candidate.unavailableQuantity));
+      const subtotal = amounts.reduce((sum, amount) => sum.plus(amount), new Prisma.Decimal(0));
+      // The coupon is recalculated on what's left; its minimum order no longer applies, since the store is short.
+      const discount = order.coupon ? couponDiscount(subtotal, order.coupon) : Prisma.Decimal.min(order.discount, subtotal);
+      const total = Prisma.Decimal.max(subtotal.plus(order.deliveryFee).minus(discount), 0);
+      const shares = discountShares(amounts, discount);
+      const repriced = items.map((candidate, index) => ({
+        id: candidate.id,
+        changed: candidate.id === itemId || !candidate.discount.eq(shares[index]!),
+        discount: shares[index]!,
+        taxAmount: includedTax(amounts[index]!.minus(shares[index]!), candidate.gstRate),
+      }));
+      const taxTotal = repriced.reduce((sum, line) => sum.plus(line.taxAmount), new Prisma.Decimal(0));
 
-      await tx.orderItem.update({
-        where: { id: itemId },
-        data: { unavailableQuantity: { increment: units }, taxAmount },
-      });
-      await tx.order.update({ where: { id: orderId }, data: { subtotal, total, taxTotal } });
+      for (const line of repriced.filter((candidate) => candidate.changed)) {
+        await tx.orderItem.update({
+          where: { id: line.id },
+          data: { discount: line.discount, taxAmount: line.taxAmount, ...(line.id === itemId && { unavailableQuantity: { increment: units } }) },
+        });
+      }
+      await tx.order.update({ where: { id: orderId }, data: { subtotal, discount, total, taxTotal } });
       if (order.paymentMethod === PaymentMethod.COD) {
         await tx.payment.updateMany({ where: { orderId }, data: { amount: total } });
       }

@@ -202,12 +202,16 @@ export type OrderDetail = {
     chargedTotal: string;
     hsnCode: string | null;
     gstRate: string | null;
-    /** GST included in the charged total. */
+    /** This line's share of the coupon discount. */
+    discount: string;
+    /** GST included in the charged total, after the coupon discount. */
     taxAmount: string;
   }>;
   subtotal: string;
   deliveryFee: string;
   discount: string;
+  /** The coupon that gave the discount. */
+  couponCode: string | null;
   total: string;
   /** GST included in the total. */
   taxTotal: string;
@@ -264,6 +268,36 @@ export type Brand = {
   isActive: boolean;
   /** Admin listings only. */
   productCount?: number;
+};
+
+export type CouponDiscountType = "FLAT" | "PERCENT";
+export type CouponStatus = "ACTIVE" | "SCHEDULED" | "EXPIRED" | "USED_UP" | "INACTIVE";
+
+/** `GET /admin/coupons`. Dates are days in the business time zone; the coupon works through the end of `endsOn`. */
+export type Coupon = {
+  id: string;
+  code: string;
+  description: string | null;
+  discountType: CouponDiscountType;
+  /** Amount for FLAT, percentage for PERCENT. */
+  discountValue: string;
+  /** Cap on a percentage discount. */
+  maxDiscount: string | null;
+  minOrderValue: string;
+  startsOn: string | null;
+  endsOn: string | null;
+  totalLimit: number | null;
+  perCustomerLimit: number | null;
+  firstOrderOnly: boolean;
+  isActive: boolean;
+  status: CouponStatus;
+  /** Orders using it, not counting cancelled ones. */
+  usedCount: number;
+  /** Discount on delivered orders. */
+  discountGiven: string;
+  /** Used by an order, so the code and discount can't change. */
+  termsLocked: boolean;
+  createdAt: string;
 };
 
 type CategorySummary = { id: string; name: string; slug: string; parentId: string | null };

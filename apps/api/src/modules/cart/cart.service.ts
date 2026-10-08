@@ -1,5 +1,6 @@
 import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { checkCoupon, COUPON_ERROR_CODES } from "../coupons/coupons.service.js";
 import { checkoutOptions, customerOrderBlock } from "../orders/checkout-rules.js";
 import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { customerVisible } from "../products/store-products.service.js";
@@ -69,6 +70,17 @@ function assertEnoughStock(requested: number, { available, limit }: { available:
 }
 
 export function createCartService(prisma: PrismaClient) {
+  /** The applied coupon's discount on the items that can be ordered, or why it doesn't apply. */
+  async function evaluateCoupon(userId: string, code: string, subtotal: Prisma.Decimal) {
+    try {
+      const { coupon, discount } = await checkCoupon(prisma, { code, userId, subtotal });
+      return { code: coupon.code, description: coupon.description, discount, message: null };
+    } catch (error) {
+      if (!(error instanceof AppError) || !COUPON_ERROR_CODES.includes(error.code)) throw error;
+      return { code, description: null, discount: new Prisma.Decimal(0), message: error.message };
+    }
+  }
+
   async function getCart(userId: string) {
     const cart = await prisma.cart.findUnique({ where: { userId }, include: cartInclude });
 
@@ -80,6 +92,7 @@ export function createCartService(prisma: PrismaClient) {
         items: [],
         itemCount: 0,
         subtotal: "0.00",
+        coupon: null,
         bill: null,
         checkout: null,
         isValid: false,
@@ -139,8 +152,12 @@ export function createCartService(prisma: PrismaClient) {
 
     const storeIsOpen = storeIsActive && isStoreOpen(cart.store?.hours ?? []);
 
-    const [settings, block] = await Promise.all([getPlatformSettings(prisma), customerOrderBlock(prisma, userId)]);
-    const charges = calculateCharges(subtotal, settings);
+    const [settings, block, coupon] = await Promise.all([
+      getPlatformSettings(prisma),
+      customerOrderBlock(prisma, userId),
+      cart.couponCode ? evaluateCoupon(userId, cart.couponCode, subtotal) : null,
+    ]);
+    const charges = calculateCharges(subtotal, settings, coupon?.discount);
 
     return {
       id: cart.id,
@@ -149,6 +166,8 @@ export function createCartService(prisma: PrismaClient) {
       items,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       subtotal: subtotal.toFixed(2),
+      /** The applied coupon; when it no longer applies, `message` says why and the bill has no discount. */
+      coupon: coupon && { code: coupon.code, description: coupon.description, applied: coupon.message === null, message: coupon.message },
       // Preview of the checkout bill for the items that can be ordered; checkout recalculates it.
       bill: {
         subtotal: charges.subtotal.toFixed(2),
@@ -260,7 +279,7 @@ export function createCartService(prisma: PrismaClient) {
 
       const remaining = await tx.cartItem.count({ where: { cartId: item.cartId } });
       if (remaining === 0) {
-        await tx.cart.update({ where: { id: item.cartId }, data: { storeId: null } });
+        await tx.cart.update({ where: { id: item.cartId }, data: { storeId: null, couponCode: null } });
       }
     });
 
@@ -274,11 +293,27 @@ export function createCartService(prisma: PrismaClient) {
 
       await lockCart(tx, cart.id);
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-      await tx.cart.update({ where: { id: cart.id }, data: { storeId: null } });
+      await tx.cart.update({ where: { id: cart.id }, data: { storeId: null, couponCode: null } });
     });
 
     return getCart(userId);
   }
 
-  return { getCart, addItem, updateItem, removeItem, clearCart };
+  /** Saves the code on the cart only if it applies to the cart now, so the customer sees why it doesn't. */
+  async function applyCoupon(userId: string, code: string) {
+    const cart = await getCart(userId);
+    if (!cart.id || !cart.bill) {
+      throw new AppError(409, "CART_EMPTY", "Add items to your cart before applying a coupon");
+    }
+    const { coupon } = await checkCoupon(prisma, { code, userId, subtotal: new Prisma.Decimal(cart.bill.subtotal) });
+    await prisma.cart.update({ where: { id: cart.id }, data: { couponCode: coupon.code } });
+    return getCart(userId);
+  }
+
+  async function removeCoupon(userId: string) {
+    await prisma.cart.updateMany({ where: { userId }, data: { couponCode: null } });
+    return getCart(userId);
+  }
+
+  return { getCart, addItem, updateItem, removeItem, clearCart, applyCoupon, removeCoupon };
 }

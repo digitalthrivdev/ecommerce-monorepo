@@ -408,6 +408,9 @@ model Cart {
   userId  String  @unique
   storeId String?
 
+  // Coupon code the customer applied; checked again on every cart view and at checkout.
+  couponCode String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -458,6 +461,10 @@ model Order {
   // Assigned when the order is delivered, e.g. INV/2026-27/000123.
   invoiceNumber String? @unique
 
+  // The coupon that gave `discount`, and its code as entered.
+  couponId   String?
+  couponCode String?
+
   paymentMethod PaymentMethod
 
   // Address snapshot
@@ -480,6 +487,7 @@ model Order {
   user    User     @relation(fields: [userId], references: [id])
   store   Store    @relation(fields: [storeId], references: [id])
   address Address? @relation(fields: [addressId], references: [id])
+  coupon  Coupon?  @relation(fields: [couponId], references: [id], onDelete: Restrict)
 
   items     OrderItem[]
   payment   Payment?
@@ -493,6 +501,7 @@ model Order {
   @@index([userId, createdAt])
   @@index([storeId, status])
   @@index([status, createdAt])
+  @@index([couponId, userId])
 }
 
 enum OrderStatus {
@@ -527,7 +536,9 @@ model OrderItem {
 
   hsnCode   String?
   gstRate   Decimal? @db.Decimal(5, 2)
-  // GST included in the charged units (quantity - unavailableQuantity).
+  // This item's share of the order's coupon discount, on the charged units.
+  discount  Decimal  @default(0) @db.Decimal(10, 2)
+  // GST included in the charged units (quantity - unavailableQuantity), after the discount.
   taxAmount Decimal  @default(0) @db.Decimal(10, 2)
 
   // Units the store could not find while picking; they are removed from the order total.
@@ -700,6 +711,54 @@ enum ComplaintStatus {
   OPEN
   RESOLVED
   REJECTED
+}
+
+// ─────────────────────────────────────────────
+// COUPONS
+// ─────────────────────────────────────────────
+
+// A code the customer enters at checkout for a discount on the items (not the delivery fee).
+// One coupon per order, no stacking. Cancelled orders don't count towards the limits. Once an order
+// has used it, the code and discount (type, value, maximum) can't change, so orders can be
+// recalculated when the store can't find an item. Values are checked by the database.
+model Coupon {
+  id          String  @id @default(cuid())
+  // Stored uppercase.
+  code        String  @unique
+  // Shown to customers, e.g. "Flat ₹50 off your first order".
+  description String?
+
+  discountType  CouponDiscountType
+  // An amount for FLAT, a percentage for PERCENT.
+  discountValue Decimal            @db.Decimal(10, 2)
+  // PERCENT only: the most the discount can be.
+  maxDiscount   Decimal?           @db.Decimal(10, 2)
+  // Item total needed, before the discount.
+  minOrderValue Decimal            @default(0) @db.Decimal(10, 2)
+
+  startsAt DateTime?
+  // Exclusive: the coupon stops working at this moment.
+  endsAt   DateTime?
+
+  // Orders that may use it in total, and per customer.
+  totalLimit       Int?
+  perCustomerLimit Int?
+  // Only for customers with no earlier order (cancelled orders don't count).
+  firstOrderOnly   Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([isActive, createdAt])
+}
+
+enum CouponDiscountType {
+  FLAT
+  PERCENT
 }
 
 // ─────────────────────────────────────────────

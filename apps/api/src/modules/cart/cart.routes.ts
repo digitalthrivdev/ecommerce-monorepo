@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
+import { applyCouponBodySchema } from "../coupons/coupons.schemas.js";
 import { addCartItemBodySchema, cartItemParamsSchema, updateCartItemBodySchema } from "./cart.schemas.js";
 import { createCartService } from "./cart.service.js";
 
@@ -32,6 +33,13 @@ const cartRoutes: FastifyPluginAsync = async (app) => {
     const { id } = cartItemParamsSchema.parse(request.params);
     return cartService.removeItem(request.user.sub, id);
   });
+
+  app.put("/coupon", async (request) => {
+    const { code } = applyCouponBodySchema.parse(request.body);
+    return cartService.applyCoupon(request.user.sub, code);
+  });
+
+  app.delete("/coupon", async (request) => cartService.removeCoupon(request.user.sub));
 };
 
 export default cartRoutes;

@@ -9,6 +9,21 @@ export function includedTax(amount: Prisma.Decimal, gstRate: Prisma.Decimal | nu
   return amount.mul(gstRate).div(gstRate.plus(100)).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 }
 
+/**
+ * Splits an order discount across its lines in proportion to their amounts, to the paisa. The
+ * rounding difference goes to the largest line, so the shares always add up to the discount.
+ */
+export function discountShares(amounts: Prisma.Decimal[], discount: Prisma.Decimal) {
+  const total = amounts.reduce((sum, amount) => sum.plus(amount), new Prisma.Decimal(0));
+  if (discount.lte(0) || total.lte(0)) return amounts.map(() => new Prisma.Decimal(0));
+
+  const shares = amounts.map((amount) => discount.mul(amount).div(total).toDecimalPlaces(2, Prisma.Decimal.ROUND_DOWN));
+  const largest = amounts.reduce((best, amount, index) => (amount.gt(amounts[best]!) ? index : best), 0);
+  const allocated = shares.reduce((sum, share) => sum.plus(share), new Prisma.Decimal(0));
+  shares[largest] = shares[largest]!.plus(discount.minus(allocated));
+  return shares;
+}
+
 /** Indian financial year (April to March) of a date in the deployment's time zone, e.g. "2026-27". */
 export function financialYear(date: Date, timeZone = env.TIMEZONE) {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric" }).formatToParts(date);
