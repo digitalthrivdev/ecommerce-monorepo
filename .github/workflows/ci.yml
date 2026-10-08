@@ -100,4 +100,5 @@ jobs:
           tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
           labels: org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          # The cache only speeds up the next build; a failed upload must not fail a pushed image.
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }},ignore-error=true
