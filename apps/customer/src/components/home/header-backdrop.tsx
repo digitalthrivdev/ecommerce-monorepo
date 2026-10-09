@@ -13,7 +13,9 @@ const FADE_STRIP_HEIGHT = 16;
 
 type Layers = { previous: TabHeader | null; current: TabHeader; generation: number };
 
-const HeaderLookContext = createContext<(Layers & { height: number }) | null>(null);
+type Frame = { height: number; imageTop: number };
+
+const HeaderLookContext = createContext<(Layers & Frame) | null>(null);
 
 function useHeaderLook() {
   const value = use(HeaderLookContext);
@@ -27,10 +29,12 @@ type HeaderLookProviderProps = PropsWithChildren<{
   look: TabHeader;
   /** The whole header's height, status bar to tab strip, so each part can draw its slice of one backdrop. */
   height: number;
+  /** Where the image starts, so it stays clear of the status bar; the colours still run behind it. */
+  imageTop: number;
 }>;
 
 /** The home header's colours and image. A new look fades in over the old one. */
-export function HeaderLookProvider({ look, height, children }: HeaderLookProviderProps) {
+export function HeaderLookProvider({ look, height, imageTop, children }: HeaderLookProviderProps) {
   const [layers, setLayers] = useState<Layers>({ previous: null, current: look, generation: 0 });
   if (lookKey(layers.current) !== lookKey(look)) {
     setLayers({ previous: layers.current, current: look, generation: layers.generation + 1 });
@@ -43,7 +47,7 @@ export function HeaderLookProvider({ look, height, children }: HeaderLookProvide
     return () => clearTimeout(timer);
   }, [layers.previous, layers.generation]);
 
-  const value = useMemo(() => ({ ...layers, height }), [layers, height]);
+  const value = useMemo(() => ({ ...layers, height, imageTop }), [layers, height, imageTop]);
   return <HeaderLookContext value={value}>{children}</HeaderLookContext>;
 }
 
@@ -58,12 +62,14 @@ function FadeIn({ animate, children }: PropsWithChildren<{ animate: boolean }>) 
 }
 
 /** The full-height backdrop, shifted up by `offset` so the part above shows the matching slice. */
-function Backdrop({ look, offset, height }: { look: TabHeader; offset: number; height: number }) {
+function Backdrop({ look, offset, height, imageTop }: Frame & { look: TabHeader; offset: number }) {
   const box: ViewStyle = height > 0 ? { top: -offset, height } : { top: 0, bottom: 0 };
   return (
     <View style={[styles.backdrop, box, { backgroundColor: look.color }]}>
       {look.gradientColor && <LinearGradient colors={[look.color, look.gradientColor]} style={StyleSheet.absoluteFill} />}
-      {look.imageUrl && <Image source={{ uri: look.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" accessibilityIgnoresInvertColors />}
+      {look.imageUrl && (
+        <Image source={{ uri: look.imageUrl }} style={[styles.image, { top: imageTop }]} contentFit="cover" accessibilityIgnoresInvertColors />
+      )}
     </View>
   );
 }
@@ -81,15 +87,15 @@ type HeaderRegionProps = PropsWithChildren<{
  * icons inside it to the current look.
  */
 export function HeaderRegion({ offset, className, style, onLayout, children }: HeaderRegionProps) {
-  const { previous, current, generation, height } = useHeaderLook();
+  const { previous, current, generation, height, imageTop } = useHeaderLook();
   const colorVars = useMemo(() => vars({ "--highlight": channels(current.color), "--highlight-foreground": channels(current.textColor) }), [current.color, current.textColor]);
 
   return (
     <View style={[colorVars, style]} className={className} onLayout={onLayout}>
       <View style={styles.clip} pointerEvents="none">
-        {previous && <Backdrop look={previous} offset={offset} height={height} />}
+        {previous && <Backdrop look={previous} offset={offset} height={height} imageTop={imageTop} />}
         <FadeIn key={generation} animate={previous !== null}>
-          <Backdrop look={current} offset={offset} height={height} />
+          <Backdrop look={current} offset={offset} height={height} imageTop={imageTop} />
         </FadeIn>
       </View>
       {children}
@@ -118,4 +124,5 @@ export function HeaderFade({ to }: { to?: string }) {
 const styles = StyleSheet.create({
   clip: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, overflow: "hidden" },
   backdrop: { position: "absolute", left: 0, right: 0 },
+  image: { position: "absolute", left: 0, right: 0, bottom: 0 },
 });

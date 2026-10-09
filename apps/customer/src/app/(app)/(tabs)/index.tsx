@@ -257,7 +257,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <HeaderLookProvider look={look} height={insets.top + headerHeight + searchHeight}>
+    <HeaderLookProvider look={look} height={insets.top + headerHeight + searchHeight} imageTop={insets.top}>
       <View className="flex-1 bg-background">
         <FocusStatusBar contentColor={look.textColor} />
         <HeaderRegion offset={0} style={{ height: insets.top }} />
