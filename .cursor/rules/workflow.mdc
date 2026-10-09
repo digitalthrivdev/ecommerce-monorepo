@@ -7,11 +7,16 @@ alwaysApply: true
 
 ## End of every task
 - Never run `git commit` or `git push`. The developer commits.
-- Finish with the exact commands, then what to do next. Keep every line short (a few paths per `git add`), never indent them, and end each line with `&&`, so a wrapped paste or a failed `git add` stops before the commit and push:
- ```bash
- git add <paths> &&
- git commit -m "feat(scope): what changed"
- ```
+- Finish with the exact commands, then what to do next. The developer's terminal wraps long lines and the paste splits them, so:
+  - every line at most 72 characters, never indented;
+  - one or two paths per `git add` line, or a directory when everything changed in it belongs to the commit;
+  - every line except the last ends with `&&`, so a split line or a failed `git add` stops before the commit.
+
+```bash
+git add apps/api/src/modules/orders &&
+git add apps/customer/src/lib/format.ts &&
+git commit -m "feat(scope): what changed"
+```
 
 ## Save tokens and time
 - Never block on or poll long tasks (EAS builds, Docker builds on the VPS, deploys). Start them with `--no-wait`, or `nohup … > ~/.cache/grocery-build/<name>.log 2>&1 &`, or hand the command to the developer and ask for the result.
