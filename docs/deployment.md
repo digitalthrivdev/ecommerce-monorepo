@@ -42,7 +42,7 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
    - `PUSH_PROVIDER=expo` for push notifications, or `none`.
    - `SENTRY_DSN`: the client's Sentry project (see "Error tracking and uptime"), or blank.
 4. **Certificate:** dry run with `STAGING=1 ./init-letsencrypt.sh`, then `./init-letsencrypt.sh` for the real certificate. This starts the stack; renewal is automatic.
-5. **First admin:** `docker compose run --rm api node dist/scripts/create-admin.js --email … --phone … --name "…"`. It asks for the password; running it again resets the password.
+5. **First admin:** `docker compose run --rm api node dist/scripts/create-admin.js --email … --phone … --name "…"`. It asks for the password; running it again resets the password. To change an admin's phone number only, run it with the new `--phone` and `--keep-password`.
 6. **Check:** `docker compose ps` (all healthy) and `curl https://API_DOMAIN/health`.
 7. **Dashboard:** sign in at `https://ADMIN_DOMAIN`, then:
    - Settings: SMS provider keys (customers can't sign in without them) and payment gateway keys;
