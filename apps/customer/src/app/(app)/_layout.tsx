@@ -4,6 +4,9 @@ import { DeliveryLocationProvider } from "@/lib/delivery-location";
 import { useOpenOrderWhenRiderAccepts } from "@/lib/orders";
 import { usePushNotifications } from "@/lib/push";
 
+/** A screen opened from a link or notification still has the tabs under it to go back to. */
+export const unstable_settings = { anchor: "(tabs)" };
+
 export default function AppLayout() {
   usePushNotifications();
   useOpenOrderWhenRiderAccepts();
