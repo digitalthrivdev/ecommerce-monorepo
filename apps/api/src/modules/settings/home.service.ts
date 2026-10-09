@@ -2,7 +2,7 @@ import { StoreStatus, type Prisma, type PrismaClient } from "../../generated/pri
 import { AppError } from "../../shared/errors.js";
 import { inCategory } from "../products/catalog.js";
 import { createDiscoveryService } from "../products/discovery.service.js";
-import { storeProductInclude, storeProductWhere, toStoreProductView } from "../products/store-products.service.js";
+import { storeProductInclude, storeProductWhere, toStoreProductViews } from "../products/store-products.service.js";
 import type { HomeSection } from "./appearance.schemas.js";
 import { getAppearance } from "./appearance.service.js";
 
@@ -78,7 +78,7 @@ export function createHomeService(prisma: PrismaClient) {
       orderBy: { name: "asc" },
       take: limit,
     });
-    return rows.map((row) => toStoreProductView(row, { includeStock: false }));
+    return toStoreProductViews(prisma, rows, { includeStock: false });
   }
 
   /** The chosen brands (or the store's top brands) that are active and have something in stock at the store. */

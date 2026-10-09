@@ -1,7 +1,7 @@
 import { OrderStatus, Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { brandSummarySelect } from "./catalog.js";
-import { storeProductInclude, storeProductWhere, toStoreProductView } from "./store-products.service.js";
+import { storeProductInclude, storeProductWhere, toStoreProductViews } from "./store-products.service.js";
 
 /** Orders that went ahead; abandoned payments and cancellations say nothing about what people buy. */
 const COUNTED_ORDER_STATUSES = Prisma.join(
@@ -41,7 +41,8 @@ export function createDiscoveryService(prisma: PrismaClient) {
       where: { id: { in: productIds }, ...storeProductWhere(storeId, false) },
       include: storeProductInclude(storeId),
     });
-    const byId = new Map(rows.map((row) => [row.id, toStoreProductView(row, { includeStock: false })]));
+    const views = await toStoreProductViews(prisma, rows, { includeStock: false });
+    const byId = new Map(views.map((view) => [view.productId, view]));
     return productIds
       .flatMap((id) => byId.get(id) ?? [])
       .filter((product) => product.variants.some((variant) => variant.inStock))

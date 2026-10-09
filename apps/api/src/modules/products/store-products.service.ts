@@ -93,7 +93,7 @@ function toVariantView(row: StoreProductRow, variant: StoreProductRow["variants"
 }
 
 /** A product as sold at one store: one entry per variant the store lists. */
-export function toStoreProductView(row: StoreProductRow, options: { includeStock: boolean }) {
+function toStoreProductView(row: StoreProductRow, options: { includeStock: boolean }) {
   return {
     productId: row.id,
     name: row.name,
@@ -105,6 +105,24 @@ export function toStoreProductView(row: StoreProductRow, options: { includeStock
     variants: row.variants.map((variant) => toVariantView(row, variant, { ...options, detail: false })),
     ...(options.includeStock && { productIsActive: row.isActive }),
   };
+}
+
+/** Average rating and number of ratings over each product's visible reviews; unrated products are left out. */
+async function productRatings(prisma: PrismaClient, productIds: string[]) {
+  if (productIds.length === 0) return new Map<string, { average: string; count: number }>();
+  const rows = await prisma.productReview.groupBy({
+    by: ["productId"],
+    where: { productId: { in: productIds }, isHidden: false },
+    _avg: { rating: true },
+    _count: true,
+  });
+  return new Map(rows.map((row) => [row.productId, { average: row._avg.rating!.toFixed(1), count: row._count }]));
+}
+
+/** Product card views of the rows, with each product's rating (null until it has one). */
+export async function toStoreProductViews(prisma: PrismaClient, rows: StoreProductRow[], options: { includeStock: boolean }) {
+  const ratings = await productRatings(prisma, rows.map((row) => row.id));
+  return rows.map((row) => ({ ...toStoreProductView(row, options), rating: ratings.get(row.id) ?? null }));
 }
 
 function toStoreProductDetail(row: StoreProductDetailRow, options: { includeStock: boolean }) {
@@ -186,7 +204,7 @@ export function createStoreProductsService(prisma: PrismaClient) {
     ]);
 
     return {
-      items: rows.map((row) => toStoreProductView(row, { includeStock: options.canManage })),
+      items: await toStoreProductViews(prisma, rows, { includeStock: options.canManage }),
       total,
       limit,
       offset,
