@@ -158,6 +158,11 @@ export type OrderRating = Prisma.OrderRatingModel
  */
 export type ProductReview = Prisma.ProductReviewModel
 /**
+ * Model WishlistItem
+ * 
+ */
+export type WishlistItem = Prisma.WishlistItemModel
+/**
  * Model DeliveryPartner
  * 
  */

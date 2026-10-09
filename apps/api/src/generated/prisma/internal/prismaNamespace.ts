@@ -425,6 +425,7 @@ export const ModelName = {
   Coupon: 'Coupon',
   OrderRating: 'OrderRating',
   ProductReview: 'ProductReview',
+  WishlistItem: 'WishlistItem',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -451,7 +452,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "wishlistItem" | "deliveryPartner" | "cashDeposit" | "riderPayout" | "delivery" | "deliveryLocation" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2527,6 +2528,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WishlistItem: {
+      payload: Prisma.$WishlistItemPayload<ExtArgs>
+      fields: Prisma.WishlistItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WishlistItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WishlistItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        findFirst: {
+          args: Prisma.WishlistItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WishlistItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        findMany: {
+          args: Prisma.WishlistItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>[]
+        }
+        create: {
+          args: Prisma.WishlistItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        createMany: {
+          args: Prisma.WishlistItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WishlistItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>[]
+        }
+        delete: {
+          args: Prisma.WishlistItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        update: {
+          args: Prisma.WishlistItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.WishlistItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WishlistItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WishlistItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.WishlistItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WishlistItemPayload>
+        }
+        aggregate: {
+          args: Prisma.WishlistItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWishlistItem>
+        }
+        groupBy: {
+          args: Prisma.WishlistItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WishlistItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WishlistItemCountAggregateOutputType> | number
+        }
+      }
+    }
     DeliveryPartner: {
       payload: Prisma.$DeliveryPartnerPayload<ExtArgs>
       fields: Prisma.DeliveryPartnerFieldRefs
@@ -3828,6 +3903,16 @@ export const ProductReviewScalarFieldEnum = {
 export type ProductReviewScalarFieldEnum = (typeof ProductReviewScalarFieldEnum)[keyof typeof ProductReviewScalarFieldEnum]
 
 
+export const WishlistItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  productId: 'productId',
+  createdAt: 'createdAt'
+} as const
+
+export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
+
+
 export const DeliveryPartnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -4551,6 +4636,7 @@ export type GlobalOmitConfig = {
   coupon?: Prisma.CouponOmit
   orderRating?: Prisma.OrderRatingOmit
   productReview?: Prisma.ProductReviewOmit
+  wishlistItem?: Prisma.WishlistItemOmit
   deliveryPartner?: Prisma.DeliveryPartnerOmit
   cashDeposit?: Prisma.CashDepositOmit
   riderPayout?: Prisma.RiderPayoutOmit

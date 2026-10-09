@@ -6,6 +6,7 @@ import { Pressable, View } from "react-native";
 import { ProductCartControl } from "@/components/variant-picker";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { WishlistButton } from "@/components/wishlist-button";
 import { useCardSurface } from "@/lib/app-theme";
 import { defaultVariant } from "@/lib/catalog";
 import { discountPercent, formatMoney, unitPrice } from "@/lib/format";
@@ -49,7 +50,8 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
         ) : discount ? (
           <DiscountRibbon percent={discount} />
         ) : null}
-        {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute right-1.5 top-1.5" />}
+        <WishlistButton productId={product.productId} size={16} onImage className="absolute right-1 top-1 size-7 bg-white/90" />
+        {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute right-[11px] top-9" />}
         {variant.label ? (
           <View className="absolute bottom-1.5 left-1.5 max-w-[48%] rounded-md bg-muted px-1.5 py-0.5">
             <Text className="text-[11px] font-semibold" numberOfLines={1}>

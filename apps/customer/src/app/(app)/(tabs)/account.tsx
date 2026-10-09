@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { ChevronRight, FileText, LogOut, Mail, MapPin, Package, Phone, UserRound, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, FileText, Heart, LogOut, Mail, MapPin, Package, Phone, UserRound, type LucideIcon } from "lucide-react-native";
 import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -76,6 +76,8 @@ export default function AccountScreen() {
 
         <Card className="gap-0 overflow-hidden py-1">
           <Row icon={Package} label="Your orders" onPress={() => router.push("/orders")} />
+          <Separator className="ml-16 w-auto" />
+          <Row icon={Heart} label="Your wishlist" onPress={() => router.push("/wishlist")} />
           <Separator className="ml-16 w-auto" />
           <Row icon={MapPin} label="Saved addresses" onPress={() => router.push("/addresses")} />
         </Card>

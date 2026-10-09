@@ -36,6 +36,15 @@ export type Category = { id: string; name: string; slug: string; imageUrl: strin
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 
+/** A saved product; `product` is null when the current store doesn't sell it. */
+export type WishlistItem = {
+  productId: string;
+  name: string;
+  imageUrl: string | null;
+  addedAt: string;
+  product: StoreProduct | null;
+};
+
 export type Coordinates = { latitude: number; longitude: number };
 
 /** Coordinates are decimal strings; they are null only for addresses saved without a location. */

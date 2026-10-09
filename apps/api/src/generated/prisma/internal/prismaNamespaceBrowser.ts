@@ -79,6 +79,7 @@ export const ModelName = {
   Coupon: 'Coupon',
   OrderRating: 'OrderRating',
   ProductReview: 'ProductReview',
+  WishlistItem: 'WishlistItem',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -554,6 +555,16 @@ export const ProductReviewScalarFieldEnum = {
 } as const
 
 export type ProductReviewScalarFieldEnum = (typeof ProductReviewScalarFieldEnum)[keyof typeof ProductReviewScalarFieldEnum]
+
+
+export const WishlistItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  productId: 'productId',
+  createdAt: 'createdAt'
+} as const
+
+export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
 
 
 export const DeliveryPartnerScalarFieldEnum = {

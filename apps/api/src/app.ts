@@ -40,6 +40,7 @@ import storesRoutes from "./modules/stores/stores.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import customersRoutes from "./modules/users/customers.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
+import wishlistRoutes from "./modules/wishlist/wishlist.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -95,6 +96,7 @@ export async function buildApp() {
   await app.register(storeVariantsRoutes, { prefix: "/stores/:storeId/variants" });
   await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });
+  await app.register(wishlistRoutes, { prefix: "/wishlist" });
   await app.register(ordersRoutes, { prefix: "/orders" });
   await app.register(customerComplaintsRoutes, { prefix: "/orders/:id/complaint" });
   await app.register(customerRatingsRoutes, { prefix: "/orders/:id/rating" });

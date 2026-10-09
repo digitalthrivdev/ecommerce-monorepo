@@ -1,5 +1,4 @@
 import { Image } from "expo-image";
-import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { ChevronRight, PackageX, Search, Share2 } from "lucide-react-native";
 import { useState } from "react";
@@ -19,13 +18,14 @@ import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
+import { WishlistButton } from "@/components/wishlist-button";
 import { ApiError } from "@/lib/api";
 import { useCardSurface } from "@/lib/app-theme";
 import { defaultVariant, exactVariant, imagesFor, pickVariant, sellableValues } from "@/lib/catalog";
 import { useDeliveryLocation } from "@/lib/delivery-location";
 import { discountPercent, formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
-import { openBrand, openCategory } from "@/lib/navigation";
+import { openBrand, openCategory, productShareUrl } from "@/lib/navigation";
 import { useAlsoBought, useStoreBrands, useStoreProduct, useStoreProducts } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 import type { ProductImage, StoreProductDetail } from "@/lib/types";
@@ -332,12 +332,14 @@ function CategoryBrands({ product }: { product: StoreProductDetail }) {
   return <BrandRow title={`Top brands in ${product.category.name}`} brands={brands} />;
 }
 
-function HeaderActions({ product, variant }: { product: StoreProductDetail | undefined; variant: Variant | undefined }) {
+type HeaderActionsProps = { productId: string; product: StoreProductDetail | undefined; variant: Variant | undefined };
+
+function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
   const { appName, currency } = useSettings();
 
   function share() {
     if (!product || !variant) return;
-    const url = Linking.createURL(`product/${product.productId}`);
+    const url = productShareUrl(product.productId);
     const name = variant.label ? `${product.name} (${variant.label})` : product.name;
     Share.share({ message: `${name} for ${formatMoney(variant.sellingPrice, currency)} on ${appName}\n${url}` }).catch(() => {});
   }
@@ -347,6 +349,7 @@ function HeaderActions({ product, variant }: { product: StoreProductDetail | und
       <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={4}>
         <Icon as={Search} size={22} />
       </Pressable>
+      <WishlistButton productId={productId} className="size-11 active:bg-accent" />
       <Pressable
         onPress={share}
         disabled={!product || !variant}
@@ -407,7 +410,7 @@ export default function ProductScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
-      <ScreenHeader title={product.data?.name ?? ""} right={<HeaderActions product={product.data} variant={variant} />} />
+      <ScreenHeader title={product.data?.name ?? ""} right={<HeaderActions productId={id} product={product.data} variant={variant} />} />
       {!store ? (
         <StoreRequired />
       ) : unavailable ? (

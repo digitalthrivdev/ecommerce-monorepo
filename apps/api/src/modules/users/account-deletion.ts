@@ -14,7 +14,7 @@ export const deletedPhone = (userId: string) => `deleted-${userId}`;
 
 /**
  * Deletes a customer or rider account by wiping its personal details: name, email, phone,
- * addresses, cart and push tokens. Orders keep their snapshots (needed for GST records), and a
+ * addresses, cart, wishlist and push tokens. Orders keep their snapshots (needed for GST records), and a
  * rider's deliveries, cash deposits and payouts stay for the accounts. The phone number is freed,
  * so it can sign up again as a new account. `revokeTokens` signs the user out on every device.
  */
@@ -68,6 +68,7 @@ export function createAccountDeletionService(prisma: PrismaClient, revokeTokens:
         await tx.cart.delete({ where: { id: cart.id } });
       }
       await tx.address.deleteMany({ where: { userId } });
+      await tx.wishlistItem.deleteMany({ where: { userId } });
       await tx.complaint.updateMany({ where: { userId }, data: { note: null, photoUrls: [] } });
       await tx.orderRating.updateMany({ where: { order: { userId } }, data: { comment: null } });
       await tx.productReview.updateMany({ where: { userId }, data: { comment: null } });

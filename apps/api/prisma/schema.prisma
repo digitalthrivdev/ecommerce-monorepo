@@ -56,6 +56,7 @@ model User {
   refundsIssued        Refund[]         @relation("RefundCreatedBy")
   productReviews       ProductReview[]
   productReviewsAdded  ProductReview[]  @relation("ProductReviewCreatedBy")
+  wishlistItems        WishlistItem[]
 
   @@index([role])
   @@index([storeId])
@@ -242,6 +243,7 @@ model Product {
   images     ProductImage[]
   orderItems OrderItem[]
   reviews    ProductReview[]
+  wishlist   WishlistItem[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -844,6 +846,20 @@ model ProductReview {
   @@unique([userId, productId])
   @@index([productId, isHidden, updatedAt])
   @@index([createdAt])
+}
+
+// A product a customer saved for later. One per product, whatever the variant.
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
 }
 
 enum PaymentMethod {

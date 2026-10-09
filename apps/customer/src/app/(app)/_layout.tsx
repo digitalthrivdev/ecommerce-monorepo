@@ -23,6 +23,7 @@ export default function AppLayout() {
         <Stack.Screen name="search" options={{ animation: "fade" }} />
         <Stack.Screen name="cart" />
         <Stack.Screen name="orders" />
+        <Stack.Screen name="wishlist" />
         <Stack.Screen name="order/[id]" />
         <Stack.Screen name="report-issue/[id]" />
         <Stack.Screen name="review/[productId]" />
