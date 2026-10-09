@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CornerDownRight } from "lucide-react";
+import { CornerDownRight, ImageIcon } from "lucide-react";
 
 import { CategoryDialog } from "@/components/catalog/category-dialog";
 import { DeleteCategoryButton } from "@/components/catalog/delete-category-button";
@@ -24,8 +24,16 @@ export default async function CategoriesPage() {
   const row = (category: Category, depth: number) => (
     <TableRow key={category.id}>
       <TableCell className="font-medium">
-        <span className={depth ? "flex items-center gap-2 pl-4 font-normal" : undefined}>
-          {depth > 0 && <CornerDownRight className="size-3.5 text-muted-foreground" />}
+        <span className={depth ? "flex items-center gap-2 pl-4 font-normal" : "flex items-center gap-3"}>
+          {depth > 0 && <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" />}
+          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-muted-foreground">
+            {category.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- uploaded or admin-entered URLs from any host
+              <img src={category.imageUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <ImageIcon className="size-4" />
+            )}
+          </span>
           {category.name}
         </span>
       </TableCell>
