@@ -1,0 +1,37 @@
+# Optional, for a server where Coolify (or another Traefik proxy on the Docker network "coolify")
+# already uses ports 80 and 443. Traefik then handles HTTPS and certificates, Nginx serves plain
+# HTTP behind it and certbot does not run. Turn it on in .env:
+#   COMPOSE_FILE=compose.yml:compose.coolify.yml
+# Details: docs/deployment.md, "Servers running Coolify".
+
+services:
+  nginx:
+    ports: !reset []
+    environment:
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-grocery}
+    volumes: !override
+      - ./nginx/behind-proxy:/etc/nginx/templates:ro
+      - uploads:/srv/uploads:ro
+    command: !reset null
+    networks:
+      - default
+      - coolify
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.services.${COMPOSE_PROJECT_NAME:-grocery}.loadbalancer.server.port=80
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-grocery}-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-grocery}-https.redirectscheme.permanent=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.entrypoints=http
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.middlewares=${COMPOSE_PROJECT_NAME:-grocery}-https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.entrypoints=https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.tls.certresolver=letsencrypt
+
+  certbot:
+    profiles: [certbot]
+
+networks:
+  coolify:
+    external: true

@@ -1,0 +1,86 @@
+# Used with compose.coolify.yml: Traefik in front handles HTTPS and certificates, and forwards plain
+# HTTP here. ${API_DOMAIN}, ${ADMIN_DOMAIN}, ${SITE_DOMAIN} and ${COMPOSE_PROJECT_NAME} are filled
+# in from the environment when Nginx starts.
+
+server_tokens off;
+
+# Nginx has no published port in this setup, so only containers on its Docker networks (Traefik)
+# reach it. Traefik appends the client address as the last X-Forwarded-For entry.
+set_real_ip_from 10.0.0.0/8;
+set_real_ip_from 172.16.0.0/12;
+set_real_ip_from 192.168.0.0/16;
+set_real_ip_from fc00::/7;
+real_ip_header X-Forwarded-For;
+
+proxy_http_version 1.1;
+proxy_set_header Host $host;
+# Overwrite rather than append, so clients cannot add fake addresses (the API trusts one hop).
+proxy_set_header X-Forwarded-For $remote_addr;
+proxy_set_header X-Forwarded-Proto https;
+proxy_set_header X-Forwarded-Host $host;
+proxy_read_timeout 60s;
+
+# Docker's DNS, looked up again at most every 10 seconds (see nginx/templates). Upstreams use the
+# container names: the proxy's shared network may hold other apps' containers called "api" or "web".
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+server {
+    listen 80;
+    server_name ${API_DOMAIN};
+
+    client_max_body_size 2m;
+
+    # Uploaded images. File names change whenever the content does, so they can be cached for good.
+    location /uploads/ {
+        alias /srv/uploads/;
+        autoindex off;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff;
+        add_header Cross-Origin-Resource-Policy cross-origin;
+    }
+
+    location / {
+        set $api_upstream http://${COMPOSE_PROJECT_NAME}-api-1:4000;
+        proxy_pass $api_upstream;
+    }
+}
+
+server {
+    listen 80;
+    server_name ${ADMIN_DOMAIN};
+
+    # Image uploads (up to 10 MB) pass through the dashboard.
+    client_max_body_size 12m;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location / {
+        set $admin_upstream http://${COMPOSE_PROJECT_NAME}-admin-1:3000;
+        proxy_pass $admin_upstream;
+    }
+}
+
+# Public website (apps/web).
+server {
+    listen 80;
+    server_name ${SITE_DOMAIN};
+
+    client_max_body_size 1m;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location / {
+        set $web_upstream http://${COMPOSE_PROJECT_NAME}-web-1:3000;
+        proxy_pass $web_upstream;
+    }
+}
+
+server {
+    listen 80;
+    server_name www.${SITE_DOMAIN};
+    return 301 https://${SITE_DOMAIN}$request_uri;
+}
+
+server {
+    listen 80 default_server;
+    return 444;
+}
