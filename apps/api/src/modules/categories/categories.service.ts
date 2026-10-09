@@ -1,6 +1,7 @@
-import type { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { slugify } from "../../shared/schemas.js";
+import { usedCategoryIds } from "../settings/appearance.service.js";
 import type { CreateCategoryInput, ListCategoriesQuery, UpdateCategoryInput } from "./categories.schemas.js";
 
 /** Active categories whose parent, for a sub-category, is active too. */
@@ -115,5 +116,42 @@ export function createCategoriesService(prisma: PrismaClient) {
     return prisma.category.update({ where: { id }, data });
   }
 
-  return { listCategories, getCategory, createCategory, updateCategory };
+  /** Only empty categories: products and sub-categories must be moved or deleted first. */
+  async function deleteCategory(id: string) {
+    const category = await prisma.category.findUnique({
+      where: { id },
+      select: { id: true, name: true, _count: { select: { products: true, children: true } } },
+    });
+
+    if (!category) {
+      throw new AppError(404, "CATEGORY_NOT_FOUND", "Category not found");
+    }
+    const { products, children } = category._count;
+    if (children > 0) {
+      throw new AppError(409, "CATEGORY_HAS_SUBCATEGORIES", `Delete or move its ${children === 1 ? "sub-category" : `${children} sub-categories`} first`);
+    }
+    if (products > 0) {
+      throw new AppError(
+        409,
+        "CATEGORY_HAS_PRODUCTS",
+        `Move its ${products === 1 ? "product" : `${products} products`} to another category or delete ${products === 1 ? "it" : "them"} first. Hidden products count too.`,
+      );
+    }
+    if ((await usedCategoryIds(prisma)).has(id)) {
+      throw new AppError(409, "CATEGORY_IN_USE", "It's used on the home screen or as a category tab. Remove it in Appearance first.");
+    }
+
+    try {
+      await prisma.category.delete({ where: { id } });
+    } catch (error) {
+      // A product or sub-category added to it while this ran.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+        throw new AppError(409, "CATEGORY_HAS_PRODUCTS", "Something was just added to this category. Try again.");
+      }
+      throw error;
+    }
+    return { id: category.id, name: category.name };
+  }
+
+  return { listCategories, getCategory, createCategory, updateCategory, deleteCategory };
 }

@@ -42,6 +42,11 @@ const categoriesRoutes: FastifyPluginAsync = async (app) => {
     const body = updateCategoryBodySchema.parse(request.body);
     return categoriesService.updateCategory(id, body);
   });
+
+  app.delete("/:id", { preHandler: requireAdmin }, async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return categoriesService.deleteCategory(id);
+  });
 };
 
 export default categoriesRoutes;

@@ -49,3 +49,16 @@ export async function saveCategory(formData: FormData): Promise<ActionResult> {
   refresh();
   return { ok: true, message: id ? "Category updated" : "Category created" };
 }
+
+export async function deleteCategory(id: string): Promise<ActionResult> {
+  if (!idSchema.safeParse(id).success) return { ok: false, error: "Invalid request" };
+
+  try {
+    await apiFetch(`/categories/${encodeURIComponent(id)}`, { method: "DELETE" });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Category deleted" };
+}

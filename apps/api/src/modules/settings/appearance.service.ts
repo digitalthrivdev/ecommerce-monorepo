@@ -113,6 +113,15 @@ export async function featuredProductIds(db: Db) {
   return new Set(sectionLists(appearance).flatMap((list) => productReferences(list.sections, list.path).map((reference) => reference.id)));
 }
 
+/** Categories used by the saved home screen, its tab pages and the category tabs themselves. */
+export async function usedCategoryIds(db: Db) {
+  const { appearance } = await getAppearance(db);
+  return new Set([
+    ...sectionLists(appearance).flatMap((list) => categoryReferences(list.sections, list.path).map((reference) => reference.id)),
+    ...appearance.categoryTabs.tabs.map((tab) => tab.categoryId),
+  ]);
+}
+
 export function createAppearanceService(prisma: PrismaClient) {
   async function getAdminAppearance() {
     const { appearance, updatedAt, updatedById } = await getAppearance(prisma);

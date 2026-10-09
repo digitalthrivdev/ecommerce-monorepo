@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CornerDownRight } from "lucide-react";
 
 import { CategoryDialog } from "@/components/catalog/category-dialog";
+import { DeleteCategoryButton } from "@/components/catalog/delete-category-button";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export default async function CategoriesPage() {
         <div className="flex justify-end gap-1">
           {depth === 0 && <CategoryDialog parents={parents} defaultParentId={category.id} />}
           <CategoryDialog category={category} parents={parents} />
+          <DeleteCategoryButton category={category} />
         </div>
       </TableCell>
     </TableRow>

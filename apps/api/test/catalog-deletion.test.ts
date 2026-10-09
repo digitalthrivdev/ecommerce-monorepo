@@ -132,3 +132,64 @@ describe("bulk product deletion", () => {
     expect((await call(app, "POST", "/products/bulk-delete", { body: { ids: ["any"] } })).status).toBe(401);
   });
 });
+
+describe("category deletion", () => {
+  const newCategory = async (body: Record<string, unknown> = {}) => {
+    const response = await call(app, "POST", "/categories", { token: admin, body: { name: `Delete Test ${Math.random().toString(36).slice(2, 8)}`, ...body } });
+    expect(response.status).toBe(201);
+    return response.body.id as string;
+  };
+  const remove = (id: string, token: string | null = admin) => call(app, "DELETE", `/categories/${id}`, { token: token ?? undefined });
+
+  it("deletes an empty category", async () => {
+    const id = await newCategory();
+    const response = await remove(id);
+    expect(response.status).toBe(200);
+    expect(response.body.id).toBe(id);
+    expect(await app.prisma.category.findUnique({ where: { id } })).toBeNull();
+    expect((await remove(id)).status).toBe(404);
+  });
+
+  it("refuses a category with sub-categories or products", async () => {
+    const parent = await newCategory();
+    const child = await newCategory({ parentId: parent });
+    const withSub = await remove(parent);
+    expect(withSub.status).toBe(409);
+    expect(withSub.body.error).toBe("CATEGORY_HAS_SUBCATEGORIES");
+
+    const created = await call(app, "POST", "/products", {
+      token: admin,
+      body: { name: "Category Delete Test", categoryId: child, gstRate: "5", isActive: false, variants: [{ sku: `CAT-DEL-${Date.now()}` }] },
+    });
+    expect(created.status).toBe(201);
+    const withProduct = await remove(child);
+    expect(withProduct.status).toBe(409);
+    expect(withProduct.body.error).toBe("CATEGORY_HAS_PRODUCTS");
+
+    expect((await call(app, "POST", "/products/bulk-delete", { token: admin, body: { ids: [created.body.id] } })).body.deleted).toBe(1);
+    expect((await remove(child)).status).toBe(200);
+    expect((await remove(parent)).status).toBe(200);
+  });
+
+  it("refuses a category used on the home screen", async () => {
+    const id = await newCategory();
+    const grid = { id: "deletion-test-grid", type: "category_grid", enabled: true, background: null, title: null, description: null, columns: 4, categoryIds: [id] };
+    const homeSections = [...(savedSections as unknown[]), grid];
+    expect((await call(app, "PATCH", "/settings/appearance", { token: admin, body: { homeSections } })).status).toBe(200);
+
+    const response = await remove(id);
+    expect(response.status).toBe(409);
+    expect(response.body.error).toBe("CATEGORY_IN_USE");
+
+    expect((await call(app, "PATCH", "/settings/appearance", { token: admin, body: { homeSections: savedSections } })).status).toBe(200);
+    expect((await remove(id)).status).toBe(200);
+  });
+
+  it("is only for admins", async () => {
+    const id = await newCategory();
+    const staff = await dashboardLogin(app, SEED.staffEmail);
+    expect((await remove(id, staff)).status).toBe(403);
+    expect((await remove(id, null)).status).toBe(401);
+    expect(await app.prisma.category.findUnique({ where: { id } })).not.toBeNull();
+  });
+});
