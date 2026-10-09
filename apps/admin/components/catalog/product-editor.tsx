@@ -180,13 +180,14 @@ type ProductEditorProps = {
   /** Under the page title, e.g. the category path. */
   description?: ReactNode;
   status?: ReactNode;
+  actions?: ReactNode;
 };
 
 /**
  * The product page: details on the left, status and organizing on the right, and one
  * "Unsaved changes" bar for everything except photos, which save as soon as they are added.
  */
-export function ProductEditor({ product, listings, stores, categories, brands, currency, timezone, description, status }: ProductEditorProps) {
+export function ProductEditor({ product, listings, stores, categories, brands, currency, timezone, description, status, actions }: ProductEditorProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [initial] = useState(() => {
@@ -342,6 +343,7 @@ export function ProductEditor({ product, listings, stores, categories, brands, c
         title={creating ? "Add a product" : product.name}
         description={description}
         status={status}
+        actions={actions}
       />
 
       <div className="grid w-full max-w-6xl items-start gap-5 px-4 pt-4 pb-16 md:px-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

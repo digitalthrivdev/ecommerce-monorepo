@@ -73,7 +73,7 @@ export function validateVariants({ options, variants }: VariantsInput) {
 }
 
 /** Deletes variants that were never ordered, with their store listings, stock and cart items. */
-async function deleteVariants(tx: Tx, variantIds: string[]) {
+export async function deleteVariants(tx: Tx, variantIds: string[]) {
   if (variantIds.length === 0) return;
 
   const listings = await tx.storeProduct.findMany({ where: { variantId: { in: variantIds } }, select: { id: true } });

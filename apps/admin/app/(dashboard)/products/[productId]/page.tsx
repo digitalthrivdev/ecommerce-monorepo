@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { editorRevision, getProductWithListings } from "@/app/(dashboard)/products/data";
+import { DeleteProductButton } from "@/components/catalog/delete-products";
 import { ProductEditor } from "@/components/catalog/product-editor";
 import { Pill } from "@/components/status-pill";
 import { apiFetch } from "@/lib/api";
@@ -49,6 +50,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[prod
           </Pill>
         )
       }
+      actions={<DeleteProductButton id={product.id} name={product.name} />}
     />
   );
 }

@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
-import { ImageIcon, Plus, Search, Upload, X } from "lucide-react";
+import { Plus, Search, Upload, X } from "lucide-react";
 
+import { ProductsTable } from "@/components/catalog/products-table";
 import { CategoryFilter } from "@/components/category-filter";
 import { Notice } from "@/components/notice";
 import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
 import { ParamSelect } from "@/components/param-select";
-import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
 import { requireAdmin } from "@/lib/dal";
 import type { Brand, Category, Paginated, ProductListItem } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Products" };
 
@@ -153,47 +151,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                 {filtered || status ? "No products match these filters." : "No products yet."}
               </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Sizes</TableHead>
-                    <TableHead className="text-right">Stores</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.items.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="whitespace-normal">
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-muted-foreground">
-                            {product.imageUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element -- uploaded or admin-entered URLs from any host
-                              <img src={product.imageUrl} alt="" className="size-full object-cover" />
-                            ) : (
-                              <ImageIcon className="size-4" />
-                            )}
-                          </div>
-                          <div>
-                            <Link href={`/products/${product.id}`} className="font-medium underline-offset-4 hover:underline">
-                              {product.name}
-                            </Link>
-                            {product.brand && <div className="text-xs text-muted-foreground">{product.brand.name}</div>}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{product.category.name}</TableCell>
-                      <TableCell className="text-right tabular-nums">{product.variantCount}</TableCell>
-                      <TableCell className={cn("text-right tabular-nums", product.storeCount === 0 && "text-muted-foreground")}>
-                        {product.storeCount === 0 ? "Not selling" : product.storeCount}
-                      </TableCell>
-                      <TableCell>{product.isActive ? <Pill tone="green">In the app</Pill> : <Pill tone="gray">Hidden</Pill>}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <ProductsTable products={products.items} />
             )}
           </CardContent>
         </Card>

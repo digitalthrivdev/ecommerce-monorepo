@@ -299,6 +299,47 @@ export async function createProduct(input: CreateProductInput): Promise<CreatePr
   return { ok: true, href, ...(problems.length > 0 && { warning: `Product saved, but ${problems.join(" and ")} could not be added. Set it below.` }) };
 }
 
+const MAX_BULK_DELETE = 100;
+
+type BulkDeleteResponse = {
+  deleted: number;
+  hidden: number;
+  skipped: Array<{ id: string; name: string; reason: string }>;
+  notFound: number;
+};
+
+export type DeleteProductsResult = { ok: true; message: string; deleted: number; hidden: number } | Failure;
+
+const products = (count: number) => `${count} ${count === 1 ? "product" : "products"}`;
+
+/**
+ * Deletes never-ordered products and hides ordered ones, which old orders and invoices still show.
+ * `leaving`: the caller opens another page after a delete, so the current one (a deleted product) isn't refreshed.
+ */
+export async function deleteProducts(ids: string[], { leaving = false } = {}): Promise<DeleteProductsResult> {
+  const parsed = z.array(idSchema).min(1).max(MAX_BULK_DELETE).safeParse(ids);
+  if (!parsed.success) return { ok: false, error: `Choose 1 to ${MAX_BULK_DELETE} products` };
+
+  let result: BulkDeleteResponse;
+  try {
+    result = await apiFetch<BulkDeleteResponse>("/products/bulk-delete", { method: "POST", body: { ids: parsed.data } });
+  } catch (error) {
+    return apiFailure(error);
+  }
+
+  const { deleted, hidden, skipped } = result;
+  const parts: string[] = [];
+  if (deleted > 0) parts.push(`Deleted ${products(deleted)}.`);
+  if (hidden > 0) parts.push(`${hidden === 1 ? "1 has" : `${hidden} have`} orders, so ${hidden === 1 ? "it's" : "they're"} hidden from the app instead.`);
+  if (skipped.length > 0) {
+    const names = skipped.map((product) => product.name).join(", ");
+    parts.push(`Not deleted (picked on the home screen; remove ${skipped.length === 1 ? "it" : "them"} in Appearance first): ${names}.`);
+  }
+  if (hidden > 0 || (deleted > 0 && !leaving)) refresh();
+  if (deleted === 0 && hidden === 0) return { ok: false, error: parts.join(" ") || "These products were already deleted." };
+  return { ok: true, message: parts.join(" "), deleted, hidden };
+}
+
 const imageTarget = z.object({ productId: idSchema, imageId: idSchema });
 
 async function imageRequest(path: string, init: Parameters<typeof apiFetch>[1], message: string): Promise<ActionResult> {

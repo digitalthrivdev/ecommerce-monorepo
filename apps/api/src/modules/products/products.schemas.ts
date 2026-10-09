@@ -180,6 +180,16 @@ const idList = z
   .transform((value) => [...new Set(value.split(",").map((id) => id.trim()).filter(Boolean))])
   .pipe(z.array(idSchema).min(1, "Give at least one product id").max(30, "Give at most 30 product ids"));
 
+export const MAX_BULK_DELETE = 100;
+
+export const deleteProductsBodySchema = z.object({
+  ids: z
+    .array(idSchema)
+    .min(1, "Choose at least one product")
+    .max(MAX_BULK_DELETE, `Delete at most ${MAX_BULK_DELETE} products at a time`)
+    .transform((ids) => [...new Set(ids)]),
+});
+
 export const alsoBoughtQuerySchema = z.object({
   productIds: idList,
   limit: z.coerce.number().int().min(1).max(20).default(10),

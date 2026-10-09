@@ -107,6 +107,12 @@ function productReferences(sections: HomeSection[], base: Path) {
   );
 }
 
+/** Products picked by hand in the saved home screen and tab pages. */
+export async function featuredProductIds(db: Db) {
+  const { appearance } = await getAppearance(db);
+  return new Set(sectionLists(appearance).flatMap((list) => productReferences(list.sections, list.path).map((reference) => reference.id)));
+}
+
 export function createAppearanceService(prisma: PrismaClient) {
   async function getAdminAppearance() {
     const { appearance, updatedAt, updatedById } = await getAppearance(prisma);

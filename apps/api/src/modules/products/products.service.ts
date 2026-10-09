@@ -1,6 +1,7 @@
-import type { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { slugify } from "../../shared/schemas.js";
+import { featuredProductIds } from "../settings/appearance.service.js";
 import {
   brandSummarySelect,
   categorySummarySelect,
@@ -20,7 +21,7 @@ import {
   type UpdateProductInput,
   type VariantsInput,
 } from "./products.schemas.js";
-import { saveVariants } from "./variants.js";
+import { deleteVariants, saveVariants } from "./variants.js";
 
 function detailInclude(includeInactive: boolean) {
   return {
@@ -282,6 +283,47 @@ export function createProductsService(prisma: PrismaClient) {
     return { items: await listImages(productId) };
   }
 
+  /**
+   * Deletes products that were never ordered, with their variants, store listings, stock, cart
+   * items, images and options. Ordered products are hidden instead, so past orders keep them.
+   * Products picked on the home screen are left until they are removed there.
+   */
+  async function deleteProducts(ids: string[]) {
+    const featured = await featuredProductIds(prisma);
+
+    try {
+      return await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Product" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
+        const products = await tx.product.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, name: true, isActive: true, _count: { select: { orderItems: true } }, variants: { select: { id: true } } },
+        });
+
+        const skipped = products
+          .filter((product) => featured.has(product.id))
+          .map((product) => ({ id: product.id, name: product.name, reason: "Picked on the home screen. Remove it there first." }));
+        const removable = products.filter((product) => !featured.has(product.id));
+        const unordered = removable.filter((product) => product._count.orderItems === 0);
+        const ordered = removable.filter((product) => product._count.orderItems > 0);
+
+        await deleteVariants(tx, unordered.flatMap((product) => product.variants.map((variant) => variant.id)));
+        await tx.product.deleteMany({ where: { id: { in: unordered.map((product) => product.id) } } });
+        await tx.product.updateMany({
+          where: { id: { in: ordered.filter((product) => product.isActive).map((product) => product.id) } },
+          data: { isActive: false },
+        });
+
+        return { deleted: unordered.length, hidden: ordered.length, skipped, notFound: ids.length - products.length };
+      });
+    } catch (error) {
+      // An order placed for one of them while this ran.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+        throw new AppError(409, "PRODUCT_ORDERED", "One of these products was just ordered. Try again.");
+      }
+      throw error;
+    }
+  }
+
   return {
     listProducts,
     getProduct,
@@ -292,5 +334,6 @@ export function createProductsService(prisma: PrismaClient) {
     updateImage,
     deleteImage,
     reorderImages,
+    deleteProducts,
   };
 }

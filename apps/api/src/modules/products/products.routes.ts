@@ -9,6 +9,7 @@ import {
   alsoBoughtQuerySchema,
   createProductBodySchema,
   createStoreVariantBodySchema,
+  deleteProductsBodySchema,
   listProductsQuerySchema,
   listStoreProductsQuerySchema,
   productImageParamsSchema,
@@ -58,6 +59,12 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
     const body = createProductBodySchema.parse(request.body);
     const product = await productsService.createProduct(body);
     return reply.status(201).send(product);
+  });
+
+  /** Deletes never-ordered products and hides ordered ones; see deleteProducts. */
+  app.post("/bulk-delete", { preHandler: requireAdmin }, async (request) => {
+    const { ids } = deleteProductsBodySchema.parse(request.body);
+    return productsService.deleteProducts(ids);
   });
 
   app.patch("/:id", { preHandler: requireAdmin }, async (request) => {
