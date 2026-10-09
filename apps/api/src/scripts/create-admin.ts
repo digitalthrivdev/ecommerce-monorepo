@@ -6,16 +6,19 @@ import { prisma } from "../infrastructure/database/prisma.js";
 import { hashPassword, passwordSchema } from "../shared/password.js";
 import { emailSchema, phoneSchema } from "../shared/schemas.js";
 
-const USAGE = `Creates an admin account, or sets a new password for an existing admin. Asks for the password.
+const USAGE = `Creates an admin account, or updates an existing admin: new password, phone number or name. Asks for the password.
 
   Development:  pnpm --filter @grocery/api admin:create --email asha@example.com --phone +919876543210 --name "Asha Rao"
   Production:   docker compose run --rm api node dist/scripts/create-admin.js --email asha@example.com --phone +919876543210
+  New phone:    docker compose run --rm api node dist/scripts/create-admin.js --email asha@example.com --phone +919812345678 --keep-password
 
 Options:
-  --email    Email the admin signs in with (required).
-  --phone    Phone number in E.164 format. Needed when the account does not exist yet.
-  --name     Display name (optional).
-  --promote  Make an existing customer account an admin.
+  --email          Email the admin signs in with (required).
+  --phone          Phone number in E.164 format. Needed when the account does not exist yet; for an
+                   existing admin it replaces the current number.
+  --name           Display name (optional).
+  --promote        Make an existing customer account an admin.
+  --keep-password  Change an existing admin's phone or name without setting a new password.
 
 The password can also be piped in on the first line of stdin.`;
 
@@ -66,6 +69,7 @@ async function main() {
       phone: { type: "string" },
       name: { type: "string" },
       promote: { type: "boolean", default: false },
+      "keep-password": { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
   });
@@ -84,7 +88,7 @@ async function main() {
   }
   const name = values.name?.trim() || null;
 
-  const select = { id: true, role: true, email: true } as const;
+  const select = { id: true, role: true, email: true, phone: true } as const;
   const byEmail = await prisma.user.findUnique({ where: { email: email.data! }, select });
   const byPhone = phone?.data ? await prisma.user.findUnique({ where: { phone: phone.data }, select }) : null;
 
@@ -112,17 +116,31 @@ async function main() {
     return 1;
   }
 
-  const entered = await readPassword();
-  if (entered === null) {
-    console.error("The passwords do not match.");
+  const keepPassword = values["keep-password"];
+  if (keepPassword && existing?.role !== UserRole.ADMIN) {
+    console.error("--keep-password only works for an existing admin. A new admin needs a password.");
     return 1;
   }
-  const password = passwordSchema.safeParse(entered);
-  if (!password.success) {
-    console.error(password.error.issues[0]?.message);
+  const newPhone = existing && phone?.data && phone.data !== existing.phone ? phone.data : undefined;
+  if (keepPassword && !newPhone && !name) {
+    console.error("Nothing to change: give a new --phone or --name, or leave out --keep-password to set a new password.");
     return 1;
   }
-  const passwordHash = await hashPassword(password.data);
+
+  let passwordHash: string | undefined;
+  if (!keepPassword) {
+    const entered = await readPassword();
+    if (entered === null) {
+      console.error("The passwords do not match.");
+      return 1;
+    }
+    const password = passwordSchema.safeParse(entered);
+    if (!password.success) {
+      console.error(password.error.issues[0]?.message);
+      return 1;
+    }
+    passwordHash = await hashPassword(password.data);
+  }
 
   if (!existing) {
     await prisma.user.create({ data: { phone: phone!.data!, email: email.data, name, passwordHash, role: UserRole.ADMIN } });
@@ -130,12 +148,14 @@ async function main() {
   } else {
     await prisma.user.update({
       where: { id: existing.id },
-      data: { role: UserRole.ADMIN, email: email.data, passwordHash, ...(name && { name }) },
+      data: { role: UserRole.ADMIN, email: email.data, passwordHash, ...(newPhone && { phone: newPhone }), ...(name && { name }) },
     });
-    console.log(existing.role === UserRole.ADMIN ? `Password set for admin ${email.data}.` : `Promoted ${email.data} to admin.`);
+    if (existing.role !== UserRole.ADMIN) console.log(`Promoted ${email.data} to admin.`);
+    else if (passwordHash) console.log(`Password set for admin ${email.data}.`);
+    if (newPhone) console.log(`Phone changed from ${existing.phone} to ${newPhone}.`);
   }
 
-  console.log("Sign in to the admin dashboard with this email and password.");
+  console.log(keepPassword ? "The password is unchanged." : "Sign in to the admin dashboard with this email and password.");
   return 0;
 }
 
