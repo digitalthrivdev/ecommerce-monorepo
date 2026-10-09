@@ -7,6 +7,7 @@ import { BrowserErrorReporter } from "@/components/browser-error-reporter";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getPublicSettings } from "@/lib/dal";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -14,10 +15,15 @@ const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: { default: "Admin", template: "%s · Admin" },
-  description: "Grocery platform admin dashboard",
-};
+/** The tab icon is the Appearance logo, or public/favicon.ico until one is set. */
+export async function generateMetadata(): Promise<Metadata> {
+  const logoUrl = (await getPublicSettings().catch(() => null))?.branding.logoUrl;
+  return {
+    title: { default: "Admin", template: "%s · Admin" },
+    description: "Grocery platform admin dashboard",
+    icons: logoUrl ? { icon: logoUrl, apple: logoUrl } : { icon: "/favicon.ico" },
+  };
+}
 
 /** Read per request, so setting SENTRY_DSN on the server turns browser reports on without a rebuild. */
 async function ErrorReporting() {
