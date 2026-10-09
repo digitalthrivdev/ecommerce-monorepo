@@ -2,10 +2,6 @@
 
 Items intentionally postponed to finish the B1 MVP first. Move an item into active work only when it is needed.
 
-## Next features (before launch)
-
-- [ ] **Shareable product links.** The product screen's Share button sends a custom-scheme link (`<scheme>://product/<id>`), which many apps (e.g. WhatsApp) don't make tappable and which does nothing when the app isn't installed. Share `https://<SITE_DOMAIN>/p/<id>` instead: Android App Links and iOS Universal Links open it in the app (domain per client in `eas.json` and `app.config.js`, plus `/.well-known/assetlinks.json` and `apple-app-site-association` served by `apps/web`); without the app, `apps/web` shows a read-only product page (name, image, price) with the Google Play / App Store links from Settings → Website. Needs one app rebuild per client.
-
 ## Before the first production launch
 
 - [ ] **Message Central go-live check.** Implemented from the VerifyNow guide but only tested against fake credentials. With a real account, add the keys under Settings → SMS provider keys, select it, and sign in with a real phone; confirm the token lifetime and whether `validateOtp` is GET or POST (both are handled).
@@ -40,8 +36,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] Hindi and other local languages in the apps and website.
 - [ ] Scheduled delivery slots.
 - [ ] Substitutions when an item is out of stock.
-- [ ] Wishlist.
-- [ ] **Public product reviews.** Stars and text on a product from customers who received it, shown in the app and on the website, with admin moderation (hide, reply) in the dashboard. Separate from the private order ratings, which stay private.
+- [ ] **Product reviews: website and replies.** Reviews are built: customers who received a product rate it in the app, admins add named reviews and hide or delete any of them in the dashboard. Still open: showing the rating and reviews on the website's product page (`/p/<id>`), and admin replies shown under a review.
 
 ## Auth
 
