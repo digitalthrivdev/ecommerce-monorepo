@@ -23,7 +23,7 @@ There is no shared database and no `tenantId`. Never point one client's app at a
 
 | Client | Server | Stack folder | Domains | App build profiles | Package IDs |
 | --- | --- | --- | --- | --- | --- |
-| Moozy (test client on our own domain) | `ssh grocery-vps` | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in`, `moozy.in` (website) | `moozy-preview`, `moozy-production` (brand folder `moozy`) | `in.moozy.app`, `in.moozy.partner` |
+| Moozy (test client on our own domain) | `ssh moozy-contabo` (shared server running Coolify, see "Servers running Coolify") | `~/moozy/deploy` | `api.moozy.in`, `admin.moozy.in`, `moozy.in` (website) | `moozy-preview`, `moozy-production` (brand folder `moozy`) | `in.moozy.app`, `in.moozy.partner` |
 
 Add a row for every new client.
 
