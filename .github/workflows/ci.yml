@@ -105,9 +105,10 @@ jobs:
 
   # Updates the test client's server to this commit (docs/deployment.md, "Automatic deploys").
   # The SSH key can only run deploy/ci-deploy.sh; the job token lets the server pull the images.
+  # The repository variable DEPLOY_MOOZY set to "false" skips it while there is no moozy server.
   deploy-moozy:
     needs: images
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_MOOZY != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:

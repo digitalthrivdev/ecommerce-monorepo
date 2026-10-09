@@ -29,7 +29,7 @@ Add a row for every new client.
 
 ## New client: server
 
-Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. With prebuilt images (see "Updating a server") nothing is built on the server, and 1 GB plus swap is enough. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server would need an extra proxy in front, which isn't set up.
+Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. With prebuilt images (see "Updating a server") nothing is built on the server, and 1 GB plus swap is enough. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server need a proxy in front (see "Servers running Coolify").
 
 1. **DNS:** point the API and dashboard domains, the client's main domain (`SITE_DOMAIN`, the public website) and its `www` (A records) at the server. Open ports 80 and 443.
 2. **Code:** `git clone git@github.com:piyushGupta20/grocery-app-monorepo.git <client>` then `cd <client>/deploy && cp .env.example .env && cp api.env.example api.env`.
@@ -51,6 +51,16 @@ Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB s
    - stores (location, radius, hours), categories, products, store prices and stock, delivery partners. A whole catalog can be loaded from one CSV per store (Products → Import CSV; download the template there).
 8. **Monitoring:** add the client's uptime monitors (see "Error tracking and uptime").
 9. Add the client to the table above, then build their apps (below).
+
+### Servers running Coolify
+
+When Coolify (its Traefik proxy, on the Docker network `coolify`) already uses ports 80 and 443, Traefik handles HTTPS instead of our certbot, and the stack's Nginx serves plain HTTP behind it with no published ports. Everything else (updates, automatic deploys, backups) works the same.
+
+- In `deploy/.env` add `COMPOSE_FILE=compose.yml:compose.coolify.yml`. This loads `deploy/compose.coolify.yml` and the Nginx template in `deploy/nginx/behind-proxy/`.
+- Skip step 4: start with `docker compose up -d`. Traefik requests the certificate (one for all four domains) once DNS points at the server, so set up DNS first. `LETSENCRYPT_EMAIL` is unused.
+- `COMPOSE_PROJECT_NAME` must be unique on the server: it names the Traefik routers and Nginx finds the containers by it.
+- Nothing is added in Coolify's dashboard; the stack does not appear there.
+- Moving to a server without Coolify: remove the `COMPOSE_FILE` line, then run `./init-letsencrypt.sh`.
 
 ## Updating a server
 
@@ -91,6 +101,8 @@ After CI passes on `main` and the images are pushed, the `deploy-moozy` job in `
 3. Any failure turns the job red and GitHub emails you. Logs: GitHub → Actions → the run → `deploy-moozy`.
 
 Pushing to `main` takes about 7 minutes to go live. Two deploys never overlap. To redeploy, open the run and use "Re-run jobs".
+
+While moozy has no server, turn the job off with `gh variable set DEPLOY_MOOZY --body false` (CI still checks and builds images); `gh variable delete DEPLOY_MOOZY` turns it back on.
 
 **Setting it up for a server** (done for moozy; the secrets are repository secrets named `<CLIENT>_SSH_KEY`, `<CLIENT>_SSH_HOST`, `<CLIENT>_SSH_KNOWN_HOSTS`):
 
