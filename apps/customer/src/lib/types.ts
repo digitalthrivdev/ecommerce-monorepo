@@ -119,6 +119,8 @@ export type StoreProduct = {
   isVeg: boolean | null;
   imageUrl: string | null;
   variants: StoreVariant[];
+  /** Null until the product has a rating. */
+  rating: { average: string; count: number } | null;
 };
 
 export type ProductImage = { id: string; url: string; altText: string | null; variantId: string | null };

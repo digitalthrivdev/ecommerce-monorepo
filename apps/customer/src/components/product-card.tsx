@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { Timer } from "lucide-react-native";
+import { Star, Timer } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -7,9 +7,9 @@ import { ProductCartControl } from "@/components/variant-picker";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { WishlistButton } from "@/components/wishlist-button";
-import { useCardSurface } from "@/lib/app-theme";
+import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { defaultVariant } from "@/lib/catalog";
-import { discountPercent, formatMoney, unitPrice } from "@/lib/format";
+import { discountPercent, formatCount, formatMoney, unitPrice } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
@@ -74,6 +74,7 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
         <Text className="text-[13px] font-semibold leading-tight" numberOfLines={3}>
           {product.name}
         </Text>
+        {product.rating && <CardRating average={Number(product.rating.average)} count={product.rating.count} />}
         {deliveryPromiseMinutes ? (
           <View className="mt-0.5 flex-row items-center gap-1">
             <Icon as={Timer} size={11} className="text-muted-foreground" />
@@ -82,6 +83,40 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
         ) : null}
       </View>
     </Pressable>
+  );
+}
+
+const STAR_SIZE = 11;
+const STAR_GAP = 1;
+const STAR_COLOR = "#F59E0B";
+const STARS = [1, 2, 3, 4, 5] as const;
+
+function StarRow({ filled, color }: { filled: boolean; color: string }) {
+  return (
+    <View className="flex-row" style={{ gap: STAR_GAP }}>
+      {STARS.map((star) => (
+        <Star key={star} size={STAR_SIZE} color={color} fill={filled ? color : "transparent"} strokeWidth={1.75} />
+      ))}
+    </View>
+  );
+}
+
+/** Five stars filled up to the average, e.g. four and a half for 4.5, then the number of ratings. */
+function CardRating({ average, count }: { average: number; count: number }) {
+  const { neutral } = useAppTheme();
+  const width = 5 * STAR_SIZE + 4 * STAR_GAP;
+  return (
+    <View className="mt-0.5 flex-row items-center gap-1" accessible accessibilityLabel={`Rated ${average} out of 5 from ${count} ratings`}>
+      <View style={{ width }}>
+        <StarRow filled={false} color={neutral.mutedForeground} />
+        <View className="absolute left-0 top-0 overflow-hidden" style={{ width: (Math.min(average, 5) / 5) * width }}>
+          <View style={{ width }}>
+            <StarRow filled color={STAR_COLOR} />
+          </View>
+        </View>
+      </View>
+      <Text className="text-[10px] font-semibold text-muted-foreground">{formatCount(count)}</Text>
+    </View>
   );
 }
 

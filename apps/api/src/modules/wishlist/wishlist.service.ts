@@ -1,7 +1,7 @@
 import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { customerVisibleProduct, imageOrder } from "../products/catalog.js";
-import { storeProductInclude, storeProductWhere, toStoreProductView } from "../products/store-products.service.js";
+import { storeProductInclude, storeProductWhere, toStoreProductViews } from "../products/store-products.service.js";
 import { MAX_WISHLIST_ITEMS, type WishlistQuery } from "./wishlist.schemas.js";
 
 export function createWishlistService(prisma: PrismaClient) {
@@ -44,7 +44,8 @@ export function createWishlistService(prisma: PrismaClient) {
             include: storeProductInclude(storeId),
           })
         : [];
-    const byId = new Map(listings.map((row) => [row.id, toStoreProductView(row, { includeStock: false })]));
+    const views = await toStoreProductViews(prisma, listings, { includeStock: false });
+    const byId = new Map(views.map((view) => [view.productId, view]));
 
     return {
       items: rows.map((row) => ({

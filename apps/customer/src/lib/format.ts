@@ -12,6 +12,12 @@ export function formatMoney(amount: string, currency: string) {
   }).format(value);
 }
 
+/** "4,533", or "1.9 lac" from a lakh up. */
+export function formatCount(count: number) {
+  if (count >= 100_000) return `${new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 }).format(count / 100_000)} lac`;
+  return new Intl.NumberFormat(LOCALE).format(count);
+}
+
 /** "1 Oct, 4:32 pm" */
 export function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat(LOCALE, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
