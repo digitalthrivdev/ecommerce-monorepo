@@ -199,6 +199,8 @@ cd apps/customer
 npx eas build --profile acme-preview --platform android
 ```
 
+When the EAS build quota is used up, build on your own machine with `--local`; setup and commands are in [docs/deployment.md](docs/deployment.md#5-building-locally-when-eas-cloud-builds-run-out).
+
 The shared EAS environments hold only values common to every client (the Firebase file). Colours, logo and texts inside the app come from the client's dashboard at runtime, so they don't need a rebuild. Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Details are in [docs/deployment.md](docs/deployment.md#mobile-apps-per-client).
 
 ## Security notes

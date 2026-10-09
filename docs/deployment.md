@@ -317,6 +317,85 @@ npx eas submit --platform android --id <build id>                       # upload
 
 Colours, logo, banners and texts inside the app come from the client's dashboard at runtime, so they change without a rebuild. A rebuild is needed only for the values in the build profile and the brand folder.
 
+### 5. Building locally (when EAS cloud builds run out)
+
+The Expo free plan has a monthly build quota. Once it's used up, build the same profiles on your own Linux or WSL2 machine with `--local`. The result is the same: the build downloads the app's signing key from EAS, so a local APK installs over a cloud-built one and keeps the fingerprint in `assetlinks.json`.
+
+**One-time setup (Ubuntu or WSL2).** Java 17 and the Android command-line tools:
+
+```bash
+sudo apt install openjdk-17-jdk unzip
+mkdir -p ~/Android/Sdk/cmdline-tools && cd ~/Android/Sdk/cmdline-tools
+Z=commandlinetools-linux-13114758_latest.zip
+curl -LO https://dl.google.com/android/repository/$Z
+unzip $Z && mv cmdline-tools latest && rm $Z
+```
+
+Add to `~/.bashrc`, then open a new terminal:
+
+```bash
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+```
+
+Accept the licences and install the SDK. The first build downloads the NDK and CMake it needs:
+
+```bash
+yes | sdkmanager --licenses
+sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+```
+
+Then:
+
+- **Expo login:** `npx eas-cli@latest login` with an account in the Expo account `folimah235`; the build fetches the signing key from there.
+- **Firebase file:** in each app's Firebase project (customer: `grocery-customer-be73d`, delivery: `grocery-delivery-f1e4e`), Project settings → Your apps → any Android app → download `google-services.json` into `apps/customer/` or `apps/delivery/`. It lists every client's package and is gitignored.
+- **Small machines (WSL with 8 GB or less):** keep Gradle within memory in `~/.gradle/gradle.properties`. The last line builds for 64-bit ARM phones only, which makes test APKs build faster:
+
+  ```properties
+  org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=768m -Dfile.encoding=UTF-8
+  org.gradle.workers.max=2
+  org.gradle.daemon=false
+  org.gradle.parallel=false
+  kotlin.daemon.jvmargs=-Xmx1024m
+  reactNativeArchitectures=arm64-v8a
+  ```
+
+  On WSL, give it memory and swap in `C:\Users\<you>\.wslconfig` (`[wsl2]`, `memory=5GB`, `swap=8GB`), then `wsl --shutdown`.
+
+**Build a preview APK** (from the app's folder; replace `moozy` with the client):
+
+```bash
+cd apps/customer
+B=$HOME/.cache/grocery-build && mkdir -p $B &&
+export GOOGLE_SERVICES_JSON=$PWD/google-services.json &&
+export EAS_LOCAL_BUILD_WORKINGDIR=$B/eas-local &&
+nohup npx eas-cli@latest build --profile moozy-preview \
+--platform android --local --non-interactive \
+--output $B/moozy-preview.apk \
+> $B/moozy-build.log 2>&1 &
+```
+
+For the delivery app, run it in `apps/delivery` with another output name (e.g. `moozy-partner-preview.apk`). Follow it with `tail -5 ~/.cache/grocery-build/moozy-build.log`; it ends with `Build successful` after about 15 to 30 minutes.
+
+- **`GOOGLE_SERVICES_JSON`** must be an absolute path: the build copies the project to a temporary folder without gitignored files. Without it the APK works but gets no push notifications.
+- **`EAS_LOCAL_BUILD_WORKINGDIR`** keeps the temporary folder out of `/tmp`, which is small and wiped when WSL restarts.
+- **One heavy build at a time.** Don't run a second app build, a Docker build or the API tests alongside it.
+- **The build uses your working copy**, uncommitted changes included. Build from a clean `main` for anything you hand out.
+
+**Check and install.** The package, CPU and signing fingerprint (compare it with `npx eas-cli@latest credentials` → Android → the package):
+
+```bash
+BT=$(ls -d ~/Android/Sdk/build-tools/* | sort -V | tail -1)
+APK=~/.cache/grocery-build/moozy-preview.apk
+$BT/aapt2 dump badging $APK | grep -E "^package|native-code"
+$BT/apksigner verify --print-certs $APK | grep SHA-256
+```
+
+On WSL, copy the APK to Windows (`cp $APK /mnt/c/Users/<you>/Downloads/`) and send it to the phone, or `adb install -r $APK` with the phone on USB debugging.
+
+**Play Store bundle.** Remove the `reactNativeArchitectures` line from `~/.gradle/gradle.properties` first (the Play Store needs every CPU type), then build `--profile moozy-production --output $B/moozy.aab`. The version code still comes from EAS, so local and cloud builds stay in sequence. Upload the `.aab` in Play Console, or with `npx eas-cli@latest submit --platform android --path <file>`.
+
 ## Launch checklist (per client)
 
 - [ ] `/health` is `ok` and the certificate is valid.
