@@ -1,52 +1,73 @@
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { Search } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, Search } from "lucide-react-native";
 import { useEffect, useRef } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
-import { ScreenHeader } from "@/components/screen-header";
 import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { subCategories, topLevelCategories } from "@/lib/catalog";
+import { subCategories } from "@/lib/catalog";
 import { useDeliveryLocation } from "@/lib/delivery-location";
+import { smallImage } from "@/lib/images";
 import { useCategories, useStoreProducts } from "@/lib/queries";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Chip = { id: string; name: string };
+const SIDEBAR_WIDTH = 84;
 
-function CategoryChips({ chips, selectedId, small = false }: { chips: Chip[]; selectedId: string; small?: boolean }) {
+type RailItem = { id: string; name: string; imageUrl: string | null };
+
+/** The sub-categories down the left, each with its picture, like the aisles of a shop. */
+function SubCategoryRail({ items, selectedId }: { items: RailItem[]; selectedId: string }) {
   const scrollRef = useRef<ScrollView>(null);
   const offsets = useRef(new Map<string, number>());
 
   useEffect(() => {
-    const x = offsets.current.get(selectedId);
-    if (x !== undefined) scrollRef.current?.scrollTo({ x: Math.max(0, x - 16), animated: true });
+    const y = offsets.current.get(selectedId);
+    if (y !== undefined) scrollRef.current?.scrollTo({ y: Math.max(0, y - 80), animated: true });
   }, [selectedId]);
 
   return (
-    <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 pb-3" className="grow-0">
-      {chips.map((chip) => {
-        const selected = chip.id === selectedId;
+    <ScrollView
+      ref={scrollRef}
+      showsVerticalScrollIndicator={false}
+      style={{ width: SIDEBAR_WIDTH }}
+      className="shrink-0 grow-0 border-r border-border"
+      contentContainerClassName="pb-6"
+    >
+      {items.map((item) => {
+        const selected = item.id === selectedId;
         return (
           <Pressable
-            key={chip.id}
+            key={item.id}
             onLayout={(event) => {
-              offsets.current.set(chip.id, event.nativeEvent.layout.x);
-              if (selected) scrollRef.current?.scrollTo({ x: Math.max(0, event.nativeEvent.layout.x - 16), animated: false });
+              offsets.current.set(item.id, event.nativeEvent.layout.y);
+              if (selected) scrollRef.current?.scrollTo({ y: Math.max(0, event.nativeEvent.layout.y - 80), animated: false });
             }}
-            onPress={() => router.setParams({ id: chip.id, name: chip.name })}
-            className={cn(
-              "rounded-full border",
-              small ? "px-3 py-1.5" : "px-4 py-2",
-              selected ? (small ? "border-primary bg-primary/10" : "border-primary bg-primary") : "border-border bg-card active:bg-accent",
-            )}
+            onPress={() => router.setParams({ id: item.id, name: item.name })}
+            className={cn("items-center px-1 py-2.5", selected ? "bg-primary/5" : "active:bg-accent")}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
           >
-            <Text className={cn("font-semibold", small ? "text-xs" : "text-sm", selected && (small ? "text-primary" : "text-primary-foreground"))}>{chip.name}</Text>
+            <View className={cn("size-14 items-center justify-center overflow-hidden rounded-full", selected ? "bg-primary/15" : "bg-tile")}>
+              {item.imageUrl ? (
+                <Image source={{ uri: smallImage(item.imageUrl) }} style={{ width: "82%", height: "82%" }} contentFit="contain" />
+              ) : (
+                <Text className="text-lg font-extrabold text-primary">{item.name.charAt(0)}</Text>
+              )}
+            </View>
+            <Text
+              className={cn("mt-1.5 text-center text-[11px] leading-tight", selected ? "font-bold" : "font-medium text-muted-foreground")}
+              numberOfLines={3}
+            >
+              {item.name}
+            </Text>
+            {selected && <View className="absolute bottom-2 right-0 top-2 w-1 rounded-l-full bg-primary" />}
           </Pressable>
         );
       })}
@@ -64,28 +85,59 @@ function categoryContext(categories: Category[], id: string) {
 export default function CategoryScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const insets = useSafeAreaInsets();
-  const { store } = useDeliveryLocation();
+  const { width } = useWindowDimensions();
+  const { store, location } = useDeliveryLocation();
   const categories = useCategories();
   const products = useStoreProducts(store?.id, { categoryId: id });
-  const all = categories.data?.items ?? [];
-  const tops = topLevelCategories(all);
-  const { current, top, children } = categoryContext(all, id);
+  const { current, top, children } = categoryContext(categories.data?.items ?? [], id);
   const title = top?.name ?? current?.name ?? name ?? "Products";
+  const rail = top && children.length > 0 ? [{ id: top.id, name: "All", imageUrl: top.imageUrl }, ...children] : [];
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
-      <ScreenHeader
-        title={title}
-        right={
-          <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={8}>
-            <Icon as={Search} size={21} />
-          </Pressable>
-        }
-      />
-      {tops.length > 1 && top && <CategoryChips chips={tops} selectedId={top.id} />}
-      {top && children.length > 0 && <CategoryChips key={`chips-${top.id}`} chips={[{ id: top.id, name: "All" }, ...children]} selectedId={id} small />}
-      {store ? <ProductList key={`products-${id}`} query={products} emptyText="No products in this category yet." /> : <StoreRequired />}
+      <View className="flex-row items-center gap-1 border-b border-border px-2 py-1.5">
+        <Pressable onPress={() => router.back()} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Back" hitSlop={8}>
+          <Icon as={ArrowLeft} size={22} />
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/location")}
+          className="flex-1 rounded-lg px-1 py-1 active:bg-accent"
+          accessibilityLabel={location ? `${title}, delivering to ${location.summary}. Change location` : title}
+        >
+          <Text className="text-base font-bold" numberOfLines={1}>
+            {title}
+          </Text>
+          {location && (
+            <View className="flex-row items-center gap-0.5">
+              <Text className="shrink text-xs" numberOfLines={1}>
+                <Text className="text-xs font-semibold text-primary">Delivering to {location.label}: </Text>
+                <Text className="text-xs text-muted-foreground">{location.summary}</Text>
+              </Text>
+              <Icon as={ChevronDown} size={14} className="text-muted-foreground" />
+            </View>
+          )}
+        </Pressable>
+        <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={8}>
+          <Icon as={Search} size={21} />
+        </Pressable>
+      </View>
+      <View className="flex-1 flex-row">
+        {rail.length > 0 && <SubCategoryRail key={`rail-${top?.id}`} items={rail} selectedId={id} />}
+        <View className="flex-1">
+          {store ? (
+            <ProductList
+              key={`products-${id}`}
+              query={products}
+              emptyText="No products in this category yet."
+              width={rail.length > 0 ? width - SIDEBAR_WIDTH : width}
+              sidePadding={rail.length > 0 ? 10 : 16}
+            />
+          ) : (
+            <StoreRequired />
+          )}
+        </View>
+      </View>
       <CartBar />
     </View>
   );

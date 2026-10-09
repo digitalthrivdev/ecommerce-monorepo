@@ -9,18 +9,24 @@ import { useAppTheme } from "@/lib/app-theme";
 import type { useStoreProducts } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 
-const SIDE_PADDING = 16;
 const GAP = 12;
 const COLUMNS = 2;
 
-type ProductListProps = { query: ReturnType<typeof useStoreProducts>; emptyText: string; header?: ReactElement };
+type ProductListProps = {
+  query: ReturnType<typeof useStoreProducts>;
+  emptyText: string;
+  header?: ReactElement;
+  /** Screen width minus whatever sits beside the grid, e.g. a sidebar. */
+  width?: number;
+  sidePadding?: number;
+};
 
 /** Two-column product grid that loads the next page as the user nears the end. */
-export function ProductList({ query, emptyText, header }: ProductListProps) {
+export function ProductList({ query, emptyText, header, width, sidePadding = 16 }: ProductListProps) {
   const { currency } = useSettings();
   const { colors } = useAppTheme();
-  const { width } = useWindowDimensions();
-  const itemWidth = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
+  const screen = useWindowDimensions();
+  const itemWidth = ((width ?? screen.width) - sidePadding * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
   const products = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
@@ -28,8 +34,8 @@ export function ProductList({ query, emptyText, header }: ProductListProps) {
       data={products}
       keyExtractor={(product) => product.productId}
       numColumns={COLUMNS}
-      columnWrapperStyle={{ gap: GAP, paddingHorizontal: SIDE_PADDING }}
-      contentContainerStyle={{ gap: GAP, paddingTop: 4, paddingBottom: 32 }}
+      columnWrapperStyle={{ gap: GAP, paddingHorizontal: sidePadding }}
+      contentContainerStyle={{ gap: GAP * 1.5, paddingTop: 12, paddingBottom: 32 }}
       renderItem={({ item }) => (
         <View style={{ width: itemWidth }}>
           <ProductCard product={item} currency={currency} />
@@ -44,7 +50,7 @@ export function ProductList({ query, emptyText, header }: ProductListProps) {
       ListHeaderComponent={header}
       ListEmptyComponent={
         query.isPending ? (
-          <View className="flex-row flex-wrap px-4" style={{ gap: GAP }}>
+          <View className="flex-row flex-wrap" style={{ gap: GAP, paddingHorizontal: sidePadding }}>
             {Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} className="rounded-lg" style={{ width: itemWidth, height: itemWidth * 1.55 }} />
             ))}
