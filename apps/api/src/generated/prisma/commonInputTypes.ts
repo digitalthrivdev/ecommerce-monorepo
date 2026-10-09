@@ -473,6 +473,23 @@ export type EnumCouponDiscountTypeWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumCouponDiscountTypeFilter<$PrismaModel>
 }
 
+export type EnumReviewSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReviewSource | Prisma.EnumReviewSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel> | $Enums.ReviewSource
+}
+
+export type EnumReviewSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReviewSource | Prisma.EnumReviewSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReviewSourceWithAggregatesFilter<$PrismaModel> | $Enums.ReviewSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel>
+}
+
 export type EnumDeliveryPartnerStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.DeliveryPartnerStatus | Prisma.EnumDeliveryPartnerStatusFieldRefInput<$PrismaModel>
   in?: $Enums.DeliveryPartnerStatus[] | Prisma.ListEnumDeliveryPartnerStatusFieldRefInput<$PrismaModel>
@@ -1079,6 +1096,23 @@ export type NestedEnumCouponDiscountTypeWithAggregatesFilter<$PrismaModel = neve
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCouponDiscountTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCouponDiscountTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumReviewSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReviewSource | Prisma.EnumReviewSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel> | $Enums.ReviewSource
+}
+
+export type NestedEnumReviewSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReviewSource | Prisma.EnumReviewSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReviewSource[] | Prisma.ListEnumReviewSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReviewSourceWithAggregatesFilter<$PrismaModel> | $Enums.ReviewSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReviewSourceFilter<$PrismaModel>
 }
 
 export type NestedEnumDeliveryPartnerStatusFilter<$PrismaModel = never> = {

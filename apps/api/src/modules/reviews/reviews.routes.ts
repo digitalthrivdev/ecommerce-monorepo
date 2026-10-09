@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
-import { adminReviewsQuerySchema, productReviewsQuerySchema, reviewBodySchema, updateReviewBodySchema } from "./reviews.schemas.js";
+import { adminReviewBodySchema, adminReviewsQuerySchema, productReviewsQuerySchema, reviewBodySchema, updateReviewBodySchema } from "./reviews.schemas.js";
 import { createReviewsService } from "./reviews.service.js";
 
 /** A product's reviews for anyone, and the signed-in customer's own review. Prefix: /products */
@@ -30,7 +30,7 @@ export const orderReviewsRoutes: FastifyPluginAsync = async (app) => {
   });
 };
 
-/** Every product review, for moderation. Prefix: /admin/reviews */
+/** Every product review, for moderation, and reviews added by admins. Prefix: /admin/reviews */
 export const adminReviewsRoutes: FastifyPluginAsync = async (app) => {
   const service = createReviewsService(app.prisma);
 
@@ -38,8 +38,17 @@ export const adminReviewsRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/", async (request) => service.listReviews(adminReviewsQuerySchema.parse(request.query)));
 
+  app.post("/", async (request, reply) => {
+    return reply.status(201).send(await service.addReview(request.user.sub, adminReviewBodySchema.parse(request.body)));
+  });
+
   app.patch("/:id", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return service.setHidden(id, updateReviewBodySchema.parse(request.body).isHidden);
+  });
+
+  app.delete("/:id", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return service.deleteReview(id);
   });
 };

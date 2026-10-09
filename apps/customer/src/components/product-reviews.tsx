@@ -69,8 +69,12 @@ export function ReviewsCard({ productId }: { productId: string }) {
           <Text className="text-sm leading-5">{review.comment}</Text>
           <View className="flex-row items-center gap-1">
             <Text className="text-xs font-semibold text-muted-foreground">{review.name}</Text>
-            <Icon as={BadgeCheck} size={13} className="text-primary" />
-            <Text className="text-xs text-muted-foreground">Verified purchase</Text>
+            {review.verified && (
+              <>
+                <Icon as={BadgeCheck} size={13} className="text-primary" />
+                <Text className="text-xs text-muted-foreground">Verified purchase</Text>
+              </>
+            )}
           </View>
         </View>
       ))}

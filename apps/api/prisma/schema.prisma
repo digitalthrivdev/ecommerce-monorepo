@@ -55,6 +55,7 @@ model User {
   complaintsResolved   Complaint[]      @relation("ComplaintResolvedBy")
   refundsIssued        Refund[]         @relation("RefundCreatedBy")
   productReviews       ProductReview[]
+  productReviewsAdded  ProductReview[]  @relation("ProductReviewCreatedBy")
 
   @@index([role])
   @@index([storeId])
@@ -805,14 +806,26 @@ model OrderRating {
   @@index([createdAt])
 }
 
-// A customer's rating of a product they received. One per customer and product: rating it again
-// replaces it.
+enum ReviewSource {
+  // A customer rating a product from their delivered order: a verified purchase.
+  CUSTOMER
+  // Added by an admin under a name they enter; never shown as a verified purchase.
+  ADMIN
+}
+
+// A rating of a product. Customers review what they received, one per customer and product (rating
+// it again replaces it); admins can add reviews under any name.
 model ProductReview {
-  id        String @id @default(cuid())
-  productId String
-  userId    String
-  // The delivered order that let the customer review it, shown as a verified purchase.
-  orderId   String
+  id          String       @id @default(cuid())
+  productId   String
+  source      ReviewSource @default(CUSTOMER)
+  // CUSTOMER reviews only.
+  userId      String?
+  // CUSTOMER reviews only: the delivered order that let the customer review it.
+  orderId     String?
+  // ADMIN reviews only: the name shown with the review.
+  authorName  String?
+  createdById String?
 
   rating  Int
   comment String?
@@ -823,9 +836,10 @@ model ProductReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
-  order   Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  order     Order?  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  createdBy User?   @relation("ProductReviewCreatedBy", fields: [createdById], references: [id])
 
   @@unique([userId, productId])
   @@index([productId, isHidden, updatedAt])

@@ -90,7 +90,7 @@ describe("product reviews", () => {
     const listed = await reviews(received);
     expect(listed.status).toBe(200);
     expect(listed.body).toMatchObject({ average: "4.0", count: 1, distribution: [0, 0, 0, 1, 0], total: 1 });
-    expect(listed.body.items[0]).toMatchObject({ rating: 4, comment: "Fresh and tasty", name: expect.any(String) });
+    expect(listed.body.items[0]).toMatchObject({ rating: 4, comment: "Fresh and tasty", name: expect.any(String), verified: true });
     expect(listed.body.items[0]).not.toHaveProperty("user");
 
     expect((await review(received, { rating: 5 })).body).toMatchObject({ rating: 5, comment: "Fresh and tasty" });
@@ -130,6 +130,53 @@ describe("product reviews", () => {
     expect((await review(received, { rating: 4 }, staff)).status).toBe(403);
     expect((await review(received, { rating: 4 }, admin)).status).toBe(403);
     expect((await call(app, "GET", `/orders/${orderId}/reviews`)).status).toBe(401);
+  });
+});
+
+describe("reviews added by admins", () => {
+  const add = (body: Record<string, unknown>, token: string | null = admin) =>
+    call(app, "POST", "/admin/reviews", { token: token ?? undefined, body: { rating: 5, authorName: "Asha R.", ...body } });
+
+  it("adds a named review that counts toward the rating but is not verified", async () => {
+    const product = await stockedProduct();
+    const created = await add({ productId: product.id, rating: 5, comment: "Crunchy and fresh" });
+    expect(created.status).toBe(201);
+    expect(created.body).toMatchObject({ productId: product.id, source: "ADMIN", authorName: "Asha R.", rating: 5, comment: "Crunchy and fresh" });
+    expect((await add({ productId: product.id, rating: 3, authorName: "Vikram" })).status).toBe(201);
+
+    const listed = await reviews(product.id);
+    expect(listed.body).toMatchObject({ average: "4.0", count: 2, distribution: [0, 0, 1, 0, 1], total: 1 });
+    expect(listed.body.items[0]).toMatchObject({ name: "Asha R.", comment: "Crunchy and fresh", verified: false });
+
+    const adminList = await call(app, "GET", "/admin/reviews", { token: admin, query: { source: "ADMIN" } });
+    const item = adminList.body.items.find((candidate: { id: string }) => candidate.id === created.body.id);
+    expect(item).toMatchObject({ source: "ADMIN", authorName: "Asha R.", customer: null, order: null, addedBy: expect.any(String) });
+    expect(adminList.body.items.every((candidate: { source: string }) => candidate.source === "ADMIN")).toBe(true);
+
+    expect((await call(app, "DELETE", `/admin/reviews/${created.body.id}`, { token: admin })).body).toEqual({ id: created.body.id });
+    expect((await reviews(product.id)).body).toMatchObject({ average: "3.0", count: 1, total: 0 });
+    expect((await call(app, "DELETE", `/admin/reviews/${created.body.id}`, { token: admin })).status).toBe(404);
+  });
+
+  it("keeps customer reviews from being deleted", async () => {
+    const customerReview = await app.prisma.productReview.findFirstOrThrow({ where: { productId: received, source: "CUSTOMER" } });
+    const response = await call(app, "DELETE", `/admin/reviews/${customerReview.id}`, { token: admin });
+    expect(response.status).toBe(409);
+    expect(response.body.error).toBe("CUSTOMER_REVIEW");
+  });
+
+  it("checks input, unknown products and access", async () => {
+    expect((await add({ productId: received, authorName: "" })).status).toBe(400);
+    expect((await add({ productId: received, authorName: "x".repeat(41) })).status).toBe(400);
+    expect((await add({ productId: received, rating: 6 })).status).toBe(400);
+    expect((await add({ productId: received, comment: "x".repeat(501) })).status).toBe(400);
+    expect((await add({ productId: "missing-product" })).status).toBe(404);
+
+    const staff = await dashboardLogin(app, SEED.staffEmail);
+    expect((await add({ productId: received }, staff)).status).toBe(403);
+    expect((await add({ productId: received }, customer)).status).toBe(403);
+    expect((await add({ productId: received }, null)).status).toBe(401);
+    expect((await call(app, "DELETE", "/admin/reviews/any", { token: staff })).status).toBe(403);
   });
 });
 

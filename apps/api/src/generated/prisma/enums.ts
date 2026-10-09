@@ -99,6 +99,14 @@ export const CouponDiscountType = {
 export type CouponDiscountType = (typeof CouponDiscountType)[keyof typeof CouponDiscountType]
 
 
+export const ReviewSource = {
+  CUSTOMER: 'CUSTOMER',
+  ADMIN: 'ADMIN'
+} as const
+
+export type ReviewSource = (typeof ReviewSource)[keyof typeof ReviewSource]
+
+
 export const PaymentMethod = {
   COD: 'COD',
   ONLINE: 'ONLINE'

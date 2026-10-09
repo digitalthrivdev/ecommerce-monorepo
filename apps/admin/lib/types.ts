@@ -436,15 +436,20 @@ export type OrderRating = { deliveryRating: number; itemsRating: number | null; 
 /** `GET /admin/ratings` and `/stores/:storeId/ratings` row: a rating with 1 or 2 stars for the delivery or the items. */
 export type ProductReview = {
   id: string;
+  /** CUSTOMER: from a delivered order. ADMIN: added in the dashboard under `authorName`. */
+  source: "CUSTOMER" | "ADMIN";
+  authorName: string | null;
   rating: number;
   comment: string | null;
   isHidden: boolean;
   createdAt: string;
   updatedAt: string;
   product: { id: string; name: string };
-  /** `phone` is null for deleted accounts. */
-  customer: { id: string; name: string | null; phone: string | null };
-  order: { id: string; orderNumber: string };
+  /** Customer reviews only; `phone` is null for deleted accounts. */
+  customer: { id: string; name: string | null; phone: string | null } | null;
+  order: { id: string; orderNumber: string } | null;
+  /** Admin reviews only: who added it. */
+  addedBy: string | null;
 };
 
 export type LowRating = OrderRating & {

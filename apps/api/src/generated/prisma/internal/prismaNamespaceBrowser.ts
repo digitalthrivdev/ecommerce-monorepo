@@ -541,8 +541,11 @@ export type OrderRatingScalarFieldEnum = (typeof OrderRatingScalarFieldEnum)[key
 export const ProductReviewScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
+  source: 'source',
   userId: 'userId',
   orderId: 'orderId',
+  authorName: 'authorName',
+  createdById: 'createdById',
   rating: 'rating',
   comment: 'comment',
   isHidden: 'isHidden',

@@ -230,7 +230,15 @@ export type OrderSummary = {
 export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
 /** `GET /products/:id/reviews`: the rating over all visible reviews, and the ones with a comment. */
-export type ProductReviews = Paginated<{ id: string; rating: number; comment: string; name: string; updatedAt: string }> & {
+export type ProductReviews = Paginated<{
+  id: string;
+  rating: number;
+  comment: string;
+  name: string;
+  /** From a customer's delivered order; false for reviews the store added. */
+  verified: boolean;
+  updatedAt: string;
+}> & {
   /** One decimal, e.g. "4.3"; null without ratings. */
   average: string | null;
   count: number;

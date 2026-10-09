@@ -1,8 +1,9 @@
-import { OrderStatus, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, Prisma, ReviewSource, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import type { AdminReviewsQuery, ProductReviewsQuery, ReviewInput } from "./reviews.schemas.js";
+import type { AdminReviewInput, AdminReviewsQuery, ProductReviewsQuery, ReviewInput } from "./reviews.schemas.js";
 
 const productNotFound = () => new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
+const reviewNotFound = () => new AppError(404, "REVIEW_NOT_FOUND", "Review not found");
 
 /** "Piyush Kumar Sharma" becomes "Piyush S."; deleted accounts and missing names show as "Customer". */
 export function reviewerName(name: string | null) {
@@ -65,7 +66,7 @@ export function createReviewsService(prisma: PrismaClient) {
         orderBy: { updatedAt: "desc" },
         take: limit,
         skip: offset,
-        select: { id: true, rating: true, comment: true, updatedAt: true, user: { select: { name: true } } },
+        select: { id: true, rating: true, comment: true, updatedAt: true, source: true, authorName: true, user: { select: { name: true } } },
       }),
       prisma.productReview.count({ where: withComment }),
     ]);
@@ -76,7 +77,11 @@ export function createReviewsService(prisma: PrismaClient) {
       count: summary._count,
       /** Number of ratings with 1 to 5 stars, in that order. */
       distribution: [1, 2, 3, 4, 5].map((stars) => counts.get(stars) ?? 0),
-      items: rows.map(({ user, ...review }) => ({ ...review, name: reviewerName(user.name) })),
+      items: rows.map(({ user, source, authorName, ...review }) => ({
+        ...review,
+        name: source === ReviewSource.ADMIN ? authorName! : reviewerName(user?.name ?? null),
+        verified: source === ReviewSource.CUSTOMER,
+      })),
       total,
       limit,
       offset,
@@ -119,8 +124,12 @@ export function createReviewsService(prisma: PrismaClient) {
     };
   }
 
-  async function listReviews({ rating, hidden, limit, offset }: AdminReviewsQuery) {
-    const where: Prisma.ProductReviewWhereInput = { ...(rating && { rating }), ...(hidden !== undefined && { isHidden: hidden }) };
+  async function listReviews({ rating, hidden, source, limit, offset }: AdminReviewsQuery) {
+    const where: Prisma.ProductReviewWhereInput = {
+      ...(rating && { rating }),
+      ...(hidden !== undefined && { isHidden: hidden }),
+      ...(source && { source }),
+    };
     const [rows, total] = await prisma.$transaction([
       prisma.productReview.findMany({
         where,
@@ -129,6 +138,8 @@ export function createReviewsService(prisma: PrismaClient) {
         skip: offset,
         select: {
           id: true,
+          source: true,
+          authorName: true,
           rating: true,
           comment: true,
           isHidden: true,
@@ -137,14 +148,16 @@ export function createReviewsService(prisma: PrismaClient) {
           product: { select: { id: true, name: true } },
           user: { select: { id: true, name: true, phone: true, deletedAt: true } },
           order: { select: { id: true, orderNumber: true } },
+          createdBy: { select: { name: true, email: true } },
         },
       }),
       prisma.productReview.count({ where }),
     ]);
     return {
-      items: rows.map(({ user, ...review }) => ({
+      items: rows.map(({ user, createdBy, ...review }) => ({
         ...review,
-        customer: { id: user.id, name: user.name, phone: user.deletedAt ? null : user.phone },
+        customer: user && { id: user.id, name: user.name, phone: user.deletedAt ? null : user.phone },
+        addedBy: createdBy && (createdBy.name ?? createdBy.email),
       })),
       total,
       limit,
@@ -152,16 +165,42 @@ export function createReviewsService(prisma: PrismaClient) {
     };
   }
 
+  /** A review under a name the admin enters. It counts toward the rating but is never a verified purchase. */
+  async function addReview(adminId: string, input: AdminReviewInput) {
+    const product = await prisma.product.findUnique({ where: { id: input.productId }, select: { id: true } });
+    if (!product) throw productNotFound();
+    return prisma.productReview.create({
+      data: {
+        productId: input.productId,
+        source: ReviewSource.ADMIN,
+        authorName: input.authorName,
+        rating: input.rating,
+        comment: input.comment || null,
+        createdById: adminId,
+      },
+      select: { id: true, productId: true, source: true, authorName: true, rating: true, comment: true, createdAt: true },
+    });
+  }
+
+  /** Only reviews an admin added can be deleted; customer reviews are hidden instead. */
+  async function deleteReview(id: string) {
+    const review = await prisma.productReview.findUnique({ where: { id }, select: { source: true } });
+    if (!review) throw reviewNotFound();
+    if (review.source !== ReviewSource.ADMIN) {
+      throw new AppError(409, "CUSTOMER_REVIEW", "Customer reviews can be hidden, not deleted");
+    }
+    await prisma.productReview.delete({ where: { id } });
+    return { id };
+  }
+
   async function setHidden(id: string, isHidden: boolean) {
     try {
       return await prisma.productReview.update({ where: { id }, data: { isHidden }, select: { id: true, isHidden: true } });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-        throw new AppError(404, "REVIEW_NOT_FOUND", "Review not found");
-      }
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") throw reviewNotFound();
       throw error;
     }
   }
 
-  return { reviewProduct, productReviews, orderReviews, listReviews, setHidden };
+  return { reviewProduct, productReviews, orderReviews, listReviews, setHidden, addReview, deleteReview };
 }

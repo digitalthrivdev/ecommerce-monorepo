@@ -3813,8 +3813,11 @@ export type OrderRatingScalarFieldEnum = (typeof OrderRatingScalarFieldEnum)[key
 export const ProductReviewScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
+  source: 'source',
   userId: 'userId',
   orderId: 'orderId',
+  authorName: 'authorName',
+  createdById: 'createdById',
   rating: 'rating',
   comment: 'comment',
   isHidden: 'isHidden',
@@ -4255,6 +4258,20 @@ export type EnumCouponDiscountTypeFieldRefInput<$PrismaModel> = FieldRefInputTyp
  * Reference to a field of type 'CouponDiscountType[]'
  */
 export type ListEnumCouponDiscountTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CouponDiscountType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ReviewSource'
+ */
+export type EnumReviewSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReviewSource'>
+    
+
+
+/**
+ * Reference to a field of type 'ReviewSource[]'
+ */
+export type ListEnumReviewSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReviewSource[]'>
     
 
 
