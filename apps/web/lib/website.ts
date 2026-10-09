@@ -3,12 +3,22 @@ import "server-only";
 import { headers } from "next/headers";
 import { cache } from "react";
 
-import { apiGet } from "./api";
-import type { HomeFeed, PublicSettings, Website } from "./types";
+import { ApiError, apiGet } from "./api";
+import type { HomeFeed, ProductPreview, PublicSettings, Website } from "./types";
 
 export const getWebsite = cache(() => apiGet<Website>("/settings/website"));
 export const getSettings = cache(() => apiGet<PublicSettings>("/settings"));
 export const getHomeFeed = cache(() => apiGet<HomeFeed>("/home"));
+
+/** Null for a product that doesn't exist or isn't shown to customers. */
+export const getProductPreview = cache(async (id: string) => {
+  try {
+    return await apiGet<ProductPreview>(`/products/${encodeURIComponent(id)}/preview`);
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 404 || error.status === 400)) return null;
+    throw error;
+  }
+});
 
 /** This website's own address, e.g. "https://acme.com", from the request (Nginx sets the forwarded headers). */
 export async function getSiteUrl() {

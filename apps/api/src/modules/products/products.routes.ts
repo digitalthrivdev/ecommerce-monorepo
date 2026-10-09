@@ -50,6 +50,11 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
     return productsService.getProduct(id, { includeInactive: await isAdmin(request) });
   });
 
+  app.get("/:id/preview", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return productsService.getPreview(id);
+  });
+
   app.get("/:id/listings", { preHandler: requireAdmin }, async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return storeProductsService.listProductListings(id);

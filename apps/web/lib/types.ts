@@ -4,7 +4,19 @@ export type PublicSettings = {
   branding: { logoUrl: string | null };
   theme: { colors: { primary: string; onPrimary: string; accent: string; onAccent: string } };
   timezone: string;
+  currency: string;
   payments: { methods: ("COD" | "ONLINE")[] };
+};
+
+/** GET /products/:id/preview: what a shared product link shows. */
+export type ProductPreview = {
+  id: string;
+  name: string;
+  description: string | null;
+  brand: string | null;
+  imageUrl: string | null;
+  /** The lowest price at a store that has it in stock; `varies` when other variants or stores charge more. */
+  price: { sellingPrice: string; mrp: string | null; label: string; varies: boolean } | null;
 };
 
 /** Business details on the website; `name` falls back to the app name. */

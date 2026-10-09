@@ -10,6 +10,10 @@ const path = require("node:path");
  *   APP_ID                Android package and iOS bundle ID, e.g. "com.acme.grocery". Permanent once the
  *                         app is published, and two installs on one phone need different IDs.
  *   APP_SCHEME            Deep link scheme used to return from online payment, e.g. "acme".
+ *   SITE_DOMAIN           The client's website, e.g. "acme.com" (SITE_DOMAIN in deploy/.env). Shared
+ *                         product links point to https://SITE_DOMAIN/p/<id> and open in the app when
+ *                         it's installed (Android App Links, iOS Universal Links). Without it, shares
+ *                         use the APP_SCHEME link.
  *   APP_BRAND             Folder under brands/ with the client's icon and splash screen, e.g. "acme".
  *   EAS_PROJECT_ID, EXPO_OWNER, APP_SLUG
  *                         The client's own EAS project, when they have one.
@@ -27,6 +31,7 @@ const path = require("node:path");
 const ID_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/;
 const SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*$/;
 const BRAND_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+const DOMAIN_PATTERN = /^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const BRAND_COLORS = ["iconBackgroundColor", "splashBackgroundColor", "splashDarkBackgroundColor", "notificationColor"];
 
@@ -144,6 +149,13 @@ module.exports = ({ config: baseConfig }) => {
   const googleServicesFile = googleServicesFor(appId);
   const mapsKey = setting("GOOGLE_MAPS_ANDROID_API_KEY");
   const sentry = sentryPlugin();
+  const siteDomain = setting("SITE_DOMAIN", DOMAIN_PATTERN);
+  const productLinks = siteDomain && {
+    action: "VIEW",
+    autoVerify: true,
+    data: [{ scheme: "https", host: siteDomain, pathPrefix: "/p/" }],
+    category: ["BROWSABLE", "DEFAULT"],
+  };
 
   return {
     ...config,
@@ -156,8 +168,22 @@ module.exports = ({ config: baseConfig }) => {
     slug: setting("APP_SLUG") ?? config.slug,
     owner: setting("EXPO_OWNER") ?? config.owner,
     scheme: setting("APP_SCHEME", SCHEME_PATTERN) ?? config.scheme,
-    ios: { ...config.ios, bundleIdentifier: appId },
-    android: { ...config.android, package: appId, ...(googleServicesFile && { googleServicesFile }) },
-    extra: { ...config.extra, googleMapsAndroid: Boolean(mapsKey), eas: { ...config.extra?.eas, ...(projectId && { projectId }) } },
+    ios: {
+      ...config.ios,
+      bundleIdentifier: appId,
+      ...(siteDomain && { associatedDomains: [...(config.ios.associatedDomains ?? []), `applinks:${siteDomain}`] }),
+    },
+    android: {
+      ...config.android,
+      package: appId,
+      ...(googleServicesFile && { googleServicesFile }),
+      ...(productLinks && { intentFilters: [...(config.android.intentFilters ?? []), productLinks] }),
+    },
+    extra: {
+      ...config.extra,
+      googleMapsAndroid: Boolean(mapsKey),
+      ...(siteDomain && { siteDomain }),
+      eas: { ...config.extra?.eas, ...(projectId && { projectId }) },
+    },
   };
 };

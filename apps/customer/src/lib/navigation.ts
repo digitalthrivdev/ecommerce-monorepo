@@ -1,3 +1,5 @@
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 
 import type { HomeLink } from "./types";
@@ -13,6 +15,12 @@ export function openBrand(brand: { id: string; name: string }) {
 /** `variantId` picks the variant the page opens on. */
 export function openProduct(productId: string, variantId?: string | null) {
   router.push({ pathname: "/product/[id]", params: variantId ? { id: productId, variant: variantId } : { id: productId } });
+}
+
+/** The website's product page, which opens the app when it's installed; the app's own link in builds without SITE_DOMAIN. */
+export function productShareUrl(productId: string) {
+  const siteDomain: unknown = Constants.expoConfig?.extra?.siteDomain;
+  return typeof siteDomain === "string" ? `https://${siteDomain}/p/${encodeURIComponent(productId)}` : Linking.createURL(`product/${productId}`);
 }
 
 /** Where a banner or offer goes; plain ones are not tappable. */

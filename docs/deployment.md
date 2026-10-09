@@ -234,18 +234,20 @@ Add `<brand>-preview` and `<brand>-production` to both `eas.json` files:
     "APP_NAME": "Acme Grocery",
     "APP_ID": "com.acme.grocery",
     "APP_SCHEME": "acme",
+    "SITE_DOMAIN": "acme.com",
     "EXPO_PUBLIC_API_URL": "https://api.acme.com",
     "EXPO_PUBLIC_SENTRY_DSN": "https://<key>@<org>.ingest.sentry.io/<project>"
   }
 },
 "acme-production": {
   "extends": "production",
-  "env": { "APP_BRAND": "acme", "APP_NAME": "Acme Grocery", "APP_ID": "com.acme.grocery", "APP_SCHEME": "acme", "EXPO_PUBLIC_API_URL": "https://api.acme.com", "EXPO_PUBLIC_SENTRY_DSN": "https://<key>@<org>.ingest.sentry.io/<project>" }
+  "env": { "APP_BRAND": "acme", "APP_NAME": "Acme Grocery", "APP_ID": "com.acme.grocery", "APP_SCHEME": "acme", "SITE_DOMAIN": "acme.com", "EXPO_PUBLIC_API_URL": "https://api.acme.com", "EXPO_PUBLIC_SENTRY_DSN": "https://<key>@<org>.ingest.sentry.io/<project>" }
 }
 ```
 
 - **`APP_ID`** is the Android package and iOS bundle ID. It's permanent once the app is on a store, and must differ between clients and between the two apps (e.g. `com.acme.grocery` and `com.acme.partner`).
 - **`APP_SCHEME`** brings the customer back from the payment page; use a unique one per client.
+- **`SITE_DOMAIN`** (customer app only) is the client's website, the same as in `deploy/.env`. Shared products link to `https://<SITE_DOMAIN>/p/<id>`; see "Product links" below.
 - **`EXPO_PUBLIC_SENTRY_DSN`** is the client's Sentry project (optional; blank turns error reporting off). Add `SENTRY_PROJECT` (the project slug) too for readable stack traces (see "Error tracking and uptime").
 - **Values here are public.** They are bundled into the app, so they are safe to commit. Never put a secret in `eas.json` or in any `EXPO_PUBLIC_` variable.
 - **Optional:** `EAS_PROJECT_ID`, `EXPO_OWNER` and `APP_SLUG` move a client to their own EAS project.
@@ -260,7 +262,7 @@ The EAS environments (`preview`, `production`) are shared by every client, so th
 
 Without a matching Firebase entry the build still works, but without push notifications (the build log warns about it).
 
-Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `APP_BRAND`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SENTRY_DSN` or `SENTRY_PROJECT` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
+Don't set `APP_NAME`, `APP_ID`, `APP_SCHEME`, `SITE_DOMAIN`, `APP_BRAND`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SENTRY_DSN` or `SENTRY_PROJECT` in an EAS environment: they would leak into the builds of clients whose profiles don't set them. When a name is in both, the build profile wins (`eas config --profile <profile>` shows which values are used). Check with `npx eas-cli@latest env:list preview` (and `production`) in each app folder.
 
 ### Google Maps key (Android)
 
@@ -283,6 +285,20 @@ One key serves both apps of every client:
 Maps without a map ID are free and unlimited ("Maps SDK" on Google's price list, India and global). Don't give the `MapView` a map ID (cloud-based styling): those loads are billed as Dynamic Maps.
 
 The admin's store map uses OpenStreetMap and needs no key. Place search uses the phone's geocoder in the app and OpenStreetMap's Nominatim in the admin (one search per click, within its usage policy).
+
+### Product links
+
+The customer app's Share button sends `https://<SITE_DOMAIN>/p/<id>`. With the app installed, the link opens the product in the app; otherwise the website shows the product (name, image, lowest price in stock) with the app store buttons from Settings → Website, and WhatsApp shows a preview card. Opening in the app needs both sides:
+
+1. **App:** `SITE_DOMAIN` in the client's build profiles (above), then a rebuild.
+2. **Website:** the app's identity in the server's `deploy/.env`, then `docker compose up -d web`:
+   - `ANDROID_APP_ID`: the customer app's `APP_ID`.
+   - `ANDROID_CERT_SHA256`: the SHA-256 fingerprints of its signing keys, comma-separated. EAS shows the keystore's under `npx eas-cli@latest credentials` → Android → the package → keystore. Once the app is on the Play Store, add Google's app signing key too (Play Console → the app → Test and release → App integrity), or links from Play installs open the browser.
+   - `IOS_APP_ID`: `<Apple Team ID>.<APP_ID>`, once there's an iOS app.
+
+   Check `https://<SITE_DOMAIN>/.well-known/assetlinks.json` (404 while unset) and, on a phone with the app, `adb shell pm get-app-links <APP_ID>` shows `verified` for the domain. Android verifies when the app is installed, so reinstall the app after changing the fingerprints.
+
+Without these, links still work: they open the website, and the app keeps opening its own `<APP_SCHEME>://product/<id>` links.
 
 ### 4. Build and publish
 

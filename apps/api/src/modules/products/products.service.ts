@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { slugify } from "../../shared/schemas.js";
 import { featuredProductIds } from "../settings/appearance.service.js";
@@ -21,6 +21,7 @@ import {
   type UpdateProductInput,
   type VariantsInput,
 } from "./products.schemas.js";
+import { customerVisible } from "./store-products.service.js";
 import { deleteVariants, saveVariants } from "./variants.js";
 
 function detailInclude(includeInactive: boolean) {
@@ -165,6 +166,54 @@ export function createProductsService(prisma: PrismaClient) {
     }
 
     return toProductDetail(product);
+  }
+
+  /** What a shared product link shows: the product and its lowest price at an active store that has it in stock. */
+  async function getPreview(id: string) {
+    const product = await prisma.product.findFirst({
+      where: { id, ...customerVisibleProduct },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        brand: { select: { name: true } },
+        images: { orderBy: [{ variantId: { sort: "asc", nulls: "first" } }, ...imageOrder], take: 1, select: { url: true } },
+      },
+    });
+
+    if (!product) {
+      throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
+    }
+
+    const buyable = {
+      ...customerVisible,
+      variant: { ...customerVisible.variant, productId: id },
+      store: { status: StoreStatus.ACTIVE },
+      inventory: { quantity: { gt: 0 } },
+    } satisfies Prisma.StoreProductWhereInput;
+    const [cheapest, highest] = await Promise.all([
+      prisma.storeProduct.findFirst({
+        where: buyable,
+        orderBy: { sellingPrice: "asc" },
+        select: { sellingPrice: true, mrp: true, variant: { select: { name: true, quantity: true, unit: true } } },
+      }),
+      prisma.storeProduct.aggregate({ where: buyable, _max: { sellingPrice: true } }),
+    ]);
+
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      brand: product.brand?.name ?? null,
+      imageUrl: product.images[0]?.url ?? null,
+      /** Null while no store has it in stock. `varies` when other variants or stores charge more. */
+      price: cheapest && {
+        sellingPrice: cheapest.sellingPrice.toFixed(2),
+        mrp: cheapest.mrp?.toFixed(2) ?? null,
+        label: variantLabel(cheapest.variant),
+        varies: !cheapest.sellingPrice.equals(highest._max.sellingPrice ?? cheapest.sellingPrice),
+      },
+    };
   }
 
   async function createProduct({ slug, options, variants, ...data }: CreateProductInput) {
@@ -327,6 +376,7 @@ export function createProductsService(prisma: PrismaClient) {
   return {
     listProducts,
     getProduct,
+    getPreview,
     createProduct,
     updateProduct,
     setVariants,
