@@ -11,6 +11,7 @@ import { BrandRow } from "@/components/brand-row";
 import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { VegMark } from "@/components/product-card";
+import { RatingLine, ReviewsCard } from "@/components/product-reviews";
 import { ProductRow } from "@/components/product-row";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -235,6 +236,7 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
             {product.isVeg !== null && <VegMark veg={product.isVeg} className="mt-2" />}
           </View>
           {variant.label ? <Text className="text-sm text-muted-foreground">{variant.label}</Text> : null}
+          <RatingLine productId={product.productId} />
         </View>
 
         <View className="flex-row flex-wrap items-center gap-2">
@@ -271,6 +273,8 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
       ) : null}
 
       <LabelDetails product={product} />
+
+      <ReviewsCard productId={product.productId} />
 
       <SimilarProducts product={product} />
       <AlsoBought product={product} />

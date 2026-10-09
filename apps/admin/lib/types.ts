@@ -434,6 +434,19 @@ export type DeliveryPartner = {
 export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
 /** `GET /admin/ratings` and `/stores/:storeId/ratings` row: a rating with 1 or 2 stars for the delivery or the items. */
+export type ProductReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  isHidden: boolean;
+  createdAt: string;
+  updatedAt: string;
+  product: { id: string; name: string };
+  /** `phone` is null for deleted accounts. */
+  customer: { id: string; name: string | null; phone: string | null };
+  order: { id: string; orderNumber: string };
+};
+
 export type LowRating = OrderRating & {
   id: string;
   order: { id: string; orderNumber: string; customerName: string; customerPhone: string; store: { id: string; name: string }; deliveredAt: string | null };

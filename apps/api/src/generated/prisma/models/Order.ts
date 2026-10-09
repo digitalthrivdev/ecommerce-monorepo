@@ -482,6 +482,7 @@ export type OrderWhereInput = {
   complaint?: Prisma.XOR<Prisma.ComplaintNullableScalarRelationFilter, Prisma.ComplaintWhereInput> | null
   rating?: Prisma.XOR<Prisma.OrderRatingNullableScalarRelationFilter, Prisma.OrderRatingWhereInput> | null
   refunds?: Prisma.RefundListRelationFilter
+  productReviews?: Prisma.ProductReviewListRelationFilter
   statusHistory?: Prisma.OrderStatusHistoryListRelationFilter
 }
 
@@ -529,6 +530,7 @@ export type OrderOrderByWithRelationInput = {
   complaint?: Prisma.ComplaintOrderByWithRelationInput
   rating?: Prisma.OrderRatingOrderByWithRelationInput
   refunds?: Prisma.RefundOrderByRelationAggregateInput
+  productReviews?: Prisma.ProductReviewOrderByRelationAggregateInput
   statusHistory?: Prisma.OrderStatusHistoryOrderByRelationAggregateInput
 }
 
@@ -579,6 +581,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   complaint?: Prisma.XOR<Prisma.ComplaintNullableScalarRelationFilter, Prisma.ComplaintWhereInput> | null
   rating?: Prisma.XOR<Prisma.OrderRatingNullableScalarRelationFilter, Prisma.OrderRatingWhereInput> | null
   refunds?: Prisma.RefundListRelationFilter
+  productReviews?: Prisma.ProductReviewListRelationFilter
   statusHistory?: Prisma.OrderStatusHistoryListRelationFilter
 }, "id" | "orderNumber" | "invoiceNumber">
 
@@ -702,6 +705,7 @@ export type OrderCreateInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -745,6 +749,7 @@ export type OrderUncheckedCreateInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -788,6 +793,7 @@ export type OrderUpdateInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -831,6 +837,7 @@ export type OrderUncheckedUpdateInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -1345,6 +1352,20 @@ export type OrderUpdateOneRequiredWithoutRatingNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutRatingInput, Prisma.OrderUpdateWithoutRatingInput>, Prisma.OrderUncheckedUpdateWithoutRatingInput>
 }
 
+export type OrderCreateNestedOneWithoutProductReviewsInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutProductReviewsInput, Prisma.OrderUncheckedCreateWithoutProductReviewsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutProductReviewsInput
+  connect?: Prisma.OrderWhereUniqueInput
+}
+
+export type OrderUpdateOneRequiredWithoutProductReviewsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutProductReviewsInput, Prisma.OrderUncheckedCreateWithoutProductReviewsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutProductReviewsInput
+  upsert?: Prisma.OrderUpsertWithoutProductReviewsInput
+  connect?: Prisma.OrderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutProductReviewsInput, Prisma.OrderUpdateWithoutProductReviewsInput>, Prisma.OrderUncheckedUpdateWithoutProductReviewsInput>
+}
+
 export type OrderCreateNestedOneWithoutDeliveryInput = {
   create?: Prisma.XOR<Prisma.OrderCreateWithoutDeliveryInput, Prisma.OrderUncheckedCreateWithoutDeliveryInput>
   connectOrCreate?: Prisma.OrderCreateOrConnectWithoutDeliveryInput
@@ -1398,6 +1419,7 @@ export type OrderCreateWithoutUserInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -1440,6 +1462,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -1547,6 +1570,7 @@ export type OrderCreateWithoutAddressInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -1589,6 +1613,7 @@ export type OrderUncheckedCreateWithoutAddressInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -1657,6 +1682,7 @@ export type OrderCreateWithoutStoreInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -1699,6 +1725,7 @@ export type OrderUncheckedCreateWithoutStoreInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -1767,6 +1794,7 @@ export type OrderCreateWithoutItemsInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -1809,6 +1837,7 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -1867,6 +1896,7 @@ export type OrderUpdateWithoutItemsInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -1909,6 +1939,7 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -1952,6 +1983,7 @@ export type OrderCreateWithoutStatusHistoryInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutStatusHistoryInput = {
@@ -1994,6 +2026,7 @@ export type OrderUncheckedCreateWithoutStatusHistoryInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutStatusHistoryInput = {
@@ -2052,6 +2085,7 @@ export type OrderUpdateWithoutStatusHistoryInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutStatusHistoryInput = {
@@ -2094,6 +2128,7 @@ export type OrderUncheckedUpdateWithoutStatusHistoryInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderCreateWithoutPaymentInput = {
@@ -2135,6 +2170,7 @@ export type OrderCreateWithoutPaymentInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -2177,6 +2213,7 @@ export type OrderUncheckedCreateWithoutPaymentInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -2235,6 +2272,7 @@ export type OrderUpdateWithoutPaymentInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -2277,6 +2315,7 @@ export type OrderUncheckedUpdateWithoutPaymentInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -2319,6 +2358,7 @@ export type OrderCreateWithoutRefundsInput = {
   delivery?: Prisma.DeliveryCreateNestedOneWithoutOrderInput
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -2361,6 +2401,7 @@ export type OrderUncheckedCreateWithoutRefundsInput = {
   delivery?: Prisma.DeliveryUncheckedCreateNestedOneWithoutOrderInput
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -2419,6 +2460,7 @@ export type OrderUpdateWithoutRefundsInput = {
   delivery?: Prisma.DeliveryUpdateOneWithoutOrderNestedInput
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -2461,6 +2503,7 @@ export type OrderUncheckedUpdateWithoutRefundsInput = {
   delivery?: Prisma.DeliveryUncheckedUpdateOneWithoutOrderNestedInput
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -2503,6 +2546,7 @@ export type OrderCreateWithoutComplaintInput = {
   delivery?: Prisma.DeliveryCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -2545,6 +2589,7 @@ export type OrderUncheckedCreateWithoutComplaintInput = {
   delivery?: Prisma.DeliveryUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -2603,6 +2648,7 @@ export type OrderUpdateWithoutComplaintInput = {
   delivery?: Prisma.DeliveryUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -2645,6 +2691,7 @@ export type OrderUncheckedUpdateWithoutComplaintInput = {
   delivery?: Prisma.DeliveryUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -2687,6 +2734,7 @@ export type OrderCreateWithoutCouponInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -2729,6 +2777,7 @@ export type OrderUncheckedCreateWithoutCouponInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -2797,6 +2846,7 @@ export type OrderCreateWithoutRatingInput = {
   delivery?: Prisma.DeliveryCreateNestedOneWithoutOrderInput
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -2839,6 +2889,7 @@ export type OrderUncheckedCreateWithoutRatingInput = {
   delivery?: Prisma.DeliveryUncheckedCreateNestedOneWithoutOrderInput
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -2897,6 +2948,7 @@ export type OrderUpdateWithoutRatingInput = {
   delivery?: Prisma.DeliveryUpdateOneWithoutOrderNestedInput
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -2938,6 +2990,195 @@ export type OrderUncheckedUpdateWithoutRatingInput = {
   payment?: Prisma.PaymentUncheckedUpdateOneWithoutOrderNestedInput
   delivery?: Prisma.DeliveryUncheckedUpdateOneWithoutOrderNestedInput
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
+  refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
+  statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderCreateWithoutProductReviewsInput = {
+  id?: string
+  orderNumber: string
+  status?: $Enums.OrderStatus
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFee: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  total: runtime.Decimal | runtime.DecimalJsLike | number | string
+  taxTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFeeGstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  deliveryFeeTax?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  invoiceNumber?: string | null
+  sellerName?: string | null
+  sellerGstin?: string | null
+  sellerAddress?: string | null
+  interStateSupply?: boolean | null
+  couponCode?: string | null
+  paymentMethod: $Enums.PaymentMethod
+  customerName: string
+  customerPhone: string
+  addressLine1: string
+  addressLine2?: string | null
+  landmark?: string | null
+  city: string
+  state: string
+  postalCode: string
+  latitude?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  longitude?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutOrdersInput
+  store: Prisma.StoreCreateNestedOneWithoutOrdersInput
+  address?: Prisma.AddressCreateNestedOneWithoutOrdersInput
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutOrderInput
+  delivery?: Prisma.DeliveryCreateNestedOneWithoutOrderInput
+  complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
+  rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
+  refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
+}
+
+export type OrderUncheckedCreateWithoutProductReviewsInput = {
+  id?: string
+  orderNumber: string
+  userId: string
+  storeId: string
+  addressId?: string | null
+  status?: $Enums.OrderStatus
+  subtotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFee: runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  total: runtime.Decimal | runtime.DecimalJsLike | number | string
+  taxTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFeeGstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  deliveryFeeTax?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  invoiceNumber?: string | null
+  sellerName?: string | null
+  sellerGstin?: string | null
+  sellerAddress?: string | null
+  interStateSupply?: boolean | null
+  couponId?: string | null
+  couponCode?: string | null
+  paymentMethod: $Enums.PaymentMethod
+  customerName: string
+  customerPhone: string
+  addressLine1: string
+  addressLine2?: string | null
+  landmark?: string | null
+  city: string
+  state: string
+  postalCode: string
+  latitude?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  longitude?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
+  payment?: Prisma.PaymentUncheckedCreateNestedOneWithoutOrderInput
+  delivery?: Prisma.DeliveryUncheckedCreateNestedOneWithoutOrderInput
+  complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
+  rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
+  refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
+}
+
+export type OrderCreateOrConnectWithoutProductReviewsInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutProductReviewsInput, Prisma.OrderUncheckedCreateWithoutProductReviewsInput>
+}
+
+export type OrderUpsertWithoutProductReviewsInput = {
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutProductReviewsInput, Prisma.OrderUncheckedUpdateWithoutProductReviewsInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutProductReviewsInput, Prisma.OrderUncheckedCreateWithoutProductReviewsInput>
+  where?: Prisma.OrderWhereInput
+}
+
+export type OrderUpdateToOneWithWhereWithoutProductReviewsInput = {
+  where?: Prisma.OrderWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutProductReviewsInput, Prisma.OrderUncheckedUpdateWithoutProductReviewsInput>
+}
+
+export type OrderUpdateWithoutProductReviewsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  orderNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  taxTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFeeGstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  deliveryFeeTax?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerGstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  interStateSupply?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  couponCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  addressLine1?: Prisma.StringFieldUpdateOperationsInput | string
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  landmark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  state?: Prisma.StringFieldUpdateOperationsInput | string
+  postalCode?: Prisma.StringFieldUpdateOperationsInput | string
+  latitude?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  longitude?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
+  store?: Prisma.StoreUpdateOneRequiredWithoutOrdersNestedInput
+  address?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutOrderNestedInput
+  delivery?: Prisma.DeliveryUpdateOneWithoutOrderNestedInput
+  complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
+  rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
+  refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutProductReviewsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  orderNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  addressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  subtotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  discount?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  total?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  taxTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  deliveryFeeGstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  deliveryFeeTax?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  invoiceNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerGstin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sellerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  interStateSupply?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  addressLine1?: Prisma.StringFieldUpdateOperationsInput | string
+  addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  landmark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  state?: Prisma.StringFieldUpdateOperationsInput | string
+  postalCode?: Prisma.StringFieldUpdateOperationsInput | string
+  latitude?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  longitude?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+  payment?: Prisma.PaymentUncheckedUpdateOneWithoutOrderNestedInput
+  delivery?: Prisma.DeliveryUncheckedUpdateOneWithoutOrderNestedInput
+  complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
+  rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -2981,6 +3222,7 @@ export type OrderCreateWithoutDeliveryInput = {
   complaint?: Prisma.ComplaintCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryCreateNestedManyWithoutOrderInput
 }
 
@@ -3023,6 +3265,7 @@ export type OrderUncheckedCreateWithoutDeliveryInput = {
   complaint?: Prisma.ComplaintUncheckedCreateNestedOneWithoutOrderInput
   rating?: Prisma.OrderRatingUncheckedCreateNestedOneWithoutOrderInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutOrderInput
+  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutOrderInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedCreateNestedManyWithoutOrderInput
 }
 
@@ -3081,6 +3324,7 @@ export type OrderUpdateWithoutDeliveryInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -3123,6 +3367,7 @@ export type OrderUncheckedUpdateWithoutDeliveryInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -3200,6 +3445,7 @@ export type OrderUpdateWithoutUserInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -3242,6 +3488,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -3354,6 +3601,7 @@ export type OrderUpdateWithoutAddressInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -3396,6 +3644,7 @@ export type OrderUncheckedUpdateWithoutAddressInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -3508,6 +3757,7 @@ export type OrderUpdateWithoutStoreInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -3550,6 +3800,7 @@ export type OrderUncheckedUpdateWithoutStoreInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -3662,6 +3913,7 @@ export type OrderUpdateWithoutCouponInput = {
   complaint?: Prisma.ComplaintUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUpdateManyWithoutOrderNestedInput
 }
 
@@ -3704,6 +3956,7 @@ export type OrderUncheckedUpdateWithoutCouponInput = {
   complaint?: Prisma.ComplaintUncheckedUpdateOneWithoutOrderNestedInput
   rating?: Prisma.OrderRatingUncheckedUpdateOneWithoutOrderNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutOrderNestedInput
+  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutOrderNestedInput
   statusHistory?: Prisma.OrderStatusHistoryUncheckedUpdateManyWithoutOrderNestedInput
 }
 
@@ -3750,12 +4003,14 @@ export type OrderUncheckedUpdateManyWithoutCouponInput = {
 export type OrderCountOutputType = {
   items: number
   refunds: number
+  productReviews: number
   statusHistory: number
 }
 
 export type OrderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   items?: boolean | OrderCountOutputTypeCountItemsArgs
   refunds?: boolean | OrderCountOutputTypeCountRefundsArgs
+  productReviews?: boolean | OrderCountOutputTypeCountProductReviewsArgs
   statusHistory?: boolean | OrderCountOutputTypeCountStatusHistoryArgs
 }
 
@@ -3781,6 +4036,13 @@ export type OrderCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Ext
  */
 export type OrderCountOutputTypeCountRefundsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.RefundWhereInput
+}
+
+/**
+ * OrderCountOutputType without action
+ */
+export type OrderCountOutputTypeCountProductReviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductReviewWhereInput
 }
 
 /**
@@ -3835,6 +4097,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   complaint?: boolean | Prisma.Order$complaintArgs<ExtArgs>
   rating?: boolean | Prisma.Order$ratingArgs<ExtArgs>
   refunds?: boolean | Prisma.Order$refundsArgs<ExtArgs>
+  productReviews?: boolean | Prisma.Order$productReviewsArgs<ExtArgs>
   statusHistory?: boolean | Prisma.Order$statusHistoryArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
@@ -3967,6 +4230,7 @@ export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   complaint?: boolean | Prisma.Order$complaintArgs<ExtArgs>
   rating?: boolean | Prisma.Order$ratingArgs<ExtArgs>
   refunds?: boolean | Prisma.Order$refundsArgs<ExtArgs>
+  productReviews?: boolean | Prisma.Order$productReviewsArgs<ExtArgs>
   statusHistory?: boolean | Prisma.Order$statusHistoryArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -3996,6 +4260,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     complaint: Prisma.$ComplaintPayload<ExtArgs> | null
     rating: Prisma.$OrderRatingPayload<ExtArgs> | null
     refunds: Prisma.$RefundPayload<ExtArgs>[]
+    productReviews: Prisma.$ProductReviewPayload<ExtArgs>[]
     statusHistory: Prisma.$OrderStatusHistoryPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -4436,6 +4701,7 @@ export interface Prisma__OrderClient<T, Null = never, ExtArgs extends runtime.Ty
   complaint<T extends Prisma.Order$complaintArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$complaintArgs<ExtArgs>>): Prisma.Prisma__ComplaintClient<runtime.Types.Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   rating<T extends Prisma.Order$ratingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$ratingArgs<ExtArgs>>): Prisma.Prisma__OrderRatingClient<runtime.Types.Result.GetResult<Prisma.$OrderRatingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   refunds<T extends Prisma.Order$refundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$refundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  productReviews<T extends Prisma.Order$productReviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$productReviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   statusHistory<T extends Prisma.Order$statusHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$statusHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderStatusHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -5059,6 +5325,30 @@ export type Order$refundsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.RefundScalarFieldEnum | Prisma.RefundScalarFieldEnum[]
+}
+
+/**
+ * Order.productReviews
+ */
+export type Order$productReviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductReview
+   */
+  select?: Prisma.ProductReviewSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductReview
+   */
+  omit?: Prisma.ProductReviewOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductReviewInclude<ExtArgs> | null
+  where?: Prisma.ProductReviewWhereInput
+  orderBy?: Prisma.ProductReviewOrderByWithRelationInput | Prisma.ProductReviewOrderByWithRelationInput[]
+  cursor?: Prisma.ProductReviewWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductReviewScalarFieldEnum | Prisma.ProductReviewScalarFieldEnum[]
 }
 
 /**

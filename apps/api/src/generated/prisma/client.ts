@@ -175,6 +175,11 @@ export type Coupon = Prisma.CouponModel
  */
 export type OrderRating = Prisma.OrderRatingModel
 /**
+ * Model ProductReview
+ * 
+ */
+export type ProductReview = Prisma.ProductReviewModel
+/**
  * Model DeliveryPartner
  * 
  */

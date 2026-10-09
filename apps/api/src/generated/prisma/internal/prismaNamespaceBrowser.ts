@@ -78,6 +78,7 @@ export const ModelName = {
   ComplaintItem: 'ComplaintItem',
   Coupon: 'Coupon',
   OrderRating: 'OrderRating',
+  ProductReview: 'ProductReview',
   DeliveryPartner: 'DeliveryPartner',
   CashDeposit: 'CashDeposit',
   RiderPayout: 'RiderPayout',
@@ -535,6 +536,21 @@ export const OrderRatingScalarFieldEnum = {
 } as const
 
 export type OrderRatingScalarFieldEnum = (typeof OrderRatingScalarFieldEnum)[keyof typeof OrderRatingScalarFieldEnum]
+
+
+export const ProductReviewScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  userId: 'userId',
+  orderId: 'orderId',
+  rating: 'rating',
+  comment: 'comment',
+  isHidden: 'isHidden',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductReviewScalarFieldEnum = (typeof ProductReviewScalarFieldEnum)[keyof typeof ProductReviewScalarFieldEnum]
 
 
 export const DeliveryPartnerScalarFieldEnum = {

@@ -25,6 +25,7 @@ export default function AppLayout() {
         <Stack.Screen name="orders" />
         <Stack.Screen name="order/[id]" />
         <Stack.Screen name="report-issue/[id]" />
+        <Stack.Screen name="review/[productId]" />
         <Stack.Screen name="pay/[id]" options={{ presentation: "modal" }} />
         <Stack.Screen name="payment-return" options={{ animation: "none" }} />
       </Stack>

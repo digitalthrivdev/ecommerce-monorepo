@@ -31,6 +31,7 @@ import paymentsRoutes from "./modules/payments/payments.routes.js";
 import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
 import { productsRoutes, storeBrandsRoutes, storeProductsRoutes, storeVariantsRoutes } from "./modules/products/products.routes.js";
 import { adminRatingsRoutes, customerRatingsRoutes, storeRatingsRoutes } from "./modules/ratings/ratings.routes.js";
+import { adminReviewsRoutes, orderReviewsRoutes, productReviewsRoutes } from "./modules/reviews/reviews.routes.js";
 import reportsRoutes from "./modules/reports/reports.routes.js";
 import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
@@ -87,6 +88,7 @@ export async function buildApp() {
   await app.register(categoriesRoutes, { prefix: "/categories" });
   await app.register(brandsRoutes, { prefix: "/brands" });
   await app.register(productsRoutes, { prefix: "/products" });
+  await app.register(productReviewsRoutes, { prefix: "/products" });
   await app.register(catalogImportRoutes, { prefix: "/catalog-imports" });
   await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
   await app.register(storeBrandsRoutes, { prefix: "/stores/:storeId/brands" });
@@ -96,6 +98,7 @@ export async function buildApp() {
   await app.register(ordersRoutes, { prefix: "/orders" });
   await app.register(customerComplaintsRoutes, { prefix: "/orders/:id/complaint" });
   await app.register(customerRatingsRoutes, { prefix: "/orders/:id/rating" });
+  await app.register(orderReviewsRoutes, { prefix: "/orders/:id/reviews" });
   await app.register(paymentsRoutes, { prefix: "/payments" });
   await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
   await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
@@ -107,6 +110,7 @@ export async function buildApp() {
   await app.register(customersRoutes, { prefix: "/admin/customers" });
   await app.register(adminComplaintsRoutes, { prefix: "/admin/complaints" });
   await app.register(adminRatingsRoutes, { prefix: "/admin/ratings" });
+  await app.register(adminReviewsRoutes, { prefix: "/admin/reviews" });
   await app.register(adminCouponsRoutes, { prefix: "/admin/coupons" });
   await app.register(partnersRoutes, { prefix: "/delivery-partners" });
   await app.register(cashRoutes, { prefix: "/rider-cash" });

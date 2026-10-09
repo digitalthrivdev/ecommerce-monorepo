@@ -229,6 +229,18 @@ export type OrderSummary = {
 /** 1 to 5 stars; the items rating and comment are optional. */
 export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
+/** `GET /products/:id/reviews`: the rating over all visible reviews, and the ones with a comment. */
+export type ProductReviews = Paginated<{ id: string; rating: number; comment: string; name: string; updatedAt: string }> & {
+  /** One decimal, e.g. "4.3"; null without ratings. */
+  average: string | null;
+  count: number;
+  /** Ratings with 1 to 5 stars, in that order. */
+  distribution: number[];
+};
+
+/** `GET /orders/:id/reviews`: the products received in a delivered order, with the customer's review of each. */
+export type OrderReviewItem = { productId: string; productName: string; imageUrl: string | null; rating: number | null; comment: string | null };
+
 /** `GET /orders/:id`. Items, prices and address are snapshots taken when the order was placed. */
 export type OrderDetail = {
   id: string;

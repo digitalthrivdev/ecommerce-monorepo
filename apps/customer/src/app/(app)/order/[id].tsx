@@ -52,8 +52,9 @@ import {
 } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
+import { useOrderReviews, useReviewProduct } from "@/lib/reviews";
 import { useSettings } from "@/lib/settings";
-import type { OrderDetail, OrderTracking } from "@/lib/types";
+import type { OrderDetail, OrderReviewItem, OrderTracking } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const PLACED_SCREEN_MS = 1800;
@@ -314,6 +315,51 @@ function RatingCard({ order }: { order: OrderDetail }) {
   );
 }
 
+function ProductReviewRow({ item, orderId }: { item: OrderReviewItem; orderId: string }) {
+  const save = useReviewProduct(orderId);
+  const [failed, setFailed] = useState(false);
+  const rate = (rating: number) => save.mutate({ productId: item.productId, rating }, { onError: (error) => Alert.alert("Couldn't save your rating", errorMessage(error)) });
+  const openReview = () => router.push({ pathname: "/review/[productId]", params: { productId: item.productId, orderId } });
+
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="size-12 items-center justify-center overflow-hidden rounded-md bg-tile">
+        {item.imageUrl && !failed ? (
+          <Image source={{ uri: smallImage(item.imageUrl) }} style={{ width: "86%", height: "86%" }} contentFit="contain" onError={() => setFailed(true)} />
+        ) : (
+          <Text className="text-base font-extrabold text-primary">{item.productName.charAt(0)}</Text>
+        )}
+      </View>
+      <View className="flex-1 gap-1">
+        <Text className="text-sm" numberOfLines={2}>
+          {item.productName}
+        </Text>
+        <StarRating value={item.rating ?? 0} onChange={rate} label={`Rate ${item.productName}`} size={22} />
+        {item.rating ? (
+          <Pressable onPress={openReview} hitSlop={6} className="self-start active:opacity-70">
+            <Text className="text-xs font-bold text-primary">{item.comment ? "Edit your review" : "Write a review"}</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function ProductReviewsCard({ order }: { order: OrderDetail }) {
+  const reviews = useOrderReviews(order.id, { enabled: order.status === "DELIVERED" });
+  const items = reviews.data?.items ?? [];
+  if (items.length === 0) return null;
+  const pending = items.filter((item) => item.rating === null).length;
+
+  return (
+    <InfoCard icon={Star} title="Rate the products" detail={pending ? "Your ratings help other shoppers choose" : "Thanks for rating your products"}>
+      {items.map((item) => (
+        <ProductReviewRow key={item.productId} item={item} orderId={order.id} />
+      ))}
+    </InfoCard>
+  );
+}
+
 function NotificationsCard() {
   const { blocked, enable } = useNotificationsBlocked();
   if (!blocked) return null;
@@ -401,6 +447,8 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
 
       <RatingCard order={order} />
+
+      <ProductReviewsCard order={order} />
 
       <ComplaintCard order={order} />
 

@@ -7,7 +7,7 @@ A white-label quick-commerce grocery platform (a simplified Blinkit). One codeba
 ## Repository
 
 - `apps/api`: Fastify modular monolith (TypeScript, Prisma 7.10, PostgreSQL, Redis via ioredis, Zod).
-  - Modules live in `src/modules/`: auth, users, stores, categories, brands, products, catalog-import, inventory, cart, coupons, orders, payments, delivery, ratings, notifications, settings, uploads.
+  - Modules live in `src/modules/`: auth, users, stores, categories, brands, products, catalog-import, inventory, cart, coupons, orders, payments, delivery, ratings, reviews, notifications, settings, uploads.
   - Infrastructure is in `src/infrastructure/` (database, redis) and Fastify plugins in `src/plugins/`.
 - `apps/admin`: Next.js 16 dashboard for admins and store staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
 - `apps/web`: Next.js 16 public website on the client's main domain: home page built from the Appearance home sections (like the customer app), policy pages and app download links. Read-only for now; web ordering would follow the app's flow through the same API. It calls the API only from the server (`API_URL`).

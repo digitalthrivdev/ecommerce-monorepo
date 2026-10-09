@@ -54,6 +54,7 @@ model User {
   complaints           Complaint[]
   complaintsResolved   Complaint[]      @relation("ComplaintResolvedBy")
   refundsIssued        Refund[]         @relation("RefundCreatedBy")
+  productReviews       ProductReview[]
 
   @@index([role])
   @@index([storeId])
@@ -239,6 +240,7 @@ model Product {
   variants   ProductVariant[]
   images     ProductImage[]
   orderItems OrderItem[]
+  reviews    ProductReview[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -507,12 +509,13 @@ model Order {
   address Address? @relation(fields: [addressId], references: [id])
   coupon  Coupon?  @relation(fields: [couponId], references: [id], onDelete: Restrict)
 
-  items     OrderItem[]
-  payment   Payment?
-  delivery  Delivery?
-  complaint Complaint?
-  rating    OrderRating?
-  refunds   Refund[]
+  items          OrderItem[]
+  payment        Payment?
+  delivery       Delivery?
+  complaint      Complaint?
+  rating         OrderRating?
+  refunds        Refund[]
+  productReviews ProductReview[]
 
   statusHistory OrderStatusHistory[]
 
@@ -799,6 +802,33 @@ model OrderRating {
 
   order Order @relation(fields: [orderId], references: [id])
 
+  @@index([createdAt])
+}
+
+// A customer's rating of a product they received. One per customer and product: rating it again
+// replaces it.
+model ProductReview {
+  id        String @id @default(cuid())
+  productId String
+  userId    String
+  // The delivered order that let the customer review it, shown as a verified purchase.
+  orderId   String
+
+  rating  Int
+  comment String?
+
+  // Hidden by an admin: kept, but left out of the product's rating and reviews.
+  isHidden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, productId])
+  @@index([productId, isHidden, updatedAt])
   @@index([createdAt])
 }
 
