@@ -5,8 +5,8 @@ import { UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { verifyAgainstDummy, verifyPassword } from "../../shared/password.js";
 import { signsInWithPassword } from "../../shared/roles.js";
-import { REVIEW_PROVIDER } from "./otp-provider.js";
-import type { OtpRegistry } from "./otp-registry.js";
+import { REVIEW_PROVIDER, RIDER_REVIEW_PROVIDER } from "./otp-provider.js";
+import type { OtpRegistry, ReviewApp } from "./otp-registry.js";
 
 const OTP_TTL_SECONDS = 300;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -51,11 +51,28 @@ export function ipBucket(ip: string) {
 /** What is kept in Redis between sending and verifying: never the code itself. */
 type PendingOtp = { provider: string; reference: string };
 
+/** The only role each review login signs in to. */
+const REVIEW_ROLES: Record<string, UserRole> = {
+  [REVIEW_PROVIDER]: UserRole.CUSTOMER,
+  [RIDER_REVIEW_PROVIDER]: UserRole.DELIVERY_PARTNER,
+};
+
+function reviewAppFor(role: UserRole | undefined): ReviewApp {
+  if (!role || role === UserRole.CUSTOMER) return "customer";
+  return role === UserRole.DELIVERY_PARTNER ? "rider" : null;
+}
+
+type TokenPayload = { sub: string; role: UserRole; test?: true };
+
+function tokenPayload(user: { id: string; role: UserRole; isTestAccount: boolean }): TokenPayload {
+  return { sub: user.id, role: user.role, ...(user.isTestAccount && { test: true as const }) };
+}
+
 type AuthServiceDeps = {
   prisma: PrismaClient;
   redis: Redis;
   otp: Pick<OtpRegistry, "sender" | "byName">;
-  signToken: (payload: { sub: string; role: UserRole }) => string;
+  signToken: (payload: TokenPayload) => string;
 };
 
 function readPending(value: string | null): PendingOtp | null {
@@ -82,7 +99,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       throw usePassword();
     }
 
-    const otpProvider = await otp.sender(phone, { allowReview: !existing || existing.role === UserRole.CUSTOMER });
+    const otpProvider = await otp.sender(phone, { reviewApp: reviewAppFor(existing?.role) });
 
     const sends = await redis.incr(keys.sends(phone));
     if (sends === 1) {
@@ -168,16 +185,17 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       where: { phone },
       update: {},
       create: { phone },
-      select: { id: true, phone: true, name: true, email: true, role: true },
+      select: { id: true, phone: true, name: true, email: true, role: true, isTestAccount: true },
     });
     if (signsInWithPassword(user.role)) {
       throw usePassword();
     }
-    if (pending.provider === REVIEW_PROVIDER && user.role !== UserRole.CUSTOMER) {
+    const reviewRole = REVIEW_ROLES[pending.provider];
+    if (reviewRole && user.role !== reviewRole) {
       throw invalidOtp();
     }
 
-    const accessToken = signToken({ sub: user.id, role: user.role });
+    const accessToken = signToken(tokenPayload(user));
 
     return { accessToken, user };
   }
@@ -199,7 +217,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
 
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, phone: true, name: true, email: true, role: true, passwordHash: true },
+      select: { id: true, phone: true, name: true, email: true, role: true, isTestAccount: true, passwordHash: true },
     });
     const valid =
       user?.passwordHash && signsInWithPassword(user.role)
@@ -212,7 +230,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
     await redis.multi().del(keys.login(email, ip)).decr(keys.ipLogin(ip)).exec();
 
     const { passwordHash: _, ...profile } = user;
-    return { accessToken: signToken({ sub: user.id, role: user.role }), user: profile };
+    return { accessToken: signToken(tokenPayload(user)), user: profile };
   }
 
   return { sendOtp, verifyOtp, login };

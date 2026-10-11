@@ -26,8 +26,9 @@ declare module "fastify" {
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string; role: UserRole; jti?: string };
+    /** `test` is set only for test accounts (`User.isTestAccount`). */
+    payload: { sub: string; role: UserRole; test?: true; jti?: string };
     /** `iat` and `exp` are set by the signer, in seconds. Tokens issued before sign-out existed have no `jti`. */
-    user: { sub: string; role: UserRole; iat: number; exp: number; jti?: string };
+    user: { sub: string; role: UserRole; test?: true; iat: number; exp: number; jti?: string };
   }
 }

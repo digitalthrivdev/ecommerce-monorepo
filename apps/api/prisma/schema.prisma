@@ -36,6 +36,10 @@ model User {
   orderBlockedAt   DateTime?
   orderBlockedById String?
 
+  // Demo account given to prospects: a test admin can only read, and test staff, customers and
+  // riders are limited. Set with the test-account script; carried in the sign-in token.
+  isTestAccount Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1087,6 +1091,12 @@ model PlatformSettings {
   reviewLoginEnabled  Boolean @default(false)
   reviewLoginPhone    String?
   reviewLoginCodeHash String?
+
+  // The same for the delivery app (and sales demos): this number signs in to an existing rider
+  // account only.
+  riderReviewLoginEnabled  Boolean @default(false)
+  riderReviewLoginPhone    String?
+  riderReviewLoginCodeHash String?
 
   // Gateway new online payments use (e.g. "razorpay", "cashfree"); null means cash on delivery only.
   // Only gateways with working keys can be selected.

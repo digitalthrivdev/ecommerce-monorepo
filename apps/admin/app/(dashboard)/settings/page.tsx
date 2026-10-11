@@ -175,7 +175,15 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               hint="Google Play and payment gateways test the app before approving it. Give them this number and code."
             >
               <Panel className="p-5">
-                <ReviewLoginForm key={settings.updatedAt} reviewLogin={settings.reviewLogin} />
+                <ReviewLoginForm key={settings.updatedAt} app="customer" reviewLogin={settings.reviewLogin} />
+              </Panel>
+            </Section>
+            <Section
+              title="Delivery app review login"
+              hint="For reviewers of the delivery partner app, and for demos. Give them this number and code."
+            >
+              <Panel className="p-5">
+                <ReviewLoginForm key={settings.updatedAt} app="rider" reviewLogin={settings.riderReviewLogin} />
               </Panel>
             </Section>
           </div>

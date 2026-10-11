@@ -3468,6 +3468,7 @@ export const UserScalarFieldEnum = {
   orderBlockReason: 'orderBlockReason',
   orderBlockedAt: 'orderBlockedAt',
   orderBlockedById: 'orderBlockedById',
+  isTestAccount: 'isTestAccount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4017,6 +4018,9 @@ export const PlatformSettingsScalarFieldEnum = {
   reviewLoginEnabled: 'reviewLoginEnabled',
   reviewLoginPhone: 'reviewLoginPhone',
   reviewLoginCodeHash: 'reviewLoginCodeHash',
+  riderReviewLoginEnabled: 'riderReviewLoginEnabled',
+  riderReviewLoginPhone: 'riderReviewLoginPhone',
+  riderReviewLoginCodeHash: 'riderReviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   updatedById: 'updatedById',
@@ -4186,6 +4190,13 @@ export type ListEnumCustomerBlockFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'Decimal'
  */
 export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
@@ -4196,13 +4207,6 @@ export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
  * Reference to a field of type 'Decimal[]'
  */
 export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 

@@ -37,6 +37,7 @@ export type UserMinAggregateOutputType = {
   orderBlockReason: string | null
   orderBlockedAt: Date | null
   orderBlockedById: string | null
+  isTestAccount: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -54,6 +55,7 @@ export type UserMaxAggregateOutputType = {
   orderBlockReason: string | null
   orderBlockedAt: Date | null
   orderBlockedById: string | null
+  isTestAccount: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,6 +73,7 @@ export type UserCountAggregateOutputType = {
   orderBlockReason: number
   orderBlockedAt: number
   orderBlockedById: number
+  isTestAccount: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -90,6 +93,7 @@ export type UserMinAggregateInputType = {
   orderBlockReason?: true
   orderBlockedAt?: true
   orderBlockedById?: true
+  isTestAccount?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -107,6 +111,7 @@ export type UserMaxAggregateInputType = {
   orderBlockReason?: true
   orderBlockedAt?: true
   orderBlockedById?: true
+  isTestAccount?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +129,7 @@ export type UserCountAggregateInputType = {
   orderBlockReason?: true
   orderBlockedAt?: true
   orderBlockedById?: true
+  isTestAccount?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -214,6 +220,7 @@ export type UserGroupByOutputType = {
   orderBlockReason: string | null
   orderBlockedAt: Date | null
   orderBlockedById: string | null
+  isTestAccount: boolean
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -252,6 +259,7 @@ export type UserWhereInput = {
   orderBlockReason?: Prisma.StringNullableFilter<"User"> | string | null
   orderBlockedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   orderBlockedById?: Prisma.StringNullableFilter<"User"> | string | null
+  isTestAccount?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   orderBlockedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -287,6 +295,7 @@ export type UserOrderByWithRelationInput = {
   orderBlockReason?: Prisma.SortOrderInput | Prisma.SortOrder
   orderBlockedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   orderBlockedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  isTestAccount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   orderBlockedBy?: Prisma.UserOrderByWithRelationInput
@@ -325,6 +334,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   orderBlockReason?: Prisma.StringNullableFilter<"User"> | string | null
   orderBlockedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   orderBlockedById?: Prisma.StringNullableFilter<"User"> | string | null
+  isTestAccount?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   orderBlockedBy?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -360,6 +370,7 @@ export type UserOrderByWithAggregationInput = {
   orderBlockReason?: Prisma.SortOrderInput | Prisma.SortOrder
   orderBlockedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   orderBlockedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  isTestAccount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -383,6 +394,7 @@ export type UserScalarWhereWithAggregatesInput = {
   orderBlockReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   orderBlockedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   orderBlockedById?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  isTestAccount?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -398,6 +410,7 @@ export type UserCreateInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -433,6 +446,7 @@ export type UserUncheckedCreateInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -464,6 +478,7 @@ export type UserUpdateInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -499,6 +514,7 @@ export type UserUncheckedUpdateInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -532,6 +548,7 @@ export type UserCreateManyInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -547,6 +564,7 @@ export type UserUpdateManyMutationInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -564,6 +582,7 @@ export type UserUncheckedUpdateManyInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -596,6 +615,7 @@ export type UserCountOrderByAggregateInput = {
   orderBlockReason?: Prisma.SortOrder
   orderBlockedAt?: Prisma.SortOrder
   orderBlockedById?: Prisma.SortOrder
+  isTestAccount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -613,6 +633,7 @@ export type UserMaxOrderByAggregateInput = {
   orderBlockReason?: Prisma.SortOrder
   orderBlockedAt?: Prisma.SortOrder
   orderBlockedById?: Prisma.SortOrder
+  isTestAccount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -630,6 +651,7 @@ export type UserMinOrderByAggregateInput = {
   orderBlockReason?: Prisma.SortOrder
   orderBlockedAt?: Prisma.SortOrder
   orderBlockedById?: Prisma.SortOrder
+  isTestAccount?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -677,6 +699,10 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type NullableEnumCustomerBlockFieldUpdateOperationsInput = {
   set?: $Enums.CustomerBlock | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -996,6 +1022,7 @@ export type UserCreateWithoutCustomersBlockedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1030,6 +1057,7 @@ export type UserUncheckedCreateWithoutCustomersBlockedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
@@ -1065,6 +1093,7 @@ export type UserCreateWithoutOrderBlockedByInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
@@ -1098,6 +1127,7 @@ export type UserUncheckedCreateWithoutOrderBlockedByInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1150,6 +1180,7 @@ export type UserUpdateWithoutCustomersBlockedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -1184,6 +1215,7 @@ export type UserUncheckedUpdateWithoutCustomersBlockedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
@@ -1235,6 +1267,7 @@ export type UserScalarWhereInput = {
   orderBlockReason?: Prisma.StringNullableFilter<"User"> | string | null
   orderBlockedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   orderBlockedById?: Prisma.StringNullableFilter<"User"> | string | null
+  isTestAccount?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
@@ -1250,6 +1283,7 @@ export type UserCreateWithoutAddressesInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1284,6 +1318,7 @@ export type UserUncheckedCreateWithoutAddressesInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1330,6 +1365,7 @@ export type UserUpdateWithoutAddressesInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -1364,6 +1400,7 @@ export type UserUncheckedUpdateWithoutAddressesInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -1394,6 +1431,7 @@ export type UserCreateWithoutStoreInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1427,6 +1465,7 @@ export type UserUncheckedCreateWithoutStoreInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1484,6 +1523,7 @@ export type UserCreateWithoutCartInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1518,6 +1558,7 @@ export type UserUncheckedCreateWithoutCartInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1564,6 +1605,7 @@ export type UserUpdateWithoutCartInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -1598,6 +1640,7 @@ export type UserUncheckedUpdateWithoutCartInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -1628,6 +1671,7 @@ export type UserCreateWithoutOrdersInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1662,6 +1706,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1708,6 +1753,7 @@ export type UserUpdateWithoutOrdersInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -1742,6 +1788,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -1772,6 +1819,7 @@ export type UserCreateWithoutRefundsIssuedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1806,6 +1854,7 @@ export type UserUncheckedCreateWithoutRefundsIssuedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1852,6 +1901,7 @@ export type UserUpdateWithoutRefundsIssuedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -1886,6 +1936,7 @@ export type UserUncheckedUpdateWithoutRefundsIssuedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -1916,6 +1967,7 @@ export type UserCreateWithoutComplaintsInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -1950,6 +2002,7 @@ export type UserUncheckedCreateWithoutComplaintsInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -1985,6 +2038,7 @@ export type UserCreateWithoutComplaintsResolvedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2019,6 +2073,7 @@ export type UserUncheckedCreateWithoutComplaintsResolvedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2065,6 +2120,7 @@ export type UserUpdateWithoutComplaintsInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2099,6 +2155,7 @@ export type UserUncheckedUpdateWithoutComplaintsInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2140,6 +2197,7 @@ export type UserUpdateWithoutComplaintsResolvedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2174,6 +2232,7 @@ export type UserUncheckedUpdateWithoutComplaintsResolvedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2204,6 +2263,7 @@ export type UserCreateWithoutProductReviewsInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2238,6 +2298,7 @@ export type UserUncheckedCreateWithoutProductReviewsInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2273,6 +2334,7 @@ export type UserCreateWithoutProductReviewsAddedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2307,6 +2369,7 @@ export type UserUncheckedCreateWithoutProductReviewsAddedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2353,6 +2416,7 @@ export type UserUpdateWithoutProductReviewsInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2387,6 +2451,7 @@ export type UserUncheckedUpdateWithoutProductReviewsInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2428,6 +2493,7 @@ export type UserUpdateWithoutProductReviewsAddedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2462,6 +2528,7 @@ export type UserUncheckedUpdateWithoutProductReviewsAddedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2492,6 +2559,7 @@ export type UserCreateWithoutWishlistItemsInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2526,6 +2594,7 @@ export type UserUncheckedCreateWithoutWishlistItemsInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2572,6 +2641,7 @@ export type UserUpdateWithoutWishlistItemsInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2606,6 +2676,7 @@ export type UserUncheckedUpdateWithoutWishlistItemsInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2636,6 +2707,7 @@ export type UserCreateWithoutDeliveryPartnerInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2670,6 +2742,7 @@ export type UserUncheckedCreateWithoutDeliveryPartnerInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2716,6 +2789,7 @@ export type UserUpdateWithoutDeliveryPartnerInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2750,6 +2824,7 @@ export type UserUncheckedUpdateWithoutDeliveryPartnerInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -2780,6 +2855,7 @@ export type UserCreateWithoutCashDepositsRecordedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2814,6 +2890,7 @@ export type UserUncheckedCreateWithoutCashDepositsRecordedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2849,6 +2926,7 @@ export type UserCreateWithoutCashDepositsVoidedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -2883,6 +2961,7 @@ export type UserUncheckedCreateWithoutCashDepositsVoidedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -2929,6 +3008,7 @@ export type UserUpdateWithoutCashDepositsRecordedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -2963,6 +3043,7 @@ export type UserUncheckedUpdateWithoutCashDepositsRecordedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3004,6 +3085,7 @@ export type UserUpdateWithoutCashDepositsVoidedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -3038,6 +3120,7 @@ export type UserUncheckedUpdateWithoutCashDepositsVoidedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3068,6 +3151,7 @@ export type UserCreateWithoutPayoutsRecordedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -3102,6 +3186,7 @@ export type UserUncheckedCreateWithoutPayoutsRecordedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -3137,6 +3222,7 @@ export type UserCreateWithoutPayoutsVoidedInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -3171,6 +3257,7 @@ export type UserUncheckedCreateWithoutPayoutsVoidedInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -3217,6 +3304,7 @@ export type UserUpdateWithoutPayoutsRecordedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -3251,6 +3339,7 @@ export type UserUncheckedUpdateWithoutPayoutsRecordedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3292,6 +3381,7 @@ export type UserUpdateWithoutPayoutsVoidedInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -3326,6 +3416,7 @@ export type UserUncheckedUpdateWithoutPayoutsVoidedInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3356,6 +3447,7 @@ export type UserCreateWithoutPushTokensInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
@@ -3390,6 +3482,7 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
@@ -3436,6 +3529,7 @@ export type UserUpdateWithoutPushTokensInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -3470,6 +3564,7 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3501,6 +3596,7 @@ export type UserCreateManyOrderBlockedByInput = {
   orderBlock?: $Enums.CustomerBlock | null
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -3516,6 +3612,7 @@ export type UserUpdateWithoutOrderBlockedByInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
@@ -3549,6 +3646,7 @@ export type UserUncheckedUpdateWithoutOrderBlockedByInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3581,6 +3679,7 @@ export type UserUncheckedUpdateManyWithoutOrderBlockedByInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3597,6 +3696,7 @@ export type UserCreateManyStoreInput = {
   orderBlockReason?: string | null
   orderBlockedAt?: Date | string | null
   orderBlockedById?: string | null
+  isTestAccount?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -3612,6 +3712,7 @@ export type UserUpdateWithoutStoreInput = {
   orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
@@ -3645,6 +3746,7 @@ export type UserUncheckedUpdateWithoutStoreInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
@@ -3677,6 +3779,7 @@ export type UserUncheckedUpdateManyWithoutStoreInput = {
   orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3842,6 +3945,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   orderBlockReason?: boolean
   orderBlockedAt?: boolean
   orderBlockedById?: boolean
+  isTestAccount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   orderBlockedBy?: boolean | Prisma.User$orderBlockedByArgs<ExtArgs>
@@ -3878,6 +3982,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   orderBlockReason?: boolean
   orderBlockedAt?: boolean
   orderBlockedById?: boolean
+  isTestAccount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   orderBlockedBy?: boolean | Prisma.User$orderBlockedByArgs<ExtArgs>
@@ -3897,6 +4002,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   orderBlockReason?: boolean
   orderBlockedAt?: boolean
   orderBlockedById?: boolean
+  isTestAccount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   orderBlockedBy?: boolean | Prisma.User$orderBlockedByArgs<ExtArgs>
@@ -3916,11 +4022,12 @@ export type UserSelectScalar = {
   orderBlockReason?: boolean
   orderBlockedAt?: boolean
   orderBlockedById?: boolean
+  isTestAccount?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "email" | "role" | "passwordHash" | "storeId" | "deletedAt" | "orderBlock" | "orderBlockReason" | "orderBlockedAt" | "orderBlockedById" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "email" | "role" | "passwordHash" | "storeId" | "deletedAt" | "orderBlock" | "orderBlockReason" | "orderBlockedAt" | "orderBlockedById" | "isTestAccount" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   orderBlockedBy?: boolean | Prisma.User$orderBlockedByArgs<ExtArgs>
   customersBlocked?: boolean | Prisma.User$customersBlockedArgs<ExtArgs>
@@ -3986,6 +4093,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     orderBlockReason: string | null
     orderBlockedAt: Date | null
     orderBlockedById: string | null
+    isTestAccount: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -4441,6 +4549,7 @@ export interface UserFieldRefs {
   readonly orderBlockReason: Prisma.FieldRef<"User", 'String'>
   readonly orderBlockedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly orderBlockedById: Prisma.FieldRef<"User", 'String'>
+  readonly isTestAccount: Prisma.FieldRef<"User", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

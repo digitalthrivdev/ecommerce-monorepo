@@ -47,7 +47,12 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
 
   app.put("/review-login", adminOnly, async (request) => {
     const body = reviewLoginBodySchema.parse(request.body);
-    return settings.saveReviewLogin(body, request.user.sub);
+    return settings.saveReviewLogin("customer", body, request.user.sub);
+  });
+
+  app.put("/rider-review-login", adminOnly, async (request) => {
+    const body = reviewLoginBodySchema.parse(request.body);
+    return settings.saveReviewLogin("rider", body, request.user.sub);
   });
 
   app.get("/platform", adminOnly, async () => settings.getAdminSettings());

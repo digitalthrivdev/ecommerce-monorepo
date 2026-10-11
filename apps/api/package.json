@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "db:seed": "prisma db seed",
     "admin:create": "tsx src/scripts/create-admin.ts",
+    "test-account": "tsx src/scripts/test-account.ts",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {

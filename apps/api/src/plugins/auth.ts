@@ -5,6 +5,7 @@ import type { FastifyRequest } from "fastify";
 import { env } from "../config/env.js";
 import { UserRole } from "../generated/prisma/client";
 import { AppError } from "../shared/errors.js";
+import { revokedTokensKey as revokedKey } from "../shared/token-revocation.js";
 
 export default fp(async (app) => {
   await app.register(jwt, {
@@ -15,7 +16,6 @@ export default fp(async (app) => {
   // A revocation only needs to outlive the tokens it rejects.
   const probe = app.jwt.decode<{ iat: number; exp: number }>(app.jwt.sign({ sub: "probe", role: UserRole.CUSTOMER }));
   const tokenLifetimeSeconds = probe ? probe.exp - probe.iat : 30 * 24 * 3600;
-  const revokedKey = (userId: string) => `auth:revoked:${userId}`;
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   /**

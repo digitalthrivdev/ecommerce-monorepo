@@ -38,21 +38,24 @@ function sameHash(expectedHex: string, actualHex: string) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
+/** The review login of the customer app, and of the delivery app. */
 export const REVIEW_PROVIDER = "review";
+export const RIDER_REVIEW_PROVIDER = "review-rider";
 
 /**
- * The review login: sends nothing and accepts the fixed code an admin set for one phone number.
+ * A review login: sends nothing and accepts the fixed code an admin set for one phone number.
  * `current` returns that number and code hash, or null once it is turned off.
  */
 export function createReviewProvider(
+  name: typeof REVIEW_PROVIDER | typeof RIDER_REVIEW_PROVIDER,
   log: FastifyBaseLogger,
   current: () => Promise<{ phone: string; codeHash: string } | null>,
 ): OtpProvider {
   return {
-    name: REVIEW_PROVIDER,
+    name,
     async start(phone) {
       log.info({ phone }, "Review login: no SMS sent, the fixed review code applies");
-      return { reference: REVIEW_PROVIDER };
+      return { reference: name };
     },
     async check({ phone, code }) {
       const review = await current();

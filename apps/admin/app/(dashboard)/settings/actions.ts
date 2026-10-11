@@ -165,6 +165,14 @@ const reviewLoginSchema = z.object({
 });
 
 export async function saveReviewLogin(formData: FormData): Promise<ActionResult> {
+  return saveReviewLoginFor("/settings/review-login", formData);
+}
+
+export async function saveRiderReviewLogin(formData: FormData): Promise<ActionResult> {
+  return saveReviewLoginFor("/settings/rider-review-login", formData);
+}
+
+async function saveReviewLoginFor(path: string, formData: FormData): Promise<ActionResult> {
   const parsed = reviewLoginSchema.safeParse({
     enabled: formChecked(formData, "enabled"),
     phone: formText(formData, "phone"),
@@ -176,9 +184,9 @@ export async function saveReviewLogin(formData: FormData): Promise<ActionResult>
   }
 
   try {
-    await apiFetch("/settings/review-login", { method: "PUT", body: parsed.data });
+    await apiFetch(path, { method: "PUT", body: parsed.data });
   } catch (error) {
-    if (error instanceof ApiError && error.code === "REVIEW_PHONE_NOT_CUSTOMER") {
+    if (error instanceof ApiError && (error.code === "REVIEW_PHONE_NOT_CUSTOMER" || error.code === "REVIEW_PHONE_NOT_RIDER")) {
       return { ok: false, error: error.message, fieldErrors: { phone: error.message } };
     }
     if (error instanceof ApiError && error.code === "REVIEW_CODE_REQUIRED") {

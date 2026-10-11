@@ -655,6 +655,8 @@ export type PaymentGatewayOption = IntegrationKeys & {
   webhookEvents: string | null;
 };
 
+export type ReviewLogin = { enabled: boolean; phone: string | null; codeSet: boolean };
+
 export type PlatformSettings = {
   deliveryFee: string;
   freeDeliveryThreshold: string | null;
@@ -682,7 +684,9 @@ export type PlatformSettings = {
   deliveryAppStoreUrl: string | null;
   deliveryDownloadUrl: string | null;
   /** One customer number that signs in with a fixed code, for app store and payment gateway reviewers. */
-  reviewLogin: { enabled: boolean; phone: string | null; codeSet: boolean };
+  reviewLogin: ReviewLogin;
+  /** The same for the delivery app: an existing rider's number. */
+  riderReviewLogin: ReviewLogin;
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];

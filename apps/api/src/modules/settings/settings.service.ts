@@ -114,6 +114,11 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
       phone: settings.reviewLoginPhone,
       codeSet: settings.reviewLoginCodeHash !== null,
     },
+    riderReviewLogin: {
+      enabled: settings.riderReviewLoginEnabled,
+      phone: settings.riderReviewLoginPhone,
+      codeSet: settings.riderReviewLoginCodeHash !== null,
+    },
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
     canStoreSecrets,
@@ -200,30 +205,43 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     return getAdminSettings();
   }
 
-  /** A blank code keeps the saved one, which only works for the same phone number. */
-  async function saveReviewLogin(input: ReviewLoginInput, adminId: string) {
+  /**
+   * The review login of the customer app (a customer or new number) or the delivery app (an existing
+   * rider's number). A blank code keeps the saved one, which only works for the same phone number.
+   */
+  async function saveReviewLogin(app: "customer" | "rider", input: ReviewLoginInput, adminId: string) {
     const settings = await getPlatformSettings(prisma);
     const { enabled, phone, code } = input;
+    const saved =
+      app === "customer"
+        ? { phone: settings.reviewLoginPhone, codeHash: settings.reviewLoginCodeHash }
+        : { phone: settings.riderReviewLoginPhone, codeHash: settings.riderReviewLoginCodeHash };
 
     if (phone) {
       const owner = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
-      if (owner && owner.role !== UserRole.CUSTOMER) {
+      if (app === "customer" && owner && owner.role !== UserRole.CUSTOMER) {
         throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin, store staff or rider. Use a number only reviewers will use.", {
           field: "phone",
         });
       }
+      if (app === "rider" && owner?.role !== UserRole.DELIVERY_PARTNER) {
+        throw new AppError(400, "REVIEW_PHONE_NOT_RIDER", "Add this number as a delivery partner first, then use it here.", {
+          field: "phone",
+        });
+      }
     }
-    const keepsCode = !code && phone === settings.reviewLoginPhone && settings.reviewLoginCodeHash !== null;
+    const keepsCode = !code && phone === saved.phone && saved.codeHash !== null;
     if (enabled && !code && !keepsCode) {
       throw new AppError(400, "REVIEW_CODE_REQUIRED", "Enter the code reviewers will type", { field: "code" });
     }
 
+    const codeHash = phone && code ? hashOtp(phone, code) : keepsCode ? saved.codeHash : null;
     const updated = await prisma.platformSettings.update({
       where: { id: SETTINGS_ID },
       data: {
-        reviewLoginEnabled: enabled,
-        reviewLoginPhone: phone,
-        reviewLoginCodeHash: phone && code ? hashOtp(phone, code) : keepsCode ? settings.reviewLoginCodeHash : null,
+        ...(app === "customer"
+          ? { reviewLoginEnabled: enabled, reviewLoginPhone: phone, reviewLoginCodeHash: codeHash }
+          : { riderReviewLoginEnabled: enabled, riderReviewLoginPhone: phone, riderReviewLoginCodeHash: codeHash }),
         updatedById: adminId,
       },
     });

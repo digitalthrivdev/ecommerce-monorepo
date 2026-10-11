@@ -122,6 +122,7 @@ export const UserScalarFieldEnum = {
   orderBlockReason: 'orderBlockReason',
   orderBlockedAt: 'orderBlockedAt',
   orderBlockedById: 'orderBlockedById',
+  isTestAccount: 'isTestAccount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -671,6 +672,9 @@ export const PlatformSettingsScalarFieldEnum = {
   reviewLoginEnabled: 'reviewLoginEnabled',
   reviewLoginPhone: 'reviewLoginPhone',
   reviewLoginCodeHash: 'reviewLoginCodeHash',
+  riderReviewLoginEnabled: 'riderReviewLoginEnabled',
+  riderReviewLoginPhone: 'riderReviewLoginPhone',
+  riderReviewLoginCodeHash: 'riderReviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   updatedById: 'updatedById',
