@@ -161,6 +161,7 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
         email: settings.supportEmail,
       },
       policies: policyLinks(),
+      demoLogins: env.DEMO_LOGINS ?? null,
     };
   }
 

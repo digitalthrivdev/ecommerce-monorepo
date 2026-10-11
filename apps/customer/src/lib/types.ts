@@ -25,7 +25,11 @@ export type PublicSettings = {
   support: { phone: string | null; email: string | null };
   /** Links to the public website and its policy pages; null when it is not set up, missing from older servers. */
   policies?: Record<"home" | "index" | "terms" | "privacy" | "refunds" | "shipping" | "contact", string> | null;
+  /** Test-account logins on a sales demo, offered on the sign-in screen; null elsewhere, missing from older servers. */
+  demoLogins?: { customer?: DemoPhoneLogin } | null;
 };
+
+export type DemoPhoneLogin = { phone: string; code: string };
 
 export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";
 

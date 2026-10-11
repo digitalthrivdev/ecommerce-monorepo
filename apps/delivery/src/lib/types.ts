@@ -16,7 +16,11 @@ export type PublicSettings = {
   currency: string;
   timezone: string;
   support: { phone: string | null; email: string | null };
+  /** Test-account logins on a sales demo, offered on the sign-in screen; null elsewhere, missing from older servers. */
+  demoLogins?: { rider?: DemoPhoneLogin } | null;
 };
+
+export type DemoPhoneLogin = { phone: string; code: string };
 
 export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";
 

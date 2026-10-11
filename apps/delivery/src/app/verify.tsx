@@ -7,12 +7,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { OtpInput } from "@/components/otp-input";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { ApiError, apiFetch, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { formatPhone } from "@/lib/phone";
 import { useSession } from "@/lib/session";
+import { useSettings } from "@/lib/settings";
 import type { User } from "@/lib/types";
 
 const OTP_LENGTH = 6;
@@ -21,6 +23,8 @@ const RESEND_SECONDS = 60;
 export default function VerifyScreen() {
   const { phone, alreadySent } = useLocalSearchParams<{ phone?: string; alreadySent?: string }>();
   const { signIn } = useSession();
+  const { demoLogins } = useSettings();
+  const demoCode = phone && demoLogins?.rider?.phone === phone ? demoLogins.rider.code : null;
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [code, setCode] = useState("");
@@ -118,6 +122,17 @@ export default function VerifyScreen() {
             </Pressable>
           )}
         </View>
+
+        {demoCode && (
+          <View className="flex-row items-center justify-between gap-3 rounded-lg border border-dashed border-input p-4">
+            <Text className="text-sm">
+              Demo code <Text className="text-sm font-bold">{demoCode}</Text>
+            </Text>
+            <Button variant="outline" size="sm" onPress={() => onChange(demoCode)} disabled={verify.isPending} className="h-9 rounded-md">
+              <Text className="text-sm font-bold">Fill</Text>
+            </Button>
+          </View>
+        )}
 
         {__DEV__ && <Text className="text-xs text-muted-foreground">Development: the code is printed in the API log.</Text>}
       </View>

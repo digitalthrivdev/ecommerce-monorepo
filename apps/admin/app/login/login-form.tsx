@@ -1,23 +1,36 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import type { DemoDashboardLogin } from "@/lib/types";
 
 import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
 
-export function LoginForm({ next, initialError }: { next?: string; initialError?: string }) {
+type DemoLogin = DemoDashboardLogin & { label: string };
+
+export function LoginForm({ next, initialError, demoLogins = [] }: { next?: string; initialError?: string; demoLogins?: DemoLogin[] }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const error = state === initialState ? initialError : state.error;
+  const formRef = useRef<HTMLFormElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  function signInAs(login: DemoLogin) {
+    if (!emailRef.current || !passwordRef.current) return;
+    emailRef.current.value = login.email;
+    passwordRef.current.value = login.password;
+    formRef.current?.requestSubmit();
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="next" value={next ?? ""} />
 
       {error && (
@@ -31,6 +44,7 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
         <Field data-invalid={Boolean(state.fieldErrors?.email)}>
           <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
+            ref={emailRef}
             id="email"
             name="email"
             type="email"
@@ -45,6 +59,7 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
         <Field data-invalid={Boolean(state.fieldErrors?.password)}>
           <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
+            ref={passwordRef}
             id="password"
             name="password"
             type="password"
@@ -60,6 +75,22 @@ export function LoginForm({ next, initialError }: { next?: string; initialError?
           Sign in
         </Button>
       </FieldGroup>
+
+      {demoLogins.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4">
+          <p className="text-sm font-medium">Try the demo</p>
+          {demoLogins.map((login) => (
+            <div key={login.email} className="flex flex-col gap-1.5">
+              <Button type="button" variant="outline" disabled={pending} onClick={() => signInAs(login)}>
+                Sign in as {login.label.toLowerCase()}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                {login.email} · {login.password}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </form>
   );
 }

@@ -12,6 +12,25 @@ const optionalSecret = z.preprocess(
   z.string().trim().min(1).optional(),
 );
 
+const demoDashboardLogin = z.object({ email: z.email(), password: z.string().min(1) });
+const demoPhoneLogin = z.object({ phone: z.string().regex(/^\+[1-9]\d{6,14}$/), code: z.string().regex(/^\d{4,8}$/) });
+const demoLoginsSchema = z
+  .object({ admin: demoDashboardLogin, staff: demoDashboardLogin, customer: demoPhoneLogin, rider: demoPhoneLogin })
+  .partial()
+  .strict();
+
+/** Blank counts as not set; anything else must be valid JSON. */
+function parseJsonEnv(value: unknown) {
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+export const demoLoginsEnv = z.preprocess(parseJsonEnv, demoLoginsSchema.optional());
+
 function allOrNone(values: (string | undefined)[]) {
   return values.every(Boolean) || values.every((value) => !value);
 }
@@ -131,6 +150,11 @@ const envSchema = z.object({
   MESSAGE_CENTRAL_KEY: optionalSecret,
   MESSAGE_CENTRAL_COUNTRY_CODE: z.string().regex(/^[1-9]\d{0,3}$/, "Digits only, e.g. 91").default("91"),
   MESSAGE_CENTRAL_EMAIL: optionalSecret,
+
+  // Sales demos only: test-account sign-in details shown on the dashboard and app sign-in screens, so
+  // prospects sign in with one tap. GET /settings returns them to anyone, so never use real accounts.
+  // JSON, any of: {"admin":{"email":"…","password":"…"},"staff":{…},"customer":{"phone":"+91…","code":"…"},"rider":{…}}
+  DEMO_LOGINS: demoLoginsEnv,
 
   // "log" writes pushes to the API log instead of sending them (development only).
   PUSH_PROVIDER: z.enum(["none", "log", "expo"]).default("log"),

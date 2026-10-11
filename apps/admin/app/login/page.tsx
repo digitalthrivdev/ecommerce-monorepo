@@ -13,9 +13,13 @@ const ERRORS: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next, error } = await searchParams;
-  const appName = await getPublicSettings()
-    .then((settings) => settings.appName)
-    .catch(() => null);
+  const settings = await getPublicSettings().catch(() => null);
+  const appName = settings?.appName ?? null;
+  const demo = settings?.demoLogins;
+  const demoLogins = [
+    demo?.admin && { label: "Demo admin", ...demo.admin },
+    demo?.staff && { label: "Demo store staff", ...demo.staff },
+  ].filter((login) => !!login);
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-muted/40 p-6">
@@ -28,6 +32,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <LoginForm
             next={typeof next === "string" ? next : undefined}
             initialError={typeof error === "string" ? ERRORS[error] : undefined}
+            demoLogins={demoLogins}
           />
         </CardContent>
       </Card>

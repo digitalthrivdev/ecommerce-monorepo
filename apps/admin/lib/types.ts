@@ -603,6 +603,17 @@ export type PublicSettings = {
   theme: AppearanceTheme;
   currency: string;
   timezone: string;
+  /** Test-account logins on a sales demo, shown on the sign-in page; null elsewhere. */
+  demoLogins?: DemoLogins | null;
+};
+
+export type DemoDashboardLogin = { email: string; password: string };
+
+export type DemoLogins = {
+  admin?: DemoDashboardLogin;
+  staff?: DemoDashboardLogin;
+  customer?: { phone: string; code: string };
+  rider?: { phone: string; code: string };
 };
 
 /** One credential of a gateway or SMS provider. Secret values are never sent back; `hint` says one is saved. */

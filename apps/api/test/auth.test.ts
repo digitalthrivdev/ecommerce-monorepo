@@ -22,6 +22,12 @@ describe("health", () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ status: "ok", database: "ok", redis: "ok" });
   });
+
+  it("offers no demo logins unless DEMO_LOGINS is set", async () => {
+    const response = await call(app, "GET", "/settings");
+    expect(response.status).toBe(200);
+    expect(response.body.demoLogins).toBeNull();
+  });
 });
 
 describe("dashboard sign-in", () => {

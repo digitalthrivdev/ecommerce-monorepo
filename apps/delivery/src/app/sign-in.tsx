@@ -13,21 +13,23 @@ import { Text } from "@/components/ui/text";
 import { ApiError, apiFetch, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { PHONE_COUNTRY_CODE, PHONE_NATIONAL_LENGTH } from "@/lib/config";
-import { isValidNationalNumber, toE164 } from "@/lib/phone";
+import { formatPhone, isValidNationalNumber, toE164 } from "@/lib/phone";
+import { useSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 export default function SignInScreen() {
   const { colors } = useAppTheme();
+  const demo = useSettings().demoLogins?.rider;
   const insets = useSafeAreaInsets();
   const [digits, setDigits] = useState("");
   const [error, setError] = useState<string | null>(null);
   const sendOtp = useMutation({ mutationFn: (phone: string) => apiFetch("/auth/send-otp", { method: "POST", body: { phone } }) });
   const valid = isValidNationalNumber(digits);
 
-  async function submit() {
-    if (!valid || sendOtp.isPending) return;
+  async function submit(demoPhone?: string) {
+    if ((!valid && !demoPhone) || sendOtp.isPending) return;
     setError(null);
-    const phone = toE164(digits);
+    const phone = demoPhone ?? toE164(digits);
     try {
       await sendOtp.mutateAsync(phone);
       router.push({ pathname: "/verify", params: { phone } });
@@ -68,7 +70,7 @@ export default function SignInScreen() {
                 setDigits(text.replace(/\D/g, ""));
                 setError(null);
               }}
-              onSubmitEditing={submit}
+              onSubmitEditing={() => submit()}
               placeholder="Enter mobile number"
               keyboardType="number-pad"
               textContentType="telephoneNumber"
@@ -81,9 +83,21 @@ export default function SignInScreen() {
           </View>
           {error && <Text className="-mt-2 text-sm text-destructive">{error}</Text>}
 
-          <Button onPress={submit} disabled={!valid || sendOtp.isPending} className="h-14 rounded-lg">
+          <Button onPress={() => submit()} disabled={!valid || sendOtp.isPending} className="h-14 rounded-lg">
             {sendOtp.isPending ? <ActivityIndicator color={colors.onPrimary} /> : <Text className="text-base font-bold">Continue</Text>}
           </Button>
+
+          {demo && (
+            <View className="gap-2 rounded-lg border border-dashed border-input p-4">
+              <Text className="text-sm font-semibold">Try the demo</Text>
+              <Button variant="outline" onPress={() => submit(demo.phone)} disabled={sendOtp.isPending} className="h-12 rounded-lg">
+                <Text className="text-base font-bold">Use demo rider number</Text>
+              </Button>
+              <Text className="text-center text-xs text-muted-foreground">
+                {formatPhone(demo.phone)} · code {demo.code}
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
