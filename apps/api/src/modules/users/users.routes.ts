@@ -33,8 +33,8 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
     return user;
   });
 
-  // Required by the app stores. Dashboard accounts are removed by an admin instead.
-  app.delete("/me", { preHandler: app.requireRole(...DELETABLE_ROLES) }, async (request, reply) => {
+  // Required by the app stores. Dashboard accounts are removed by an admin instead. Demo logins must survive for the next prospect.
+  app.delete("/me", { preHandler: [app.requireRole(...DELETABLE_ROLES), app.forbidTestAccount] }, async (request, reply) => {
     await accounts.deleteAccount(request.user.sub, request.user.role);
     return reply.status(204).send();
   });

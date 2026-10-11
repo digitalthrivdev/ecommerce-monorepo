@@ -17,6 +17,8 @@ declare module "fastify" {
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;
     canManageStore: (request: FastifyRequest, storeId: string) => Promise<boolean>;
     requireStoreAccess: (request: FastifyRequest) => Promise<void>;
+    /** Refuses test accounts (demo logins). Runs after the route's authentication, so list it after that guard. */
+    forbidTestAccount: (request: FastifyRequest) => Promise<void>;
     /** Rejects every token issued to the user until now, e.g. after the account is deleted. */
     revokeTokens: (userId: string) => Promise<void>;
     /** Rejects one token (sign-out on one device); other devices stay signed in. */

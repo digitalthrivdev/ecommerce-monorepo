@@ -171,7 +171,7 @@ export const storeVariantsRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(listing);
   });
 
-  app.patch("/:variantId", { preHandler: app.requireStoreAccess }, async (request) => {
+  app.patch("/:variantId", { preHandler: [app.requireStoreAccess, app.forbidTestAccount] }, async (request) => {
     const { storeId, variantId } = storeVariantParamsSchema.parse(request.params);
     const body = updateStoreVariantBodySchema.parse(request.body);
 

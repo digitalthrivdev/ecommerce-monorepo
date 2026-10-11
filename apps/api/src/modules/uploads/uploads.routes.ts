@@ -31,7 +31,7 @@ const uploadsRoutes: FastifyPluginAsync = async (app) => {
     },
   });
 
-  app.post("/images", { preHandler: app.requireRole(UserRole.ADMIN, UserRole.STORE_STAFF) }, async (request, reply) => {
+  app.post("/images", { preHandler: [app.requireRole(UserRole.ADMIN, UserRole.STORE_STAFF), app.forbidTestAccount] }, async (request, reply) => {
     const file = await request.file();
     if (!file) {
       throw new AppError(400, "FILE_REQUIRED", "Choose an image to upload");

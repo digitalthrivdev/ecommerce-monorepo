@@ -52,7 +52,7 @@ const cashRoutes: FastifyPluginAsync = async (app) => {
     return cash.listDeposits(partnerId, query);
   });
 
-  app.post("/:partnerId/deposits", async (request, reply) => {
+  app.post("/:partnerId/deposits", { preHandler: app.forbidTestAccount }, async (request, reply) => {
     const by = await recorder(request);
     const { partnerId } = cashPartnerParamsSchema.parse(request.params);
     const body = recordDepositBodySchema.parse(request.body);

@@ -20,7 +20,7 @@ const inventoryRoutes: FastifyPluginAsync = async (app) => {
     return inventoryService.listInventory(storeId, query);
   });
 
-  app.patch("/:variantId", async (request) => {
+  app.patch("/:variantId", { preHandler: app.forbidTestAccount }, async (request) => {
     const { storeId, variantId } = inventoryItemParamsSchema.parse(request.params);
     const body = adjustInventoryBodySchema.parse(request.body);
     return inventoryService.adjustInventory(storeId, variantId, body, request.user.sub);

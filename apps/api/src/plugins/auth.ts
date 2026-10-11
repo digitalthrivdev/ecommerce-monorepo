@@ -19,14 +19,24 @@ export default fp(async (app) => {
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+  const testAccountError = () => new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
 
   /** A test admin (demo login) can look at everything but change nothing, apart from signing out. */
   function assertNotReadOnly(request: FastifyRequest) {
     const { role, test } = request.user;
     if (test && role === UserRole.ADMIN && !READ_METHODS.has(request.method) && request.routeOptions.url !== "/auth/logout") {
-      throw new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
+      throw testAccountError();
     }
   }
+
+  app.decorate("forbidTestAccount", async (request: FastifyRequest) => {
+    if (!request.user) {
+      throw new AppError(401, "UNAUTHORIZED", "Missing or invalid access token");
+    }
+    if (request.user.test) {
+      throw testAccountError();
+    }
+  });
 
   /**
    * Whether the token is valid, not signed out, and issued after the user's last revocation. A Redis failure

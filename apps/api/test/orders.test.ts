@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -156,5 +158,37 @@ describe("after checkout", () => {
 
     const again = await call(app, "POST", `/orders/${orderId}/cancel`, { token: customer, body: {} });
     expect(again.status).toBeGreaterThanOrEqual(400);
+  });
+});
+
+describe("test accounts", () => {
+  /** A sign-in token as the API issues it to a test account. */
+  async function testToken(where: Prisma.UserWhereUniqueInput) {
+    const user = await app.prisma.user.findUniqueOrThrow({ where, select: { id: true, role: true } });
+    return app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() });
+  }
+
+  it("lets a test customer order and test staff run the whole order flow", async () => {
+    const testCustomer = await testToken({ phone: SEED.customerPhone });
+    const testStaff = await testToken({ email: SEED.staffEmail });
+    const item = await listing({ sellingPrice: { gte: 100 } });
+
+    await call(app, "DELETE", "/cart", { token: testCustomer });
+    const added = await call(app, "POST", "/cart/items", { token: testCustomer, body: { storeId, variantId: item.variantId, quantity: 2 } });
+    expect(added.status).toBe(200);
+    const placed = await call(app, "POST", "/orders", { token: testCustomer, body: { addressId, paymentMethod: "COD" } });
+    expect(placed.status).toBe(201);
+
+    const orderPath = `/stores/${storeId}/orders/${placed.body.id}`;
+    const order = await app.prisma.order.findUniqueOrThrow({ where: { id: placed.body.id }, include: { items: true } });
+    expect((await call(app, "POST", `${orderPath}/accept`, { token: testStaff })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/start-picking`, { token: testStaff })).status).toBe(200);
+    const unavailable = await call(app, "POST", `${orderPath}/items/${order.items[0]!.id}/unavailable`, { token: testStaff, body: { quantity: 1 } });
+    expect(unavailable.status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/pack`, { token: testStaff })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/ready`, { token: testStaff })).status).toBe(200);
+
+    const after = await app.prisma.order.findUniqueOrThrow({ where: { id: placed.body.id } });
+    expect(after.status).toBe("READY_FOR_PICKUP");
   });
 });

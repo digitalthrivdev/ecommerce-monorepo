@@ -205,27 +205,70 @@ describe("test accounts", () => {
         await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: true } });
       }
     });
+  });
 
-    it("does not block test staff, customers or riders", async () => {
+  describe("test staff, customers and riders", () => {
+    const READ_ONLY = { error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" };
+    let staff: string;
+    let customer: string;
+    let rider: string;
+    let storeId: string;
+    let variantId: string;
+    let partnerId: string;
+
+    beforeAll(async () => {
       const users = await app.prisma.user.findMany({
         where: { OR: [{ email: SEED.staffEmail }, { phone: { in: [SEED.customerPhone, SEED.riderPhone] } }] },
-        select: { id: true, role: true, storeId: true },
+        select: { id: true, role: true, storeId: true, deliveryPartner: { select: { id: true } } },
       });
+      const userFor = (role: string) => users.find((candidate) => candidate.role === role)!;
       const tokenFor = (role: string) => {
-        const user = users.find((candidate) => candidate.role === role)!;
-        return { user, token: app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() }) };
+        const user = userFor(role);
+        return app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() });
       };
+      staff = tokenFor("STORE_STAFF");
+      customer = tokenFor("CUSTOMER");
+      rider = tokenFor("DELIVERY_PARTNER");
+      storeId = userFor("STORE_STAFF").storeId!;
+      partnerId = userFor("DELIVERY_PARTNER").deliveryPartner!.id;
+      variantId = (await app.prisma.storeProduct.findFirstOrThrow({ where: { storeId }, select: { variantId: true } })).variantId;
+    });
 
-      const staff = tokenFor("STORE_STAFF");
-      const accept = await call(app, "POST", `/stores/${staff.user.storeId}/orders/not-an-order/accept`, { token: staff.token });
+    it("blocks test staff from stock, availability, cash deposits and uploads", async () => {
+      // Invalid bodies: without the check these would fail with 400, never write.
+      const writes = [
+        call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: staff, body: {} }),
+        call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: staff, body: {} }),
+        call(app, "POST", `/rider-cash/${partnerId}/deposits`, { token: staff, body: {} }),
+        call(app, "POST", "/images", { token: staff }),
+      ];
+      for (const response of await Promise.all(writes)) {
+        expect(response.status).toBe(403);
+        expect(response.body).toMatchObject(READ_ONLY);
+      }
+    });
+
+    it("leaves normal staff unaffected", async () => {
+      const normal = await dashboardLogin(app, SEED.staffEmail);
+      const adjust = await call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: normal, body: {} });
+      expect(adjust.status).toBe(400);
+    });
+
+    it("keeps test customer and rider accounts from being deleted", async () => {
+      for (const token of [customer, rider]) {
+        const response = await call(app, "DELETE", "/users/me", { token });
+        expect(response.status).toBe(403);
+        expect(response.body).toMatchObject(READ_ONLY);
+        expect((await call(app, "GET", "/users/me", { token })).status).toBe(200);
+      }
+    });
+
+    it("lets test staff, customers and riders do everything else", async () => {
+      const accept = await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: staff });
       expect(accept.status).toBe(404);
-
-      const customer = tokenFor("CUSTOMER");
-      const profile = await call(app, "PATCH", "/users/me", { token: customer.token, body: {} });
+      const profile = await call(app, "PATCH", "/users/me", { token: customer, body: {} });
       expect(profile.status).toBe(400);
-
-      const rider = tokenFor("DELIVERY_PARTNER");
-      const status = await call(app, "PATCH", "/delivery/me/status", { token: rider.token, body: { status: "NOT_A_STATUS" } });
+      const status = await call(app, "PATCH", "/delivery/me/status", { token: rider, body: { status: "NOT_A_STATUS" } });
       expect(status.status).toBe(400);
     });
   });
