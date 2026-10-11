@@ -18,9 +18,20 @@ export default fp(async (app) => {
   const tokenLifetimeSeconds = probe ? probe.exp - probe.iat : 30 * 24 * 3600;
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
+  const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+  /** A test admin (demo login) can look at everything but change nothing, apart from signing out. */
+  function assertNotReadOnly(request: FastifyRequest) {
+    const { role, test } = request.user;
+    if (test && role === UserRole.ADMIN && !READ_METHODS.has(request.method) && request.routeOptions.url !== "/auth/logout") {
+      throw new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
+    }
+  }
+
   /**
    * Whether the token is valid, not signed out, and issued after the user's last revocation. A Redis failure
-   * throws instead of returning false, so an outage does not sign every app user out.
+   * throws instead of returning false, so an outage does not sign every app user out. Every authenticated
+   * request passes here, so it also enforces the read-only test admin.
    */
   async function verify(request: FastifyRequest) {
     try {
@@ -30,7 +41,11 @@ export default fp(async (app) => {
     }
     const { sub, iat, jti } = request.user;
     const [revokedAt, signedOut] = await app.redis.mget(jti ? [revokedKey(sub), revokedTokenKey(jti)] : [revokedKey(sub)]);
-    return !(revokedAt && iat <= Number(revokedAt)) && !signedOut;
+    if ((revokedAt && iat <= Number(revokedAt)) || signedOut) {
+      return false;
+    }
+    assertNotReadOnly(request);
+    return true;
   }
 
   app.decorate("revokeTokens", async (userId: string) => {

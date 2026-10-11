@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -148,5 +150,83 @@ describe("test accounts", () => {
     } finally {
       await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: false } });
     }
+  });
+
+  describe("test admin", () => {
+    let token: string;
+
+    beforeAll(async () => {
+      await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: true } });
+      token = await dashboardLogin(app, SEED.adminEmail);
+    });
+
+    afterAll(async () => {
+      await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: false } });
+    });
+
+    it("can read the dashboard", async () => {
+      const me = await call(app, "GET", "/users/me", { token });
+      expect(me.status).toBe(200);
+      expect(me.body).toMatchObject({ role: "ADMIN", isTestAccount: true });
+      expect((await call(app, "HEAD", "/users/me", { token })).status).toBe(200);
+      expect((await call(app, "GET", "/admin/orders", { token })).status).toBe(200);
+      expect((await call(app, "GET", "/settings/platform", { token })).status).toBe(200);
+    });
+
+    it("cannot change anything", async () => {
+      // Invalid bodies and unknown IDs: without the check these would fail with 400 or 404, never write.
+      const writes = [
+        call(app, "POST", "/categories", { token, body: {} }),
+        call(app, "PATCH", "/settings/platform", { token, body: {} }),
+        call(app, "PUT", "/settings/rider-review-login", { token, body: {} }),
+        call(app, "DELETE", "/admin/customers/not-a-customer", { token }),
+      ];
+      for (const response of await Promise.all(writes)) {
+        expect(response.status).toBe(403);
+        expect(response.body).toMatchObject({ error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" });
+      }
+    });
+
+    it("can sign out", async () => {
+      const own = await dashboardLogin(app, SEED.adminEmail);
+      expect((await call(app, "POST", "/auth/logout", { token: own })).status).toBe(204);
+      expect((await call(app, "GET", "/users/me", { token: own })).status).toBe(401);
+    });
+
+    it("does not affect a normal admin", async () => {
+      await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: false } });
+      try {
+        const admin = await dashboardLogin(app, SEED.adminEmail);
+        const me = await call(app, "GET", "/users/me", { token: admin });
+        expect(me.body.isTestAccount).toBe(false);
+        const saved = await call(app, "PUT", "/settings/rider-review-login", { token: admin, body: { enabled: false, phone: null } });
+        expect(saved.status).toBe(200);
+      } finally {
+        await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: true } });
+      }
+    });
+
+    it("does not block test staff, customers or riders", async () => {
+      const users = await app.prisma.user.findMany({
+        where: { OR: [{ email: SEED.staffEmail }, { phone: { in: [SEED.customerPhone, SEED.riderPhone] } }] },
+        select: { id: true, role: true, storeId: true },
+      });
+      const tokenFor = (role: string) => {
+        const user = users.find((candidate) => candidate.role === role)!;
+        return { user, token: app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() }) };
+      };
+
+      const staff = tokenFor("STORE_STAFF");
+      const accept = await call(app, "POST", `/stores/${staff.user.storeId}/orders/not-an-order/accept`, { token: staff.token });
+      expect(accept.status).toBe(404);
+
+      const customer = tokenFor("CUSTOMER");
+      const profile = await call(app, "PATCH", "/users/me", { token: customer.token, body: {} });
+      expect(profile.status).toBe(400);
+
+      const rider = tokenFor("DELIVERY_PARTNER");
+      const status = await call(app, "PATCH", "/delivery/me/status", { token: rider.token, body: { status: "NOT_A_STATUS" } });
+      expect(status.status).toBe(400);
+    });
   });
 });

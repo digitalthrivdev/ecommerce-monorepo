@@ -14,6 +14,7 @@ const meSelect = {
   name: true,
   email: true,
   role: true,
+  isTestAccount: true,
   store: { select: { id: true, name: true, code: true } },
 } satisfies Prisma.UserSelect;
 
