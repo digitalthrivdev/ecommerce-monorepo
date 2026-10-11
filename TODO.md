@@ -10,7 +10,7 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 ## Sales demo (moozy)
 
 - [ ] **Nightly demo reset.** Restore clean demo data every night (orders, carts, stock, cash deposits, uploads made by prospects) while keeping the four demo accounts, their test flags, the review logins and `DEMO_LOGINS`. Back up first; moozy is the only demo instance.
-- [ ] **Clean-up after the demo-logins deploy.** Once moozy runs with `DEMO_LOGINS`, delete the `api.env` backup made when it was added (`~/moozy/deploy/api.env.bak-20261011-2016`) and the local copy of the demo credentials (`~/.cache/grocery-build/moozy-demo.env`).
+- [ ] **Delete the local demo credentials** (`~/.cache/grocery-build/moozy-demo.env`) once they are saved elsewhere. App builds don't need the file. (The `api.env` backup on moozy was deleted on 11 Oct, after confirming moozy runs with `DEMO_LOGINS`.)
 
 ## Delivery
 
