@@ -192,6 +192,11 @@ describe("test accounts", () => {
         expect(response.status).toBe(403);
         expect(response.body).toMatchObject({ error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" });
       }
+
+      // Rider assignment stays open (the full assign flow is in orders.test.ts).
+      const store = await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } });
+      const reassign = await call(app, "POST", `/stores/${store.id}/orders/not-an-order/reassign`, { token, body: { partnerId: "not-a-partner" } });
+      expect(reassign.status).toBe(404);
     });
 
     it("can sign out", async () => {

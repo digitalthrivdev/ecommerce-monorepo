@@ -172,7 +172,7 @@ describe("test accounts", () => {
     const testCustomer = await testToken({ phone: SEED.customerPhone });
     const testStaff = await testToken({ email: SEED.staffEmail });
     const testRider = await testToken({ phone: SEED.riderPhone });
-    const admin = await dashboardLogin(app, SEED.adminEmail);
+    const testAdmin = await testToken({ email: SEED.adminEmail });
     const staff = await dashboardLogin(app, SEED.staffEmail);
     const item = await listing({ sellingPrice: { gte: 100 } });
 
@@ -195,8 +195,12 @@ describe("test accounts", () => {
 
     const partner = await app.prisma.deliveryPartner.findFirstOrThrow({ where: { user: { phone: SEED.riderPhone } } });
     expect((await call(app, "PATCH", "/delivery/me/status", { token: testRider, body: { status: "ONLINE" } })).status).toBe(200);
-    const assigned = await call(app, "POST", `${orderPath}/assign`, { token: admin, body: { partnerId: partner.id } });
-    expect(assigned.status).toBe(200);
+    // The read-only test admin may still assign riders: invalid input, then assign, unassign and assign again.
+    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: {} })).status).toBe(400);
+    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: { partnerId: partner.id } })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/unassign`, { token: testAdmin })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: { partnerId: partner.id } })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/mark-delivered`, { token: testAdmin, body: { reason: "Demo" } })).status).toBe(403);
     for (const step of ["accept", "pickup", "start-delivery"]) {
       expect((await call(app, "POST", `/delivery/orders/${orderId}/${step}`, { token: testRider })).status).toBe(200);
     }

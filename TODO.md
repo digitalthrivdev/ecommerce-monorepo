@@ -7,6 +7,11 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 - [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `SECRETS_ENCRYPTION_KEY` set and webhooks registered (see `apps/api/.env.example`).
 - [ ] **Off-site backups.** `deploy/` keeps daily database dumps and a copy of uploaded images on the server only (`deploy/backups`); copy them to object storage or another machine (e.g. a nightly rclone/rsync job).
 
+## Sales demo (moozy)
+
+- [ ] **Nightly demo reset.** Restore clean demo data every night (orders, carts, stock, cash deposits, uploads made by prospects) while keeping the four demo accounts, their test flags, the review logins and `DEMO_LOGINS`. Back up first; moozy is the only demo instance.
+- [ ] **Clean-up after the demo-logins deploy.** Once moozy runs with `DEMO_LOGINS`, delete the `api.env` backup made when it was added (`~/moozy/deploy/api.env.bak-20261011-2016`) and the local copy of the demo credentials (`~/.cache/grocery-build/moozy-demo.env`).
+
 ## Delivery
 
 - [ ] **Live tracking over WebSockets.** Push partner location and order status to the customer app (`@fastify/websocket`, Redis pub/sub so it works across API instances). Today the customer app polls `GET /orders/:id/tracking` every 10 seconds and glides the partner's marker on the map between updates; WebSockets are only worth it at much higher order volumes.

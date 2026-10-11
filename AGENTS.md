@@ -65,7 +65,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 - **Review login** (Settings → SMS sign-in), for app store and payment gateway reviewers and sales demos: one phone number signs in to a customer account, and one to an existing rider account, with a fixed code and no SMS.
  - Off by default. Codes are stored only as HMACs. The customer number never applies to admin, staff or rider accounts, and orders from it are flagged "Review account" (not when it is a test account, as on a demo); the rider number only signs in to a rider account.
  - Do not extend it to other roles or numbers.
-- **Test accounts** (`User.isTestAccount`, set with the `test-account` script) are demo accounts for prospects. The flag is in the sign-in token: a test admin can only read, and test staff, customers and riders are limited.
+- **Test accounts** (`User.isTestAccount`, set with the `test-account` script) are demo accounts for prospects. The flag is in the sign-in token: a test admin can only read (and assign riders), and test staff, customers and riders are limited.
 
 ## White-label
 
