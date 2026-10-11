@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance } from "fastify";
+import sharp from "sharp";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { call, dashboardLogin, otpLogin, SEED, sendOtp, startApp } from "./helpers";
@@ -231,45 +232,82 @@ describe("test accounts", () => {
       rider = tokenFor("DELIVERY_PARTNER");
       storeId = userFor("STORE_STAFF").storeId!;
       partnerId = userFor("DELIVERY_PARTNER").deliveryPartner!.id;
-      variantId = (await app.prisma.storeProduct.findFirstOrThrow({ where: { storeId }, select: { variantId: true } })).variantId;
+      variantId = (await app.prisma.storeProduct.findFirstOrThrow({ where: { storeId, isAvailable: true, inventory: { isNot: null } }, select: { variantId: true } })).variantId;
     });
 
-    it("blocks test staff from stock, availability, cash deposits and uploads", async () => {
-      // Invalid bodies: without the check these would fail with 400, never write.
-      const writes = [
-        call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: staff, body: {} }),
-        call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: staff, body: {} }),
-        call(app, "POST", `/rider-cash/${partnerId}/deposits`, { token: staff, body: {} }),
-        call(app, "POST", "/images", { token: staff }),
-      ];
-      for (const response of await Promise.all(writes)) {
+    /** A one-file multipart upload, as the dashboard sends it. */
+    async function uploadImage(token: string) {
+      const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: "#ffffff" } }).png().toBuffer();
+      const boundary = "test-boundary";
+      const payload = Buffer.concat([
+        Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.png"\r\nContent-Type: image/png\r\n\r\n`),
+        png,
+        Buffer.from(`\r\n--${boundary}--\r\n`),
+      ]);
+      const response = await app.inject({
+        method: "POST",
+        url: "/images",
+        payload,
+        headers: { authorization: `Bearer ${token}`, "content-type": `multipart/form-data; boundary=${boundary}` },
+      });
+      return { status: response.statusCode, body: response.json() };
+    }
+
+    it("blocks test staff from stock and availability changes and uploads; normal staff can", async () => {
+      const normal = await dashboardLogin(app, SEED.staffEmail);
+      const inventoryPath = `/stores/${storeId}/inventory/${variantId}`;
+      const restock = { delta: 1, reason: "RESTOCK" };
+      const availability = { isAvailable: true };
+
+      for (const response of [
+        await call(app, "PATCH", inventoryPath, { token: staff, body: restock }),
+        await call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: staff, body: availability }),
+        await uploadImage(staff),
+      ]) {
         expect(response.status).toBe(403);
         expect(response.body).toMatchObject(READ_ONLY);
       }
+
+      expect((await call(app, "PATCH", inventoryPath, { token: normal, body: restock })).status).toBe(200);
+      expect((await call(app, "PATCH", inventoryPath, { token: normal, body: { delta: -1, reason: "CORRECTION" } })).status).toBe(200);
+      expect((await call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: normal, body: availability })).status).toBe(200);
+      expect((await uploadImage(normal)).status).toBe(201);
     });
 
-    it("leaves normal staff unaffected", async () => {
-      const normal = await dashboardLogin(app, SEED.staffEmail);
-      const adjust = await call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: normal, body: {} });
-      expect(adjust.status).toBe(400);
-    });
-
-    it("keeps test customer and rider accounts from being deleted", async () => {
+    it("keeps test customer and rider accounts from being deleted; normal ones can delete", async () => {
       for (const token of [customer, rider]) {
         const response = await call(app, "DELETE", "/users/me", { token });
         expect(response.status).toBe(403);
         expect(response.body).toMatchObject(READ_ONLY);
         expect((await call(app, "GET", "/users/me", { token })).status).toBe(200);
       }
+
+      const admin = await dashboardLogin(app, SEED.adminEmail);
+      const riderPhone = "+919000000096";
+      expect((await call(app, "POST", "/delivery-partners", { token: admin, body: { phone: riderPhone, name: "Spare Rider" } })).status).toBe(201);
+      for (const phone of ["+919000000097", riderPhone]) {
+        const token = await otpLogin(app, phone);
+        expect((await call(app, "DELETE", "/users/me", { token })).status).toBe(204);
+        expect((await call(app, "GET", "/users/me", { token })).status).toBe(401);
+      }
     });
 
-    it("lets test staff, customers and riders do everything else", async () => {
-      const accept = await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: staff });
-      expect(accept.status).toBe(404);
-      const profile = await call(app, "PATCH", "/users/me", { token: customer, body: {} });
-      expect(profile.status).toBe(400);
-      const status = await call(app, "PATCH", "/delivery/me/status", { token: rider, body: { status: "NOT_A_STATUS" } });
-      expect(status.status).toBe(400);
+    it("checks the role and the input before the test-account limits", async () => {
+      // Wrong role: the usual 403 FORBIDDEN, not the demo message.
+      for (const response of [
+        await call(app, "DELETE", "/users/me", { token: staff }),
+        await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: customer }),
+        await call(app, "POST", "/images", { token: rider }),
+        await call(app, "POST", `/rider-cash/${partnerId}/deposits`, { token: customer, body: { amount: "1.00" } }),
+      ]) {
+        expect(response.status).toBe(403);
+        expect(response.body.error).toBe("FORBIDDEN");
+      }
+
+      // Allowed routes still validate input.
+      expect((await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: staff })).status).toBe(404);
+      expect((await call(app, "PATCH", "/users/me", { token: customer, body: {} })).status).toBe(400);
+      expect((await call(app, "PATCH", "/delivery/me/status", { token: rider, body: { status: "NOT_A_STATUS" } })).status).toBe(400);
     });
   });
 });

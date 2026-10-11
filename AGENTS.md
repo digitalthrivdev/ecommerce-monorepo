@@ -63,7 +63,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
   - Admins set and reset staff passwords in the dashboard. The first admin, and any admin password reset, uses the `create-admin` script.
 - **SMS fallback:** in development, OTPs are written to the API log until an SMS provider is set up. In production, OTP sign-in is unavailable until an admin configures SMS. `OTP_PROVIDER` in the environment overrides the dashboard choice, for recovery.
 - **Review login** (Settings → SMS sign-in), for app store and payment gateway reviewers and sales demos: one phone number signs in to a customer account, and one to an existing rider account, with a fixed code and no SMS.
- - Off by default. Codes are stored only as HMACs. The customer number never applies to admin, staff or rider accounts, and orders from it are flagged "Review account"; the rider number only signs in to a rider account.
+ - Off by default. Codes are stored only as HMACs. The customer number never applies to admin, staff or rider accounts, and orders from it are flagged "Review account" (not when it is a test account, as on a demo); the rider number only signs in to a rider account.
  - Do not extend it to other roles or numbers.
 - **Test accounts** (`User.isTestAccount`, set with the `test-account` script) are demo accounts for prospects. The flag is in the sign-in token: a test admin can only read, and test staff, customers and riders are limited.
 

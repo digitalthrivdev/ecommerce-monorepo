@@ -168,9 +168,12 @@ describe("test accounts", () => {
     return app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() });
   }
 
-  it("lets a test customer order and test staff run the whole order flow", async () => {
+  it("lets a test customer, test staff and a test rider run the whole order flow", async () => {
     const testCustomer = await testToken({ phone: SEED.customerPhone });
     const testStaff = await testToken({ email: SEED.staffEmail });
+    const testRider = await testToken({ phone: SEED.riderPhone });
+    const admin = await dashboardLogin(app, SEED.adminEmail);
+    const staff = await dashboardLogin(app, SEED.staffEmail);
     const item = await listing({ sellingPrice: { gte: 100 } });
 
     await call(app, "DELETE", "/cart", { token: testCustomer });
@@ -178,17 +181,58 @@ describe("test accounts", () => {
     expect(added.status).toBe(200);
     const placed = await call(app, "POST", "/orders", { token: testCustomer, body: { addressId, paymentMethod: "COD" } });
     expect(placed.status).toBe(201);
+    const orderId = placed.body.id as string;
 
-    const orderPath = `/stores/${storeId}/orders/${placed.body.id}`;
-    const order = await app.prisma.order.findUniqueOrThrow({ where: { id: placed.body.id }, include: { items: true } });
+    const orderPath = `/stores/${storeId}/orders/${orderId}`;
+    const order = await app.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { items: true } });
     expect((await call(app, "POST", `${orderPath}/accept`, { token: testStaff })).status).toBe(200);
     expect((await call(app, "POST", `${orderPath}/start-picking`, { token: testStaff })).status).toBe(200);
-    const unavailable = await call(app, "POST", `${orderPath}/items/${order.items[0]!.id}/unavailable`, { token: testStaff, body: { quantity: 1 } });
-    expect(unavailable.status).toBe(200);
+    const itemPath = `${orderPath}/items/${order.items[0]!.id}/unavailable`;
+    expect((await call(app, "POST", itemPath, { token: testStaff, body: { quantity: 0 } })).status).toBe(400);
+    expect((await call(app, "POST", itemPath, { token: testStaff, body: { quantity: 1 } })).status).toBe(200);
     expect((await call(app, "POST", `${orderPath}/pack`, { token: testStaff })).status).toBe(200);
     expect((await call(app, "POST", `${orderPath}/ready`, { token: testStaff })).status).toBe(200);
 
-    const after = await app.prisma.order.findUniqueOrThrow({ where: { id: placed.body.id } });
-    expect(after.status).toBe("READY_FOR_PICKUP");
+    const partner = await app.prisma.deliveryPartner.findFirstOrThrow({ where: { user: { phone: SEED.riderPhone } } });
+    expect((await call(app, "PATCH", "/delivery/me/status", { token: testRider, body: { status: "ONLINE" } })).status).toBe(200);
+    const assigned = await call(app, "POST", `${orderPath}/assign`, { token: admin, body: { partnerId: partner.id } });
+    expect(assigned.status).toBe(200);
+    for (const step of ["accept", "pickup", "start-delivery"]) {
+      expect((await call(app, "POST", `/delivery/orders/${orderId}/${step}`, { token: testRider })).status).toBe(200);
+    }
+    const { deliveryOtp } = (await call(app, "GET", `/orders/${orderId}`, { token: testCustomer })).body;
+    const wrongOtp = String((Number(deliveryOtp) + 1) % 10_000).padStart(4, "0");
+    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: "12" } })).status).toBe(400);
+    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: wrongOtp } })).status).toBe(400);
+    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: deliveryOtp } })).status).toBe(200);
+    expect((await app.prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status).toBe("DELIVERED");
+
+    // The rider now holds the COD cash; test staff cannot record the deposit, normal staff can.
+    const deposit = { amount: "1.00" };
+    const blocked = await call(app, "POST", `/rider-cash/${partner.id}/deposits`, { token: testStaff, body: deposit });
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.error).toBe("TEST_ACCOUNT_READ_ONLY");
+    expect((await call(app, "POST", `/rider-cash/${partner.id}/deposits`, { token: staff, body: deposit })).status).toBe(201);
+  });
+
+  it("drops the Review account label when the review number is a test account", async () => {
+    const admin = await dashboardLogin(app, SEED.adminEmail);
+    const labels = async () => {
+      const list = await call(app, "GET", "/admin/orders", { token: admin, query: { limit: "50" } });
+      const mine = await app.prisma.order.findMany({ where: { user: { phone: SEED.customerPhone } }, select: { id: true } });
+      const ids = new Set(mine.map((order) => order.id));
+      return new Set((list.body.items as { id: string; reviewAccount: boolean }[]).filter((order) => ids.has(order.id)).map((order) => order.reviewAccount));
+    };
+
+    const saved = await call(app, "PUT", "/settings/review-login", { token: admin, body: { enabled: true, phone: SEED.customerPhone, code: "246810" } });
+    expect(saved.status).toBe(200);
+    try {
+      expect(await labels()).toEqual(new Set([true]));
+      await app.prisma.user.update({ where: { phone: SEED.customerPhone }, data: { isTestAccount: true } });
+      expect(await labels()).toEqual(new Set([false]));
+    } finally {
+      await app.prisma.user.update({ where: { phone: SEED.customerPhone }, data: { isTestAccount: false } });
+      await call(app, "PUT", "/settings/review-login", { token: admin, body: { enabled: false, phone: null } });
+    }
   });
 });

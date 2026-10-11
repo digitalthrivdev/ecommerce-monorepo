@@ -77,14 +77,17 @@ function policyLinks() {
   } as Record<"home" | "index" | PolicySlug | "contact", string>;
 }
 
-/** The customer account reviewers sign in to, so staff can tell its orders apart. */
+/**
+ * The customer account reviewers sign in to, so staff can tell its orders apart. Not on a demo, where the
+ * review number is a test account and every order comes from it.
+ */
 export async function reviewAccountUserId(db: Db) {
   const { reviewLoginPhone } = await getPlatformSettings(db);
   if (!reviewLoginPhone) {
     return null;
   }
-  const user = await db.user.findUnique({ where: { phone: reviewLoginPhone }, select: { id: true } });
-  return user?.id ?? null;
+  const user = await db.user.findUnique({ where: { phone: reviewLoginPhone }, select: { id: true, isTestAccount: true } });
+  return user && !user.isTestAccount ? user.id : null;
 }
 
 async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: PlatformSettings) {
