@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { Eye } from "lucide-react";
 
 import { AppSidebar, StaffTabBar } from "@/components/app-sidebar";
 import { AttentionBanner } from "@/components/orders/attention-banner";
@@ -38,14 +37,6 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
         openComplaints={openComplaints}
       />
       <SidebarInset className={cn("bg-background", isStaff && "pb-20 md:pb-0")}>
-        {isAdmin && user.isTestAccount && (
-          <div role="status" className="flex items-center gap-2 border-b border-sky-600/30 bg-sky-50 px-4 py-2 text-sm dark:bg-sky-500/10">
-            <Eye className="size-4 shrink-0 text-sky-700 dark:text-sky-400" aria-hidden />
-            <p>
-              <span className="font-semibold">Demo mode:</span> changes are disabled, except assigning riders to orders.
-            </p>
-          </div>
-        )}
         {attention && <AttentionBanner initial={attention} />}
         {children}
       </SidebarInset>
