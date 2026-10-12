@@ -52,7 +52,7 @@ const storeSchema = z.object({
   latitude: coordinate("latitude", 90),
   longitude: coordinate("longitude", 180),
   serviceRadiusKm: positiveDecimal("Enter the radius in km, like 3 or 2.5")
-    .refine((value) => Number(value) <= 50, "Keep the radius at 50 km or less")
+    .refine((value) => Number(value) <= 2500, "Keep the radius at 2500 km or less")
     .transform(Number),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   gstin: optionalGstin,

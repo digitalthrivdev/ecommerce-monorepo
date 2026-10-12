@@ -131,7 +131,7 @@ model Store {
   latitude  Decimal @db.Decimal(10, 7)
   longitude Decimal @db.Decimal(10, 7)
 
-  serviceRadiusKm Decimal @default(3) @db.Decimal(5, 2)
+  serviceRadiusKm Decimal @default(3) @db.Decimal(6, 2)
 
   // GST registration of a store in another state than the business's main one. Overrides the
   // GSTIN in PlatformSettings on this store's invoices.

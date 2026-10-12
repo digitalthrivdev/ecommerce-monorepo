@@ -23,7 +23,7 @@ const storeBodySchema = z.object({
   postalCode: z.string().trim().min(3).max(12),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  serviceRadiusKm: z.number().gt(0).max(50).optional(),
+  serviceRadiusKm: z.number().gt(0).max(2500).optional(),
   status: z.enum(StoreStatus).optional(),
   // Only for a store registered in another state than the GSTIN in settings.
   gstin: gstinSchema.nullish(),
