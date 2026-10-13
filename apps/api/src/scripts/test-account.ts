@@ -6,7 +6,7 @@ import { emailSchema, phoneSchema } from "../shared/schemas.js";
 import { revokedTokensKey } from "../shared/token-revocation.js";
 
 const USAGE = `Marks an existing account as a test account for demos, or makes it a normal account again.
-A test admin can only look; test staff, customers and riders are limited. The account is signed
+A test admin can only look and move orders to a rider; test staff, customers and riders are limited. The account is signed
 out on every device so the change applies at its next sign-in.
 
   Development:  pnpm --filter @grocery/api test-account --email demo-admin@example.com

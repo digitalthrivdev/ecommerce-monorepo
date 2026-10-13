@@ -15,7 +15,7 @@ export type CurrentUser = {
   name: string | null;
   email: string | null;
   role: UserRole;
-  /** A demo login. A test admin can only look; the API refuses every change. */
+  /** A demo login. A test admin can only look and move orders to a rider; the API refuses other changes. */
   isTestAccount: boolean;
   store: StoreSummary | null;
 };

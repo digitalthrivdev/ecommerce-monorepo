@@ -219,6 +219,31 @@ describe("test accounts", () => {
     expect((await call(app, "POST", `/rider-cash/${partner.id}/deposits`, { token: staff, body: deposit })).status).toBe(201);
   });
 
+  it("lets the test admin run the store's fulfilment steps, but not cancel", async () => {
+    const testAdmin = await testToken({ email: SEED.adminEmail });
+    const item = await listing({ sellingPrice: { gte: 100 } });
+    await fillCart(item.variantId, 2);
+    const placed = await call(app, "POST", "/orders", { token: customer, body: { addressId, paymentMethod: "COD" } });
+    expect(placed.status).toBe(201);
+    const orderPath = `/stores/${storeId}/orders/${placed.body.id}`;
+    const order = await app.prisma.order.findUniqueOrThrow({ where: { id: placed.body.id }, include: { items: true } });
+
+    expect((await call(app, "POST", `${orderPath}/pack`, { token: testAdmin })).status).toBe(409);
+    expect((await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: testAdmin })).status).toBe(404);
+    expect((await call(app, "POST", `${orderPath}/accept`, { token: testAdmin })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/start-picking`, { token: testAdmin })).status).toBe(200);
+    const itemPath = `${orderPath}/items/${order.items[0]!.id}/unavailable`;
+    expect((await call(app, "POST", itemPath, { token: testAdmin, body: { quantity: 1 } })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/pack`, { token: testAdmin })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/ready`, { token: testAdmin })).status).toBe(200);
+
+    const cancel = await call(app, "POST", `${orderPath}/cancel`, { token: testAdmin, body: { reason: "Demo" } });
+    expect(cancel.status).toBe(403);
+    expect(cancel.body.error).toBe("TEST_ACCOUNT_READ_ONLY");
+    const history = await app.prisma.orderStatusHistory.findMany({ where: { orderId: order.id }, orderBy: { createdAt: "asc" } });
+    expect(history.map((entry) => entry.toStatus)).toEqual(["CONFIRMED", "STORE_ACCEPTED", "PICKING", "PICKING", "PACKED", "READY_FOR_PICKUP"]);
+  });
+
   it("drops the Review account label when the review number is a test account", async () => {
     const admin = await dashboardLogin(app, SEED.adminEmail);
     const labels = async () => {

@@ -19,16 +19,21 @@ export default fp(async (app) => {
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-  // Rider assignment is part of the demo's order flow, and only an admin can do it.
+  // The demo's order flow: the store's fulfilment steps (as test staff) and rider assignment (admin only).
   const TEST_ADMIN_WRITES = new Set([
     "/auth/logout",
+    "/stores/:storeId/orders/:orderId/accept",
+    "/stores/:storeId/orders/:orderId/start-picking",
+    "/stores/:storeId/orders/:orderId/items/:itemId/unavailable",
+    "/stores/:storeId/orders/:orderId/pack",
+    "/stores/:storeId/orders/:orderId/ready",
     "/stores/:storeId/orders/:orderId/assign",
     "/stores/:storeId/orders/:orderId/reassign",
     "/stores/:storeId/orders/:orderId/unassign",
   ]);
   const testAccountError = () => new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
 
-  /** A test admin (demo login) can look at everything but change nothing, apart from signing out and assigning riders. */
+  /** A test admin (demo login) can look at everything but change nothing, apart from signing out and moving orders to a rider. */
   function assertNotReadOnly(request: FastifyRequest) {
     const { role, test } = request.user;
     if (test && role === UserRole.ADMIN && !READ_METHODS.has(request.method) && !TEST_ADMIN_WRITES.has(request.routeOptions.url ?? "")) {
