@@ -19,7 +19,7 @@ import type { OrderStatus, OrderSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function statusTone(status: OrderStatus) {
-  if (status === "CANCELLED") return { box: "bg-destructive/10", text: "text-destructive" };
+  if (status === "CANCELLED" || status === "RTO") return { box: "bg-destructive/10", text: "text-destructive" };
   if (status === "DELIVERED") return { box: "bg-muted", text: "text-muted-foreground" };
   return { box: "bg-primary/10", text: "text-primary" };
 }

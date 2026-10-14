@@ -6,22 +6,21 @@ import { cn } from "@/lib/utils";
 
 const STEPS: Array<{ label: string; statuses: OrderStatus[] }> = [
   { label: "Placed", statuses: ["CONFIRMED"] },
-  { label: "Accepted", statuses: ["STORE_ACCEPTED"] },
-  { label: "Packing", statuses: ["PICKING"] },
-  { label: "Ready", statuses: ["PACKED", "READY_FOR_PICKUP"] },
-  { label: "On the way", statuses: ["OUT_FOR_DELIVERY"] },
+  { label: "Packed", statuses: ["PACKED"] },
+  { label: "Shipped", statuses: ["SHIPPED"] },
+  { label: "In transit", statuses: ["IN_TRANSIT"] },
+  { label: "Out for delivery", statuses: ["OUT_FOR_DELIVERY"] },
   { label: "Delivered", statuses: ["DELIVERED"] },
 ];
 
 const stepOf = (status: OrderStatus) => STEPS.findIndex((step) => step.statuses.includes(status));
 
-/** Placed → Accepted → Packing → Ready → On the way → Delivered, with the time each step was reached. */
+/** Placed → Packed → Shipped → In transit → Out for delivery → Delivered, with the time each step was reached. */
 export function OrderProgress({ order, timezone }: { order: OrderDetail; timezone: string }) {
   const steps = order.statusHistory.filter((entry) => entry.fromStatus !== entry.toStatus);
-  // A cancelled order shows how far it got.
-  const reached =
-    order.status === "CANCELLED" ? Math.max(-1, ...steps.map((entry) => stepOf(entry.toStatus))) : stepOf(order.status);
-  const cancelled = order.status === "CANCELLED";
+  // A cancelled or returned order shows how far it got.
+  const stopped = order.status === "CANCELLED" || order.status === "RTO";
+  const reached = stopped ? Math.max(-1, ...steps.map((entry) => stepOf(entry.toStatus))) : stepOf(order.status);
   const done = order.status === "DELIVERED";
 
   return (
@@ -29,7 +28,7 @@ export function OrderProgress({ order, timezone }: { order: OrderDetail; timezon
       {STEPS.map((step, index) => {
         const at = steps.find((entry) => step.statuses.includes(entry.toStatus))?.createdAt ?? (index === 0 && reached >= 0 ? order.createdAt : null);
         const isDone = index < reached || (done && index === reached);
-        const isCurrent = index === reached && !done && !cancelled;
+        const isCurrent = index === reached && !done && !stopped;
         return (
           <li key={step.label} aria-current={isCurrent ? "step" : undefined} className="relative flex flex-col items-center gap-1.5 text-center">
             {index > 0 && (

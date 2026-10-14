@@ -185,13 +185,28 @@ export type CheckoutOptions = {
 export type OrderStatus =
   | "PENDING_PAYMENT"
   | "CONFIRMED"
-  | "STORE_ACCEPTED"
-  | "PICKING"
   | "PACKED"
-  | "READY_FOR_PICKUP"
+  | "SHIPPED"
+  | "IN_TRANSIT"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
-  | "CANCELLED";
+  | "CANCELLED"
+  /** Couldn't be delivered and is going back to the seller. */
+  | "RTO";
+
+export type ShipmentStatus =
+  | "PENDING"
+  | "AWB_ASSIGNED"
+  | "PICKUP_SCHEDULED"
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "NDR"
+  | "RTO_IN_TRANSIT"
+  | "RTO_DELIVERED"
+  | "CANCELLED"
+  | "LOST";
 
 export type PaymentMethod = "COD" | "ONLINE";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED";
@@ -268,8 +283,16 @@ export type OrderDetail = {
   total: string;
   /** GST included in the item prices. */
   taxTotal: string;
-  /** Assigned once the order is delivered. */
+  /** Assigned once the order is packed. */
   invoiceNumber: string | null;
+  /** The courier's tracking; null until a shipment is booked. Events are oldest first. */
+  shipment: {
+    status: ShipmentStatus;
+    courierName: string | null;
+    awb: string | null;
+    trackingUrl: string | null;
+    events: { status: ShipmentStatus; occurredAt: string; location: string | null; description: string | null }[];
+  } | null;
   deliveryAddress: {
     name: string;
     phone: string;

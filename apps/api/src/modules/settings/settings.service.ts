@@ -11,6 +11,13 @@ import {
   removeGatewayCredentials,
   saveGatewayCredentials,
 } from "../payments/gateway-registry.js";
+import {
+  getShippingProvider,
+  removeCarrierCredentials,
+  saveCarrierCredentials,
+  shippingCarrierOptions,
+} from "../shipping/carrier-registry.js";
+import { MANUAL_CARRIER } from "../shipping/shipping-provider.js";
 import { getAppearance } from "./appearance.service.js";
 import { POLICY_SLUGS, type PolicySlug } from "./policy-templates.js";
 import type { ReviewLoginInput, UpdateSettingsInput } from "./settings.schemas.js";
@@ -113,6 +120,8 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     },
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
+    shippingProvider: settings.shippingProvider ?? MANUAL_CARRIER,
+    shippingCarriers: await shippingCarrierOptions(prisma),
     canStoreSecrets,
     sms: await otp.adminView(),
     updatedById: settings.updatedById,
@@ -167,11 +176,18 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     if (input.otpProvider !== undefined) {
       await otp.assertSelectable(input.otpProvider);
     }
+    if (input.shippingProvider && !(await getShippingProvider(prisma, input.shippingProvider))) {
+      throw new AppError(400, "SHIPPING_CARRIER_NOT_CONFIGURED", "This shipping carrier is not configured on the server", {
+        shippingProvider: input.shippingProvider,
+      });
+    }
+    // Manual is what no selection means.
+    const data = input.shippingProvider === MANUAL_CARRIER ? { ...input, shippingProvider: null } : input;
 
     await getPlatformSettings(prisma);
     const updated = await prisma.platformSettings.update({
       where: { id: SETTINGS_ID },
-      data: { ...input, updatedById: adminId },
+      data: { ...data, updatedById: adminId },
     });
     otp.invalidate();
     return toAdminView(prisma, otp, updated);
@@ -195,6 +211,17 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
   async function removeGatewayKeys(gateway: string) {
     const settings = await getPlatformSettings(prisma);
     await removeGatewayCredentials(prisma, gateway, settings.paymentProvider);
+    return getAdminSettings();
+  }
+
+  async function saveCarrierKeys(carrier: string, credentials: Record<string, string>, adminId: string) {
+    await saveCarrierCredentials(prisma, carrier, credentials, adminId);
+    return getAdminSettings();
+  }
+
+  async function removeCarrierKeys(carrier: string) {
+    const settings = await getPlatformSettings(prisma);
+    await removeCarrierCredentials(prisma, carrier, settings.shippingProvider);
     return getAdminSettings();
   }
 
@@ -236,6 +263,8 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     saveReviewLogin,
     saveGatewayKeys,
     removeGatewayKeys,
+    saveCarrierKeys,
+    removeCarrierKeys,
     saveOtpProviderKeys,
     removeOtpProviderKeys,
   };

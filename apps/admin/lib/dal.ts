@@ -4,7 +4,16 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { apiFetch } from "./api";
-import { isDashboardRole, type CurrentUser, type DashboardUser, type PublicSettings } from "./types";
+import {
+  activeCarrierOf,
+  isDashboardRole,
+  MANUAL_CARRIER,
+  type ActiveCarrier,
+  type CurrentUser,
+  type DashboardUser,
+  type PlatformSettings,
+  type PublicSettings,
+} from "./types";
 
 /**
  * The signed-in dashboard user, verified by the API. Memoised per request, so layouts and
@@ -29,3 +38,11 @@ export async function requireAdmin() {
 }
 
 export const getPublicSettings = cache(() => apiFetch<PublicSettings>("/settings", { auth: false }));
+
+/** The carrier new shipments are booked with. Null for staff, who can't read the platform settings. */
+export const getActiveCarrier = cache(async (): Promise<ActiveCarrier | null> => {
+  const user = await getCurrentUser();
+  if (user.role !== "ADMIN") return null;
+  const carrier = activeCarrierOf(await apiFetch<PlatformSettings>("/settings/platform"));
+  return { name: carrier?.name ?? MANUAL_CARRIER, label: carrier?.label ?? "Manual" };
+});

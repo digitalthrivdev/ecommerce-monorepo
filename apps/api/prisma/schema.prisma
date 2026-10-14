@@ -422,8 +422,9 @@ model Order {
   deliveryFeeGstRate Decimal? @db.Decimal(5, 2)
   deliveryFeeTax     Decimal  @default(0) @db.Decimal(10, 2)
 
-  // Assigned when the order is delivered, e.g. INV/2026-27/000123.
-  invoiceNumber String? @unique
+  // Assigned when the order is packed, e.g. INV/2026-27/000123, and dated invoicedAt.
+  invoiceNumber String?   @unique
+  invoicedAt    DateTime?
 
   // Seller snapshot for the invoice, taken with the invoice number: legal name, GSTIN (null when
   // none applies) and the default pickup location's address. interStateSupply is true when that
@@ -465,6 +466,7 @@ model Order {
   payment        Payment?
   complaint      Complaint?
   rating         OrderRating?
+  shipment       Shipment?
   refunds        Refund[]
   productReviews ProductReview[]
 
@@ -475,16 +477,18 @@ model Order {
   @@index([couponId, userId])
 }
 
+// SHIPPED onwards follow the shipment (see shipping/shipment-status.ts). RTO: the parcel is
+// going back to, or is back at, the pickup location.
 enum OrderStatus {
   PENDING_PAYMENT
   CONFIRMED
-  STORE_ACCEPTED
-  PICKING
   PACKED
-  READY_FOR_PICKUP
+  SHIPPED
+  IN_TRANSIT
   OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
+  RTO
 }
 
 model OrderItem {
@@ -549,6 +553,86 @@ model OrderStatusHistory {
 
   @@index([orderId, createdAt])
   @@index([notifiedAt, createdAt])
+}
+
+// ─────────────────────────────────────────────
+// SHIPPING
+// ─────────────────────────────────────────────
+
+// One shipment per order. A cancelled shipment is reused when the order is shipped again, so its
+// events stay in the order's tracking history.
+model Shipment {
+  id      String @id @default(cuid())
+  orderId String @unique
+
+  // Carrier that carries it (e.g. "manual", "shiprocket"), fixed for the shipment's life.
+  provider           String
+  providerOrderId    String?
+  providerShipmentId String?
+  awb                String?
+  courierName        String?
+  trackingUrl        String?
+  labelUrl           String?
+
+  status   ShipmentStatus @default(PENDING)
+  // When the event that set `status` happened, so a late webhook doesn't move it back.
+  statusAt DateTime       @default(now())
+
+  // Parcel as booked with the carrier.
+  weightGrams Int
+  lengthCm    Decimal @db.Decimal(7, 2)
+  breadthCm   Decimal @db.Decimal(7, 2)
+  heightCm    Decimal @db.Decimal(7, 2)
+
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order  Order           @relation(fields: [orderId], references: [id])
+  events ShipmentEvent[]
+
+  @@unique([provider, awb])
+  @@index([provider, providerShipmentId])
+}
+
+enum ShipmentStatus {
+  PENDING
+  AWB_ASSIGNED
+  PICKUP_SCHEDULED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  // Delivery attempt failed (customer unavailable, refused, wrong address); the carrier retries.
+  NDR
+  RTO_IN_TRANSIT
+  RTO_DELIVERED
+  CANCELLED
+  LOST
+}
+
+// Tracking history from carrier webhooks, tracking syncs and admins (manual carrier).
+model ShipmentEvent {
+  id         String @id @default(cuid())
+  shipmentId String
+
+  status          ShipmentStatus
+  // The carrier's id for the event, or one derived from its content: each event is recorded once.
+  providerEventId String
+  occurredAt      DateTime
+  location        String?
+  description     String?
+
+  // The admin who recorded it; null for carrier events.
+  createdById String?
+
+  createdAt DateTime @default(now())
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([shipmentId, providerEventId])
+  @@index([shipmentId, occurredAt])
 }
 
 // ─────────────────────────────────────────────
@@ -873,6 +957,10 @@ model PlatformSettings {
   // the API log, in production for admins only. OTP_PROVIDER in the environment overrides this.
   otpProvider String?
 
+  // Carrier new shipments are booked with (e.g. "shiprocket"). Null: manual, the admin books the
+  // courier and types the AWB. Only carriers with working keys can be selected.
+  shippingProvider String?
+
   updatedById String?
 
   createdAt DateTime @default(now())
@@ -896,6 +984,19 @@ model PolicyPage {
 // in the server environment take priority over these.
 model PaymentGatewayCredential {
   gateway String @id
+
+  credentials String
+
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Shipping carrier keys entered by admins in the dashboard, one row per carrier. Stored like
+// PaymentGatewayCredential: encrypted, never returned, and keys in the environment take priority.
+model ShippingCarrierCredential {
+  carrier String @id
 
   credentials String
 

@@ -12,6 +12,7 @@ import {
   MessageSquareWarning,
   ShoppingBag,
   Star,
+  Truck,
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
@@ -38,6 +39,7 @@ import {
   ORDER_STATUS_TEXT,
   ORDER_STEPS,
   orderStep,
+  SHIPMENT_STATUS_TEXT,
   useCancelOrder,
   useOpenInvoice,
   useOrder,
@@ -141,20 +143,58 @@ function StepsCard({ order }: { order: OrderDetail }) {
   );
 }
 
-/** Delivered, cancelled or awaiting payment. */
+/** Delivered, cancelled, returned or awaiting payment. */
 function StatusCard({ order }: { order: OrderDetail }) {
   const text = ORDER_STATUS_TEXT[order.status];
-  const cancelled = order.status === "CANCELLED";
+  const failed = order.status === "CANCELLED" || order.status === "RTO";
   const deliveredAt = order.status === "DELIVERED" ? order.deliveredAt : null;
 
   return (
     <Card className="flex-row items-center">
-      {cancelled ? <Icon as={CircleX} size={30} className="text-destructive" /> : <Icon as={CircleCheck} size={30} className="text-primary" />}
+      {failed ? <Icon as={CircleX} size={30} className="text-destructive" /> : <Icon as={CircleCheck} size={30} className="text-primary" />}
       <View className="flex-1">
         <Text className="text-lg font-extrabold">{text.title}</Text>
         <Text className="text-sm text-muted-foreground">{deliveredAt ? `Delivered at ${formatTime(deliveredAt)}. ${text.detail}` : text.detail}</Text>
       </View>
     </Card>
+  );
+}
+
+/** The courier, the AWB and the tracking events, newest first. */
+function TrackingCard({ shipment }: { shipment: NonNullable<OrderDetail["shipment"]> }) {
+  const events = [...shipment.events].reverse();
+  const trackingUrl = shipment.trackingUrl;
+
+  return (
+    <InfoCard
+      icon={Truck}
+      title={shipment.courierName ?? "Shipment"}
+      detail={SHIPMENT_STATUS_TEXT[shipment.status]}
+      action={trackingUrl ? { label: "Track on courier site", onPress: () => Linking.openURL(trackingUrl) } : undefined}
+    >
+      {shipment.awb ? (
+        <Text selectable className="text-sm text-muted-foreground">
+          AWB <Text className="text-sm font-semibold text-foreground">{shipment.awb}</Text>
+        </Text>
+      ) : null}
+      {events.length > 0 && (
+        <View>
+          {events.map((event, index) => (
+            <View key={`${index}-${event.occurredAt}`} className="flex-row gap-3">
+              <View className="items-center">
+                <View className={cn("mt-1 size-2.5 rounded-full", index === 0 ? "bg-primary" : "bg-muted-foreground/40")} />
+                {index < events.length - 1 && <View className="w-px flex-1 bg-border" />}
+              </View>
+              <View className={cn("flex-1 gap-0.5", index < events.length - 1 && "pb-3")}>
+                <Text className={cn("text-sm", index === 0 ? "font-bold" : "font-semibold text-muted-foreground")}>{SHIPMENT_STATUS_TEXT[event.status]}</Text>
+                {event.description ? <Text className="text-xs text-muted-foreground">{event.description}</Text> : null}
+                <Text className="text-xs text-muted-foreground">{[formatDateTime(event.occurredAt), event.location].filter(Boolean).join(" · ")}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </InfoCard>
   );
 }
 
@@ -342,7 +382,7 @@ function NotificationsCard() {
     <InfoCard
       icon={Bell}
       title="Want to stay up to date?"
-      detail="Turn on notifications so we can tell you when your order is packed and on its way."
+      detail="Turn on notifications so we can tell you when your order ships and when it's out for delivery."
       action={{ label: "Turn on notifications", onPress: () => enable().catch(() => {}) }}
     />
   );
@@ -404,6 +444,7 @@ function OrderBody({ order }: { order: OrderDetail }) {
   const invoice = useOpenInvoice(order.id);
   const address = order.deliveryAddress;
   const live = isLive(order);
+  const hasInvoice = order.invoiceNumber !== null && order.status !== "CANCELLED";
   const chargedLines = order.items.map((item) => ({ compareAtPrice: item.compareAtPrice, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
 
   const confirmCancel = () =>
@@ -417,6 +458,8 @@ function OrderBody({ order }: { order: OrderDetail }) {
       {live ? <StepsCard order={order} /> : <StatusCard order={order} />}
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
+
+      {order.shipment && order.shipment.status !== "CANCELLED" && <TrackingCard shipment={order.shipment} />}
 
       <RatingCard order={order} />
 
@@ -471,10 +514,10 @@ function OrderBody({ order }: { order: OrderDetail }) {
 
       <View className="gap-0.5 px-5">
         <Text className="text-xs text-muted-foreground">Placed {formatDateTime(order.createdAt)}</Text>
-        {order.invoiceNumber && <Text className="text-xs text-muted-foreground">Invoice {order.invoiceNumber}</Text>}
+        {hasInvoice && <Text className="text-xs text-muted-foreground">Invoice {order.invoiceNumber}</Text>}
       </View>
 
-      {order.invoiceNumber && (
+      {hasInvoice && (
         <Button
           variant="outline"
           onPress={() => invoice.mutate(undefined, { onError: (error) => Alert.alert("Couldn't open the invoice", errorMessage(error)) })}

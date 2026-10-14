@@ -1,56 +1,47 @@
-import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, Prisma, ShipmentStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { couponDiscount } from "../coupons/coupons.service.js";
 import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
 import { reviewAccountUserId } from "../settings/settings.service.js";
+import { CANCELLABLE_SHIPMENT_STATUSES, FINAL_SHIPMENT_STATUSES } from "../shipping/shipment-status.js";
+import { toShipmentAdminView } from "../shipping/shipment-views.js";
+import { HAND_TRACKED_CARRIERS, MANUAL_CARRIER } from "../shipping/shipping-provider.js";
 import { lockOrder, transitionOrder } from "./order-status.js";
 import { orderDetailInclude, toDetailView } from "./orders.service.js";
 import { discountShares, includedTax } from "./tax.js";
 
-/** Fulfilment steps, moved on by staff or an admin. */
+/** Fulfilment steps, moved on by staff or an admin. Later steps follow the shipment. */
 export const FULFILMENT_ACTIONS = {
-  accept: { from: [OrderStatus.CONFIRMED], to: OrderStatus.STORE_ACCEPTED },
-  "start-picking": { from: [OrderStatus.STORE_ACCEPTED], to: OrderStatus.PICKING },
-  pack: { from: [OrderStatus.PICKING], to: OrderStatus.PACKED },
-  ready: { from: [OrderStatus.PACKED], to: OrderStatus.READY_FOR_PICKUP },
-} as const satisfies Record<string, { from: OrderStatus[]; to: OrderStatus }>;
-
-/** Delivery steps, moved on by an admin. Delivering counts cash on delivery as collected. */
-export const ADMIN_ACTIONS = {
-  "out-for-delivery": { from: [OrderStatus.READY_FOR_PICKUP], to: OrderStatus.OUT_FOR_DELIVERY },
-  "mark-delivered": { from: [OrderStatus.READY_FOR_PICKUP, OrderStatus.OUT_FOR_DELIVERY], to: OrderStatus.DELIVERED },
+  pack: { from: [OrderStatus.CONFIRMED], to: OrderStatus.PACKED },
 } as const satisfies Record<string, { from: OrderStatus[]; to: OrderStatus }>;
 
 export type FulfilmentAction = keyof typeof FULFILMENT_ACTIONS;
-export type AdminAction = keyof typeof ADMIN_ACTIONS;
 
-const ORDER_ACTIONS = { ...FULFILMENT_ACTIONS, ...ADMIN_ACTIONS };
-
-const STAFF_CANCELLABLE: OrderStatus[] = [
-  OrderStatus.CONFIRMED,
-  OrderStatus.STORE_ACCEPTED,
-  OrderStatus.PICKING,
-  OrderStatus.PACKED,
-  OrderStatus.READY_FOR_PICKUP,
-];
+/** Until the order ships; a shipment has to be cancelled first. */
+const STAFF_CANCELLABLE: OrderStatus[] = [OrderStatus.CONFIRMED, OrderStatus.PACKED];
 
 /** Items can be marked unavailable until the order is packed. */
-const ITEMS_EDITABLE: OrderStatus[] = [OrderStatus.STORE_ACCEPTED, OrderStatus.PICKING];
+const ITEMS_EDITABLE: OrderStatus[] = [OrderStatus.CONFIRMED];
 
 function hiddenStatuses(isAdmin: boolean) {
   return isAdmin ? [] : [OrderStatus.PENDING_PAYMENT];
 }
 
-// Admins can also cancel failed deliveries; the items come back, so stock is returned.
-const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, OrderStatus.OUT_FOR_DELIVERY];
+// Admins can also cancel an online order still waiting for payment.
+const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [OrderStatus.PENDING_PAYMENT];
 
 function cancellableFrom(isAdmin: boolean) {
   return isAdmin ? [...STAFF_CANCELLABLE, ...ADMIN_ONLY_CANCELLABLE] : STAFF_CANCELLABLE;
 }
 
-function allowedActions(status: OrderStatus, isAdmin: boolean) {
-  const actions: string[] = Object.entries(isAdmin ? ORDER_ACTIONS : FULFILMENT_ACTIONS)
+type ShipmentState = { status: ShipmentStatus; provider: string } | null;
+
+const isActiveShipment = (shipment: ShipmentState): shipment is NonNullable<ShipmentState> =>
+  shipment !== null && shipment.status !== ShipmentStatus.CANCELLED;
+
+function allowedActions(status: OrderStatus, isAdmin: boolean, shipment: ShipmentState) {
+  const actions: string[] = Object.entries(FULFILMENT_ACTIONS)
     .filter(([, action]) => (action.from as readonly OrderStatus[]).includes(status))
     .map(([name]) => name);
 
@@ -58,8 +49,17 @@ function allowedActions(status: OrderStatus, isAdmin: boolean) {
     actions.push("mark-unavailable");
   }
 
-  if (cancellableFrom(isAdmin).includes(status)) {
-    actions.push("cancel");
+  if (isActiveShipment(shipment)) {
+    const manualHandedOver = shipment.provider === MANUAL_CARRIER && shipment.status === ShipmentStatus.PICKED_UP;
+    if (CANCELLABLE_SHIPMENT_STATUSES.includes(shipment.status) || manualHandedOver) {
+      actions.push("cancel-shipment");
+    }
+    if (isAdmin && HAND_TRACKED_CARRIERS.includes(shipment.provider) && !FINAL_SHIPMENT_STATUSES.includes(shipment.status)) {
+      actions.push("add-tracking");
+    }
+  } else {
+    if (status === OrderStatus.PACKED) actions.push("ship");
+    if (cancellableFrom(isAdmin).includes(status)) actions.push("cancel");
   }
 
   return actions;
@@ -114,6 +114,7 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
           customerPhone: true,
           createdAt: true,
           _count: { select: { items: true } },
+          shipment: { select: { status: true, provider: true, courierName: true, awb: true } },
           // Enough recent entries to skip "item not found" notes, which do not change the status.
           statusHistory: { orderBy: { createdAt: "desc" }, take: 5, select: { fromStatus: true, toStatus: true, createdAt: true } },
         },
@@ -124,15 +125,16 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
     const reviewUserId = await reviewAccountUserId(prisma);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, statusHistory, userId, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, statusHistory, userId, shipment, ...order }) => ({
         ...order,
+        shipment: shipment && { status: shipment.status, courierName: shipment.courierName, awb: shipment.awb },
         reviewAccount: userId === reviewUserId,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
         /** When the order reached its current status, for "waiting 8 min" timers. */
         statusChangedAt:
           statusHistory.find((entry) => entry.toStatus === order.status && entry.fromStatus !== entry.toStatus)?.createdAt ?? order.createdAt,
-        allowedActions: allowedActions(order.status, actor.isAdmin),
+        allowedActions: allowedActions(order.status, actor.isAdmin, shipment),
       })),
       total,
       limit: query.limit,
@@ -169,6 +171,7 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
     const refundable = actor.isAdmin ? payments.refundableAmount(order, order.payment) : new Prisma.Decimal(0);
     return {
       ...view,
+      shipment: order.shipment && toShipmentAdminView(order.shipment),
       reviewAccount: order.userId === reviewUserId,
       statusHistory: order.statusHistory.map(({ changedById, ...entry }) => ({
         ...entry,
@@ -180,13 +183,12 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
         createdBy: createdBy?.name ?? null,
       })),
       refundable: refundable.toFixed(2),
-      allowedActions: [...allowedActions(order.status, actor.isAdmin), ...(refundable.gt(0) ? ["refund"] : [])],
+      allowedActions: [...allowedActions(order.status, actor.isAdmin, order.shipment), ...(refundable.gt(0) ? ["refund"] : [])],
     };
   }
 
-  /** Admin actions are admin-only; enforced by the route. */
-  async function performAction(orderId: string, action: FulfilmentAction | AdminAction, actor: Actor, note?: string) {
-    const { from, to } = ORDER_ACTIONS[action];
+  async function performAction(orderId: string, action: FulfilmentAction, actor: Actor, note?: string) {
+    const { from, to } = FULFILMENT_ACTIONS[action];
 
     await prisma.$transaction((tx) =>
       transitionOrder(tx, {
@@ -203,8 +205,13 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
   }
 
   async function cancelOrder(orderId: string, actor: Actor, reason: string) {
-    await prisma.$transaction((tx) =>
-      transitionOrder(tx, {
+    await prisma.$transaction(async (tx) => {
+      await lockOrder(tx, orderId, undefined, hiddenStatuses(actor.isAdmin));
+      const shipment = await tx.shipment.findUnique({ where: { orderId }, select: { status: true, provider: true } });
+      if (isActiveShipment(shipment)) {
+        throw new AppError(409, "SHIPMENT_ACTIVE", "Cancel the shipment before cancelling the order", { shipmentStatus: shipment.status });
+      }
+      await transitionOrder(tx, {
         orderId,
         hiddenStatuses: hiddenStatuses(actor.isAdmin),
         allowedFrom: cancellableFrom(actor.isAdmin),
@@ -212,8 +219,8 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
         changedById: actor.userId,
         note: reason,
         notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
-      }),
-    );
+      });
+    });
     await payments.settleCancelledOrder(orderId);
 
     return getOrder(orderId, actor);

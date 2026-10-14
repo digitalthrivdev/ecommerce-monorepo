@@ -88,7 +88,7 @@ export default async function PickupLocationsPage() {
           </Card>
         )}
         <p className="text-sm text-muted-foreground">
-          Invoices of orders delivered from now on show the default location as the seller&apos;s address. You can have up to 20 locations.
+          Invoices of orders packed from now on show the default location as the seller&apos;s address. You can have up to 20 locations.
         </p>
       </div>
     </>

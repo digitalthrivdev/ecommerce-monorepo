@@ -16,7 +16,7 @@ import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getCurrentUser, getPublicSettings } from "@/lib/dal";
+import { getActiveCarrier, getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { BOARD_STATUSES } from "@/lib/order-flow";
 import { listOrders } from "@/lib/orders";
@@ -34,6 +34,7 @@ type Tab = { id: string; label: string; statuses?: OrderStatus[]; adminOnly?: bo
 const TABS: Tab[] = [
   { id: "active", label: "In progress", statuses: BOARD_STATUSES, oldestFirst: true },
   { id: "delivered", label: "Delivered", statuses: ["DELIVERED"] },
+  { id: "rto", label: "Not delivered (RTO)", statuses: ["RTO"] },
   { id: "cancelled", label: "Cancelled", statuses: ["CANCELLED"] },
   { id: "unpaid", label: "Waiting for payment", statuses: ["PENDING_PAYMENT"], adminOnly: true },
   { id: "all", label: "All" },
@@ -43,6 +44,13 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 
 function payment(order: OrderListItem, currency: string) {
   return order.paymentMethod === "COD" ? `Cash ${formatMoney(order.total, currency)}` : `Paid online · ${formatMoney(order.total, currency)}`;
+}
+
+/** "Delhivery · AWB 1234567890" while the order has a live shipment. */
+function shipmentLine(order: OrderListItem) {
+  const shipment = order.shipment;
+  if (!shipment?.awb || shipment.status === "CANCELLED") return null;
+  return [shipment.courierName, `AWB ${shipment.awb}`].filter(Boolean).join(" · ");
 }
 
 export default async function OrdersPage({ searchParams }: PageProps<"/orders">) {
@@ -56,7 +64,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
   const tab = tabs.find((candidate) => candidate.id === first(params.tab)) ?? (q ? tabs.at(-1)! : tabs[0]!);
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const [orders, settings] = await Promise.all([
+  const [orders, settings, carrier] = await Promise.all([
     view === "board"
       ? listOrders({ status: BOARD_STATUSES, sort: "oldest", limit: BOARD_LIMIT, offset: 0 })
       : listOrders({
@@ -67,6 +75,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
           offset: (page - 1) * PAGE_SIZE,
         }),
     getPublicSettings(),
+    getActiveCarrier(),
   ]);
 
   const href = (changes: Record<string, string | undefined>) => {
@@ -123,7 +132,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
       <PageBody className="gap-4">
         {view === "board" ? (
           <>
-            <OrderBoard orders={orders.items} currency={currency} />
+            <OrderBoard orders={orders.items} currency={currency} carrier={carrier} />
             {orders.total > BOARD_LIMIT && (
               <p className="text-sm text-muted-foreground">
                 Showing the {BOARD_LIMIT} oldest of {orders.total} open orders.{" "}
@@ -197,6 +206,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                         <p className="text-xs text-muted-foreground">
                           {payment(order, currency)} · {formatDateTime(order.createdAt, settings.timezone)}
                         </p>
+                        {shipmentLine(order) && <p className="text-xs text-muted-foreground">{shipmentLine(order)}</p>}
                       </li>
                     ))}
                   </ul>
@@ -231,6 +241,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                           </TableCell>
                           <TableCell>
                             <OrderStatusPill status={order.status} />
+                            {shipmentLine(order) && <div className="mt-1 text-xs text-muted-foreground">{shipmentLine(order)}</div>}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="tabular-nums">{formatMoney(order.total, currency)}</div>
@@ -241,8 +252,10 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                           <TableCell className="pr-4 text-right">
                             <NextStepButton
                               orderId={order.id}
+                              orderNumber={order.orderNumber}
                               status={order.status}
                               allowedActions={order.allowedActions}
+                              carrier={carrier}
                               size="default"
                             />
                           </TableCell>

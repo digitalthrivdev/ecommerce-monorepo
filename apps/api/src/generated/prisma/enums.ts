@@ -39,16 +39,34 @@ export type InventoryAdjustmentReason = (typeof InventoryAdjustmentReason)[keyof
 export const OrderStatus = {
   PENDING_PAYMENT: 'PENDING_PAYMENT',
   CONFIRMED: 'CONFIRMED',
-  STORE_ACCEPTED: 'STORE_ACCEPTED',
-  PICKING: 'PICKING',
   PACKED: 'PACKED',
-  READY_FOR_PICKUP: 'READY_FOR_PICKUP',
+  SHIPPED: 'SHIPPED',
+  IN_TRANSIT: 'IN_TRANSIT',
   OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
   DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED'
+  CANCELLED: 'CANCELLED',
+  RTO: 'RTO'
 } as const
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
+
+
+export const ShipmentStatus = {
+  PENDING: 'PENDING',
+  AWB_ASSIGNED: 'AWB_ASSIGNED',
+  PICKUP_SCHEDULED: 'PICKUP_SCHEDULED',
+  PICKED_UP: 'PICKED_UP',
+  IN_TRANSIT: 'IN_TRANSIT',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  NDR: 'NDR',
+  RTO_IN_TRANSIT: 'RTO_IN_TRANSIT',
+  RTO_DELIVERED: 'RTO_DELIVERED',
+  CANCELLED: 'CANCELLED',
+  LOST: 'LOST'
+} as const
+
+export type ShipmentStatus = (typeof ShipmentStatus)[keyof typeof ShipmentStatus]
 
 
 export const RefundMethod = {

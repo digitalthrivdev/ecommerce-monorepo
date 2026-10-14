@@ -9,12 +9,13 @@ import { Elapsed } from "@/components/orders/elapsed";
 import { NextStepButton, OrderMoreMenu } from "@/components/orders/order-actions";
 import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
+import { ShipmentCard } from "@/components/orders/shipment-card";
 import { PageHeader } from "@/components/page-header";
 import { Block, PageBody, Panel, Section } from "@/components/section";
 import { Stars } from "@/components/stars";
 import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, getPublicSettings } from "@/lib/dal";
+import { getActiveCarrier, getCurrentUser, getPublicSettings } from "@/lib/dal";
 import {
   COMPLAINT_REASON_LABELS,
   COMPLAINT_STATUS_LABELS,
@@ -42,7 +43,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export default async function OrderPage({ params }: PageProps<"/orders/[orderId]">) {
   const { orderId } = await params;
   const user = await getCurrentUser();
-  const [order, settings] = await Promise.all([getOrder(orderId), getPublicSettings()]);
+  const [order, settings, carrier] = await Promise.all([getOrder(orderId), getPublicSettings(), getActiveCarrier()]);
 
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const date = (value: string) => formatDateTime(value, settings.timezone);
@@ -51,7 +52,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
     address.latitude && address.longitude
       ? `https://www.google.com/maps/search/?api=1&query=${address.latitude},${address.longitude}`
       : null;
-  const isOpen = order.status !== "DELIVERED" && order.status !== "CANCELLED";
+  const isOpen = order.status !== "DELIVERED" && order.status !== "CANCELLED" && order.status !== "RTO";
   const packItemIds = order.items.filter((item) => item.quantity > item.unavailableQuantity).map((item) => item.id);
   const cancelEntry = order.status === "CANCELLED" ? order.statusHistory.findLast((entry) => entry.toStatus === "CANCELLED") : null;
   const collectCash = order.paymentMethod === "COD" && isOpen && order.payment?.status !== "PAID";
@@ -86,16 +87,13 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 </a>
               </Button>
             )}
-            <OrderMoreMenu
+            <OrderMoreMenu orderId={order.id} orderNumber={order.orderNumber} canCancel={order.allowedActions.includes("cancel")} />
+            <NextStepButton
               orderId={order.id}
               orderNumber={order.orderNumber}
               status={order.status}
-              canCancel={order.allowedActions.includes("cancel")}
-            />
-            <NextStepButton
-              orderId={order.id}
-              status={order.status}
               allowedActions={order.allowedActions}
+              carrier={carrier}
               packItemIds={packItemIds}
             />
           </>
@@ -114,6 +112,11 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
             }
           >
             Reported {date(order.complaint.createdAt)}
+          </Notice>
+        )}
+        {order.status === "RTO" && (
+          <Notice tone="danger" title="Not delivered">
+            The courier couldn&apos;t deliver the parcel and is returning it to the pickup location (RTO).
           </Notice>
         )}
         {cancelEntry ? (
@@ -158,6 +161,10 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
                 )}
               </dl>
             </Section>
+
+            {order.shipment && (
+              <ShipmentCard orderId={order.id} shipment={order.shipment} allowedActions={order.allowedActions} timezone={settings.timezone} />
+            )}
 
             <details className="group rounded-xl border bg-card shadow-xs">
               <summary className="flex h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 font-semibold [&::-webkit-details-marker]:hidden">
@@ -277,19 +284,19 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               )}
             </Block>
 
-            <Block title="Delivery">
-              <p className="text-sm text-muted-foreground">
-                {order.deliveredAt
-                  ? `Delivered ${date(order.deliveredAt)}.`
-                  : order.status === "READY_FOR_PICKUP"
-                    ? "Packed and waiting to go out."
-                    : order.status === "OUT_FOR_DELIVERY"
-                      ? "Out for delivery."
+            {!order.shipment && (
+              <Block title="Shipping">
+                <p className="text-sm text-muted-foreground">
+                  {order.deliveredAt
+                    ? `Delivered ${date(order.deliveredAt)}.`
+                    : order.status === "PACKED"
+                      ? "Packed. Ship it to book the courier."
                       : isOpen
-                        ? "Goes out once the order is packed."
-                        : "Not delivered."}
-              </p>
-            </Block>
+                        ? "Ships once the order is packed."
+                        : "Not shipped."}
+                </p>
+              </Block>
+            )}
 
             {order.rating && (
               <Block title="Customer rating" hint={`Rated ${date(order.rating.createdAt)}`}>

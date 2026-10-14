@@ -10,18 +10,19 @@ import { InvoiceSettingsForm } from "@/components/settings/invoice-settings-form
 import { PaymentGatewayForm } from "@/components/settings/payment-gateway-form";
 import { ReviewLoginForm } from "@/components/settings/review-login-form";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { CarrierKeys, ShippingCarrierForm } from "@/components/settings/shipping-carrier-form";
 import { SmsProviderForm, SmsProviderKeys } from "@/components/settings/sms-provider-form";
 import { AppLinksForm, PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/components/settings/website-settings";
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
-import type { EditablePolicyPage, PickupLocation, PlatformSettings } from "@/lib/types";
+import { activeCarrierOf, MANUAL_CARRIER, type EditablePolicyPage, type PickupLocation, type PlatformSettings } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/website";
 
 export const metadata: Metadata = { title: "Settings" };
 
-const TABS = ["rules", "payments", "sms", "invoices", "website", "about"] as const;
+const TABS = ["rules", "payments", "shipping", "sms", "invoices", "website", "about"] as const;
 type Tab = (typeof TABS)[number];
 
 function Dot({ ok }: { ok: boolean }) {
@@ -51,6 +52,34 @@ function PaymentsStatus({ settings }: { settings: PlatformSettings }) {
   ) : (
     <Notice tone="success" title={`Customers pay online through ${active.label}`}>
       Cash on delivery stays available too.
+    </Notice>
+  );
+}
+
+function ShippingStatus({ settings }: { settings: PlatformSettings }) {
+  const active = activeCarrierOf(settings);
+  if (settings.shippingProvider !== (active?.name ?? MANUAL_CARRIER)) {
+    const chosen = settings.shippingCarriers.find((carrier) => carrier.name === settings.shippingProvider);
+    return (
+      <Notice tone="danger" title={`${chosen?.label ?? settings.shippingProvider} has no working keys`}>
+        Orders are shipped manually until you add its keys again or choose another carrier.
+      </Notice>
+    );
+  }
+  if (!active || active.name === MANUAL_CARRIER) {
+    return (
+      <Notice tone="info" title="You book couriers yourself">
+        When you ship an order, enter the courier&apos;s name and AWB number. Add tracking updates from the order page.
+      </Notice>
+    );
+  }
+  return active.testMode ? (
+    <Notice tone="warning" title={`Shipments go to ${active.label}`}>
+      Nothing is really shipped. Choose a real carrier before opening to customers.
+    </Notice>
+  ) : (
+    <Notice tone="success" title={`Shipments are booked with ${active.label}`}>
+      Labels, pickups and tracking come from {active.label}.
     </Notice>
   );
 }
@@ -92,7 +121,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
     apiFetch<PlatformSettings>("/settings/platform"),
     getPublicSettings(),
     tab === "website" ? apiFetch<EditablePolicyPage[]>("/settings/policy-pages") : null,
-    tab === "invoices" ? apiFetch<{ items: PickupLocation[] }>("/pickup-locations") : null,
+    tab === "invoices" || tab === "shipping" ? apiFetch<{ items: PickupLocation[] }>("/pickup-locations") : null,
   ]);
   const defaultLocation = pickupLocations?.items.find((location) => location.isDefault);
   const siteUrl = getSiteUrl();
@@ -105,11 +134,14 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const activeGateway = settings.paymentGateways.find((gateway) => gateway.name === settings.paymentProvider);
   const paymentsOk = Boolean(activeGateway?.configured && !activeGateway.testMode);
   const smsOk = Boolean(settings.sms.active);
+  const carrierInUse = activeCarrierOf(settings);
+  const shippingOk = !carrierInUse?.testMode && settings.shippingProvider === (carrierInUse?.name ?? MANUAL_CARRIER);
+  const carriersWithKeys = settings.shippingCarriers.some((carrier) => carrier.needsCredentials);
   const lastSaved = settings.updatedById ? formatDateTime(settings.updatedAt, deployment.timezone) : null;
 
   return (
     <>
-      <PageHeader title="Settings" description="How your shop charges, takes payments and signs people in" />
+      <PageHeader title="Settings" description="How your shop charges, takes payments, ships and signs people in" />
 
       <PageBody narrow className="max-w-3xl gap-6 pb-0">
         <PageTabs
@@ -118,6 +150,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           tabs={[
             { id: "rules", label: "Shop rules", href: "/settings" },
             { id: "payments", label: "Online payments", href: "/settings?tab=payments", badge: <Dot ok={paymentsOk} /> },
+            { id: "shipping", label: "Shipping", href: "/settings?tab=shipping", badge: <Dot ok={shippingOk} /> },
             { id: "sms", label: "SMS sign-in", href: "/settings?tab=sms", badge: <Dot ok={smsOk} /> },
             { id: "invoices", label: "GST invoices", href: "/settings?tab=invoices", badge: <Dot ok={Boolean(settings.gstin)} /> },
             { id: "website", label: "Website", href: "/settings?tab=website" },
@@ -144,6 +177,45 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               <Panel className="p-5">
                 <PaymentGatewayForm
                   key={`${settings.updatedAt}-${settings.paymentGateways.map((gateway) => `${gateway.name}:${gateway.configured}`).join()}`}
+                  settings={settings}
+                />
+              </Panel>
+            </Section>
+          </div>
+        )}
+
+        {tab === "shipping" && (
+          <div className="flex flex-col gap-8 pb-12">
+            <ShippingStatus settings={settings} />
+            {pickupLocations && !defaultLocation && (
+              <Notice tone="warning" title="No pickup location yet">
+                Orders can&apos;t be shipped until you{" "}
+                <Link href="/pickup-locations" className="font-medium underline underline-offset-4">
+                  add the address couriers collect from
+                </Link>
+                .
+              </Notice>
+            )}
+            {carriersWithKeys && (
+              <Section step={1} title="Add your carrier account keys" hint="Copy them from your carrier account. They are stored safely and never shown again.">
+                <Panel className="p-5">
+                  <CarrierKeys
+                    carriers={settings.shippingCarriers}
+                    activeCarrier={settings.shippingProvider}
+                    canStore={settings.canStoreSecrets}
+                    timezone={deployment.timezone}
+                  />
+                </Panel>
+              </Section>
+            )}
+            <Section
+              step={carriersWithKeys ? 2 : undefined}
+              title="Choose how orders are shipped"
+              hint={carriersWithKeys ? "Only carriers with keys can be chosen." : undefined}
+            >
+              <Panel className="p-5">
+                <ShippingCarrierForm
+                  key={`${settings.updatedAt}-${settings.shippingCarriers.map((carrier) => `${carrier.name}:${carrier.configured}`).join()}`}
                   settings={settings}
                 />
               </Panel>
@@ -182,7 +254,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           <div className="flex flex-col gap-8 pb-12">
             {!settings.gstin && (
               <Notice tone="warning" title="Invoices have no GSTIN yet">
-                Delivered orders get an invoice the customer can download. Add your GSTIN so it can be used as a tax invoice.
+                Packed orders get an invoice the customer can download. Add your GSTIN so it can be used as a tax invoice.
               </Notice>
             )}
             {pickupLocations && !defaultLocation && (
@@ -203,7 +275,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                 .
               </Notice>
             )}
-            <Section title="Seller on invoices" hint="Printed on the invoice of each order when it is delivered. Changes apply to orders delivered later.">
+            <Section title="Seller on invoices" hint="Printed on the invoice of each order when it is packed. Changes apply to orders packed later.">
               <Panel className="p-5">
                 <InvoiceSettingsForm key={settings.updatedAt} settings={settings} />
               </Panel>

@@ -19,23 +19,78 @@ export type CurrentUser = {
 
 export type DashboardUser = CurrentUser & { role: DashboardRole };
 
+/** From SHIPPED on, the order follows its shipment. RTO: the parcel couldn't be delivered and goes back. */
 export type OrderStatus =
   | "PENDING_PAYMENT"
   | "CONFIRMED"
-  | "STORE_ACCEPTED"
-  | "PICKING"
   | "PACKED"
-  | "READY_FOR_PICKUP"
+  | "SHIPPED"
+  | "IN_TRANSIT"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "RTO";
 
 export type PaymentMethod = "COD" | "ONLINE";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED";
 
-export type FulfilmentAction = "accept" | "start-picking" | "pack" | "ready";
-export type AdminOrderAction = "out-for-delivery" | "mark-delivered";
-export type OrderAction = FulfilmentAction | AdminOrderAction | "cancel" | "mark-unavailable" | "refund";
+/** `add-tracking` is admin-only, for carriers without tracking (manual and the test carrier). */
+export type OrderAction = "pack" | "mark-unavailable" | "ship" | "cancel" | "cancel-shipment" | "add-tracking" | "refund";
+
+/** NDR: a delivery attempt failed and the carrier tries again. */
+export type ShipmentStatus =
+  | "PENDING"
+  | "AWB_ASSIGNED"
+  | "PICKUP_SCHEDULED"
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "NDR"
+  | "RTO_IN_TRANSIT"
+  | "RTO_DELIVERED"
+  | "CANCELLED"
+  | "LOST";
+
+/** Updates an admin can record by hand, in the order the API lists them. */
+export const MANUAL_TRACKING_STATUSES = [
+  "PICKED_UP",
+  "IN_TRANSIT",
+  "OUT_FOR_DELIVERY",
+  "NDR",
+  "DELIVERED",
+  "RTO_IN_TRANSIT",
+  "RTO_DELIVERED",
+  "LOST",
+] as const satisfies readonly ShipmentStatus[];
+
+export type ManualTrackingStatus = (typeof MANUAL_TRACKING_STATUSES)[number];
+
+/** The carrier that books shipments by hand: the admin types the courier and AWB. */
+export const MANUAL_CARRIER = "manual";
+
+export type ShipmentEvent = { status: ShipmentStatus; occurredAt: string; location: string | null; description: string | null };
+
+export type Shipment = {
+  id: string;
+  /** Carrier name, e.g. "manual"; fixed for the shipment's life. */
+  provider: string;
+  status: ShipmentStatus;
+  statusAt: string;
+  courierName: string | null;
+  awb: string | null;
+  trackingUrl: string | null;
+  labelUrl: string | null;
+  providerOrderId: string | null;
+  providerShipmentId: string | null;
+  parcel: { weightGrams: number; lengthCm: string; breadthCm: string; heightCm: string };
+  /** Oldest first. */
+  events: ShipmentEvent[];
+  createdAt: string;
+};
+
+/** The carrier new shipments are booked with, for the ship dialog. */
+export type ActiveCarrier = { name: string; label: string };
 
 export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
 export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
@@ -129,13 +184,15 @@ export type OrderListItem = {
   allowedActions: OrderAction[];
   /** Placed through the review login, by an app store or payment gateway reviewer. */
   reviewAccount: boolean;
+  shipment: Pick<Shipment, "status" | "courierName" | "awb"> | null;
 };
 
 export type OrderList = Paginated<OrderListItem> & {
   statusCounts: Partial<Record<OrderStatus, number>>;
 };
 
-export type AttentionReason = "NOT_ACCEPTED" | "NOT_DISPATCHED";
+/** NOT_PACKED: new for too long. NOT_SHIPPED: packed but the courier hasn't picked it up. */
+export type AttentionReason = "NOT_PACKED" | "NOT_SHIPPED";
 
 export type AttentionList = {
   items: Array<{
@@ -199,8 +256,10 @@ export type OrderDetail = {
   /** GST rate included in the delivery fee; null for orders placed before it was recorded. */
   deliveryFeeGstRate: string | null;
   deliveryFeeTax: string;
-  /** Assigned when the order is delivered. */
+  /** Assigned when the order is packed. */
   invoiceNumber: string | null;
+  /** Null until the order is shipped; a cancelled shipment stays until the order ships again. */
+  shipment: Shipment | null;
   deliveryAddress: {
     name: string;
     phone: string;
@@ -535,6 +594,18 @@ export type PaymentGatewayOption = IntegrationKeys & {
   webhookEvents: string | null;
 };
 
+/** Same shape as a payment gateway. The manual and test carriers need no keys. */
+export type ShippingCarrierOption = PaymentGatewayOption;
+
+/** The carrier in use, as the API decides: the chosen one while it has working keys, otherwise manual. */
+export function activeCarrierOf(settings: Pick<PlatformSettings, "shippingProvider" | "shippingCarriers">) {
+  const { shippingProvider, shippingCarriers } = settings;
+  return (
+    shippingCarriers.find((carrier) => carrier.name === shippingProvider && carrier.configured) ??
+    shippingCarriers.find((carrier) => carrier.name === MANUAL_CARRIER)
+  );
+}
+
 export type ReviewLogin = { enabled: boolean; phone: string | null; codeSet: boolean };
 
 export type PlatformSettings = {
@@ -562,6 +633,9 @@ export type PlatformSettings = {
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];
+  /** Carrier new shipments are booked with; "manual" when none is chosen. */
+  shippingProvider: string;
+  shippingCarriers: ShippingCarrierOption[];
   /** False until SECRETS_ENCRYPTION_KEY is set on the server; keys can then only come from its environment. */
   canStoreSecrets: boolean;
   sms: SmsSettings;
@@ -721,9 +795,9 @@ export type DashboardStats = {
   timezone: string;
   currency: string;
   today: { orders: number; revenue: string; delivered: number; cancelled: number };
-  pipeline: Record<Exclude<OrderStatus, "PENDING_PAYMENT" | "DELIVERED" | "CANCELLED">, number>;
+  pipeline: Record<Exclude<OrderStatus, "PENDING_PAYMENT" | "DELIVERED" | "CANCELLED" | "RTO">, number>;
   activeOrders: number;
-  /** Packed and ready, not out for delivery yet. */
+  /** Packed, not picked up by the courier yet. */
   awaitingDispatch: number;
   lowStock: { count: number; threshold: number };
   customers: number | null;

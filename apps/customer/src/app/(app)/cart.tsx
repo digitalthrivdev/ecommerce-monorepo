@@ -357,7 +357,7 @@ function CartContent({ cart }: { cart: Cart }) {
           <View className="flex-1 gap-0.5">
             <Text className="text-sm font-bold">Cancellation policy</Text>
             <Text className="text-xs leading-4 text-muted-foreground">
-              You can cancel your order until it is accepted. If you paid online, the full amount is refunded.
+              You can cancel your order until it is packed. If you paid online, the full amount is refunded.
             </Text>
           </View>
         </View>

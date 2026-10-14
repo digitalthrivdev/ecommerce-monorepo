@@ -19,16 +19,13 @@ export default fp(async (app) => {
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-  // The demo's order flow: the fulfilment steps (as test staff) and the delivery steps (admin only).
+  // The demo's order flow: packing, and tracking a manually shipped order. Booking with a carrier
+  // is left out, since a real carrier would charge for it.
   const TEST_ADMIN_WRITES = new Set([
     "/auth/logout",
-    "/admin/orders/:orderId/accept",
-    "/admin/orders/:orderId/start-picking",
     "/admin/orders/:orderId/items/:itemId/unavailable",
     "/admin/orders/:orderId/pack",
-    "/admin/orders/:orderId/ready",
-    "/admin/orders/:orderId/out-for-delivery",
-    "/admin/orders/:orderId/mark-delivered",
+    "/admin/orders/:orderId/shipment/events",
   ]);
   const testAccountError = () => new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
 

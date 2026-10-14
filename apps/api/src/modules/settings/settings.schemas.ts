@@ -42,6 +42,7 @@ export const updateSettingsBodySchema = z
     appDownloadUrl: downloadUrlSchema,
     paymentProvider: z.string().trim().min(1).max(32).nullable(),
     otpProvider: z.string().trim().min(1).max(32).nullable(),
+    shippingProvider: z.string().trim().min(1).max(32).nullable(),
   })
   .partial()
   .strict()
@@ -51,6 +52,10 @@ export type UpdateSettingsInput = z.infer<typeof updateSettingsBodySchema>;
 
 export const gatewayParamsSchema = z.object({
   gateway: z.string().min(1).max(32),
+});
+
+export const carrierParamsSchema = z.object({
+  carrier: z.string().min(1).max(32),
 });
 
 export const otpProviderParamsSchema = z.object({

@@ -1,5 +1,5 @@
 import { env } from "../../config/env.js";
-import { OrderStatus, Prisma } from "../../generated/prisma/client";
+import { Prisma } from "../../generated/prisma/client";
 import { splitIntraState, stateCodes } from "../../shared/gst.js";
 
 /** SAC for local delivery services, used for the delivery fee line. */
@@ -42,7 +42,7 @@ export const invoiceSelect = {
       taxAmount: true,
     },
   },
-  statusHistory: { where: { toStatus: OrderStatus.DELIVERED }, orderBy: { createdAt: "asc" }, take: 1, select: { createdAt: true } },
+  invoicedAt: true,
 } satisfies Prisma.OrderSelect;
 
 export type InvoiceOrder = Prisma.OrderGetPayload<{ select: typeof invoiceSelect }>;
@@ -128,14 +128,13 @@ export function buildInvoice(order: InvoiceOrder) {
   }
 
   const sum = (key: "taxable" | "cgst" | "sgst" | "igst" | "tax" | "total") => lines.reduce((total, line) => total.plus(line[key]), zero());
-  const deliveredAt = order.statusHistory[0]?.createdAt ?? null;
   const address = [order.addressLine1, order.addressLine2, order.landmark && `Near ${order.landmark}`, order.city, `${order.state} ${order.postalCode}`]
     .filter(Boolean)
     .join(", ");
 
   return {
     invoiceNumber: order.invoiceNumber!,
-    invoiceDate: deliveredAt ? formatInvoiceDate(deliveredAt) : "",
+    invoiceDate: order.invoicedAt ? formatInvoiceDate(order.invoicedAt) : "",
     orderNumber: order.orderNumber,
     orderDate: formatInvoiceDate(order.createdAt),
     paymentMethod: order.paymentMethod === "COD" ? "Cash on delivery" : "Paid online",

@@ -5,15 +5,11 @@ import { env } from "../../config/env.js";
 import { UserRole } from "../../generated/prisma/client";
 import { orderRefundBodySchema } from "../complaints/complaints.schemas.js";
 import { createComplaintsService } from "../complaints/complaints.service.js";
+import { shipmentEventBodySchema, shipOrderBodySchema } from "../shipping/shipments.schemas.js";
+import { createShipmentsService } from "../shipping/shipments.service.js";
 import { createImageStore } from "../uploads/image-store.js";
 import { createDashboardService } from "./dashboard.service.js";
-import {
-  ADMIN_ACTIONS,
-  FULFILMENT_ACTIONS,
-  createManageOrdersService,
-  type AdminAction,
-  type FulfilmentAction,
-} from "./manage-orders.service.js";
+import { FULFILMENT_ACTIONS, createManageOrdersService, type FulfilmentAction } from "./manage-orders.service.js";
 import { manageOrdersQuerySchema } from "./orders.schemas.js";
 
 const idSchema = z.string().trim().min(1).max(64);
@@ -33,10 +29,14 @@ const unavailableBodySchema = z
   .object({ quantity: z.number().int().min(1).max(10_000).optional() })
   .default({});
 
-/** Orders in the dashboard. Staff run the fulfilment steps; delivery steps and refunds are admin-only. */
+/**
+ * Orders in the dashboard. Staff pack and ship orders; recording tracking by hand and refunds are
+ * admin-only.
+ */
 const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
   const orders = createManageOrdersService(app.prisma, app.payments);
   const dashboard = createDashboardService(app.prisma);
+  const shipments = createShipmentsService(app.prisma, app.log);
   const complaints = createComplaintsService(app.prisma, app.payments, app.notifications.notify, createImageStore(env.UPLOADS_DIR).root);
   const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };
 
@@ -67,13 +67,38 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
     });
   }
 
-  for (const action of Object.keys(ADMIN_ACTIONS) as AdminAction[]) {
-    app.post(`/:orderId/${action}`, adminOnly, async (request) => {
-      const { orderId } = orderParamsSchema.parse(request.params);
-      const { note } = actionBodySchema.parse(request.body ?? undefined);
-      return orders.performAction(orderId, action, actor(request), note);
-    });
-  }
+  app.post("/:orderId/shipment", async (request, reply) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    const body = shipOrderBodySchema.parse(request.body);
+    await shipments.shipOrder(orderId, body, actor(request));
+    return reply.status(201).send(await orders.getOrder(orderId, actor(request)));
+  });
+
+  app.post("/:orderId/shipment/cancel", async (request) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    await shipments.cancelShipment(orderId, actor(request));
+    return orders.getOrder(orderId, actor(request));
+  });
+
+  app.post("/:orderId/shipment/label", async (request) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    await shipments.refreshLabel(orderId);
+    return orders.getOrder(orderId, actor(request));
+  });
+
+  app.post("/:orderId/shipment/sync", async (request) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    await shipments.syncTracking(orderId);
+    return orders.getOrder(orderId, actor(request));
+  });
+
+  /** For carriers without tracking: delivered marks cash on delivery as collected. */
+  app.post("/:orderId/shipment/events", adminOnly, async (request) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    const body = shipmentEventBodySchema.parse(request.body);
+    await shipments.addEvent(orderId, body, actor(request));
+    return orders.getOrder(orderId, actor(request));
+  });
 
   app.post("/:orderId/cancel", async (request) => {
     const { orderId } = orderParamsSchema.parse(request.params);

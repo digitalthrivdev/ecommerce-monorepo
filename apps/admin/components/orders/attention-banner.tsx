@@ -13,8 +13,8 @@ const POLL_MS = 30_000;
 const SHOWN = 5;
 
 const REASONS: Record<AttentionReason, { label: string; status: OrderStatus }> = {
-  NOT_ACCEPTED: { label: "Not accepted yet", status: "CONFIRMED" },
-  NOT_DISPATCHED: { label: "Not sent out yet", status: "READY_FOR_PICKUP" },
+  NOT_PACKED: { label: "Not packed yet", status: "CONFIRMED" },
+  NOT_SHIPPED: { label: "Not picked up by the courier yet", status: "PACKED" },
 };
 
 const keyOf = (item: AttentionList["items"][number]) => `${item.orderId}:${item.reason}`;
@@ -25,7 +25,7 @@ const keyOf = (item: AttentionList["items"][number]) => `${item.orderId}:${item.
  */
 export function AttentionBanner({ initial }: { initial: AttentionList }) {
   const sound = useSoundSetting();
-  // A page refresh (e.g. after an order goes out) brings a newer list than the last poll.
+  // A page refresh (e.g. after an order is packed) brings a newer list than the last poll.
   const [polled, setPolled] = useState<{ list: AttentionList; basis: AttentionList } | null>(null);
   const list = polled && polled.basis === initial ? polled.list : initial;
   const seen = useRef(new Set(initial.items.map(keyOf)));

@@ -9,17 +9,19 @@ import { NextStepButton } from "@/components/orders/order-actions";
 import { ReviewAccountPill } from "@/components/status-pill";
 import { formatMoney, ORDER_STATUS_LABELS } from "@/lib/format";
 import { BOARD_COLUMNS, nextStep, type BoardColumn } from "@/lib/order-flow";
-import type { OrderListItem } from "@/lib/types";
+import type { ActiveCarrier, OrderListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type BoardProps = {
   orders: OrderListItem[];
   currency: string;
+  /** For the ship dialog; null when not known (staff). */
+  carrier: ActiveCarrier | null;
 };
 
-function Ticket({ order, currency }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
-  const inPacking = order.status === "STORE_ACCEPTED" || order.status === "PICKING" || order.status === "PACKED";
+function Ticket({ order, currency, carrier }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
   const waiting = !nextStep(order.status, order.allowedActions);
+  const shipment = order.shipment?.status === "CANCELLED" ? null : order.shipment;
 
   return (
     <article className="relative flex flex-col gap-2.5 rounded-xl border bg-card p-3.5 shadow-xs transition-shadow hover:shadow-md">
@@ -49,22 +51,29 @@ function Ticket({ order, currency }: { order: OrderListItem } & Omit<BoardProps,
         {order.reviewAccount && <ReviewAccountPill />}
       </div>
 
-      {inPacking && order.status !== "PICKING" && (
-        <p className="text-xs font-medium text-muted-foreground">{ORDER_STATUS_LABELS[order.status]}</p>
+      {shipment?.awb && (
+        <p className="truncate text-xs text-muted-foreground">
+          {[shipment.courierName, `AWB ${shipment.awb}`].filter(Boolean).join(" · ")}
+        </p>
       )}
-      {waiting && (order.status === "READY_FOR_PICKUP" || order.status === "OUT_FOR_DELIVERY") && (
+      {waiting && order.status === "PACKED" && shipment && (
         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-4" aria-hidden />
-          {order.status === "READY_FOR_PICKUP" ? "Waiting to go out" : "On the way"}
+          Waiting for the courier to pick it up
         </p>
+      )}
+      {order.status !== "CONFIRMED" && order.status !== "PACKED" && (
+        <p className="text-xs font-medium text-muted-foreground">{ORDER_STATUS_LABELS[order.status]}</p>
       )}
 
       {/* Above the ticket's link so the buttons stay clickable. */}
       <div className="relative z-10 empty:hidden">
         <NextStepButton
           orderId={order.id}
+          orderNumber={order.orderNumber}
           status={order.status}
           allowedActions={order.allowedActions}
+          carrier={carrier}
           size="lg"
           className="w-full"
         />
@@ -96,7 +105,7 @@ function Column({ column, orders, hidden, ...rest }: { column: BoardColumn; orde
   );
 }
 
-/** Orders in progress as four columns; below extra-wide screens the columns become tabs. */
+/** Orders in progress as three columns; below extra-wide screens the columns become tabs. */
 export function OrderBoard({ orders, ...rest }: BoardProps) {
   const byColumn = new Map(
     BOARD_COLUMNS.map((column) => [column.id, orders.filter((order) => column.statuses.includes(order.status))]),
@@ -121,7 +130,7 @@ export function OrderBoard({ orders, ...rest }: BoardProps) {
                 selected ? "border-primary bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground",
               )}
             >
-              {column.id === "ready" ? "Ready" : column.label}
+              {column.label}
               <span
                 className={cn(
                   "min-w-6 rounded-full px-1.5 py-0.5 text-xs tabular-nums",
@@ -135,7 +144,7 @@ export function OrderBoard({ orders, ...rest }: BoardProps) {
         })}
       </div>
 
-      <div className="grid items-start gap-3 xl:grid-cols-4">
+      <div className="grid items-start gap-3 xl:grid-cols-3">
         {BOARD_COLUMNS.map((column) => (
           <Column key={column.id} column={column} orders={byColumn.get(column.id)!} hidden={column.id !== active} {...rest} />
         ))}

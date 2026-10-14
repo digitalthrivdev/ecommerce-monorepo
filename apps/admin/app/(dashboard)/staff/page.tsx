@@ -18,13 +18,13 @@ export default async function StaffPage() {
 
   return (
     <>
-      <PageHeader title="Staff" description="People who accept and pack orders and keep stock up to date" actions={<AddStaffDialog />} />
+      <PageHeader title="Staff" description="People who pack and ship orders and keep stock up to date" actions={<AddStaffDialog />} />
 
       <div className="flex max-w-4xl flex-col gap-4 p-4 md:p-6">
         <Card>
           <CardContent>
             {staff.items.length === 0 ? (
-              <p className="py-12 text-center text-sm text-muted-foreground">No staff yet. Add someone to accept and pack orders.</p>
+              <p className="py-12 text-center text-sm text-muted-foreground">No staff yet. Add someone to pack and ship orders.</p>
             ) : (
               <Table>
                 <TableHeader>

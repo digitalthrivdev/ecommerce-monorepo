@@ -293,6 +293,33 @@ export async function updateOtpProvider(formData: FormData): Promise<ActionResul
   return { ok: true, message: parsed.data.otpProvider ? "SMS provider updated" : "SMS provider turned off" };
 }
 
+export async function saveCarrierKeys(formData: FormData): Promise<ActionResult> {
+  return saveKeys("/settings/shipping-carriers", formData, "Unknown shipping carrier", "Carrier keys saved");
+}
+
+export async function removeCarrierKeys(input: { name: string }): Promise<ActionResult> {
+  return removeKeys("/settings/shipping-carriers", input, "Unknown shipping carrier", "Carrier keys removed");
+}
+
+const carrierSchema = z.object({ shippingProvider: integrationName });
+
+export async function updateShippingCarrier(formData: FormData): Promise<ActionResult> {
+  const parsed = carrierSchema.safeParse({ shippingProvider: formText(formData, "shippingProvider") });
+  if (!parsed.success) return { ok: false, error: "Choose a carrier", fieldErrors: { shippingProvider: "Choose a carrier" } };
+
+  try {
+    await apiFetch("/settings/platform", { method: "PATCH", body: parsed.data });
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "SHIPPING_CARRIER_NOT_CONFIGURED") {
+      return { ok: false, error: error.message, fieldErrors: { shippingProvider: error.message } };
+    }
+    return apiFailure(error);
+  }
+
+  refresh();
+  return { ok: true, message: "Shipping carrier updated" };
+}
+
 const gatewaySchema = z.object({
   paymentProvider: z
     .string()

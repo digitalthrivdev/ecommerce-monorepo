@@ -7,6 +7,7 @@ import type {
   PaymentMethod,
   PaymentStatus,
   RefundMethod,
+  ShipmentStatus,
   StockChangeReason,
   UserRole,
 } from "./types";
@@ -65,13 +66,28 @@ export function formatNumber(value: number) {
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING_PAYMENT: "Waiting for payment",
   CONFIRMED: "New",
-  STORE_ACCEPTED: "Accepted",
-  PICKING: "Packing",
   PACKED: "Packed",
-  READY_FOR_PICKUP: "Ready to send",
-  OUT_FOR_DELIVERY: "On the way",
+  SHIPPED: "Shipped",
+  IN_TRANSIT: "In transit",
+  OUT_FOR_DELIVERY: "Out for delivery",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
+  RTO: "Not delivered (RTO)",
+};
+
+export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
+  PENDING: "Pending",
+  AWB_ASSIGNED: "AWB assigned",
+  PICKUP_SCHEDULED: "Pickup scheduled",
+  PICKED_UP: "Picked up",
+  IN_TRANSIT: "In transit",
+  OUT_FOR_DELIVERY: "Out for delivery",
+  DELIVERED: "Delivered",
+  NDR: "Delivery failed (NDR)",
+  RTO_IN_TRANSIT: "Returning (RTO)",
+  RTO_DELIVERED: "Returned (RTO delivered)",
+  CANCELLED: "Cancelled",
+  LOST: "Lost",
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
@@ -93,14 +109,12 @@ export function todayIn(timeZone: string) {
 }
 
 export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
-  accept: "Accept order",
-  "start-picking": "Start packing",
   pack: "Mark packed",
-  ready: "Ready to send",
-  "out-for-delivery": "Out for delivery",
-  "mark-delivered": "Mark delivered",
-  cancel: "Cancel order",
   "mark-unavailable": "Item not found",
+  ship: "Ship order",
+  cancel: "Cancel order",
+  "cancel-shipment": "Cancel shipment",
+  "add-tracking": "Add tracking update",
   refund: "Refund",
 };
 

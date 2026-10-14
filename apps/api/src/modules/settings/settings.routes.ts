@@ -4,6 +4,7 @@ import { UserRole } from "../../generated/prisma/client";
 import { updateAppearanceBodySchema } from "./appearance.schemas.js";
 import { createAppearanceService } from "./appearance.service.js";
 import {
+  carrierParamsSchema,
   gatewayParamsSchema,
   otpProviderParamsSchema,
   policyParamsSchema,
@@ -66,6 +67,17 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
   app.delete("/payment-gateways/:gateway", adminOnly, async (request) => {
     const { gateway } = gatewayParamsSchema.parse(request.params);
     return settings.removeGatewayKeys(gateway);
+  });
+
+  app.put("/shipping-carriers/:carrier", adminOnly, async (request) => {
+    const { carrier } = carrierParamsSchema.parse(request.params);
+    const { credentials } = saveGatewayKeysBodySchema.parse(request.body);
+    return settings.saveCarrierKeys(carrier, credentials, request.user.sub);
+  });
+
+  app.delete("/shipping-carriers/:carrier", adminOnly, async (request) => {
+    const { carrier } = carrierParamsSchema.parse(request.params);
+    return settings.removeCarrierKeys(carrier);
   });
 
   app.put("/otp-providers/:provider", adminOnly, async (request) => {

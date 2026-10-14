@@ -194,9 +194,9 @@ describe("test accounts", () => {
         expect(response.body).toMatchObject({ error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" });
       }
 
-      // The delivery steps stay open (the full order flow is in orders.test.ts).
-      const delivered = await call(app, "POST", "/admin/orders/not-an-order/mark-delivered", { token });
-      expect(delivered.status).toBe(404);
+      // Packing and manual tracking stay open (the full order flow is in orders.test.ts).
+      const tracked = await call(app, "POST", "/admin/orders/not-an-order/shipment/events", { token, body: { status: "IN_TRANSIT" } });
+      expect(tracked.status).toBe(404);
     });
 
     it("can sign out", async () => {
@@ -294,7 +294,7 @@ describe("test accounts", () => {
       // Wrong role: the usual 403 FORBIDDEN, not the demo message.
       for (const response of [
         await call(app, "DELETE", "/users/me", { token: staff }),
-        await call(app, "POST", "/admin/orders/not-an-order/accept", { token: customer }),
+        await call(app, "POST", "/admin/orders/not-an-order/pack", { token: customer }),
         await call(app, "POST", "/images", { token: customer }),
       ]) {
         expect(response.status).toBe(403);
@@ -302,7 +302,7 @@ describe("test accounts", () => {
       }
 
       // Allowed routes still validate input.
-      expect((await call(app, "POST", "/admin/orders/not-an-order/accept", { token: staff })).status).toBe(404);
+      expect((await call(app, "POST", "/admin/orders/not-an-order/pack", { token: staff })).status).toBe(404);
       expect((await call(app, "PATCH", "/users/me", { token: customer, body: {} })).status).toBe(400);
     });
   });

@@ -131,12 +131,13 @@ export function createReportsService(prisma: PrismaClient) {
 
   /**
    * Taxable value and GST by HSN and rate, with the delivery fee under its SAC. The split follows
-   * each order's snapshot: CGST + SGST within the state, IGST across states. Orders delivered before
-   * the snapshot have their GST under gst_not_split.
+   * each order's snapshot: CGST + SGST within the state, IGST across states. Orders count by invoice
+   * date (they are invoiced when packed); orders cancelled after packing are left out. Orders
+   * invoiced before the snapshot have their GST under gst_not_split.
    */
   async function gstSummary(query: ReportQuery) {
     const { start, end } = scope(query);
-    const delivered = Prisma.sql`o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end}`;
+    const invoiced = Prisma.sql`o."invoicedAt" >= ${start} AND o."invoicedAt" < ${end} AND o.status <> 'CANCELLED'`;
     const rows = await prisma.$queryRaw<GstRow[]>`
       WITH lines AS (
         SELECT 'goods' AS kind, i."hsnCode" AS hsn, i."gstRate" AS rate, o."interStateSupply" AS inter,
@@ -145,13 +146,11 @@ export function createReportsService(prisma: PrismaClient) {
           i."taxAmount" AS tax
         FROM "OrderItem" i
         JOIN "Order" o ON o.id = i."orderId"
-        JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
-        WHERE ${delivered} AND i.quantity > i."unavailableQuantity"
+        WHERE ${invoiced} AND i.quantity > i."unavailableQuantity"
         UNION ALL
         SELECT 'delivery', ${DELIVERY_SAC}, o."deliveryFeeGstRate", o."interStateSupply", NULL, o."deliveryFee", o."deliveryFeeTax"
         FROM "Order" o
-        JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
-        WHERE ${delivered} AND o."deliveryFee" > 0
+        WHERE ${invoiced} AND o."deliveryFee" > 0
       )
       SELECT kind, hsn, rate,
         sum(quantity)::int AS quantity,

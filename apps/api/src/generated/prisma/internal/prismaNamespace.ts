@@ -416,6 +416,8 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   InvoiceSequence: 'InvoiceSequence',
   OrderStatusHistory: 'OrderStatusHistory',
+  Shipment: 'Shipment',
+  ShipmentEvent: 'ShipmentEvent',
   Payment: 'Payment',
   Refund: 'Refund',
   Complaint: 'Complaint',
@@ -427,6 +429,7 @@ export const ModelName = {
   PlatformSettings: 'PlatformSettings',
   PolicyPage: 'PolicyPage',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
+  ShippingCarrierCredential: 'ShippingCarrierCredential',
   OtpProviderCredential: 'OtpProviderCredential',
   AppAppearance: 'AppAppearance',
   PushToken: 'PushToken'
@@ -445,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "pickupLocation" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "wishlistItem" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "pickupLocation" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "shipment" | "shipmentEvent" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "wishlistItem" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "shippingCarrierCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1855,6 +1858,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Shipment: {
+      payload: Prisma.$ShipmentPayload<ExtArgs>
+      fields: Prisma.ShipmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ShipmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ShipmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        findFirst: {
+          args: Prisma.ShipmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ShipmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        findMany: {
+          args: Prisma.ShipmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>[]
+        }
+        create: {
+          args: Prisma.ShipmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        createMany: {
+          args: Prisma.ShipmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ShipmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>[]
+        }
+        delete: {
+          args: Prisma.ShipmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        update: {
+          args: Prisma.ShipmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.ShipmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ShipmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ShipmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.ShipmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentPayload>
+        }
+        aggregate: {
+          args: Prisma.ShipmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateShipment>
+        }
+        groupBy: {
+          args: Prisma.ShipmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShipmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ShipmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShipmentCountAggregateOutputType> | number
+        }
+      }
+    }
+    ShipmentEvent: {
+      payload: Prisma.$ShipmentEventPayload<ExtArgs>
+      fields: Prisma.ShipmentEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ShipmentEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ShipmentEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        findFirst: {
+          args: Prisma.ShipmentEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ShipmentEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        findMany: {
+          args: Prisma.ShipmentEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>[]
+        }
+        create: {
+          args: Prisma.ShipmentEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        createMany: {
+          args: Prisma.ShipmentEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ShipmentEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>[]
+        }
+        delete: {
+          args: Prisma.ShipmentEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        update: {
+          args: Prisma.ShipmentEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.ShipmentEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ShipmentEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ShipmentEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.ShipmentEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShipmentEventPayload>
+        }
+        aggregate: {
+          args: Prisma.ShipmentEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateShipmentEvent>
+        }
+        groupBy: {
+          args: Prisma.ShipmentEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShipmentEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ShipmentEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShipmentEventCountAggregateOutputType> | number
+        }
+      }
+    }
     Payment: {
       payload: Prisma.$PaymentPayload<ExtArgs>
       fields: Prisma.PaymentFieldRefs
@@ -2669,6 +2820,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ShippingCarrierCredential: {
+      payload: Prisma.$ShippingCarrierCredentialPayload<ExtArgs>
+      fields: Prisma.ShippingCarrierCredentialFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ShippingCarrierCredentialFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ShippingCarrierCredentialFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        findFirst: {
+          args: Prisma.ShippingCarrierCredentialFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ShippingCarrierCredentialFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        findMany: {
+          args: Prisma.ShippingCarrierCredentialFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>[]
+        }
+        create: {
+          args: Prisma.ShippingCarrierCredentialCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        createMany: {
+          args: Prisma.ShippingCarrierCredentialCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ShippingCarrierCredentialCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>[]
+        }
+        delete: {
+          args: Prisma.ShippingCarrierCredentialDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        update: {
+          args: Prisma.ShippingCarrierCredentialUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        deleteMany: {
+          args: Prisma.ShippingCarrierCredentialDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ShippingCarrierCredentialUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ShippingCarrierCredentialUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>[]
+        }
+        upsert: {
+          args: Prisma.ShippingCarrierCredentialUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ShippingCarrierCredentialPayload>
+        }
+        aggregate: {
+          args: Prisma.ShippingCarrierCredentialAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateShippingCarrierCredential>
+        }
+        groupBy: {
+          args: Prisma.ShippingCarrierCredentialGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShippingCarrierCredentialGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ShippingCarrierCredentialCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ShippingCarrierCredentialCountAggregateOutputType> | number
+        }
+      }
+    }
     OtpProviderCredential: {
       payload: Prisma.$OtpProviderCredentialPayload<ExtArgs>
       fields: Prisma.OtpProviderCredentialFieldRefs
@@ -3168,6 +3393,7 @@ export const OrderScalarFieldEnum = {
   deliveryFeeGstRate: 'deliveryFeeGstRate',
   deliveryFeeTax: 'deliveryFeeTax',
   invoiceNumber: 'invoiceNumber',
+  invoicedAt: 'invoicedAt',
   sellerName: 'sellerName',
   sellerGstin: 'sellerGstin',
   sellerAddress: 'sellerAddress',
@@ -3236,6 +3462,45 @@ export const OrderStatusHistoryScalarFieldEnum = {
 } as const
 
 export type OrderStatusHistoryScalarFieldEnum = (typeof OrderStatusHistoryScalarFieldEnum)[keyof typeof OrderStatusHistoryScalarFieldEnum]
+
+
+export const ShipmentScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  provider: 'provider',
+  providerOrderId: 'providerOrderId',
+  providerShipmentId: 'providerShipmentId',
+  awb: 'awb',
+  courierName: 'courierName',
+  trackingUrl: 'trackingUrl',
+  labelUrl: 'labelUrl',
+  status: 'status',
+  statusAt: 'statusAt',
+  weightGrams: 'weightGrams',
+  lengthCm: 'lengthCm',
+  breadthCm: 'breadthCm',
+  heightCm: 'heightCm',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShipmentScalarFieldEnum = (typeof ShipmentScalarFieldEnum)[keyof typeof ShipmentScalarFieldEnum]
+
+
+export const ShipmentEventScalarFieldEnum = {
+  id: 'id',
+  shipmentId: 'shipmentId',
+  status: 'status',
+  providerEventId: 'providerEventId',
+  occurredAt: 'occurredAt',
+  location: 'location',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type ShipmentEventScalarFieldEnum = (typeof ShipmentEventScalarFieldEnum)[keyof typeof ShipmentEventScalarFieldEnum]
 
 
 export const PaymentScalarFieldEnum = {
@@ -3385,6 +3650,7 @@ export const PlatformSettingsScalarFieldEnum = {
   reviewLoginCodeHash: 'reviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
+  shippingProvider: 'shippingProvider',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -3413,6 +3679,17 @@ export const PaymentGatewayCredentialScalarFieldEnum = {
 } as const
 
 export type PaymentGatewayCredentialScalarFieldEnum = (typeof PaymentGatewayCredentialScalarFieldEnum)[keyof typeof PaymentGatewayCredentialScalarFieldEnum]
+
+
+export const ShippingCarrierCredentialScalarFieldEnum = {
+  carrier: 'carrier',
+  credentials: 'credentials',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShippingCarrierCredentialScalarFieldEnum = (typeof ShippingCarrierCredentialScalarFieldEnum)[keyof typeof ShippingCarrierCredentialScalarFieldEnum]
 
 
 export const OtpProviderCredentialScalarFieldEnum = {
@@ -3639,6 +3916,20 @@ export type EnumPaymentMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  * Reference to a field of type 'PaymentMethod[]'
  */
 export type ListEnumPaymentMethodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMethod[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ShipmentStatus'
+ */
+export type EnumShipmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShipmentStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ShipmentStatus[]'
+ */
+export type ListEnumShipmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ShipmentStatus[]'>
     
 
 
@@ -3923,6 +4214,8 @@ export type GlobalOmitConfig = {
   orderItem?: Prisma.OrderItemOmit
   invoiceSequence?: Prisma.InvoiceSequenceOmit
   orderStatusHistory?: Prisma.OrderStatusHistoryOmit
+  shipment?: Prisma.ShipmentOmit
+  shipmentEvent?: Prisma.ShipmentEventOmit
   payment?: Prisma.PaymentOmit
   refund?: Prisma.RefundOmit
   complaint?: Prisma.ComplaintOmit
@@ -3934,6 +4227,7 @@ export type GlobalOmitConfig = {
   platformSettings?: Prisma.PlatformSettingsOmit
   policyPage?: Prisma.PolicyPageOmit
   paymentGatewayCredential?: Prisma.PaymentGatewayCredentialOmit
+  shippingCarrierCredential?: Prisma.ShippingCarrierCredentialOmit
   otpProviderCredential?: Prisma.OtpProviderCredentialOmit
   appAppearance?: Prisma.AppAppearanceOmit
   pushToken?: Prisma.PushTokenOmit

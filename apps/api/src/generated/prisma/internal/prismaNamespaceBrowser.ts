@@ -70,6 +70,8 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   InvoiceSequence: 'InvoiceSequence',
   OrderStatusHistory: 'OrderStatusHistory',
+  Shipment: 'Shipment',
+  ShipmentEvent: 'ShipmentEvent',
   Payment: 'Payment',
   Refund: 'Refund',
   Complaint: 'Complaint',
@@ -81,6 +83,7 @@ export const ModelName = {
   PlatformSettings: 'PlatformSettings',
   PolicyPage: 'PolicyPage',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
+  ShippingCarrierCredential: 'ShippingCarrierCredential',
   OtpProviderCredential: 'OtpProviderCredential',
   AppAppearance: 'AppAppearance',
   PushToken: 'PushToken'
@@ -340,6 +343,7 @@ export const OrderScalarFieldEnum = {
   deliveryFeeGstRate: 'deliveryFeeGstRate',
   deliveryFeeTax: 'deliveryFeeTax',
   invoiceNumber: 'invoiceNumber',
+  invoicedAt: 'invoicedAt',
   sellerName: 'sellerName',
   sellerGstin: 'sellerGstin',
   sellerAddress: 'sellerAddress',
@@ -408,6 +412,45 @@ export const OrderStatusHistoryScalarFieldEnum = {
 } as const
 
 export type OrderStatusHistoryScalarFieldEnum = (typeof OrderStatusHistoryScalarFieldEnum)[keyof typeof OrderStatusHistoryScalarFieldEnum]
+
+
+export const ShipmentScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  provider: 'provider',
+  providerOrderId: 'providerOrderId',
+  providerShipmentId: 'providerShipmentId',
+  awb: 'awb',
+  courierName: 'courierName',
+  trackingUrl: 'trackingUrl',
+  labelUrl: 'labelUrl',
+  status: 'status',
+  statusAt: 'statusAt',
+  weightGrams: 'weightGrams',
+  lengthCm: 'lengthCm',
+  breadthCm: 'breadthCm',
+  heightCm: 'heightCm',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShipmentScalarFieldEnum = (typeof ShipmentScalarFieldEnum)[keyof typeof ShipmentScalarFieldEnum]
+
+
+export const ShipmentEventScalarFieldEnum = {
+  id: 'id',
+  shipmentId: 'shipmentId',
+  status: 'status',
+  providerEventId: 'providerEventId',
+  occurredAt: 'occurredAt',
+  location: 'location',
+  description: 'description',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type ShipmentEventScalarFieldEnum = (typeof ShipmentEventScalarFieldEnum)[keyof typeof ShipmentEventScalarFieldEnum]
 
 
 export const PaymentScalarFieldEnum = {
@@ -557,6 +600,7 @@ export const PlatformSettingsScalarFieldEnum = {
   reviewLoginCodeHash: 'reviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
+  shippingProvider: 'shippingProvider',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -585,6 +629,17 @@ export const PaymentGatewayCredentialScalarFieldEnum = {
 } as const
 
 export type PaymentGatewayCredentialScalarFieldEnum = (typeof PaymentGatewayCredentialScalarFieldEnum)[keyof typeof PaymentGatewayCredentialScalarFieldEnum]
+
+
+export const ShippingCarrierCredentialScalarFieldEnum = {
+  carrier: 'carrier',
+  credentials: 'credentials',
+  updatedById: 'updatedById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ShippingCarrierCredentialScalarFieldEnum = (typeof ShippingCarrierCredentialScalarFieldEnum)[keyof typeof ShippingCarrierCredentialScalarFieldEnum]
 
 
 export const OtpProviderCredentialScalarFieldEnum = {

@@ -113,6 +113,16 @@ export type InvoiceSequence = Prisma.InvoiceSequenceModel
  */
 export type OrderStatusHistory = Prisma.OrderStatusHistoryModel
 /**
+ * Model Shipment
+ * 
+ */
+export type Shipment = Prisma.ShipmentModel
+/**
+ * Model ShipmentEvent
+ * 
+ */
+export type ShipmentEvent = Prisma.ShipmentEventModel
+/**
  * Model Payment
  * 
  */
@@ -167,6 +177,11 @@ export type PolicyPage = Prisma.PolicyPageModel
  * 
  */
 export type PaymentGatewayCredential = Prisma.PaymentGatewayCredentialModel
+/**
+ * Model ShippingCarrierCredential
+ * 
+ */
+export type ShippingCarrierCredential = Prisma.ShippingCarrierCredentialModel
 /**
  * Model OtpProviderCredential
  * 

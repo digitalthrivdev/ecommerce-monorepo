@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Bike, ChevronRight, CircleCheck, Package, Wallet, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, CircleCheck, Package, Truck, Wallet, type LucideIcon } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 
 function statusIcon(status: OrderStatus): LucideIcon {
   if (status === "PENDING_PAYMENT") return Wallet;
-  if (status === "CONFIRMED" || status === "STORE_ACCEPTED") return CircleCheck;
-  if (status === "PICKING" || status === "PACKED" || status === "READY_FOR_PICKUP") return Package;
-  return Bike;
+  if (status === "CONFIRMED") return CircleCheck;
+  if (status === "PACKED") return Package;
+  return Truck;
 }
 
 function StepBar({ status }: { status: OrderStatus }) {

@@ -21,6 +21,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/print/orde
 
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const address = order.deliveryAddress;
+  const shipment = order.shipment?.status === "CANCELLED" ? null : order.shipment;
   const isCash = order.paymentMethod === "COD" && order.payment?.status !== "PAID" && order.status !== "CANCELLED";
 
   return (
@@ -49,6 +50,9 @@ export default async function PackingSlipPage({ params }: PageProps<"/print/orde
             <p className="text-base font-bold">{order.orderNumber}</p>
             <p className="text-black/70">{formatDateTime(order.createdAt, settings.timezone)}</p>
             {order.invoiceNumber && <p className="text-black/70">Bill {order.invoiceNumber}</p>}
+            {shipment?.awb && (
+              <p className="text-black/70">{[shipment.courierName, `AWB ${shipment.awb}`].filter(Boolean).join(" · ")}</p>
+            )}
           </div>
         </header>
 

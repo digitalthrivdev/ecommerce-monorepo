@@ -10,7 +10,8 @@ import type { PaymentGatewayOption } from "@/lib/types";
 
 import { IntegrationKeysList } from "./integration-keys";
 
-function WebhookSetup({ gateway }: { gateway: PaymentGatewayOption }) {
+/** Where to point the gateway's or carrier's webhooks. `title` names what the updates are about. */
+export function WebhookSetup({ gateway, title = "Payment updates" }: { gateway: PaymentGatewayOption; title?: string }) {
   if (!gateway.webhookEvents) return null;
 
   async function copy(url: string) {
@@ -24,7 +25,7 @@ function WebhookSetup({ gateway }: { gateway: PaymentGatewayOption }) {
 
   return (
     <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3 text-sm">
-      <span className="font-medium">Payment updates link (webhook)</span>
+      <span className="font-medium">{title} link (webhook)</span>
       {gateway.webhookUrl ? (
         <div className="flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1 text-xs">{gateway.webhookUrl}</code>

@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, Paginated, PaymentMethod, Product } from "./types";
+import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, Paginated, PaymentMethod, Product, ShipmentStatus } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -13,7 +13,7 @@ const LIVE_REFRESH_MS = 15_000;
 const orderKey = (id: string) => ["order", id] as const;
 const orderPath = (id: string) => `/orders/${encodeURIComponent(id)}`;
 
-export const isOrderFinished = (status: OrderStatus) => status === "DELIVERED" || status === "CANCELLED";
+export const isOrderFinished = (status: OrderStatus) => status === "DELIVERED" || status === "CANCELLED" || status === "RTO";
 
 export function useOrders() {
   return useInfiniteQuery({
@@ -46,7 +46,7 @@ export function useBuyAgain({ limit = 12 }: { limit?: number } = {}) {
   });
 }
 
-/** Polls for status changes until the order is delivered or cancelled. */
+/** Polls for status changes until the order is delivered, cancelled or returned. */
 export function useOrder(id: string) {
   return useQuery({
     queryKey: orderKey(id),
@@ -169,26 +169,40 @@ export function usePayOnline(id: string) {
 export const ORDER_STATUS_TEXT: Record<OrderStatus, { title: string; detail: string }> = {
   PENDING_PAYMENT: { title: "Waiting for payment", detail: "Complete the payment to confirm your order." },
   CONFIRMED: { title: "Order confirmed", detail: "We'll start packing your order soon." },
-  STORE_ACCEPTED: { title: "Order accepted", detail: "Your order is next in line for packing." },
-  PICKING: { title: "Packing your order", detail: "We're picking your items." },
-  PACKED: { title: "Order packed", detail: "Your items are packed and ready to go." },
-  READY_FOR_PICKUP: { title: "Ready to send", detail: "Your order will be on its way soon." },
-  OUT_FOR_DELIVERY: { title: "On the way", detail: "Your order is on its way to you." },
+  PACKED: { title: "Order packed", detail: "Your items are packed and will be shipped soon." },
+  SHIPPED: { title: "Shipped", detail: "Your order is with the courier." },
+  IN_TRANSIT: { title: "In transit", detail: "Your order is on its way to you." },
+  OUT_FOR_DELIVERY: { title: "Out for delivery", detail: "Your order will be delivered today." },
   DELIVERED: { title: "Delivered", detail: "Enjoy your order!" },
   CANCELLED: { title: "Cancelled", detail: "This order was cancelled." },
+  RTO: { title: "Returned to seller", detail: "We couldn't deliver this order, so it's coming back to us. We'll be in touch." },
 };
 
-export const ORDER_STEPS = ["Confirmed", "Packing", "Packed", "On the way", "Delivered"] as const;
+export const ORDER_STEPS = ["Confirmed", "Packed", "Shipped", "Out for delivery", "Delivered"] as const;
 
 const STEP_INDEX: Partial<Record<OrderStatus, number>> = {
   CONFIRMED: 0,
-  STORE_ACCEPTED: 1,
-  PICKING: 1,
-  PACKED: 2,
-  READY_FOR_PICKUP: 2,
+  PACKED: 1,
+  SHIPPED: 2,
+  IN_TRANSIT: 2,
   OUT_FOR_DELIVERY: 3,
   DELIVERED: 4,
 };
 
-/** Position in `ORDER_STEPS`, or null for orders awaiting payment or cancelled. */
+/** Position in `ORDER_STEPS`, or null for orders awaiting payment, cancelled or returned. */
 export const orderStep = (status: OrderStatus) => STEP_INDEX[status] ?? null;
+
+export const SHIPMENT_STATUS_TEXT: Record<ShipmentStatus, string> = {
+  PENDING: "Pending",
+  AWB_ASSIGNED: "Booked with the courier",
+  PICKUP_SCHEDULED: "Pickup scheduled",
+  PICKED_UP: "Picked up",
+  IN_TRANSIT: "In transit",
+  OUT_FOR_DELIVERY: "Out for delivery",
+  DELIVERED: "Delivered",
+  NDR: "Delivery attempt failed",
+  RTO_IN_TRANSIT: "Returning to seller",
+  RTO_DELIVERED: "Returned to seller",
+  CANCELLED: "Cancelled",
+  LOST: "Lost",
+};

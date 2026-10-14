@@ -25,7 +25,7 @@ export const POLICY_TEMPLATES: Record<PolicySlug, string> = {
 
 ## Orders and prices
 - Prices, offers and availability are shown in the app and can change at any time. The total shown at checkout, including any delivery charge, is the amount you pay.
-- Placing an order is an offer to buy. The order is confirmed when it is accepted, and we may not be able to supply every item.
+- Placing an order is an offer to buy. We may not be able to supply every item.
 - If an item turns out to be unavailable, it is removed from your order and you are not charged for it.
 
 ## Payment
@@ -97,7 +97,7 @@ For any question or complaint about your personal information, contact us:
   refunds: `This policy explains when you can cancel an order with {{appName}} and how refunds work.
 
 ## Cancelling an order
-- You can cancel an order in the app until we accept it. After that, the order is being packed and can no longer be cancelled from the app; contact us and we will help where we can.
+- You can cancel an order in the app until we pack it. After that it can no longer be cancelled from the app; contact us and we will help where we can, until it ships.
 - Orders paid online that are not paid within the time shown at checkout are cancelled automatically.
 - We may cancel an order if items are unavailable, or the order cannot be delivered to the address. You will be refunded in full for anything you paid.
 
@@ -121,7 +121,7 @@ Check your order at delivery. If an item is damaged, wrong, missing or expired, 
 We deliver to addresses in India. If we cannot deliver to your address, we will contact you and refund anything you paid.
 
 ## Delivery times
-Orders are packed and sent after they are accepted. Times shown in the app are estimates and can be longer at busy times or in bad weather. You can follow your order in the app.
+Orders are packed and handed to a courier, who delivers them. Times shown are estimates and can be longer at busy times or in bad weather. Once your order ships, you can track it in the app with the courier's tracking number.
 
 ## Delivery charges
 Any delivery charge, minimum order value or free-delivery threshold is shown in your cart and at checkout before you pay.

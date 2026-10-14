@@ -3,43 +3,29 @@ import type { OrderAction, OrderStatus } from "./types";
 export type BoardColumn = { id: string; label: string; statuses: OrderStatus[]; empty: string };
 
 export const BOARD_COLUMNS: BoardColumn[] = [
-  { id: "new", label: "New", statuses: ["CONFIRMED"], empty: "No new orders" },
-  { id: "packing", label: "Packing", statuses: ["STORE_ACCEPTED", "PICKING", "PACKED"], empty: "Nothing being packed" },
-  { id: "ready", label: "Ready to send", statuses: ["READY_FOR_PICKUP"], empty: "Nothing waiting to go out" },
-  { id: "way", label: "On the way", statuses: ["OUT_FOR_DELIVERY"], empty: "Nothing on the way" },
+  { id: "new", label: "To pack", statuses: ["CONFIRMED"], empty: "Nothing to pack" },
+  { id: "packed", label: "To ship", statuses: ["PACKED"], empty: "Nothing waiting to ship" },
+  { id: "shipped", label: "Shipped", statuses: ["SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY"], empty: "Nothing on the way" },
 ];
 
 export const BOARD_STATUSES = BOARD_COLUMNS.flatMap((column) => column.statuses);
 
-/** "pack-ready" packs and marks ready in one tap; the API still records both steps. */
-export type NextStepAction = "accept" | "start-picking" | "pack-ready" | "ready" | "out-for-delivery" | "mark-delivered";
-
-export const NEXT_STEP: Partial<Record<OrderStatus, { action: NextStepAction; label: string }>> = {
-  CONFIRMED: { action: "accept", label: "Accept order" },
-  STORE_ACCEPTED: { action: "start-picking", label: "Start packing" },
-  PICKING: { action: "pack-ready", label: "Packed – ready" },
-  PACKED: { action: "ready", label: "Ready to send" },
-  // Admins only; the API leaves them out of staff's allowed actions.
-  READY_FOR_PICKUP: { action: "out-for-delivery", label: "Out for delivery" },
-  OUT_FOR_DELIVERY: { action: "mark-delivered", label: "Mark delivered" },
+/** Shipping opens a dialog for the parcel; packing is one tap. */
+export const NEXT_STEP: Partial<Record<OrderStatus, { action: Extract<OrderAction, "pack" | "ship">; label: string }>> = {
+  CONFIRMED: { action: "pack", label: "Mark packed" },
+  PACKED: { action: "ship", label: "Ship order" },
 };
 
 /** The step that can be taken now, if the API allows it for this user. */
 export function nextStep(status: OrderStatus, allowedActions: OrderAction[]) {
   const step = NEXT_STEP[status];
-  if (!step) return null;
-  const needs = step.action === "pack-ready" ? "pack" : step.action;
-  return allowedActions.includes(needs) ? step : null;
+  return step && allowedActions.includes(step.action) ? step : null;
 }
 
-/** Minutes in a status before the timer turns amber, then red. */
+/** Minutes in a status before the timer turns amber, then red; red matches the API's attention list. */
 const TIMER_LIMITS: Partial<Record<OrderStatus, [warn: number, late: number]>> = {
-  CONFIRMED: [5, 10],
-  STORE_ACCEPTED: [5, 10],
-  PICKING: [10, 20],
-  PACKED: [5, 10],
-  READY_FOR_PICKUP: [10, 20],
-  OUT_FOR_DELIVERY: [30, 45],
+  CONFIRMED: [6 * 60, 12 * 60],
+  PACKED: [12 * 60, 24 * 60],
 };
 
 export function timerTone(status: OrderStatus, minutes: number): "normal" | "warn" | "late" {
@@ -51,7 +37,7 @@ export function timerTone(status: OrderStatus, minutes: number): "normal" | "war
 }
 
 /** Statuses where the packing checklist can be ticked. */
-export const PACKING_STATUSES: OrderStatus[] = ["STORE_ACCEPTED", "PICKING"];
+export const PACKING_STATUSES: OrderStatus[] = ["CONFIRMED"];
 
 /** When the order reached its current status, from its history. */
 export function statusChangedAt(order: {

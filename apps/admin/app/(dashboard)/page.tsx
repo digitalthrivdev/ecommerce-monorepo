@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           <StatCard
             title="Active orders"
             value={formatNumber(stats.activeOrders)}
-            hint={`${stats.awaitingDispatch} ready to send`}
+            hint={`${stats.awaitingDispatch} packed, waiting to ship`}
             icon={PackageCheck}
             href="/orders"
           />

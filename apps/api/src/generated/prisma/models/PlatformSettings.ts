@@ -66,6 +66,7 @@ export type PlatformSettingsMinAggregateOutputType = {
   reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
+  shippingProvider: string | null
   updatedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -93,6 +94,7 @@ export type PlatformSettingsMaxAggregateOutputType = {
   reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
+  shippingProvider: string | null
   updatedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -120,6 +122,7 @@ export type PlatformSettingsCountAggregateOutputType = {
   reviewLoginCodeHash: number
   paymentProvider: number
   otpProvider: number
+  shippingProvider: number
   updatedById: number
   createdAt: number
   updatedAt: number
@@ -167,6 +170,7 @@ export type PlatformSettingsMinAggregateInputType = {
   reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
+  shippingProvider?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -194,6 +198,7 @@ export type PlatformSettingsMaxAggregateInputType = {
   reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
+  shippingProvider?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -221,6 +226,7 @@ export type PlatformSettingsCountAggregateInputType = {
   reviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
+  shippingProvider?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -335,6 +341,7 @@ export type PlatformSettingsGroupByOutputType = {
   reviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
+  shippingProvider: string | null
   updatedById: string | null
   createdAt: Date
   updatedAt: Date
@@ -385,6 +392,7 @@ export type PlatformSettingsWhereInput = {
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
@@ -412,6 +420,7 @@ export type PlatformSettingsOrderByWithRelationInput = {
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -442,6 +451,7 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
@@ -469,6 +479,7 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -504,6 +515,7 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   reviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  shippingProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformSettings"> | Date | string
@@ -531,6 +543,7 @@ export type PlatformSettingsCreateInput = {
   reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
+  shippingProvider?: string | null
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -558,6 +571,7 @@ export type PlatformSettingsUncheckedCreateInput = {
   reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
+  shippingProvider?: string | null
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -585,6 +599,7 @@ export type PlatformSettingsUpdateInput = {
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -612,6 +627,7 @@ export type PlatformSettingsUncheckedUpdateInput = {
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -639,6 +655,7 @@ export type PlatformSettingsCreateManyInput = {
   reviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
+  shippingProvider?: string | null
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -666,6 +683,7 @@ export type PlatformSettingsUpdateManyMutationInput = {
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -693,6 +711,7 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -720,6 +739,7 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
+  shippingProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -756,6 +776,7 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
+  shippingProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -783,6 +804,7 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   reviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
+  shippingProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -821,6 +843,7 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
+  shippingProvider?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -848,6 +871,7 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
+  shippingProvider?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -875,6 +899,7 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
+  shippingProvider?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -902,12 +927,13 @@ export type PlatformSettingsSelectScalar = {
   reviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
+  shippingProvider?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "deliveryFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "deliveryFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -934,6 +960,7 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     reviewLoginCodeHash: string | null
     paymentProvider: string | null
     otpProvider: string | null
+    shippingProvider: string | null
     updatedById: string | null
     createdAt: Date
     updatedAt: Date
@@ -1381,6 +1408,7 @@ export interface PlatformSettingsFieldRefs {
   readonly reviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly paymentProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly otpProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly shippingProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly updatedById: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly createdAt: Prisma.FieldRef<"PlatformSettings", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"PlatformSettings", 'DateTime'>

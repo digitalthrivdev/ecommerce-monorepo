@@ -1,18 +1,23 @@
 import {
   Ban,
   BellRing,
+  CalendarClock,
   CircleCheck,
   Clock,
   FlaskConical,
+  MapPin,
   PackageCheck,
-  PackageOpen,
+  PackageX,
+  Tag,
+  TriangleAlert,
   Truck,
+  Undo2,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { ORDER_STATUS_LABELS } from "@/lib/format";
-import type { OrderStatus } from "@/lib/types";
+import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/format";
+import type { OrderStatus, ShipmentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export type Tone = "blue" | "amber" | "violet" | "indigo" | "green" | "red" | "gray";
@@ -58,13 +63,13 @@ export function ReviewAccountPill({ size }: { size?: "sm" | "md" }) {
 export const ORDER_STATUS_STYLE: Record<OrderStatus, { tone: Tone; icon: LucideIcon }> = {
   PENDING_PAYMENT: { tone: "gray", icon: Clock },
   CONFIRMED: { tone: "blue", icon: BellRing },
-  STORE_ACCEPTED: { tone: "amber", icon: PackageOpen },
-  PICKING: { tone: "amber", icon: PackageOpen },
   PACKED: { tone: "amber", icon: PackageCheck },
-  READY_FOR_PICKUP: { tone: "violet", icon: PackageCheck },
-  OUT_FOR_DELIVERY: { tone: "indigo", icon: Truck },
+  SHIPPED: { tone: "violet", icon: Truck },
+  IN_TRANSIT: { tone: "indigo", icon: Truck },
+  OUT_FOR_DELIVERY: { tone: "indigo", icon: MapPin },
   DELIVERED: { tone: "green", icon: CircleCheck },
   CANCELLED: { tone: "red", icon: Ban },
+  RTO: { tone: "red", icon: Undo2 },
 };
 
 export function OrderStatusPill({ status, size }: { status: OrderStatus; size?: "sm" | "md" }) {
@@ -72,6 +77,30 @@ export function OrderStatusPill({ status, size }: { status: OrderStatus; size?: 
   return (
     <Pill tone={tone} icon={icon} size={size}>
       {ORDER_STATUS_LABELS[status]}
+    </Pill>
+  );
+}
+
+const SHIPMENT_STATUS_STYLE: Record<ShipmentStatus, { tone: Tone; icon: LucideIcon }> = {
+  PENDING: { tone: "gray", icon: Clock },
+  AWB_ASSIGNED: { tone: "blue", icon: Tag },
+  PICKUP_SCHEDULED: { tone: "blue", icon: CalendarClock },
+  PICKED_UP: { tone: "violet", icon: PackageCheck },
+  IN_TRANSIT: { tone: "indigo", icon: Truck },
+  OUT_FOR_DELIVERY: { tone: "indigo", icon: MapPin },
+  DELIVERED: { tone: "green", icon: CircleCheck },
+  NDR: { tone: "amber", icon: TriangleAlert },
+  RTO_IN_TRANSIT: { tone: "red", icon: Undo2 },
+  RTO_DELIVERED: { tone: "red", icon: Undo2 },
+  CANCELLED: { tone: "gray", icon: Ban },
+  LOST: { tone: "red", icon: PackageX },
+};
+
+export function ShipmentStatusPill({ status, size }: { status: ShipmentStatus; size?: "sm" | "md" }) {
+  const { tone, icon } = SHIPMENT_STATUS_STYLE[status];
+  return (
+    <Pill tone={tone} icon={icon} size={size}>
+      {SHIPMENT_STATUS_LABELS[status]}
     </Pill>
   );
 }

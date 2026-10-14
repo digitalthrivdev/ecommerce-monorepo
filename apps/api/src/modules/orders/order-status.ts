@@ -5,13 +5,12 @@ import { assignInvoiceNumber } from "./tax.js";
 
 type Tx = Prisma.TransactionClient;
 
-/** Paid orders that are still being prepared or delivered. */
+/** Paid orders that are still being prepared or are on their way. */
 export const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.CONFIRMED,
-  OrderStatus.STORE_ACCEPTED,
-  OrderStatus.PICKING,
   OrderStatus.PACKED,
-  OrderStatus.READY_FOR_PICKUP,
+  OrderStatus.SHIPPED,
+  OrderStatus.IN_TRANSIT,
   OrderStatus.OUT_FOR_DELIVERY,
 ];
 
@@ -81,8 +80,8 @@ export async function lockOrder(
 
 /**
  * Locks the order row, checks the current status, applies the change and records it in the
- * status history. Cancelling returns the order's stock; delivering assigns the invoice number and
- * counts cash on delivery as collected. Must run inside a transaction.
+ * status history. Cancelling returns the order's stock, packing assigns the invoice number, and
+ * delivering counts cash on delivery as collected. Must run inside a transaction.
  */
 export async function transitionOrder(tx: Tx, params: TransitionParams) {
   const locked = await lockOrder(tx, params.orderId, params.scope, params.hiddenStatuses);
@@ -100,8 +99,11 @@ export async function transitionOrder(tx: Tx, params: TransitionParams) {
     await releaseOrderStock(tx, params.orderId);
   }
 
-  if (params.to === OrderStatus.DELIVERED) {
+  if (params.to === OrderStatus.PACKED) {
     await assignInvoiceNumber(tx, params.orderId);
+  }
+
+  if (params.to === OrderStatus.DELIVERED) {
     await tx.payment.updateMany({
       where: { orderId: params.orderId, method: PaymentMethod.COD, status: PaymentStatus.PENDING },
       data: { status: PaymentStatus.PAID, paidAt: new Date(), provider: "cash" },

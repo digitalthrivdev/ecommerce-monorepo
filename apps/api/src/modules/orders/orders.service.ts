@@ -14,6 +14,7 @@ import { reserveStock } from "../inventory/inventory.service.js";
 import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
+import { shipmentInclude, toTrackingView } from "../shipping/shipment-views.js";
 import { customerVisibleVariant, imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, deliveredAt, deliveredEntry, transitionOrder } from "./order-status.js";
@@ -69,6 +70,7 @@ export const orderDetailInclude = {
     },
   },
   rating: { select: { deliveryRating: true, itemsRating: true, comment: true, createdAt: true } },
+  shipment: { include: shipmentInclude },
 } satisfies Prisma.OrderInclude;
 
 export type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
@@ -144,6 +146,7 @@ export function toDetailView(order: OrderDetail) {
     deliveryFeeGstRate: order.deliveryFeeGstRate?.toFixed(2) ?? null,
     deliveryFeeTax: order.deliveryFeeTax.toFixed(2),
     invoiceNumber: order.invoiceNumber,
+    shipment: order.shipment && toTrackingView(order.shipment),
     deliveryAddress: {
       name: order.customerName,
       phone: order.customerPhone,

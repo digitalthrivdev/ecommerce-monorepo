@@ -38,12 +38,17 @@ export function financialYear(date: Date, timeZone = env.TIMEZONE) {
 }
 
 /**
- * Gives the order the next invoice number of the current financial year, e.g. INV/2026-27/000123,
+ * Gives a packed order the next invoice number of the current financial year, e.g. INV/2026-27/000123,
  * and copies the seller onto it: legal name, GSTIN (see invoiceGstin), the default pickup
  * location's address, and whether the supply is inter-state. Invoices only ever read this snapshot.
  */
 export async function assignInvoiceNumber(tx: Tx, orderId: string) {
-  const year = financialYear(new Date());
+  // An order packed again (its shipment was cancelled) keeps its invoice.
+  const current = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { invoiceNumber: true } });
+  if (current.invoiceNumber) return current.invoiceNumber;
+
+  const invoicedAt = new Date();
+  const year = financialYear(invoicedAt);
   const [row] = await tx.$queryRaw<{ lastNumber: number }[]>`
     INSERT INTO "InvoiceSequence" ("financialYear", "lastNumber") VALUES (${year}, 1)
     ON CONFLICT ("financialYear") DO UPDATE SET "lastNumber" = "InvoiceSequence"."lastNumber" + 1
@@ -58,6 +63,7 @@ export async function assignInvoiceNumber(tx: Tx, orderId: string) {
     where: { id: orderId },
     data: {
       invoiceNumber,
+      invoicedAt,
       sellerName: settings.businessName ?? (await getAppearance(tx)).appearance.appName,
       ...(origin && {
         sellerGstin: invoiceGstin(origin.state, settings.gstin),

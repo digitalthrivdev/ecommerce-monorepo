@@ -13,8 +13,8 @@ type TodayRow = {
 
 /** Minutes before a waiting order is flagged to admins. Matches the red timers on the order board. */
 export const ATTENTION_MINUTES = {
-  NOT_ACCEPTED: 10,
-  NOT_DISPATCHED: 20,
+  NOT_PACKED: 12 * 60,
+  NOT_SHIPPED: 24 * 60,
 } as const;
 
 export type AttentionReason = keyof typeof ATTENTION_MINUTES;
@@ -85,7 +85,7 @@ export function createDashboardService(prisma: PrismaClient) {
       },
       pipeline: pipelineCounts,
       activeOrders: Object.values(pipelineCounts).reduce((sum, count) => sum + count, 0),
-      awaitingDispatch: pipelineCounts.READY_FOR_PICKUP,
+      awaitingDispatch: pipelineCounts.PACKED,
       lowStock: { count: lowStock, threshold: LOW_STOCK_THRESHOLD },
       customers,
       recentOrders: recent.map(({ total, ...order }) => ({ ...order, total: total.toFixed(2) })),
@@ -93,8 +93,7 @@ export function createDashboardService(prisma: PrismaClient) {
   }
 
   /**
-   * Orders left waiting: not yet accepted, or the packed order has not gone out for
-   * delivery. Oldest first. Nothing changes automatically; an admin decides.
+   * Orders left waiting: not yet packed, or packed but not yet picked up by the courier. Oldest first. Nothing changes automatically; an admin decides.
    */
   async function getAttention() {
     const waiting = await prisma.$queryRaw<WaitingRow[]>`
@@ -105,8 +104,8 @@ export function createDashboardService(prisma: PrismaClient) {
         FROM "OrderStatusHistory" h
         WHERE h."orderId" = o.id AND h."toStatus" = o.status AND h."fromStatus" IS DISTINCT FROM h."toStatus"
       ) h
-      WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_ACCEPTED)})
-         OR (o.status = 'READY_FOR_PICKUP' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_DISPATCHED)})
+      WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_PACKED)})
+         OR (o.status = 'PACKED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_SHIPPED)})
       ORDER BY h.since
       LIMIT ${ATTENTION_LIMIT}
     `;
@@ -114,7 +113,7 @@ export function createDashboardService(prisma: PrismaClient) {
     const items = waiting.map((row) => ({
       orderId: row.id,
       orderNumber: row.orderNumber,
-      reason: (row.status === OrderStatus.CONFIRMED ? "NOT_ACCEPTED" : "NOT_DISPATCHED") as AttentionReason,
+      reason: (row.status === OrderStatus.CONFIRMED ? "NOT_PACKED" : "NOT_SHIPPED") as AttentionReason,
       since: row.since,
     }));
 

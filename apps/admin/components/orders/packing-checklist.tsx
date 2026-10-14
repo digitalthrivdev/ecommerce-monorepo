@@ -12,7 +12,7 @@ import type { OrderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type ChecklistProps = {
-  order: Pick<OrderDetail, "id" | "status" | "items" | "allowedActions">;
+  order: Pick<OrderDetail, "id" | "orderNumber" | "status" | "items" | "allowedActions">;
   currency: string;
 };
 
@@ -121,8 +121,10 @@ export function PackingChecklist({ order, currency }: ChecklistProps) {
       {packing && (
         <NextStepButton
           orderId={order.id}
+          orderNumber={order.orderNumber}
           status={order.status}
           allowedActions={order.allowedActions}
+          carrier={null}
           packItemIds={packItemIds}
           className="w-full sm:ml-auto sm:w-auto sm:min-w-56"
         />

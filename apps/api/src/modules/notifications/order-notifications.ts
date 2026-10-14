@@ -43,11 +43,19 @@ export function orderNotifications(change: StatusChange, order: OrderContext): N
     case OrderStatus.CONFIRMED:
       return [customer("Order confirmed", `We've received order ${order.orderNumber}. We'll start packing it soon.`)];
 
+    case OrderStatus.SHIPPED:
+      return change.fromStatus === OrderStatus.PACKED
+        ? [customer("Your order has shipped", `Order ${order.orderNumber} is on its way. Track it in the app.`)]
+        : [];
+
     case OrderStatus.OUT_FOR_DELIVERY:
-      return [customer("Your order is on the way", `Order ${order.orderNumber} is out for delivery.`)];
+      return [customer("Out for delivery", `Order ${order.orderNumber} will be delivered today.`)];
 
     case OrderStatus.DELIVERED:
       return [customer("Order delivered", `Order ${order.orderNumber} has been delivered. Enjoy!`)];
+
+    case OrderStatus.RTO:
+      return [customer("Delivery failed", `Order ${order.orderNumber} couldn't be delivered and is going back to us. We'll be in touch.`)];
 
     case OrderStatus.CANCELLED: {
       const paidOnline =
