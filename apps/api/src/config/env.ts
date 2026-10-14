@@ -127,6 +127,15 @@ const envSchema = z.object({
   CASHFREE_SECRET_KEY: optionalSecret,
   CASHFREE_ENVIRONMENT: z.enum(["sandbox", "production"]).default("sandbox"),
 
+  // Shipping carrier credentials. Values set here take priority over keys saved in the dashboard.
+  // Admins choose the active carrier in the dashboard.
+  // Shiprocket (apiv2.shiprocket.in). The API user is created under Settings → API in the
+  // Shiprocket account; the webhook token is the security token set with the webhook.
+  SHIPROCKET_API_EMAIL: optionalSecret,
+  SHIPROCKET_API_PASSWORD: optionalSecret,
+  SHIPROCKET_WEBHOOK_TOKEN: optionalSecret,
+  SHIPROCKET_PICKUP_LOCATION: optionalSecret,
+
   PAYMENT_TIMEOUT_MINUTES: z.coerce.number().int().min(1).max(120).default(15),
 
   // 0 disables the background check for unpaid orders and pending refunds.
@@ -175,7 +184,16 @@ const envSchema = z.object({
 ).refine((value) => allOrNone([value.CASHFREE_APP_ID, value.CASHFREE_SECRET_KEY]), {
   message: "Set both CASHFREE_APP_ID and CASHFREE_SECRET_KEY, or neither",
   path: ["CASHFREE_APP_ID"],
-}).refine((value) => !(value.NODE_ENV === "production" && value.OTP_PROVIDER === "log"), {
+}).refine(
+  (value) =>
+    allOrNone([
+      value.SHIPROCKET_API_EMAIL,
+      value.SHIPROCKET_API_PASSWORD,
+      value.SHIPROCKET_WEBHOOK_TOKEN,
+      value.SHIPROCKET_PICKUP_LOCATION,
+    ]),
+  { message: "Set all SHIPROCKET_* variables, or none", path: ["SHIPROCKET_API_EMAIL"] },
+).refine((value) => !(value.NODE_ENV === "production" && value.OTP_PROVIDER === "log"), {
   message: "OTP_PROVIDER=log is not allowed in production; configure an SMS provider",
   path: ["OTP_PROVIDER"],
 }).refine((value) => allOrNone([value.MESSAGE_CENTRAL_CUSTOMER_ID, value.MESSAGE_CENTRAL_KEY]), {

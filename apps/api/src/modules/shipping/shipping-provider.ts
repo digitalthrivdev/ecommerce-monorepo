@@ -7,6 +7,7 @@ import type { Prisma, ShipmentStatus } from "../../generated/prisma/client";
 import type { CredentialField, Credentials } from "../../shared/credentials.js";
 import { manualCarrier } from "./manual-carrier.js";
 import { mockCarrier } from "./mock-carrier.js";
+import { createShiprocketProvider } from "./shiprocket-carrier.js";
 
 /** A tracking update in our terms. `providerEventId` identifies it, so the same update is recorded once. */
 export type ShipmentEventInput = {
@@ -133,6 +134,8 @@ function defineCarrier<S extends z.ZodObject<Record<string, z.ZodType<string>>>>
   };
 }
 
+const required = z.string().trim().min(1, "Required");
+
 export const MANUAL_CARRIER = "manual";
 
 /** Carriers whose shipments an admin moves along by hand (the test carrier too, for trying the flow). */
@@ -148,6 +151,43 @@ export const CARRIERS: readonly CarrierDefinition[] = [
     schema: z.object({}),
     fromEnv: () => ({}),
     create: () => manualCarrier,
+  }),
+  defineCarrier({
+    name: "shiprocket",
+    label: "Shiprocket",
+    fields: [
+      { key: "email", label: "API user email", secret: false },
+      { key: "password", label: "API user password", secret: true },
+      {
+        key: "webhookToken",
+        label: "Webhook token",
+        secret: true,
+        help: "Set the same value in Shiprocket → Settings → API → Webhooks.",
+      },
+      {
+        key: "pickupLocation",
+        label: "Pickup location nickname",
+        secret: false,
+        help: "The pickup location name in your Shiprocket account.",
+      },
+    ],
+    webhookEvents: "Tracking updates",
+    schema: z.object({
+      email: required.regex(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, "Enter the API user email"),
+      password: required,
+      webhookToken: required,
+      pickupLocation: required.max(36, "At most 36 characters"),
+    }),
+    fromEnv: () =>
+      env.SHIPROCKET_API_EMAIL && env.SHIPROCKET_API_PASSWORD && env.SHIPROCKET_WEBHOOK_TOKEN && env.SHIPROCKET_PICKUP_LOCATION
+        ? {
+            email: env.SHIPROCKET_API_EMAIL,
+            password: env.SHIPROCKET_API_PASSWORD,
+            webhookToken: env.SHIPROCKET_WEBHOOK_TOKEN,
+            pickupLocation: env.SHIPROCKET_PICKUP_LOCATION,
+          }
+        : null,
+    create: createShiprocketProvider,
   }),
   ...(env.NODE_ENV === "production"
     ? []

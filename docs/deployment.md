@@ -72,7 +72,20 @@ Admins choose the active carrier under Settings → Shipping. Keys entered there
 
 - **Manual:** no keys. The admin books the courier themselves and types the courier name, AWB and tracking URL on the order. Every pincode counts as serviceable.
 - **Mock:** outside production only, for testing the whole flow without a carrier account.
-- **Shiprocket** and **Fship:** setup steps (API user, webhook URL and token, pickup location name) are added here when each carrier is implemented.
+- **Fship:** setup steps are added here when the carrier is implemented.
+
+### Shiprocket
+
+Shiprocket aggregates couriers: the API books the order, assigns the courier and AWB, and schedules the pickup; Shiprocket then reports progress by webhook.
+
+1. **API user:** in the Shiprocket panel go to **Settings → API** and create an API user. Admin and staff accounts cannot log in through the API, so use a dedicated API user (a sub-user with the warehouse access needed to create orders).
+2. **Pickup location:** under **Settings → Pickup Addresses**, add the address couriers collect from and note its **nickname**. This is the `pickupLocation` value; it must match exactly.
+3. **Webhook:** under **Settings → API → Webhooks** add a webhook for the order status updates, with URL `https://API_DOMAIN/shipping/webhooks/shiprocket` and a security token you choose. The same token is the `webhookToken` credential, which authenticates every incoming event.
+4. **Save the keys:** Settings → Shipping, pick Shiprocket and enter the API user email and password, the webhook token and the pickup location nickname. Secrets entered here are encrypted with `SECRETS_ENCRYPTION_KEY`. To set them from the server instead, use `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_WEBHOOK_TOKEN` and `SHIPROCKET_PICKUP_LOCATION` in `deploy/api.env` (all four or none); `deploy/api.env` wins.
+
+The API logs in once and caches the token in Redis for nine days (Shiprocket tokens last ten). Tracking webhooks are matched by AWB, verified with the token and applied once; the same updates can always be pulled from the order page.
+
+In development, save the same credentials under Settings → Shipping; outside production the Mock carrier is also available.
 
 Before launch, create one real test shipment with the client's carrier account, print its label, and cancel it, so the pickup address, package dimensions and webhooks are known to work.
 
