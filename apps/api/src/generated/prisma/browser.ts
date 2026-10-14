@@ -163,31 +163,6 @@ export type ProductReview = Prisma.ProductReviewModel
  */
 export type WishlistItem = Prisma.WishlistItemModel
 /**
- * Model DeliveryPartner
- * 
- */
-export type DeliveryPartner = Prisma.DeliveryPartnerModel
-/**
- * Model CashDeposit
- * 
- */
-export type CashDeposit = Prisma.CashDepositModel
-/**
- * Model RiderPayout
- * 
- */
-export type RiderPayout = Prisma.RiderPayoutModel
-/**
- * Model Delivery
- * 
- */
-export type Delivery = Prisma.DeliveryModel
-/**
- * Model DeliveryLocation
- * 
- */
-export type DeliveryLocation = Prisma.DeliveryLocationModel
-/**
  * Model PlatformSettings
  * 
  */

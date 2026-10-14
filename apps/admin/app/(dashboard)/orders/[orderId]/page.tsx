@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bike, ChevronDown, FileText, MapPin, Phone } from "lucide-react";
+import { ChevronDown, FileText, MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { RefundDialog } from "@/components/complaints/refund-dialog";
 import { Notice } from "@/components/notice";
 import { Elapsed } from "@/components/orders/elapsed";
-import { NextStepButton, OrderMoreMenu, RiderPicker } from "@/components/orders/order-actions";
+import { NextStepButton, OrderMoreMenu } from "@/components/orders/order-actions";
 import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
 import { PageHeader } from "@/components/page-header";
@@ -14,13 +14,10 @@ import { Block, PageBody, Panel, Section } from "@/components/section";
 import { Stars } from "@/components/stars";
 import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import {
   COMPLAINT_REASON_LABELS,
   COMPLAINT_STATUS_LABELS,
-  DELIVERY_FAILURE_LABELS,
-  DELIVERY_STATUS_LABELS,
   formatDateTime,
   formatMoney,
   ORDER_STATUS_LABELS,
@@ -30,7 +27,6 @@ import {
 } from "@/lib/format";
 import { statusChangedAt } from "@/lib/order-flow";
 import { getOrder } from "@/lib/orders";
-import type { DeliveryPartner, Paginated, StoreDetails } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Order" };
 
@@ -48,18 +44,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
   const user = await getCurrentUser();
   const [order, settings] = await Promise.all([getOrder(user, orderId), getPublicSettings()]);
 
-  const assignMode = order.allowedActions.includes("assign")
-    ? "assign"
-    : order.allowedActions.includes("reassign")
-      ? "reassign"
-      : null;
-  const [partners, store] = assignMode
-    ? await Promise.all([
-        apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", { query: { isActive: true, limit: 100 } }),
-        apiFetch<StoreDetails>(`/stores/${encodeURIComponent(order.store.id)}`),
-      ])
-    : [null, null];
-
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const date = (value: string) => formatDateTime(value, settings.timezone);
   const address = order.deliveryAddress;
@@ -70,7 +54,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
   const isOpen = order.status !== "DELIVERED" && order.status !== "CANCELLED";
   const packItemIds = order.items.filter((item) => item.quantity > item.unavailableQuantity).map((item) => item.id);
   const cancelEntry = order.status === "CANCELLED" ? order.statusHistory.findLast((entry) => entry.toStatus === "CANCELLED") : null;
-  const rider = order.delivery?.partner;
   const collectCash = order.paymentMethod === "COD" && isOpen && order.payment?.status !== "PAID";
 
   return (
@@ -110,8 +93,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               orderNumber={order.orderNumber}
               status={order.status}
               canCancel={order.allowedActions.includes("cancel")}
-              canUnassign={order.allowedActions.includes("unassign")}
-              canMarkDelivered={order.allowedActions.includes("mark-delivered")}
             />
             <NextStepButton
               storeId={order.store.id}
@@ -141,7 +122,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
         {cancelEntry ? (
           <Notice tone="danger" title={`Cancelled ${date(cancelEntry.createdAt)}`}>
             {[
-              order.delivery?.failure && DELIVERY_FAILURE_LABELS[order.delivery.failure],
               cancelEntry.note,
               cancelEntry.changedBy && `by ${cancelEntry.changedBy.name ?? ROLE_LABELS[cancelEntry.changedBy.role]}`,
             ]
@@ -300,51 +280,18 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               )}
             </Block>
 
-            <Block title="Rider">
-              {rider ? (
-                <div className="flex flex-col gap-3 text-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <Bike className="size-5 text-muted-foreground" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold">{rider.name ?? rider.phone}</p>
-                      <p className="text-muted-foreground">
-                        {[rider.vehicleType, rider.vehicleNumber].filter(Boolean).join(" · ") || rider.phone}
-                      </p>
-                    </div>
-                  </div>
-                  <Button asChild variant="outline" className="w-full">
-                    <a href={`tel:${rider.phone}`}>
-                      <Phone />
-                      Call rider
-                    </a>
-                  </Button>
-                  <dl className="flex flex-col gap-2">
-                    {order.delivery && <Row label="Status">{DELIVERY_STATUS_LABELS[order.delivery.status]}</Row>}
-                    {order.delivery?.assignedAt && <Row label="Assigned">{date(order.delivery.assignedAt)}</Row>}
-                    {order.delivery?.pickedUpAt && <Row label="Picked up">{date(order.delivery.pickedUpAt)}</Row>}
-                    {order.delivery?.deliveredAt && <Row label="Delivered">{date(order.delivery.deliveredAt)}</Row>}
-                  </dl>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {order.status === "READY_FOR_PICKUP"
-                    ? "Packed and waiting for a rider."
-                    : isOpen
-                      ? "A rider is chosen once the order is packed."
-                      : "No rider."}
-                </p>
-              )}
-              {assignMode && (
-                <RiderPicker
-                  storeId={order.store.id}
-                  orderId={order.id}
-                  mode={assignMode}
-                  partners={partners?.items ?? []}
-                  store={store && { latitude: Number(store.latitude), longitude: Number(store.longitude) }}
-                />
-              )}
+            <Block title="Delivery">
+              <p className="text-sm text-muted-foreground">
+                {order.deliveredAt
+                  ? `Delivered ${date(order.deliveredAt)}.`
+                  : order.status === "READY_FOR_PICKUP"
+                    ? "Packed and waiting to go out."
+                    : order.status === "OUT_FOR_DELIVERY"
+                      ? "Out for delivery."
+                      : isOpen
+                        ? "Goes out once the order is packed."
+                        : "Not delivered."}
+              </p>
             </Block>
 
             {order.rating && (

@@ -2,7 +2,7 @@
 
 A white-label single-vendor e-commerce platform, like a Shopify store: one seller per deployment, any kind of physical product. Customers buy on the storefront website or the customer app; admins and staff run the shop from a dashboard; orders ship through third-party carriers (Shiprocket, Fship, any courier, or manual self-ship), with online payment or cash on delivery. The same code is deployed separately for each client, with its own database, Redis, secrets and app builds.
 
-> **Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until that is finished, parts of the code (stores, store pricing, delivery partners, `apps/delivery`) still follow the grocery model. `AGENTS.md` describes the target.
+> **Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until that is finished, parts of the code (stores, store pricing, the store-run order flow) still follow the grocery model. `AGENTS.md` describes the target.
 
 ## What's in the repository
 
@@ -12,7 +12,6 @@ A white-label single-vendor e-commerce platform, like a Shopify store: one selle
 | Dashboard | `apps/admin` | Next.js 16, React, Tailwind CSS, shadcn/ui | Admins and staff |
 | Storefront | `apps/web` | Next.js 16 | Customers, on the client's main domain |
 | Customer app | `apps/customer` | Expo, React Native | Customers |
-| Delivery app | `apps/delivery` | Expo, React Native | Being removed |
 
 Other folders:
 

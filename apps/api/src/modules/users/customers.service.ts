@@ -1,4 +1,4 @@
-import { DeliveryFailure, OrderStatus, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import type { BlockCustomerInput, CustomerOrdersQuery, ListCustomersQuery } from "./customers.schemas.js";
 
@@ -13,37 +13,11 @@ type LastOrderRow = {
 
 const customerSelect = { id: true, phone: true, name: true, email: true, deletedAt: true, orderBlock: true, createdAt: true } satisfies Prisma.UserSelect;
 
-/** Customers who refused this many deliveries are flagged for an admin to decide on a block. */
-export const REPEAT_REFUSALS = 2;
-
 function notFound() {
   return new AppError(404, "CUSTOMER_NOT_FOUND", "Customer not found");
 }
 
 export function createCustomersService(prisma: PrismaClient) {
-  async function refusalCounts(userIds: string[]) {
-    if (userIds.length === 0) return new Map<string, number>();
-
-    const rows = await prisma.$queryRaw<{ userId: string; refusals: number }[]>`
-      SELECT o."userId", count(*)::int AS refusals
-      FROM "Delivery" d JOIN "Order" o ON o.id = d."orderId"
-      WHERE d.failure = 'REFUSED' AND o."userId" IN (${Prisma.join(userIds)})
-      GROUP BY o."userId"
-    `;
-    return new Map(rows.map((row) => [row.userId, row.refusals]));
-  }
-
-  async function repeatRefuserIds() {
-    const rows = await prisma.$queryRaw<{ userId: string }[]>`
-      SELECT o."userId"
-      FROM "Delivery" d JOIN "Order" o ON o.id = d."orderId"
-      WHERE d.failure = 'REFUSED'
-      GROUP BY o."userId"
-      HAVING count(*) >= ${REPEAT_REFUSALS}
-    `;
-    return rows.map((row) => row.userId);
-  }
-
   /** Each customer's most recent order, via the (userId, createdAt) index. */
   async function lastOrders(userIds: string[]) {
     if (userIds.length === 0) return new Map<string, LastOrderRow>();
@@ -60,7 +34,6 @@ export function createCustomersService(prisma: PrismaClient) {
   async function listCustomers({ q, filter, limit, offset }: ListCustomersQuery) {
     const where: Prisma.UserWhereInput = {
       role: UserRole.CUSTOMER,
-      ...(filter === "refusals" && { id: { in: await repeatRefuserIds() } }),
       ...(filter === "blocked" && { orderBlock: { not: null } }),
       ...(q && {
         OR: [
@@ -83,13 +56,12 @@ export function createCustomersService(prisma: PrismaClient) {
     ]);
 
     const ids = rows.map((row) => row.id);
-    const [latest, refusals] = await Promise.all([lastOrders(ids), refusalCounts(ids)]);
+    const latest = await lastOrders(ids);
     const items = rows.map(({ _count, ...customer }) => {
       const last = latest.get(customer.id);
       return {
         ...customer,
         orderCount: _count.orders,
-        refusals: refusals.get(customer.id) ?? 0,
         lastOrder: last
           ? { id: last.id, orderNumber: last.orderNumber, status: last.status, total: last.total.toFixed(2), createdAt: last.createdAt }
           : null,
@@ -132,7 +104,7 @@ export function createCustomersService(prisma: PrismaClient) {
       throw notFound();
     }
 
-    const [byStatus, last, failures] = await Promise.all([
+    const [byStatus, last] = await Promise.all([
       prisma.order.groupBy({
         by: ["status"],
         where: { userId: id },
@@ -141,28 +113,15 @@ export function createCustomersService(prisma: PrismaClient) {
         _sum: { total: true },
       }),
       prisma.order.findFirst({ where: { userId: id }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
-      prisma.delivery.groupBy({
-        by: ["failure"],
-        where: { failure: { not: null }, order: { userId: id } },
-        orderBy: { failure: "asc" },
-        _count: { _all: true },
-      }),
     ]);
 
     const countOf = (status: OrderStatus) => byStatus.find((row) => row.status === status)?._count._all ?? 0;
-    const failuresOf = (failure: DeliveryFailure) => failures.find((row) => row.failure === failure)?._count._all ?? 0;
     const spent = byStatus.find((row) => row.status === OrderStatus.DELIVERED)?._sum.total ?? new Prisma.Decimal(0);
     const { orderBlockedBy, ...rest } = customer;
 
     return {
       ...rest,
       orderBlockedBy: orderBlockedBy?.name ?? null,
-      failedDeliveries: {
-        refused: failuresOf(DeliveryFailure.REFUSED),
-        unreachable: failuresOf(DeliveryFailure.UNREACHABLE),
-        other: failuresOf(DeliveryFailure.OTHER),
-      },
-      repeatRefusals: failuresOf(DeliveryFailure.REFUSED) >= REPEAT_REFUSALS,
       stats: {
         orders: byStatus.reduce((sum, row) => sum + row._count._all, 0),
         delivered: countOf(OrderStatus.DELIVERED),

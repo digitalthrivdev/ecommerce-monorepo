@@ -1,12 +1,10 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
-import { router, usePathname } from "expo-router";
-import { useEffect, useRef } from "react";
 import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, OrderTracking, Paginated, PaymentMethod, StoreProduct } from "./types";
+import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, Paginated, PaymentMethod, StoreProduct } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -37,27 +35,6 @@ export function useActiveOrders() {
   });
 }
 
-/**
- * Opens an order when its rider accepts it while the app is open. Orders accepted before the app
- * loaded them are left alone, so starting the app doesn't jump to an order.
- */
-export function useOpenOrderWhenRiderAccepts() {
-  const active = useActiveOrders();
-  const pathname = usePathname();
-  const seen = useRef<{ data: unknown; accepted: Map<string, boolean> } | null>(null);
-
-  useEffect(() => {
-    const data = active.data;
-    if (!data || seen.current?.data === data) return;
-    const previous = seen.current?.accepted;
-    seen.current = { data, accepted: new Map(data.items.map((order) => [order.id, order.riderAcceptedAt !== null])) };
-    const order = previous && data.items.find((candidate) => candidate.riderAcceptedAt !== null && previous.get(candidate.id) === false);
-    if (order && pathname !== `/order/${order.id}`) {
-      router.push({ pathname: "/order/[id]", params: { id: order.id } });
-    }
-  }, [active.data, pathname]);
-}
-
 export const buyAgainKey = (storeId: string | null) => [...ORDERS_KEY, "buy-again", storeId] as const;
 
 /** Products from the customer's past orders that are in stock at the store, most often ordered first. */
@@ -77,22 +54,6 @@ export function useOrder(id: string) {
     queryFn: () => apiFetch<OrderDetail>(orderPath(id)),
     staleTime: 10_000,
     refetchInterval: (query) => (query.state.data && isOrderFinished(query.state.data.status) ? false : LIVE_REFRESH_MS),
-  });
-}
-
-const TRACKABLE: OrderStatus[] = ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"];
-
-/** Matches how often the delivery app sends the partner's position while they have an order. */
-export const TRACKING_REFRESH_MS = 10_000;
-
-/** The partner's position, distance and arrival estimate while the order is with them; null until their location is known. */
-export function useOrderTracking(id: string, status: OrderStatus | undefined) {
-  return useQuery({
-    queryKey: [...orderKey(id), "tracking"],
-    queryFn: () => apiFetch<OrderTracking>(`${orderPath(id)}/tracking`),
-    enabled: status !== undefined && TRACKABLE.includes(status),
-    staleTime: 5_000,
-    refetchInterval: TRACKING_REFRESH_MS,
   });
 }
 
@@ -212,9 +173,7 @@ export const ORDER_STATUS_TEXT: Record<OrderStatus, { title: string; detail: str
   STORE_ACCEPTED: { title: "Accepted by the store", detail: "Your order is next in line for packing." },
   PICKING: { title: "Packing your order", detail: "The store is picking your items." },
   PACKED: { title: "Order packed", detail: "Your items are packed and ready to go." },
-  READY_FOR_PICKUP: { title: "Ready for pickup", detail: "Waiting for a delivery partner to collect it." },
-  ASSIGNED: { title: "Delivery partner assigned", detail: "Your delivery partner is heading to the store." },
-  PICKED_UP: { title: "Picked up", detail: "Your order has left the store." },
+  READY_FOR_PICKUP: { title: "Ready to send", detail: "Your order will be on its way soon." },
   OUT_FOR_DELIVERY: { title: "On the way", detail: "Your order is on its way to you." },
   DELIVERED: { title: "Delivered", detail: "Enjoy your order!" },
   CANCELLED: { title: "Cancelled", detail: "This order was cancelled." },
@@ -228,8 +187,6 @@ const STEP_INDEX: Partial<Record<OrderStatus, number>> = {
   PICKING: 1,
   PACKED: 2,
   READY_FOR_PICKUP: 2,
-  ASSIGNED: 3,
-  PICKED_UP: 3,
   OUT_FOR_DELIVERY: 3,
   DELIVERED: 4,
 };

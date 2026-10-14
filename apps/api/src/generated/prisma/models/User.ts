@@ -268,11 +268,6 @@ export type UserWhereInput = {
   addresses?: Prisma.AddressListRelationFilter
   cart?: Prisma.XOR<Prisma.CartNullableScalarRelationFilter, Prisma.CartWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
-  deliveryPartner?: Prisma.XOR<Prisma.DeliveryPartnerNullableScalarRelationFilter, Prisma.DeliveryPartnerWhereInput> | null
-  cashDepositsRecorded?: Prisma.CashDepositListRelationFilter
-  cashDepositsVoided?: Prisma.CashDepositListRelationFilter
-  payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
-  payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
   complaints?: Prisma.ComplaintListRelationFilter
   complaintsResolved?: Prisma.ComplaintListRelationFilter
@@ -304,11 +299,6 @@ export type UserOrderByWithRelationInput = {
   addresses?: Prisma.AddressOrderByRelationAggregateInput
   cart?: Prisma.CartOrderByWithRelationInput
   orders?: Prisma.OrderOrderByRelationAggregateInput
-  deliveryPartner?: Prisma.DeliveryPartnerOrderByWithRelationInput
-  cashDepositsRecorded?: Prisma.CashDepositOrderByRelationAggregateInput
-  cashDepositsVoided?: Prisma.CashDepositOrderByRelationAggregateInput
-  payoutsRecorded?: Prisma.RiderPayoutOrderByRelationAggregateInput
-  payoutsVoided?: Prisma.RiderPayoutOrderByRelationAggregateInput
   pushTokens?: Prisma.PushTokenOrderByRelationAggregateInput
   complaints?: Prisma.ComplaintOrderByRelationAggregateInput
   complaintsResolved?: Prisma.ComplaintOrderByRelationAggregateInput
@@ -343,11 +333,6 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   addresses?: Prisma.AddressListRelationFilter
   cart?: Prisma.XOR<Prisma.CartNullableScalarRelationFilter, Prisma.CartWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
-  deliveryPartner?: Prisma.XOR<Prisma.DeliveryPartnerNullableScalarRelationFilter, Prisma.DeliveryPartnerWhereInput> | null
-  cashDepositsRecorded?: Prisma.CashDepositListRelationFilter
-  cashDepositsVoided?: Prisma.CashDepositListRelationFilter
-  payoutsRecorded?: Prisma.RiderPayoutListRelationFilter
-  payoutsVoided?: Prisma.RiderPayoutListRelationFilter
   pushTokens?: Prisma.PushTokenListRelationFilter
   complaints?: Prisma.ComplaintListRelationFilter
   complaintsResolved?: Prisma.ComplaintListRelationFilter
@@ -419,11 +404,6 @@ export type UserCreateInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -453,11 +433,6 @@ export type UserUncheckedCreateInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -487,11 +462,6 @@ export type UserUpdateInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -521,11 +491,6 @@ export type UserUncheckedUpdateInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -923,80 +888,6 @@ export type UserUpdateOneRequiredWithoutWishlistItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWishlistItemsInput, Prisma.UserUpdateWithoutWishlistItemsInput>, Prisma.UserUncheckedUpdateWithoutWishlistItemsInput>
 }
 
-export type UserCreateNestedOneWithoutDeliveryPartnerInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutDeliveryPartnerInput, Prisma.UserUncheckedCreateWithoutDeliveryPartnerInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeliveryPartnerInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutDeliveryPartnerNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutDeliveryPartnerInput, Prisma.UserUncheckedCreateWithoutDeliveryPartnerInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeliveryPartnerInput
-  upsert?: Prisma.UserUpsertWithoutDeliveryPartnerInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeliveryPartnerInput, Prisma.UserUpdateWithoutDeliveryPartnerInput>, Prisma.UserUncheckedUpdateWithoutDeliveryPartnerInput>
-}
-
-export type UserCreateNestedOneWithoutCashDepositsRecordedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsRecordedInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserCreateNestedOneWithoutCashDepositsVoidedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsVoidedInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutCashDepositsRecordedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsRecordedInput
-  upsert?: Prisma.UserUpsertWithoutCashDepositsRecordedInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashDepositsRecordedInput, Prisma.UserUpdateWithoutCashDepositsRecordedInput>, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
-}
-
-export type UserUpdateOneWithoutCashDepositsVoidedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCashDepositsVoidedInput
-  upsert?: Prisma.UserUpsertWithoutCashDepositsVoidedInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCashDepositsVoidedInput, Prisma.UserUpdateWithoutCashDepositsVoidedInput>, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
-}
-
-export type UserCreateNestedOneWithoutPayoutsRecordedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsRecordedInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserCreateNestedOneWithoutPayoutsVoidedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsVoidedInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneRequiredWithoutPayoutsRecordedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsRecordedInput
-  upsert?: Prisma.UserUpsertWithoutPayoutsRecordedInput
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPayoutsRecordedInput, Prisma.UserUpdateWithoutPayoutsRecordedInput>, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
-}
-
-export type UserUpdateOneWithoutPayoutsVoidedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPayoutsVoidedInput
-  upsert?: Prisma.UserUpsertWithoutPayoutsVoidedInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPayoutsVoidedInput, Prisma.UserUpdateWithoutPayoutsVoidedInput>, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
-}
-
 export type UserCreateNestedOneWithoutPushTokensInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutPushTokensInput, Prisma.UserUncheckedCreateWithoutPushTokensInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushTokensInput
@@ -1030,11 +921,6 @@ export type UserCreateWithoutCustomersBlockedInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1063,11 +949,6 @@ export type UserUncheckedCreateWithoutCustomersBlockedInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1101,11 +982,6 @@ export type UserCreateWithoutOrderBlockedByInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1134,11 +1010,6 @@ export type UserUncheckedCreateWithoutOrderBlockedByInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1188,11 +1059,6 @@ export type UserUpdateWithoutCustomersBlockedInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -1221,11 +1087,6 @@ export type UserUncheckedUpdateWithoutCustomersBlockedInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -1291,11 +1152,6 @@ export type UserCreateWithoutAddressesInput = {
   store?: Prisma.StoreCreateNestedOneWithoutStaffInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1324,11 +1180,6 @@ export type UserUncheckedCreateWithoutAddressesInput = {
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1373,11 +1224,6 @@ export type UserUpdateWithoutAddressesInput = {
   store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -1406,11 +1252,6 @@ export type UserUncheckedUpdateWithoutAddressesInput = {
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -1439,11 +1280,6 @@ export type UserCreateWithoutStoreInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1472,11 +1308,6 @@ export type UserUncheckedCreateWithoutStoreInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1531,11 +1362,6 @@ export type UserCreateWithoutCartInput = {
   store?: Prisma.StoreCreateNestedOneWithoutStaffInput
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1564,11 +1390,6 @@ export type UserUncheckedCreateWithoutCartInput = {
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1613,11 +1434,6 @@ export type UserUpdateWithoutCartInput = {
   store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -1646,11 +1462,6 @@ export type UserUncheckedUpdateWithoutCartInput = {
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -1679,11 +1490,6 @@ export type UserCreateWithoutOrdersInput = {
   store?: Prisma.StoreCreateNestedOneWithoutStaffInput
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1712,11 +1518,6 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1761,11 +1562,6 @@ export type UserUpdateWithoutOrdersInput = {
   store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -1794,11 +1590,6 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -1828,11 +1619,6 @@ export type UserCreateWithoutRefundsIssuedInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -1861,11 +1647,6 @@ export type UserUncheckedCreateWithoutRefundsIssuedInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -1910,11 +1691,6 @@ export type UserUpdateWithoutRefundsIssuedInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -1943,11 +1719,6 @@ export type UserUncheckedUpdateWithoutRefundsIssuedInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -1976,11 +1747,6 @@ export type UserCreateWithoutComplaintsInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
   refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
@@ -2009,11 +1775,6 @@ export type UserUncheckedCreateWithoutComplaintsInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
   refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2047,11 +1808,6 @@ export type UserCreateWithoutComplaintsResolvedInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
@@ -2080,11 +1836,6 @@ export type UserUncheckedCreateWithoutComplaintsResolvedInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2129,11 +1880,6 @@ export type UserUpdateWithoutComplaintsInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
   refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
@@ -2162,11 +1908,6 @@ export type UserUncheckedUpdateWithoutComplaintsInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
   refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2206,11 +1947,6 @@ export type UserUpdateWithoutComplaintsResolvedInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
@@ -2239,11 +1975,6 @@ export type UserUncheckedUpdateWithoutComplaintsResolvedInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2272,11 +2003,6 @@ export type UserCreateWithoutProductReviewsInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -2305,11 +2031,6 @@ export type UserUncheckedCreateWithoutProductReviewsInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -2343,11 +2064,6 @@ export type UserCreateWithoutProductReviewsAddedInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -2376,11 +2092,6 @@ export type UserUncheckedCreateWithoutProductReviewsAddedInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -2425,11 +2136,6 @@ export type UserUpdateWithoutProductReviewsInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -2458,11 +2164,6 @@ export type UserUncheckedUpdateWithoutProductReviewsInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -2502,11 +2203,6 @@ export type UserUpdateWithoutProductReviewsAddedInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -2535,11 +2231,6 @@ export type UserUncheckedUpdateWithoutProductReviewsAddedInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -2568,11 +2259,6 @@ export type UserCreateWithoutWishlistItemsInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
@@ -2601,11 +2287,6 @@ export type UserUncheckedCreateWithoutWishlistItemsInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
@@ -2650,11 +2331,6 @@ export type UserUpdateWithoutWishlistItemsInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -2683,757 +2359,12 @@ export type UserUncheckedUpdateWithoutWishlistItemsInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
   refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
   productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
   productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-}
-
-export type UserCreateWithoutDeliveryPartnerInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
-  customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
-  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
-  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutDeliveryPartnerInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  storeId?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  orderBlockedById?: string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
-  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutDeliveryPartnerInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutDeliveryPartnerInput, Prisma.UserUncheckedCreateWithoutDeliveryPartnerInput>
-}
-
-export type UserUpsertWithoutDeliveryPartnerInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutDeliveryPartnerInput, Prisma.UserUncheckedUpdateWithoutDeliveryPartnerInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutDeliveryPartnerInput, Prisma.UserUncheckedCreateWithoutDeliveryPartnerInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutDeliveryPartnerInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutDeliveryPartnerInput, Prisma.UserUncheckedUpdateWithoutDeliveryPartnerInput>
-}
-
-export type UserUpdateWithoutDeliveryPartnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
-  customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
-  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
-  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutDeliveryPartnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
-  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutCashDepositsRecordedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
-  customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
-  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
-  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutCashDepositsRecordedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  storeId?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  orderBlockedById?: string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
-  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutCashDepositsRecordedInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
-}
-
-export type UserCreateWithoutCashDepositsVoidedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
-  customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
-  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
-  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutCashDepositsVoidedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  storeId?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  orderBlockedById?: string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
-  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutCashDepositsVoidedInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
-}
-
-export type UserUpsertWithoutCashDepositsRecordedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedCreateWithoutCashDepositsRecordedInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutCashDepositsRecordedInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsRecordedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsRecordedInput>
-}
-
-export type UserUpdateWithoutCashDepositsRecordedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
-  customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
-  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
-  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutCashDepositsRecordedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
-  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserUpsertWithoutCashDepositsVoidedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedCreateWithoutCashDepositsVoidedInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutCashDepositsVoidedInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutCashDepositsVoidedInput, Prisma.UserUncheckedUpdateWithoutCashDepositsVoidedInput>
-}
-
-export type UserUpdateWithoutCashDepositsVoidedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
-  customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
-  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
-  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutCashDepositsVoidedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
-  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserCreateWithoutPayoutsRecordedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
-  customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
-  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
-  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutPayoutsRecordedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  storeId?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  orderBlockedById?: string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
-  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
-  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutPayoutsRecordedInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
-}
-
-export type UserCreateWithoutPayoutsVoidedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orderBlockedBy?: Prisma.UserCreateNestedOneWithoutCustomersBlockedInput
-  customersBlocked?: Prisma.UserCreateNestedManyWithoutOrderBlockedByInput
-  store?: Prisma.StoreCreateNestedOneWithoutStaffInput
-  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemCreateNestedManyWithoutUserInput
-}
-
-export type UserUncheckedCreateWithoutPayoutsVoidedInput = {
-  id?: string
-  phone: string
-  name?: string | null
-  email?: string | null
-  role?: $Enums.UserRole
-  passwordHash?: string | null
-  storeId?: string | null
-  deletedAt?: Date | string | null
-  orderBlock?: $Enums.CustomerBlock | null
-  orderBlockReason?: string | null
-  orderBlockedAt?: Date | string | null
-  orderBlockedById?: string | null
-  isTestAccount?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  customersBlocked?: Prisma.UserUncheckedCreateNestedManyWithoutOrderBlockedByInput
-  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
-  cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
-  complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
-  complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
-  refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
-  productReviews?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutUserInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedCreateNestedManyWithoutCreatedByInput
-  wishlistItems?: Prisma.WishlistItemUncheckedCreateNestedManyWithoutUserInput
-}
-
-export type UserCreateOrConnectWithoutPayoutsVoidedInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
-}
-
-export type UserUpsertWithoutPayoutsRecordedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsRecordedInput, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsRecordedInput, Prisma.UserUncheckedCreateWithoutPayoutsRecordedInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutPayoutsRecordedInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsRecordedInput, Prisma.UserUncheckedUpdateWithoutPayoutsRecordedInput>
-}
-
-export type UserUpdateWithoutPayoutsRecordedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
-  customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
-  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
-  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutPayoutsRecordedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
-  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
-  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUncheckedUpdateManyWithoutUserNestedInput
-}
-
-export type UserUpsertWithoutPayoutsVoidedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsVoidedInput, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutPayoutsVoidedInput, Prisma.UserUncheckedCreateWithoutPayoutsVoidedInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutPayoutsVoidedInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutPayoutsVoidedInput, Prisma.UserUncheckedUpdateWithoutPayoutsVoidedInput>
-}
-
-export type UserUpdateWithoutPayoutsVoidedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orderBlockedBy?: Prisma.UserUpdateOneWithoutCustomersBlockedNestedInput
-  customersBlocked?: Prisma.UserUpdateManyWithoutOrderBlockedByNestedInput
-  store?: Prisma.StoreUpdateOneWithoutStaffNestedInput
-  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUpdateManyWithoutUserNestedInput
-}
-
-export type UserUncheckedUpdateWithoutPayoutsVoidedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlock?: Prisma.NullableEnumCustomerBlockFieldUpdateOperationsInput | $Enums.CustomerBlock | null
-  orderBlockReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  orderBlockedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  orderBlockedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isTestAccount?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  customersBlocked?: Prisma.UserUncheckedUpdateManyWithoutOrderBlockedByNestedInput
-  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
-  cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
-  complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
-  complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
-  refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
-  productReviews?: Prisma.ProductReviewUncheckedUpdateManyWithoutUserNestedInput
-  productReviewsAdded?: Prisma.ProductReviewUncheckedUpdateManyWithoutCreatedByNestedInput
-  wishlistItems?: Prisma.WishlistItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPushTokensInput = {
@@ -3456,11 +2387,6 @@ export type UserCreateWithoutPushTokensInput = {
   addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
   cart?: Prisma.CartCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutCreateNestedManyWithoutVoidedByInput
   complaints?: Prisma.ComplaintCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintCreateNestedManyWithoutResolvedByInput
   refundsIssued?: Prisma.RefundCreateNestedManyWithoutCreatedByInput
@@ -3489,11 +2415,6 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
   cart?: Prisma.CartUncheckedCreateNestedOneWithoutUserInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedCreateNestedOneWithoutUserInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedCreateNestedManyWithoutRecordedByInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedCreateNestedManyWithoutVoidedByInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutRecordedByInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedCreateNestedManyWithoutVoidedByInput
   complaints?: Prisma.ComplaintUncheckedCreateNestedManyWithoutUserInput
   complaintsResolved?: Prisma.ComplaintUncheckedCreateNestedManyWithoutResolvedByInput
   refundsIssued?: Prisma.RefundUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3538,11 +2459,6 @@ export type UserUpdateWithoutPushTokensInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
   refundsIssued?: Prisma.RefundUpdateManyWithoutCreatedByNestedInput
@@ -3571,11 +2487,6 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
   refundsIssued?: Prisma.RefundUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3620,11 +2531,6 @@ export type UserUpdateWithoutOrderBlockedByInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -3653,11 +2559,6 @@ export type UserUncheckedUpdateWithoutOrderBlockedByInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -3720,11 +2621,6 @@ export type UserUpdateWithoutStoreInput = {
   addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUpdateManyWithoutResolvedByNestedInput
@@ -3753,11 +2649,6 @@ export type UserUncheckedUpdateWithoutStoreInput = {
   addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
   cart?: Prisma.CartUncheckedUpdateOneWithoutUserNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
-  deliveryPartner?: Prisma.DeliveryPartnerUncheckedUpdateOneWithoutUserNestedInput
-  cashDepositsRecorded?: Prisma.CashDepositUncheckedUpdateManyWithoutRecordedByNestedInput
-  cashDepositsVoided?: Prisma.CashDepositUncheckedUpdateManyWithoutVoidedByNestedInput
-  payoutsRecorded?: Prisma.RiderPayoutUncheckedUpdateManyWithoutRecordedByNestedInput
-  payoutsVoided?: Prisma.RiderPayoutUncheckedUpdateManyWithoutVoidedByNestedInput
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   complaints?: Prisma.ComplaintUncheckedUpdateManyWithoutUserNestedInput
   complaintsResolved?: Prisma.ComplaintUncheckedUpdateManyWithoutResolvedByNestedInput
@@ -3793,10 +2684,6 @@ export type UserCountOutputType = {
   customersBlocked: number
   addresses: number
   orders: number
-  cashDepositsRecorded: number
-  cashDepositsVoided: number
-  payoutsRecorded: number
-  payoutsVoided: number
   pushTokens: number
   complaints: number
   complaintsResolved: number
@@ -3810,10 +2697,6 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   customersBlocked?: boolean | UserCountOutputTypeCountCustomersBlockedArgs
   addresses?: boolean | UserCountOutputTypeCountAddressesArgs
   orders?: boolean | UserCountOutputTypeCountOrdersArgs
-  cashDepositsRecorded?: boolean | UserCountOutputTypeCountCashDepositsRecordedArgs
-  cashDepositsVoided?: boolean | UserCountOutputTypeCountCashDepositsVoidedArgs
-  payoutsRecorded?: boolean | UserCountOutputTypeCountPayoutsRecordedArgs
-  payoutsVoided?: boolean | UserCountOutputTypeCountPayoutsVoidedArgs
   pushTokens?: boolean | UserCountOutputTypeCountPushTokensArgs
   complaints?: boolean | UserCountOutputTypeCountComplaintsArgs
   complaintsResolved?: boolean | UserCountOutputTypeCountComplaintsResolvedArgs
@@ -3852,34 +2735,6 @@ export type UserCountOutputTypeCountAddressesArgs<ExtArgs extends runtime.Types.
  */
 export type UserCountOutputTypeCountOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.OrderWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountCashDepositsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CashDepositWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountCashDepositsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CashDepositWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountPayoutsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.RiderPayoutWhereInput
-}
-
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountPayoutsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.RiderPayoutWhereInput
 }
 
 /**
@@ -3954,11 +2809,6 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   addresses?: boolean | Prisma.User$addressesArgs<ExtArgs>
   cart?: boolean | Prisma.User$cartArgs<ExtArgs>
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
-  deliveryPartner?: boolean | Prisma.User$deliveryPartnerArgs<ExtArgs>
-  cashDepositsRecorded?: boolean | Prisma.User$cashDepositsRecordedArgs<ExtArgs>
-  cashDepositsVoided?: boolean | Prisma.User$cashDepositsVoidedArgs<ExtArgs>
-  payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
-  payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   complaints?: boolean | Prisma.User$complaintsArgs<ExtArgs>
   complaintsResolved?: boolean | Prisma.User$complaintsResolvedArgs<ExtArgs>
@@ -4035,11 +2885,6 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   addresses?: boolean | Prisma.User$addressesArgs<ExtArgs>
   cart?: boolean | Prisma.User$cartArgs<ExtArgs>
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
-  deliveryPartner?: boolean | Prisma.User$deliveryPartnerArgs<ExtArgs>
-  cashDepositsRecorded?: boolean | Prisma.User$cashDepositsRecordedArgs<ExtArgs>
-  cashDepositsVoided?: boolean | Prisma.User$cashDepositsVoidedArgs<ExtArgs>
-  payoutsRecorded?: boolean | Prisma.User$payoutsRecordedArgs<ExtArgs>
-  payoutsVoided?: boolean | Prisma.User$payoutsVoidedArgs<ExtArgs>
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   complaints?: boolean | Prisma.User$complaintsArgs<ExtArgs>
   complaintsResolved?: boolean | Prisma.User$complaintsResolvedArgs<ExtArgs>
@@ -4067,11 +2912,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     addresses: Prisma.$AddressPayload<ExtArgs>[]
     cart: Prisma.$CartPayload<ExtArgs> | null
     orders: Prisma.$OrderPayload<ExtArgs>[]
-    deliveryPartner: Prisma.$DeliveryPartnerPayload<ExtArgs> | null
-    cashDepositsRecorded: Prisma.$CashDepositPayload<ExtArgs>[]
-    cashDepositsVoided: Prisma.$CashDepositPayload<ExtArgs>[]
-    payoutsRecorded: Prisma.$RiderPayoutPayload<ExtArgs>[]
-    payoutsVoided: Prisma.$RiderPayoutPayload<ExtArgs>[]
     pushTokens: Prisma.$PushTokenPayload<ExtArgs>[]
     complaints: Prisma.$ComplaintPayload<ExtArgs>[]
     complaintsResolved: Prisma.$ComplaintPayload<ExtArgs>[]
@@ -4496,11 +3336,6 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   addresses<T extends Prisma.User$addressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$addressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AddressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   cart<T extends Prisma.User$cartArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cartArgs<ExtArgs>>): Prisma.Prisma__CartClient<runtime.Types.Result.GetResult<Prisma.$CartPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   orders<T extends Prisma.User$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  deliveryPartner<T extends Prisma.User$deliveryPartnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deliveryPartnerArgs<ExtArgs>>): Prisma.Prisma__DeliveryPartnerClient<runtime.Types.Result.GetResult<Prisma.$DeliveryPartnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  cashDepositsRecorded<T extends Prisma.User$cashDepositsRecordedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashDepositsRecordedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashDepositPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  cashDepositsVoided<T extends Prisma.User$cashDepositsVoidedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashDepositsVoidedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashDepositPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  payoutsRecorded<T extends Prisma.User$payoutsRecordedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsRecordedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  payoutsVoided<T extends Prisma.User$payoutsVoidedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$payoutsVoidedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RiderPayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pushTokens<T extends Prisma.User$pushTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   complaints<T extends Prisma.User$complaintsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$complaintsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   complaintsResolved<T extends Prisma.User$complaintsResolvedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$complaintsResolvedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ComplaintPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5079,121 +3914,6 @@ export type User$ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.OrderScalarFieldEnum | Prisma.OrderScalarFieldEnum[]
-}
-
-/**
- * User.deliveryPartner
- */
-export type User$deliveryPartnerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the DeliveryPartner
-   */
-  select?: Prisma.DeliveryPartnerSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the DeliveryPartner
-   */
-  omit?: Prisma.DeliveryPartnerOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.DeliveryPartnerInclude<ExtArgs> | null
-  where?: Prisma.DeliveryPartnerWhereInput
-}
-
-/**
- * User.cashDepositsRecorded
- */
-export type User$cashDepositsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CashDeposit
-   */
-  select?: Prisma.CashDepositSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CashDeposit
-   */
-  omit?: Prisma.CashDepositOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CashDepositInclude<ExtArgs> | null
-  where?: Prisma.CashDepositWhereInput
-  orderBy?: Prisma.CashDepositOrderByWithRelationInput | Prisma.CashDepositOrderByWithRelationInput[]
-  cursor?: Prisma.CashDepositWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CashDepositScalarFieldEnum | Prisma.CashDepositScalarFieldEnum[]
-}
-
-/**
- * User.cashDepositsVoided
- */
-export type User$cashDepositsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CashDeposit
-   */
-  select?: Prisma.CashDepositSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CashDeposit
-   */
-  omit?: Prisma.CashDepositOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CashDepositInclude<ExtArgs> | null
-  where?: Prisma.CashDepositWhereInput
-  orderBy?: Prisma.CashDepositOrderByWithRelationInput | Prisma.CashDepositOrderByWithRelationInput[]
-  cursor?: Prisma.CashDepositWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CashDepositScalarFieldEnum | Prisma.CashDepositScalarFieldEnum[]
-}
-
-/**
- * User.payoutsRecorded
- */
-export type User$payoutsRecordedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the RiderPayout
-   */
-  select?: Prisma.RiderPayoutSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the RiderPayout
-   */
-  omit?: Prisma.RiderPayoutOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.RiderPayoutInclude<ExtArgs> | null
-  where?: Prisma.RiderPayoutWhereInput
-  orderBy?: Prisma.RiderPayoutOrderByWithRelationInput | Prisma.RiderPayoutOrderByWithRelationInput[]
-  cursor?: Prisma.RiderPayoutWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.RiderPayoutScalarFieldEnum | Prisma.RiderPayoutScalarFieldEnum[]
-}
-
-/**
- * User.payoutsVoided
- */
-export type User$payoutsVoidedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the RiderPayout
-   */
-  select?: Prisma.RiderPayoutSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the RiderPayout
-   */
-  omit?: Prisma.RiderPayoutOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.RiderPayoutInclude<ExtArgs> | null
-  where?: Prisma.RiderPayoutWhereInput
-  orderBy?: Prisma.RiderPayoutOrderByWithRelationInput | Prisma.RiderPayoutOrderByWithRelationInput[]
-  cursor?: Prisma.RiderPayoutWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.RiderPayoutScalarFieldEnum | Prisma.RiderPayoutScalarFieldEnum[]
 }
 
 /**

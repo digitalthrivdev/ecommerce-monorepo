@@ -66,13 +66,6 @@ const users = [
 
 const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff", email: "staff@shop.test" };
 
-const deliveryPartner = {
-  phone: "+919000000004",
-  name: "Test Delivery Partner",
-  vehicleType: "Bike",
-  vehicleNumber: "KA01AB1234",
-};
-
 const store = {
   code: "BLR-KRM-01",
   name: "Koramangala Store",
@@ -334,19 +327,6 @@ async function main() {
     data: { passwordHash: await hashPassword(DEV_PASSWORD) },
   });
 
-  const { vehicleType, vehicleNumber, ...partnerUser } = deliveryPartner;
-  const partnerAccount = await prisma.user.upsert({
-    where: { phone: partnerUser.phone },
-    update: { name: partnerUser.name, role: UserRole.DELIVERY_PARTNER },
-    create: { ...partnerUser, role: UserRole.DELIVERY_PARTNER },
-  });
-  // Keep the partner's live status on reseed.
-  await prisma.deliveryPartner.upsert({
-    where: { userId: partnerAccount.id },
-    update: { vehicleType, vehicleNumber },
-    create: { userId: partnerAccount.id, vehicleType, vehicleNumber },
-  });
-
   const brandIds = new Map<string, string>();
   for (const { slug, name } of brands) {
     const seededBrand = await prisma.brand.upsert({ where: { slug }, update: { name }, create: { slug, name } });
@@ -430,7 +410,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${users.length + 2} users (incl. store staff and a delivery partner), 1 store, ${brands.length} brands, ${categories.length} categories with sub-categories, ${productCount} products with ${variantCount} variants`,
+    `Seeded ${users.length + 1} users (incl. store staff), 1 store, ${brands.length} brands, ${categories.length} categories with sub-categories, ${productCount} products with ${variantCount} variants`,
   );
   console.log(`Dashboard sign-in: ${users[0]!.email} or ${storeStaff.email}, password "${DEV_PASSWORD}"`);
 }

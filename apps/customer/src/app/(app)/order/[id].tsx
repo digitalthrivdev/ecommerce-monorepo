@@ -3,13 +3,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   ArrowLeft,
   Bell,
-  Bike,
   Check,
   CircleCheck,
   CircleX,
   FileText,
   Headset,
-  KeyRound,
   MapPin,
   MessageSquareWarning,
   Phone,
@@ -29,7 +27,6 @@ import { FormField } from "@/components/form-field";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { StarRating } from "@/components/star-rating";
-import { TrackingMap } from "@/components/tracking-map";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -37,7 +34,6 @@ import { errorMessage } from "@/lib/api";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { formatDateTime, formatMoney, formatTime } from "@/lib/format";
 import { smallImage } from "@/lib/images";
-import { mapsAvailable } from "@/lib/maps";
 import {
   COMPLAINT_REASON_TEXT,
   isOrderFinished,
@@ -47,14 +43,13 @@ import {
   useCancelOrder,
   useOpenInvoice,
   useOrder,
-  useOrderTracking,
   useRateOrder,
 } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
 import { useOrderReviews, useReviewProduct } from "@/lib/reviews";
 import { useSettings } from "@/lib/settings";
-import type { OrderDetail, OrderReviewItem, OrderTracking } from "@/lib/types";
+import type { OrderDetail, OrderReviewItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const PLACED_SCREEN_MS = 1800;
@@ -93,13 +88,12 @@ function InfoCard({ icon, title, detail, right, action, children }: InfoCardProp
   );
 }
 
-/** Being prepared or delivered: shown with the tracking header. */
+/** Being prepared or delivered: shown with the status header. */
 const isLive = (order: OrderDetail) => !isOrderFinished(order.status) && order.status !== "PENDING_PAYMENT";
 
-function TrackingHeader({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
+function StatusHeader({ order }: { order: OrderDetail }) {
   const insets = useSafeAreaInsets();
   const text = ORDER_STATUS_TEXT[order.status];
-  const eta = tracking?.etaMinutes ?? null;
 
   return (
     <View className="bg-primary px-2 pb-4" style={{ paddingTop: insets.top + 4 }}>
@@ -114,21 +108,10 @@ function TrackingHeader({ order, tracking }: { order: OrderDetail; tracking: Ord
           <Icon as={ArrowLeft} size={22} className="text-primary-foreground" />
         </Pressable>
         <View className="flex-1 items-center px-2">
-          {eta !== null ? (
-            <>
-              <Text className="text-sm font-semibold text-primary-foreground">{text.title}</Text>
-              <Text className="text-2xl font-extrabold text-primary-foreground">
-                Arriving in {eta} {eta === 1 ? "minute" : "minutes"}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text className="text-2xl font-extrabold text-primary-foreground">{text.title}</Text>
-              <Text className="text-center text-sm font-semibold text-primary-foreground" numberOfLines={2}>
-                {text.detail}
-              </Text>
-            </>
-          )}
+          <Text className="text-2xl font-extrabold text-primary-foreground">{text.title}</Text>
+          <Text className="text-center text-sm font-semibold text-primary-foreground" numberOfLines={2}>
+            {text.detail}
+          </Text>
         </View>
         <View className="size-11" />
       </View>
@@ -136,10 +119,9 @@ function TrackingHeader({ order, tracking }: { order: OrderDetail; tracking: Ord
   );
 }
 
-function StepsCard({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
+function StepsCard({ order }: { order: OrderDetail }) {
   const step = orderStep(order.status);
   if (step === null) return null;
-  const distance = tracking?.distanceKm ?? null;
 
   return (
     <Card>
@@ -157,11 +139,6 @@ function StepsCard({ order, tracking }: { order: OrderDetail; tracking: OrderTra
           ))}
         </View>
       </View>
-      {distance !== null && (
-        <Text className="text-xs text-muted-foreground">
-          Your delivery partner is {distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`} from you.
-        </Text>
-      )}
     </Card>
   );
 }
@@ -170,7 +147,7 @@ function StepsCard({ order, tracking }: { order: OrderDetail; tracking: OrderTra
 function StatusCard({ order }: { order: OrderDetail }) {
   const text = ORDER_STATUS_TEXT[order.status];
   const cancelled = order.status === "CANCELLED";
-  const deliveredAt = order.status === "DELIVERED" ? order.delivery?.deliveredAt : null;
+  const deliveredAt = order.status === "DELIVERED" ? order.deliveredAt : null;
 
   return (
     <Card className="flex-row items-center">
@@ -300,7 +277,7 @@ function RatingCard({ order }: { order: OrderDetail }) {
             optional
             value={comment}
             onChangeText={setComment}
-            placeholder="The rider was quick and polite"
+            placeholder="Quick delivery, everything fresh"
             multiline
             maxLength={500}
             textAlignVertical="top"
@@ -423,11 +400,10 @@ function OrderItemRow({ item, currency }: { item: OrderDetail["items"][number]; 
   );
 }
 
-function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTracking | undefined }) {
+function OrderBody({ order }: { order: OrderDetail }) {
   const { currency } = useSettings();
   const cancel = useCancelOrder(order.id);
   const invoice = useOpenInvoice(order.id);
-  const partner = order.delivery?.partner;
   const address = order.deliveryAddress;
   const live = isLive(order);
   const chargedLines = order.items.map((item) => ({ mrp: item.mrp, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
@@ -440,9 +416,7 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
 
   return (
     <>
-      {live && mapsAvailable && tracking?.trackable && <TrackingMap tracking={tracking} />}
-
-      {live ? <StepsCard order={order} tracking={tracking} /> : <StatusCard order={order} />}
+      {live ? <StepsCard order={order} /> : <StatusCard order={order} />}
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
 
@@ -451,33 +425,6 @@ function OrderBody({ order, tracking }: { order: OrderDetail; tracking: OrderTra
       <ProductReviewsCard order={order} />
 
       <ComplaintCard order={order} />
-
-      {order.deliveryOtp && (
-        <Card className="flex-row items-center">
-          <Icon as={KeyRound} size={22} className="text-primary" />
-          <View className="flex-1">
-            <Text className="text-sm font-bold">Delivery OTP</Text>
-            <Text className="text-xs text-muted-foreground">Share it with your delivery partner at the door.</Text>
-          </View>
-          <Text className="text-2xl font-extrabold tracking-[4px]">{order.deliveryOtp}</Text>
-        </Card>
-      )}
-
-      {partner && live ? (
-        <InfoCard
-          icon={Bike}
-          title={partner.name ?? "Your delivery partner"}
-          detail={[partner.vehicleType, partner.vehicleNumber].filter(Boolean).join(" · ") || "Your delivery partner"}
-          right={
-            <Button variant="outline" size="sm" onPress={() => Linking.openURL(`tel:${partner.phone}`)} className="h-9 rounded-md">
-              <Icon as={Phone} size={16} />
-              <Text className="font-semibold">Call</Text>
-            </Button>
-          }
-        />
-      ) : live ? (
-        <InfoCard icon={Bike} title="We'll assign a delivery partner as soon as your order is packed" />
-      ) : null}
 
       {live && order.store.phone && (
         <InfoCard
@@ -596,7 +543,6 @@ export default function OrderScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const order = useOrder(id);
-  const tracking = useOrderTracking(id, order.data?.status);
   const [refreshing, setRefreshing] = useState(false);
   const [showPlaced, setShowPlaced] = useState(placed === "1");
   const hidePlaced = useCallback(() => setShowPlaced(false), []);
@@ -604,14 +550,14 @@ export default function OrderScreen() {
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all([order.refetch(), live ? tracking.refetch() : null]);
+    await order.refetch();
     setRefreshing(false);
   }
 
   return (
     <View className="flex-1 bg-background">
       {live && order.data ? (
-        <TrackingHeader order={order.data} tracking={tracking.data} />
+        <StatusHeader order={order.data} />
       ) : (
         <View style={{ paddingTop: insets.top }}>
           <FocusStatusBar />
@@ -625,7 +571,7 @@ export default function OrderScreen() {
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         >
-          <OrderBody order={order.data} tracking={tracking.data} />
+          <OrderBody order={order.data} />
         </ScrollView>
       ) : order.isPending ? (
         <ActivityIndicator color={colors.primary} className="py-12" />

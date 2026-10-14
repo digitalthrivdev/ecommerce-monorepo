@@ -28,8 +28,6 @@ export const updateSettingsBodySchema = z
     deliveryFee: decimalSchema,
     freeDeliveryThreshold: decimalSchema.nullable(),
     minOrderValue: decimalSchema,
-    deliveryPartnerFee: decimalSchema,
-    riderCashLimit: positiveDecimalSchema.nullable(),
     codMaxOrderValue: positiveDecimalSchema.nullable(),
     deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
     supportPhone: phoneSchema.nullable(),
@@ -42,9 +40,6 @@ export const updateSettingsBodySchema = z
     playStoreUrl: playStoreUrlSchema,
     appStoreUrl: appStoreUrlSchema,
     appDownloadUrl: downloadUrlSchema,
-    deliveryPlayStoreUrl: playStoreUrlSchema,
-    deliveryAppStoreUrl: appStoreUrlSchema,
-    deliveryDownloadUrl: downloadUrlSchema,
     paymentProvider: z.string().trim().min(1).max(32).nullable(),
     otpProvider: z.string().trim().min(1).max(32).nullable(),
   })

@@ -34,8 +34,6 @@ const settingsSchema = z.object({
   freeDeliveryThreshold: optionalDecimal(AMOUNT),
   minOrderValue: decimal(AMOUNT),
   codMaxOrderValue: optionalPositiveDecimal("Enter an amount above 0, or leave it empty for no limit"),
-  deliveryPartnerFee: decimal(AMOUNT),
-  riderCashLimit: optionalPositiveDecimal("Enter an amount above 0, or leave it empty for no limit"),
   deliveryPromiseMinutes,
   supportPhone: optionalPhoneInput,
   supportEmail: optionalEmail,
@@ -47,8 +45,6 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
     freeDeliveryThreshold: formText(formData, "freeDeliveryThreshold"),
     minOrderValue: formText(formData, "minOrderValue"),
     codMaxOrderValue: formText(formData, "codMaxOrderValue"),
-    deliveryPartnerFee: formText(formData, "deliveryPartnerFee"),
-    riderCashLimit: formText(formData, "riderCashLimit"),
     deliveryPromiseMinutes: formText(formData, "deliveryPromiseMinutes"),
     supportPhone: formText(formData, "supportPhone"),
     supportEmail: formText(formData, "supportEmail"),
@@ -84,15 +80,12 @@ const websiteSchema = z.object({
   websiteTagline: optionalText(160),
 });
 
-const APP_LINK_FIELDS = ["playStoreUrl", "appStoreUrl", "appDownloadUrl", "deliveryPlayStoreUrl", "deliveryAppStoreUrl", "deliveryDownloadUrl"] as const;
+const APP_LINK_FIELDS = ["playStoreUrl", "appStoreUrl", "appDownloadUrl"] as const;
 
 const appLinksSchema = z.object({
   playStoreUrl,
   appStoreUrl,
   appDownloadUrl: downloadUrl,
-  deliveryPlayStoreUrl: playStoreUrl,
-  deliveryAppStoreUrl: appStoreUrl,
-  deliveryDownloadUrl: downloadUrl,
 });
 
 export async function updateAppLinks(formData: FormData): Promise<ActionResult> {
@@ -165,14 +158,6 @@ const reviewLoginSchema = z.object({
 });
 
 export async function saveReviewLogin(formData: FormData): Promise<ActionResult> {
-  return saveReviewLoginFor("/settings/review-login", formData);
-}
-
-export async function saveRiderReviewLogin(formData: FormData): Promise<ActionResult> {
-  return saveReviewLoginFor("/settings/rider-review-login", formData);
-}
-
-async function saveReviewLoginFor(path: string, formData: FormData): Promise<ActionResult> {
   const parsed = reviewLoginSchema.safeParse({
     enabled: formChecked(formData, "enabled"),
     phone: formText(formData, "phone"),
@@ -184,9 +169,9 @@ async function saveReviewLoginFor(path: string, formData: FormData): Promise<Act
   }
 
   try {
-    await apiFetch(path, { method: "PUT", body: parsed.data });
+    await apiFetch("/settings/review-login", { method: "PUT", body: parsed.data });
   } catch (error) {
-    if (error instanceof ApiError && (error.code === "REVIEW_PHONE_NOT_CUSTOMER" || error.code === "REVIEW_PHONE_NOT_RIDER")) {
+    if (error instanceof ApiError && error.code === "REVIEW_PHONE_NOT_CUSTOMER") {
       return { ok: false, error: error.message, fieldErrors: { phone: error.message } };
     }
     if (error instanceof ApiError && error.code === "REVIEW_CODE_REQUIRED") {

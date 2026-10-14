@@ -168,12 +168,10 @@ describe("test accounts", () => {
     return app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() });
   }
 
-  it("lets a test customer, test staff and a test rider run the whole order flow", async () => {
+  it("lets a test customer, test staff and the test admin run the whole order flow", async () => {
     const testCustomer = await testToken({ phone: SEED.customerPhone });
     const testStaff = await testToken({ email: SEED.staffEmail });
-    const testRider = await testToken({ phone: SEED.riderPhone });
     const testAdmin = await testToken({ email: SEED.adminEmail });
-    const staff = await dashboardLogin(app, SEED.staffEmail);
     const item = await listing({ sellingPrice: { gte: 100 } });
 
     await call(app, "DELETE", "/cart", { token: testCustomer });
@@ -193,30 +191,50 @@ describe("test accounts", () => {
     expect((await call(app, "POST", `${orderPath}/pack`, { token: testStaff })).status).toBe(200);
     expect((await call(app, "POST", `${orderPath}/ready`, { token: testStaff })).status).toBe(200);
 
-    const partner = await app.prisma.deliveryPartner.findFirstOrThrow({ where: { user: { phone: SEED.riderPhone } } });
-    expect((await call(app, "PATCH", "/delivery/me/status", { token: testRider, body: { status: "ONLINE" } })).status).toBe(200);
-    // The read-only test admin may still assign riders: invalid input, then assign, unassign and assign again.
-    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: {} })).status).toBe(400);
-    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: { partnerId: partner.id } })).status).toBe(200);
-    expect((await call(app, "POST", `${orderPath}/unassign`, { token: testAdmin })).status).toBe(200);
-    expect((await call(app, "POST", `${orderPath}/assign`, { token: testAdmin, body: { partnerId: partner.id } })).status).toBe(200);
-    expect((await call(app, "POST", `${orderPath}/mark-delivered`, { token: testAdmin, body: { reason: "Demo" } })).status).toBe(403);
-    for (const step of ["accept", "pickup", "start-delivery"]) {
-      expect((await call(app, "POST", `/delivery/orders/${orderId}/${step}`, { token: testRider })).status).toBe(200);
-    }
-    const { deliveryOtp } = (await call(app, "GET", `/orders/${orderId}`, { token: testCustomer })).body;
-    const wrongOtp = String((Number(deliveryOtp) + 1) % 10_000).padStart(4, "0");
-    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: "12" } })).status).toBe(400);
-    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: wrongOtp } })).status).toBe(400);
-    expect((await call(app, "POST", `/delivery/orders/${orderId}/delivered`, { token: testRider, body: { otp: deliveryOtp } })).status).toBe(200);
-    expect((await app.prisma.order.findUniqueOrThrow({ where: { id: orderId } })).status).toBe("DELIVERED");
+    // The delivery steps are admin-only; the read-only test admin may still run them.
+    const staffTry = await call(app, "POST", `${orderPath}/out-for-delivery`, { token: testStaff });
+    expect(staffTry.status).toBe(403);
+    expect(staffTry.body.error).toBe("FORBIDDEN");
+    expect((await call(app, "POST", `${orderPath}/out-for-delivery`, { token: testAdmin, body: { note: "" } })).status).toBe(400);
+    expect((await call(app, "POST", `/stores/${storeId}/orders/not-an-order/out-for-delivery`, { token: testAdmin })).status).toBe(404);
+    expect((await call(app, "POST", `${orderPath}/out-for-delivery`, { token: testAdmin })).status).toBe(200);
+    expect((await call(app, "POST", `${orderPath}/out-for-delivery`, { token: testAdmin })).status).toBe(409);
+    const delivered = await call(app, "POST", `${orderPath}/mark-delivered`, { token: testAdmin, body: { note: "Handed over" } });
+    expect(delivered.status).toBe(200);
+    expect(delivered.body.deliveredAt).toBeTruthy();
 
-    // The rider now holds the COD cash; test staff cannot record the deposit, normal staff can.
-    const deposit = { amount: "1.00" };
-    const blocked = await call(app, "POST", `/rider-cash/${partner.id}/deposits`, { token: testStaff, body: deposit });
-    expect(blocked.status).toBe(403);
-    expect(blocked.body.error).toBe("TEST_ACCOUNT_READ_ONLY");
-    expect((await call(app, "POST", `/rider-cash/${partner.id}/deposits`, { token: staff, body: deposit })).status).toBe(201);
+    const final = await app.prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: { payment: true, statusHistory: { orderBy: { createdAt: "asc" } } } });
+    expect(final.status).toBe("DELIVERED");
+    expect(final.invoiceNumber).toMatch(/^INV\//);
+    expect(final.payment).toMatchObject({ status: "PAID", provider: "cash" });
+    expect(final.statusHistory.map((entry) => entry.toStatus).slice(-2)).toEqual(["OUT_FOR_DELIVERY", "DELIVERED"]);
+    const view = await call(app, "GET", `/orders/${orderId}`, { token: testCustomer });
+    expect(view.body).toMatchObject({ status: "DELIVERED", canRate: true, canReportIssue: true });
+  });
+
+  it("lets only an admin cancel an order out for delivery, returning the stock", async () => {
+    const admin = await dashboardLogin(app, SEED.adminEmail);
+    const staff = await dashboardLogin(app, SEED.staffEmail);
+    const item = await listing({ sellingPrice: { gte: 100 } });
+    await fillCart(item.variantId, 1);
+    const placed = await call(app, "POST", "/orders", { token: customer, body: { addressId, paymentMethod: "COD" } });
+    expect(placed.status).toBe(201);
+    const orderPath = `/stores/${storeId}/orders/${placed.body.id}`;
+    for (const step of ["accept", "start-picking", "pack", "ready"]) {
+      expect((await call(app, "POST", `${orderPath}/${step}`, { token: staff })).status).toBe(200);
+    }
+    expect((await call(app, "POST", `${orderPath}/out-for-delivery`, { token: admin })).status).toBe(200);
+    const before = await stock(item.id);
+
+    const byStaff = await call(app, "POST", `${orderPath}/cancel`, { token: staff, body: { reason: "Customer refused" } });
+    expect(byStaff.status).toBe(409);
+    expect(byStaff.body.error).toBe("ORDER_NOT_CANCELLABLE");
+    expect((await call(app, "POST", `${orderPath}/cancel`, { token: admin, body: {} })).status).toBe(400);
+    const cancelled = await call(app, "POST", `${orderPath}/cancel`, { token: admin, body: { reason: "Customer refused" } });
+    expect(cancelled.status).toBe(200);
+    expect(cancelled.body.status).toBe("CANCELLED");
+    expect(await stock(item.id)).toBe(before + 1);
+    expect((await call(app, "POST", `${orderPath}/mark-delivered`, { token: admin })).status).toBe(409);
   });
 
   it("lets the test admin run the store's fulfilment steps, but not cancel", async () => {

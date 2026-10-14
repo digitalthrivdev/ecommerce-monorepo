@@ -102,7 +102,6 @@ export default async function RatingsPage({ searchParams }: PageProps<"/ratings"
                     <TableHead>Delivery</TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead>Comment</TableHead>
-                    <TableHead>Rider</TableHead>
                     <TableHead>Rated</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -123,19 +122,6 @@ export default async function RatingsPage({ searchParams }: PageProps<"/ratings"
                       <TableCell>{rating.itemsRating ? <Stars value={rating.itemsRating} /> : <span className="text-muted-foreground">—</span>}</TableCell>
                       <TableCell className="max-w-sm text-sm whitespace-normal">
                         {rating.comment ?? <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        {rating.rider ? (
-                          isAdmin ? (
-                            <Link href={`/delivery-partners/${rating.rider.id}`} className="underline-offset-4 hover:underline">
-                              {rating.rider.name ?? rating.rider.phone}
-                            </Link>
-                          ) : (
-                            (rating.rider.name ?? rating.rider.phone)
-                          )
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDateTime(rating.createdAt, settings.timezone)}

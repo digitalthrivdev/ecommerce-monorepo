@@ -30,8 +30,6 @@ export type PlatformSettingsAvgAggregateOutputType = {
   deliveryFee: runtime.Decimal | null
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
-  deliveryPartnerFee: runtime.Decimal | null
-  riderCashLimit: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
   deliveryFeeGstRate: runtime.Decimal | null
@@ -41,8 +39,6 @@ export type PlatformSettingsSumAggregateOutputType = {
   deliveryFee: runtime.Decimal | null
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
-  deliveryPartnerFee: runtime.Decimal | null
-  riderCashLimit: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
   deliveryFeeGstRate: runtime.Decimal | null
@@ -53,8 +49,6 @@ export type PlatformSettingsMinAggregateOutputType = {
   deliveryFee: runtime.Decimal | null
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
-  deliveryPartnerFee: runtime.Decimal | null
-  riderCashLimit: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
   supportPhone: string | null
@@ -67,15 +61,9 @@ export type PlatformSettingsMinAggregateOutputType = {
   playStoreUrl: string | null
   appStoreUrl: string | null
   appDownloadUrl: string | null
-  deliveryPlayStoreUrl: string | null
-  deliveryAppStoreUrl: string | null
-  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
-  riderReviewLoginEnabled: boolean | null
-  riderReviewLoginPhone: string | null
-  riderReviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -88,8 +76,6 @@ export type PlatformSettingsMaxAggregateOutputType = {
   deliveryFee: runtime.Decimal | null
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
-  deliveryPartnerFee: runtime.Decimal | null
-  riderCashLimit: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
   supportPhone: string | null
@@ -102,15 +88,9 @@ export type PlatformSettingsMaxAggregateOutputType = {
   playStoreUrl: string | null
   appStoreUrl: string | null
   appDownloadUrl: string | null
-  deliveryPlayStoreUrl: string | null
-  deliveryAppStoreUrl: string | null
-  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
-  riderReviewLoginEnabled: boolean | null
-  riderReviewLoginPhone: string | null
-  riderReviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -123,8 +103,6 @@ export type PlatformSettingsCountAggregateOutputType = {
   deliveryFee: number
   freeDeliveryThreshold: number
   minOrderValue: number
-  deliveryPartnerFee: number
-  riderCashLimit: number
   codMaxOrderValue: number
   deliveryPromiseMinutes: number
   supportPhone: number
@@ -137,15 +115,9 @@ export type PlatformSettingsCountAggregateOutputType = {
   playStoreUrl: number
   appStoreUrl: number
   appDownloadUrl: number
-  deliveryPlayStoreUrl: number
-  deliveryAppStoreUrl: number
-  deliveryDownloadUrl: number
   reviewLoginEnabled: number
   reviewLoginPhone: number
   reviewLoginCodeHash: number
-  riderReviewLoginEnabled: number
-  riderReviewLoginPhone: number
-  riderReviewLoginCodeHash: number
   paymentProvider: number
   otpProvider: number
   updatedById: number
@@ -159,8 +131,6 @@ export type PlatformSettingsAvgAggregateInputType = {
   deliveryFee?: true
   freeDeliveryThreshold?: true
   minOrderValue?: true
-  deliveryPartnerFee?: true
-  riderCashLimit?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
   deliveryFeeGstRate?: true
@@ -170,8 +140,6 @@ export type PlatformSettingsSumAggregateInputType = {
   deliveryFee?: true
   freeDeliveryThreshold?: true
   minOrderValue?: true
-  deliveryPartnerFee?: true
-  riderCashLimit?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
   deliveryFeeGstRate?: true
@@ -182,8 +150,6 @@ export type PlatformSettingsMinAggregateInputType = {
   deliveryFee?: true
   freeDeliveryThreshold?: true
   minOrderValue?: true
-  deliveryPartnerFee?: true
-  riderCashLimit?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
   supportPhone?: true
@@ -196,15 +162,9 @@ export type PlatformSettingsMinAggregateInputType = {
   playStoreUrl?: true
   appStoreUrl?: true
   appDownloadUrl?: true
-  deliveryPlayStoreUrl?: true
-  deliveryAppStoreUrl?: true
-  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
-  riderReviewLoginEnabled?: true
-  riderReviewLoginPhone?: true
-  riderReviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -217,8 +177,6 @@ export type PlatformSettingsMaxAggregateInputType = {
   deliveryFee?: true
   freeDeliveryThreshold?: true
   minOrderValue?: true
-  deliveryPartnerFee?: true
-  riderCashLimit?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
   supportPhone?: true
@@ -231,15 +189,9 @@ export type PlatformSettingsMaxAggregateInputType = {
   playStoreUrl?: true
   appStoreUrl?: true
   appDownloadUrl?: true
-  deliveryPlayStoreUrl?: true
-  deliveryAppStoreUrl?: true
-  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
-  riderReviewLoginEnabled?: true
-  riderReviewLoginPhone?: true
-  riderReviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -252,8 +204,6 @@ export type PlatformSettingsCountAggregateInputType = {
   deliveryFee?: true
   freeDeliveryThreshold?: true
   minOrderValue?: true
-  deliveryPartnerFee?: true
-  riderCashLimit?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
   supportPhone?: true
@@ -266,15 +216,9 @@ export type PlatformSettingsCountAggregateInputType = {
   playStoreUrl?: true
   appStoreUrl?: true
   appDownloadUrl?: true
-  deliveryPlayStoreUrl?: true
-  deliveryAppStoreUrl?: true
-  deliveryDownloadUrl?: true
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
-  riderReviewLoginEnabled?: true
-  riderReviewLoginPhone?: true
-  riderReviewLoginCodeHash?: true
   paymentProvider?: true
   otpProvider?: true
   updatedById?: true
@@ -374,8 +318,6 @@ export type PlatformSettingsGroupByOutputType = {
   deliveryFee: runtime.Decimal
   freeDeliveryThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal
-  deliveryPartnerFee: runtime.Decimal
-  riderCashLimit: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
   supportPhone: string | null
@@ -388,15 +330,9 @@ export type PlatformSettingsGroupByOutputType = {
   playStoreUrl: string | null
   appStoreUrl: string | null
   appDownloadUrl: string | null
-  deliveryPlayStoreUrl: string | null
-  deliveryAppStoreUrl: string | null
-  deliveryDownloadUrl: string | null
   reviewLoginEnabled: boolean
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
-  riderReviewLoginEnabled: boolean
-  riderReviewLoginPhone: string | null
-  riderReviewLoginCodeHash: string | null
   paymentProvider: string | null
   otpProvider: string | null
   updatedById: string | null
@@ -432,8 +368,6 @@ export type PlatformSettingsWhereInput = {
   deliveryFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.IntNullableFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -446,15 +380,9 @@ export type PlatformSettingsWhereInput = {
   playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   appStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   appDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryPlayStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryAppStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
-  riderReviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  riderReviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -467,8 +395,6 @@ export type PlatformSettingsOrderByWithRelationInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrderInput | Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -481,15 +407,9 @@ export type PlatformSettingsOrderByWithRelationInput = {
   playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   appStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   appDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryPlayStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryAppStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
-  riderReviewLoginEnabled?: Prisma.SortOrder
-  riderReviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
-  riderReviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -505,8 +425,6 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   deliveryFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.IntNullableFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -519,15 +437,9 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   playStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   appStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   appDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryPlayStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryAppStoreUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  deliveryDownloadUrl?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
-  riderReviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
-  riderReviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -540,8 +452,6 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrderInput | Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   supportPhone?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -554,15 +464,9 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   playStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   appStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   appDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryPlayStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryAppStoreUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  deliveryDownloadUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
-  riderReviewLoginEnabled?: Prisma.SortOrder
-  riderReviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
-  riderReviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -583,8 +487,6 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   deliveryFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.IntNullableWithAggregatesFilter<"PlatformSettings"> | number | null
   supportPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -597,15 +499,9 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   playStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   appStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   appDownloadUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
-  deliveryPlayStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
-  deliveryAppStoreUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
-  deliveryDownloadUrl?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   reviewLoginEnabled?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
-  riderReviewLoginEnabled?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
-  riderReviewLoginPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
-  riderReviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -618,8 +514,6 @@ export type PlatformSettingsCreateInput = {
   deliveryFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
@@ -632,15 +526,9 @@ export type PlatformSettingsCreateInput = {
   playStoreUrl?: string | null
   appStoreUrl?: string | null
   appDownloadUrl?: string | null
-  deliveryPlayStoreUrl?: string | null
-  deliveryAppStoreUrl?: string | null
-  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: string | null
-  riderReviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -653,8 +541,6 @@ export type PlatformSettingsUncheckedCreateInput = {
   deliveryFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
@@ -667,15 +553,9 @@ export type PlatformSettingsUncheckedCreateInput = {
   playStoreUrl?: string | null
   appStoreUrl?: string | null
   appDownloadUrl?: string | null
-  deliveryPlayStoreUrl?: string | null
-  deliveryAppStoreUrl?: string | null
-  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: string | null
-  riderReviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -688,8 +568,6 @@ export type PlatformSettingsUpdateInput = {
   deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -702,15 +580,9 @@ export type PlatformSettingsUpdateInput = {
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  riderReviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -723,8 +595,6 @@ export type PlatformSettingsUncheckedUpdateInput = {
   deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -737,15 +607,9 @@ export type PlatformSettingsUncheckedUpdateInput = {
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  riderReviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -758,8 +622,6 @@ export type PlatformSettingsCreateManyInput = {
   deliveryFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee: runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: number | null
   supportPhone?: string | null
@@ -772,15 +634,9 @@ export type PlatformSettingsCreateManyInput = {
   playStoreUrl?: string | null
   appStoreUrl?: string | null
   appDownloadUrl?: string | null
-  deliveryPlayStoreUrl?: string | null
-  deliveryAppStoreUrl?: string | null
-  deliveryDownloadUrl?: string | null
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: string | null
-  riderReviewLoginCodeHash?: string | null
   paymentProvider?: string | null
   otpProvider?: string | null
   updatedById?: string | null
@@ -793,8 +649,6 @@ export type PlatformSettingsUpdateManyMutationInput = {
   deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -807,15 +661,9 @@ export type PlatformSettingsUpdateManyMutationInput = {
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  riderReviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -828,8 +676,6 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   deliveryFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeDeliveryThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  deliveryPartnerFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
-  riderCashLimit?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   deliveryPromiseMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   supportPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -842,15 +688,9 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   playStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   appDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryPlayStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryAppStoreUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  deliveryDownloadUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  riderReviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  riderReviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -863,8 +703,6 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
@@ -877,15 +715,9 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   playStoreUrl?: Prisma.SortOrder
   appStoreUrl?: Prisma.SortOrder
   appDownloadUrl?: Prisma.SortOrder
-  deliveryPlayStoreUrl?: Prisma.SortOrder
-  deliveryAppStoreUrl?: Prisma.SortOrder
-  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
-  riderReviewLoginEnabled?: Prisma.SortOrder
-  riderReviewLoginPhone?: Prisma.SortOrder
-  riderReviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -897,8 +729,6 @@ export type PlatformSettingsAvgOrderByAggregateInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
   deliveryFeeGstRate?: Prisma.SortOrder
@@ -909,8 +739,6 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
@@ -923,15 +751,9 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   playStoreUrl?: Prisma.SortOrder
   appStoreUrl?: Prisma.SortOrder
   appDownloadUrl?: Prisma.SortOrder
-  deliveryPlayStoreUrl?: Prisma.SortOrder
-  deliveryAppStoreUrl?: Prisma.SortOrder
-  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
-  riderReviewLoginEnabled?: Prisma.SortOrder
-  riderReviewLoginPhone?: Prisma.SortOrder
-  riderReviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -944,8 +766,6 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
   supportPhone?: Prisma.SortOrder
@@ -958,15 +778,9 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   playStoreUrl?: Prisma.SortOrder
   appStoreUrl?: Prisma.SortOrder
   appDownloadUrl?: Prisma.SortOrder
-  deliveryPlayStoreUrl?: Prisma.SortOrder
-  deliveryAppStoreUrl?: Prisma.SortOrder
-  deliveryDownloadUrl?: Prisma.SortOrder
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
-  riderReviewLoginEnabled?: Prisma.SortOrder
-  riderReviewLoginPhone?: Prisma.SortOrder
-  riderReviewLoginCodeHash?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -978,8 +792,6 @@ export type PlatformSettingsSumOrderByAggregateInput = {
   deliveryFee?: Prisma.SortOrder
   freeDeliveryThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
-  deliveryPartnerFee?: Prisma.SortOrder
-  riderCashLimit?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
   deliveryFeeGstRate?: Prisma.SortOrder
@@ -992,8 +804,6 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   deliveryFee?: boolean
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
-  deliveryPartnerFee?: boolean
-  riderCashLimit?: boolean
   codMaxOrderValue?: boolean
   deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
@@ -1006,15 +816,9 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   playStoreUrl?: boolean
   appStoreUrl?: boolean
   appDownloadUrl?: boolean
-  deliveryPlayStoreUrl?: boolean
-  deliveryAppStoreUrl?: boolean
-  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: boolean
-  riderReviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -1027,8 +831,6 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   deliveryFee?: boolean
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
-  deliveryPartnerFee?: boolean
-  riderCashLimit?: boolean
   codMaxOrderValue?: boolean
   deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
@@ -1041,15 +843,9 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   playStoreUrl?: boolean
   appStoreUrl?: boolean
   appDownloadUrl?: boolean
-  deliveryPlayStoreUrl?: boolean
-  deliveryAppStoreUrl?: boolean
-  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: boolean
-  riderReviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -1062,8 +858,6 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   deliveryFee?: boolean
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
-  deliveryPartnerFee?: boolean
-  riderCashLimit?: boolean
   codMaxOrderValue?: boolean
   deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
@@ -1076,15 +870,9 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   playStoreUrl?: boolean
   appStoreUrl?: boolean
   appDownloadUrl?: boolean
-  deliveryPlayStoreUrl?: boolean
-  deliveryAppStoreUrl?: boolean
-  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: boolean
-  riderReviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -1097,8 +885,6 @@ export type PlatformSettingsSelectScalar = {
   deliveryFee?: boolean
   freeDeliveryThreshold?: boolean
   minOrderValue?: boolean
-  deliveryPartnerFee?: boolean
-  riderCashLimit?: boolean
   codMaxOrderValue?: boolean
   deliveryPromiseMinutes?: boolean
   supportPhone?: boolean
@@ -1111,15 +897,9 @@ export type PlatformSettingsSelectScalar = {
   playStoreUrl?: boolean
   appStoreUrl?: boolean
   appDownloadUrl?: boolean
-  deliveryPlayStoreUrl?: boolean
-  deliveryAppStoreUrl?: boolean
-  deliveryDownloadUrl?: boolean
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
-  riderReviewLoginEnabled?: boolean
-  riderReviewLoginPhone?: boolean
-  riderReviewLoginCodeHash?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   updatedById?: boolean
@@ -1127,7 +907,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "deliveryPartnerFee" | "riderCashLimit" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "deliveryFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "deliveryPlayStoreUrl" | "deliveryAppStoreUrl" | "deliveryDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "riderReviewLoginEnabled" | "riderReviewLoginPhone" | "riderReviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryFee" | "freeDeliveryThreshold" | "minOrderValue" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "deliveryFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -1137,8 +917,6 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     deliveryFee: runtime.Decimal
     freeDeliveryThreshold: runtime.Decimal | null
     minOrderValue: runtime.Decimal
-    deliveryPartnerFee: runtime.Decimal
-    riderCashLimit: runtime.Decimal | null
     codMaxOrderValue: runtime.Decimal | null
     deliveryPromiseMinutes: number | null
     supportPhone: string | null
@@ -1151,15 +929,9 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     playStoreUrl: string | null
     appStoreUrl: string | null
     appDownloadUrl: string | null
-    deliveryPlayStoreUrl: string | null
-    deliveryAppStoreUrl: string | null
-    deliveryDownloadUrl: string | null
     reviewLoginEnabled: boolean
     reviewLoginPhone: string | null
     reviewLoginCodeHash: string | null
-    riderReviewLoginEnabled: boolean
-    riderReviewLoginPhone: string | null
-    riderReviewLoginCodeHash: string | null
     paymentProvider: string | null
     otpProvider: string | null
     updatedById: string | null
@@ -1592,8 +1364,6 @@ export interface PlatformSettingsFieldRefs {
   readonly deliveryFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly freeDeliveryThreshold: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly minOrderValue: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
-  readonly deliveryPartnerFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
-  readonly riderCashLimit: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly codMaxOrderValue: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly deliveryPromiseMinutes: Prisma.FieldRef<"PlatformSettings", 'Int'>
   readonly supportPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
@@ -1606,15 +1376,9 @@ export interface PlatformSettingsFieldRefs {
   readonly playStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly appStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly appDownloadUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
-  readonly deliveryPlayStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
-  readonly deliveryAppStoreUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
-  readonly deliveryDownloadUrl: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly reviewLoginEnabled: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
   readonly reviewLoginPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly reviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>
-  readonly riderReviewLoginEnabled: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
-  readonly riderReviewLoginPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
-  readonly riderReviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly paymentProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly otpProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly updatedById: Prisma.FieldRef<"PlatformSettings", 'String'>

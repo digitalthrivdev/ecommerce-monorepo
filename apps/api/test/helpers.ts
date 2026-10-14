@@ -9,7 +9,6 @@ export const SEED = {
   adminEmail: "admin@shop.test",
   staffEmail: "staff@shop.test",
   customerPhone: "+919000000002",
-  riderPhone: "+919000000004",
   storeCode: "BLR-KRM-01",
 };
 

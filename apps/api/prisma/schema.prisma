@@ -25,7 +25,7 @@ model User {
   // Set only for STORE_STAFF: the store they work at.
   storeId String?
 
-  // Set when a customer or rider deletes their account. Personal details are wiped and the phone
+  // Set when a customer deletes their account. Personal details are wiped and the phone
   // is replaced, so the number can sign up again as a new account; orders keep their snapshots.
   deletedAt DateTime?
 
@@ -36,31 +36,26 @@ model User {
   orderBlockedAt   DateTime?
   orderBlockedById String?
 
-  // Demo account given to prospects: a test admin can only read, and test staff, customers and
-  // riders are limited. Set with the test-account script; carried in the sign-in token.
+  // Demo account given to prospects: a test admin can only read, and test staff and customers are
+  // limited. Set with the test-account script; carried in the sign-in token.
   isTestAccount Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orderBlockedBy       User?            @relation("CustomerBlockedBy", fields: [orderBlockedById], references: [id])
-  customersBlocked     User[]           @relation("CustomerBlockedBy")
-  store                Store?           @relation(fields: [storeId], references: [id])
-  addresses            Address[]
-  cart                 Cart?
-  orders               Order[]
-  deliveryPartner      DeliveryPartner?
-  cashDepositsRecorded CashDeposit[]    @relation("CashDepositRecordedBy")
-  cashDepositsVoided   CashDeposit[]    @relation("CashDepositVoidedBy")
-  payoutsRecorded      RiderPayout[]    @relation("RiderPayoutRecordedBy")
-  payoutsVoided        RiderPayout[]    @relation("RiderPayoutVoidedBy")
-  pushTokens           PushToken[]
-  complaints           Complaint[]
-  complaintsResolved   Complaint[]      @relation("ComplaintResolvedBy")
-  refundsIssued        Refund[]         @relation("RefundCreatedBy")
-  productReviews       ProductReview[]
-  productReviewsAdded  ProductReview[]  @relation("ProductReviewCreatedBy")
-  wishlistItems        WishlistItem[]
+  orderBlockedBy      User?           @relation("CustomerBlockedBy", fields: [orderBlockedById], references: [id])
+  customersBlocked    User[]          @relation("CustomerBlockedBy")
+  store               Store?          @relation(fields: [storeId], references: [id])
+  addresses           Address[]
+  cart                Cart?
+  orders              Order[]
+  pushTokens          PushToken[]
+  complaints          Complaint[]
+  complaintsResolved  Complaint[]     @relation("ComplaintResolvedBy")
+  refundsIssued       Refund[]        @relation("RefundCreatedBy")
+  productReviews      ProductReview[]
+  productReviewsAdded ProductReview[] @relation("ProductReviewCreatedBy")
+  wishlistItems       WishlistItem[]
 
   @@index([role])
   @@index([storeId])
@@ -70,7 +65,6 @@ enum UserRole {
   CUSTOMER
   ADMIN
   STORE_STAFF
-  DELIVERY_PARTNER
 }
 
 enum CustomerBlock {
@@ -140,12 +134,11 @@ model Store {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products     StoreProduct[]
-  orders       Order[]
-  carts        Cart[]
-  staff        User[]
-  hours        StoreHours[]
-  cashDeposits CashDeposit[]
+  products StoreProduct[]
+  orders   Order[]
+  carts    Cart[]
+  staff    User[]
+  hours    StoreHours[]
 
   @@index([status])
 }
@@ -518,7 +511,6 @@ model Order {
 
   items          OrderItem[]
   payment        Payment?
-  delivery       Delivery?
   complaint      Complaint?
   rating         OrderRating?
   refunds        Refund[]
@@ -539,8 +531,6 @@ enum OrderStatus {
   PICKING
   PACKED
   READY_FOR_PICKUP
-  ASSIGNED
-  PICKED_UP
   OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
@@ -794,8 +784,7 @@ enum CouponDiscountType {
 // RATINGS
 // ─────────────────────────────────────────────
 
-// A customer's rating of a delivered order, at most one per order and never shown publicly. The
-// delivery rating counts towards the rider who delivered it (Order → Delivery → partner).
+// A customer's rating of a delivered order, at most one per order and never shown publicly.
 // Stars are 1 to 5 (database checks).
 model OrderRating {
   id      String @id @default(cuid())
@@ -880,166 +869,6 @@ enum PaymentStatus {
 }
 
 // ─────────────────────────────────────────────
-// DELIVERY
-// ─────────────────────────────────────────────
-
-model DeliveryPartner {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  status   DeliveryPartnerStatus @default(OFFLINE)
-  // Inactive partners cannot use the delivery app or be assigned.
-  isActive Boolean               @default(true)
-
-  vehicleType   String?
-  vehicleNumber String?
-
-  // Cash-on-delivery orders delivered from this time count towards cash in hand. Partners that
-  // existed before cash tracking start at the time it was added.
-  cashSince     DateTime @default(now())
-  // Delivery earnings from this time count towards what the partner is owed; earlier ones were
-  // settled before payouts were recorded.
-  earningsSince DateTime @default(now())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user         User          @relation(fields: [userId], references: [id])
-  deliveries   Delivery[]
-  cashDeposits CashDeposit[]
-  payouts      RiderPayout[]
-
-  @@index([status])
-}
-
-// Cash a partner handed over from cash-on-delivery orders. Never deleted: a mistake is voided
-// with a reason and stays in the log. Amounts are always positive (database check).
-model CashDeposit {
-  id        String  @id @default(cuid())
-  partnerId String
-  amount    Decimal @db.Decimal(10, 2)
-  // The store whose staff received it; null when an admin recorded it.
-  storeId   String?
-  note      String?
-
-  recordedById String
-  createdAt    DateTime @default(now())
-
-  voidedAt   DateTime?
-  voidedById String?
-  voidReason String?
-
-  partner    DeliveryPartner @relation(fields: [partnerId], references: [id])
-  store      Store?          @relation(fields: [storeId], references: [id])
-  recordedBy User            @relation("CashDepositRecordedBy", fields: [recordedById], references: [id])
-  voidedBy   User?           @relation("CashDepositVoidedBy", fields: [voidedById], references: [id])
-
-  @@index([partnerId, createdAt])
-  @@index([storeId, createdAt])
-}
-
-enum PayoutMethod {
-  CASH
-  UPI
-  BANK_TRANSFER
-  OTHER
-}
-
-// Earnings an admin paid a partner. Never deleted: a mistake is voided with a reason and stays
-// in the log. Amounts are always positive (database check).
-model RiderPayout {
-  id        String       @id @default(cuid())
-  partnerId String
-  amount    Decimal      @db.Decimal(10, 2)
-  method    PayoutMethod
-  // Transaction or receipt reference, or anything else worth keeping.
-  note      String?
-  paidAt    DateTime
-
-  recordedById String
-  createdAt    DateTime @default(now())
-
-  voidedAt   DateTime?
-  voidedById String?
-  voidReason String?
-
-  partner    DeliveryPartner @relation(fields: [partnerId], references: [id])
-  recordedBy User            @relation("RiderPayoutRecordedBy", fields: [recordedById], references: [id])
-  voidedBy   User?           @relation("RiderPayoutVoidedBy", fields: [voidedById], references: [id])
-
-  @@index([partnerId, paidAt])
-}
-
-enum DeliveryPartnerStatus {
-  OFFLINE
-  ONLINE
-  BUSY
-}
-
-model Delivery {
-  id        String  @id @default(cuid())
-  orderId   String  @unique
-  partnerId String?
-
-  status DeliveryStatus @default(PENDING)
-
-  assignedAt  DateTime?
-  acceptedAt  DateTime?
-  pickedUpAt  DateTime?
-  deliveredAt DateTime?
-
-  deliveryOtpHash String?
-
-  // Partner earning snapshot, set when delivered.
-  earning Decimal? @db.Decimal(10, 2)
-
-  // Why it failed, when an admin cancels the order after the rider picked it up.
-  failure DeliveryFailure?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  order   Order            @relation(fields: [orderId], references: [id])
-  partner DeliveryPartner? @relation(fields: [partnerId], references: [id])
-
-  locations DeliveryLocation[]
-
-  @@index([partnerId, status])
-  @@index([status])
-  @@index([failure])
-  @@index([deliveredAt])
-}
-
-enum DeliveryFailure {
-  REFUSED
-  UNREACHABLE
-  OTHER
-}
-
-enum DeliveryStatus {
-  PENDING
-  ASSIGNED
-  PICKED_UP
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-}
-
-model DeliveryLocation {
-  id         String @id @default(cuid())
-  deliveryId String
-
-  latitude  Decimal @db.Decimal(10, 7)
-  longitude Decimal @db.Decimal(10, 7)
-
-  recordedAt DateTime @default(now())
-
-  delivery Delivery @relation(fields: [deliveryId], references: [id])
-
-  @@index([deliveryId, recordedAt])
-}
-
-// ─────────────────────────────────────────────
 // SETTINGS
 // ─────────────────────────────────────────────
 
@@ -1052,10 +881,6 @@ model PlatformSettings {
   // Null means delivery is never free.
   freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
   minOrderValue         Decimal  @db.Decimal(10, 2)
-  deliveryPartnerFee    Decimal  @db.Decimal(10, 2)
-
-  // A partner holding this much cash or more can't be assigned orders until they deposit; null means no limit.
-  riderCashLimit Decimal? @db.Decimal(10, 2)
 
   // Largest order total that can be paid cash on delivery; null means no limit.
   codMaxOrderValue Decimal? @db.Decimal(10, 2)
@@ -1076,27 +901,18 @@ model PlatformSettings {
   // GST rate included in the delivery fee.
   deliveryFeeGstRate Decimal @default(18) @db.Decimal(5, 2)
 
-  // Public website on SITE_DOMAIN: home page tagline and where to get the customer and delivery
-  // partner apps. A direct download link only shows while that app has no store listing.
-  websiteTagline       String?
-  playStoreUrl         String?
-  appStoreUrl          String?
-  appDownloadUrl       String?
-  deliveryPlayStoreUrl String?
-  deliveryAppStoreUrl  String?
-  deliveryDownloadUrl  String?
+  // Public website on SITE_DOMAIN: home page tagline and where to get the customer app. A direct
+  // download link only shows while the app has no store listing.
+  websiteTagline String?
+  playStoreUrl   String?
+  appStoreUrl    String?
+  appDownloadUrl String?
 
   // Review login for app store and payment gateway reviewers: this phone number signs in to a
   // customer account with a fixed code and no SMS. The code is stored only as an HMAC.
   reviewLoginEnabled  Boolean @default(false)
   reviewLoginPhone    String?
   reviewLoginCodeHash String?
-
-  // The same for the delivery app (and sales demos): this number signs in to an existing rider
-  // account only.
-  riderReviewLoginEnabled  Boolean @default(false)
-  riderReviewLoginPhone    String?
-  riderReviewLoginCodeHash String?
 
   // Gateway new online payments use (e.g. "razorpay", "cashfree"); null means cash on delivery only.
   // Only gateways with working keys can be selected.

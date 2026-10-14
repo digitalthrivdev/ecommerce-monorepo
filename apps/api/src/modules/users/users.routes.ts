@@ -39,7 +39,7 @@ const usersRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(204).send();
   });
 
-  // Staff and partner names are managed by admins.
+  // Staff names are managed by admins.
   app.patch("/me", { preHandler: requireCustomer }, async (request) => {
     const body = updateProfileBodySchema.parse(request.body);
     try {

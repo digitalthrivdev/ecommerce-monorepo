@@ -82,8 +82,9 @@ describe("phone OTP sign-in", () => {
   });
 });
 
-describe("rider review login", () => {
+describe("review login", () => {
   const CODE = "246810";
+  const REVIEW_PHONE = "+919000000095";
 
   async function clearOtpState() {
     const otpKeys = await app.redis.keys("otp:*");
@@ -92,54 +93,54 @@ describe("rider review login", () => {
 
   afterAll(async () => {
     const admin = await dashboardLogin(app, SEED.adminEmail);
-    await call(app, "PUT", "/settings/rider-review-login", { token: admin, body: { enabled: false, phone: null } });
+    await call(app, "PUT", "/settings/review-login", { token: admin, body: { enabled: false, phone: null } });
   });
 
   it("is only for admins", async () => {
-    const body = { enabled: true, phone: SEED.riderPhone, code: CODE };
-    expect((await call(app, "PUT", "/settings/rider-review-login", { body })).status).toBe(401);
+    const body = { enabled: true, phone: REVIEW_PHONE, code: CODE };
+    expect((await call(app, "PUT", "/settings/review-login", { body })).status).toBe(401);
     const staff = await dashboardLogin(app, SEED.staffEmail);
-    expect((await call(app, "PUT", "/settings/rider-review-login", { token: staff, body })).status).toBe(403);
+    expect((await call(app, "PUT", "/settings/review-login", { token: staff, body })).status).toBe(403);
   });
 
-  it("refuses a number that is not a rider, and invalid input", async () => {
+  it("refuses a dashboard account's number, and invalid input", async () => {
     const admin = await dashboardLogin(app, SEED.adminEmail);
-    const customer = await call(app, "PUT", "/settings/rider-review-login", {
+    const dashboard = await call(app, "PUT", "/settings/review-login", {
       token: admin,
-      body: { enabled: true, phone: SEED.customerPhone, code: CODE },
+      body: { enabled: true, phone: "+919000000001", code: CODE },
     });
-    expect(customer.status).toBe(400);
-    expect(customer.body.error).toBe("REVIEW_PHONE_NOT_RIDER");
+    expect(dashboard.status).toBe(400);
+    expect(dashboard.body.error).toBe("REVIEW_PHONE_NOT_CUSTOMER");
 
-    const badCode = await call(app, "PUT", "/settings/rider-review-login", {
+    const badCode = await call(app, "PUT", "/settings/review-login", {
       token: admin,
-      body: { enabled: true, phone: SEED.riderPhone, code: "12" },
+      body: { enabled: true, phone: REVIEW_PHONE, code: "12" },
     });
     expect(badCode.status).toBe(400);
     expect(badCode.body.error).toBe("VALIDATION_ERROR");
   });
 
-  it("signs the rider in with the fixed code and no SMS", async () => {
+  it("signs a new customer in with the fixed code and no SMS", async () => {
     const admin = await dashboardLogin(app, SEED.adminEmail);
-    const saved = await call(app, "PUT", "/settings/rider-review-login", {
+    const saved = await call(app, "PUT", "/settings/review-login", {
       token: admin,
-      body: { enabled: true, phone: SEED.riderPhone, code: CODE },
+      body: { enabled: true, phone: REVIEW_PHONE, code: CODE },
     });
     expect(saved.status).toBe(200);
-    expect(saved.body.riderReviewLogin).toEqual({ enabled: true, phone: SEED.riderPhone, codeSet: true });
+    expect(saved.body.reviewLogin).toEqual({ enabled: true, phone: REVIEW_PHONE, codeSet: true });
 
     await clearOtpState();
-    expect((await call(app, "POST", "/auth/send-otp", { body: { phone: SEED.riderPhone } })).status).toBe(200);
-    const wrong = await call(app, "POST", "/auth/verify-otp", { body: { phone: SEED.riderPhone, otp: "135791" } });
+    expect((await call(app, "POST", "/auth/send-otp", { body: { phone: REVIEW_PHONE } })).status).toBe(200);
+    const wrong = await call(app, "POST", "/auth/verify-otp", { body: { phone: REVIEW_PHONE, otp: "135791" } });
     expect(wrong.status).toBe(401);
-    const verified = await call(app, "POST", "/auth/verify-otp", { body: { phone: SEED.riderPhone, otp: CODE } });
+    const verified = await call(app, "POST", "/auth/verify-otp", { body: { phone: REVIEW_PHONE, otp: CODE } });
     expect(verified.status).toBe(200);
-    expect(verified.body.user.role).toBe("DELIVERY_PARTNER");
+    expect(verified.body.user.role).toBe("CUSTOMER");
   });
 
-  it("does not apply to the customer app's numbers", async () => {
+  it("does not apply to other numbers", async () => {
     await clearOtpState();
-    // The customer still gets a normal (logged) code; the rider's fixed code does not work for it.
+    // Another customer still gets a normal (logged) code; the fixed code does not work for it.
     await sendOtp(app, SEED.customerPhone);
     const response = await call(app, "POST", "/auth/verify-otp", { body: { phone: SEED.customerPhone, otp: CODE } });
     expect(response.status).toBe(401);
@@ -185,7 +186,7 @@ describe("test accounts", () => {
       const writes = [
         call(app, "POST", "/categories", { token, body: {} }),
         call(app, "PATCH", "/settings/platform", { token, body: {} }),
-        call(app, "PUT", "/settings/rider-review-login", { token, body: {} }),
+        call(app, "PUT", "/settings/review-login", { token, body: {} }),
         call(app, "DELETE", "/admin/customers/not-a-customer", { token }),
       ];
       for (const response of await Promise.all(writes)) {
@@ -193,10 +194,10 @@ describe("test accounts", () => {
         expect(response.body).toMatchObject({ error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" });
       }
 
-      // Rider assignment stays open (the full assign flow is in orders.test.ts).
+      // The delivery steps stay open (the full order flow is in orders.test.ts).
       const store = await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } });
-      const reassign = await call(app, "POST", `/stores/${store.id}/orders/not-an-order/reassign`, { token, body: { partnerId: "not-a-partner" } });
-      expect(reassign.status).toBe(404);
+      const delivered = await call(app, "POST", `/stores/${store.id}/orders/not-an-order/mark-delivered`, { token });
+      expect(delivered.status).toBe(404);
     });
 
     it("can sign out", async () => {
@@ -211,7 +212,7 @@ describe("test accounts", () => {
         const admin = await dashboardLogin(app, SEED.adminEmail);
         const me = await call(app, "GET", "/users/me", { token: admin });
         expect(me.body.isTestAccount).toBe(false);
-        const saved = await call(app, "PUT", "/settings/rider-review-login", { token: admin, body: { enabled: false, phone: null } });
+        const saved = await call(app, "PUT", "/settings/review-login", { token: admin, body: { enabled: false, phone: null } });
         expect(saved.status).toBe(200);
       } finally {
         await app.prisma.user.update({ where: { email: SEED.adminEmail }, data: { isTestAccount: true } });
@@ -219,19 +220,17 @@ describe("test accounts", () => {
     });
   });
 
-  describe("test staff, customers and riders", () => {
+  describe("test staff and customers", () => {
     const READ_ONLY = { error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" };
     let staff: string;
     let customer: string;
-    let rider: string;
     let storeId: string;
     let variantId: string;
-    let partnerId: string;
 
     beforeAll(async () => {
       const users = await app.prisma.user.findMany({
-        where: { OR: [{ email: SEED.staffEmail }, { phone: { in: [SEED.customerPhone, SEED.riderPhone] } }] },
-        select: { id: true, role: true, storeId: true, deliveryPartner: { select: { id: true } } },
+        where: { OR: [{ email: SEED.staffEmail }, { phone: SEED.customerPhone }] },
+        select: { id: true, role: true, storeId: true },
       });
       const userFor = (role: string) => users.find((candidate) => candidate.role === role)!;
       const tokenFor = (role: string) => {
@@ -240,9 +239,7 @@ describe("test accounts", () => {
       };
       staff = tokenFor("STORE_STAFF");
       customer = tokenFor("CUSTOMER");
-      rider = tokenFor("DELIVERY_PARTNER");
       storeId = userFor("STORE_STAFF").storeId!;
-      partnerId = userFor("DELIVERY_PARTNER").deliveryPartner!.id;
       variantId = (await app.prisma.storeProduct.findFirstOrThrow({ where: { storeId, isAvailable: true, inventory: { isNot: null } }, select: { variantId: true } })).variantId;
     });
 
@@ -285,22 +282,15 @@ describe("test accounts", () => {
       expect((await uploadImage(normal)).status).toBe(201);
     });
 
-    it("keeps test customer and rider accounts from being deleted; normal ones can delete", async () => {
-      for (const token of [customer, rider]) {
-        const response = await call(app, "DELETE", "/users/me", { token });
-        expect(response.status).toBe(403);
-        expect(response.body).toMatchObject(READ_ONLY);
-        expect((await call(app, "GET", "/users/me", { token })).status).toBe(200);
-      }
+    it("keeps a test customer account from being deleted; a normal one can delete", async () => {
+      const response = await call(app, "DELETE", "/users/me", { token: customer });
+      expect(response.status).toBe(403);
+      expect(response.body).toMatchObject(READ_ONLY);
+      expect((await call(app, "GET", "/users/me", { token: customer })).status).toBe(200);
 
-      const admin = await dashboardLogin(app, SEED.adminEmail);
-      const riderPhone = "+919000000096";
-      expect((await call(app, "POST", "/delivery-partners", { token: admin, body: { phone: riderPhone, name: "Spare Rider" } })).status).toBe(201);
-      for (const phone of ["+919000000097", riderPhone]) {
-        const token = await otpLogin(app, phone);
-        expect((await call(app, "DELETE", "/users/me", { token })).status).toBe(204);
-        expect((await call(app, "GET", "/users/me", { token })).status).toBe(401);
-      }
+      const token = await otpLogin(app, "+919000000097");
+      expect((await call(app, "DELETE", "/users/me", { token })).status).toBe(204);
+      expect((await call(app, "GET", "/users/me", { token })).status).toBe(401);
     });
 
     it("checks the role and the input before the test-account limits", async () => {
@@ -308,8 +298,7 @@ describe("test accounts", () => {
       for (const response of [
         await call(app, "DELETE", "/users/me", { token: staff }),
         await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: customer }),
-        await call(app, "POST", "/images", { token: rider }),
-        await call(app, "POST", `/rider-cash/${partnerId}/deposits`, { token: customer, body: { amount: "1.00" } }),
+        await call(app, "POST", "/images", { token: customer }),
       ]) {
         expect(response.status).toBe(403);
         expect(response.body.error).toBe("FORBIDDEN");
@@ -318,7 +307,6 @@ describe("test accounts", () => {
       // Allowed routes still validate input.
       expect((await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: staff })).status).toBe(404);
       expect((await call(app, "PATCH", "/users/me", { token: customer, body: {} })).status).toBe(400);
-      expect((await call(app, "PATCH", "/delivery/me/status", { token: rider, body: { status: "NOT_A_STATUS" } })).status).toBe(400);
     });
   });
 });

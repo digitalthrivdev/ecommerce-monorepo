@@ -207,8 +207,8 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
           </View>
           <Text className="text-xs text-muted-foreground">
             {mapsAvailable
-              ? "Place the pin on your building's entrance, so the rider finds you easily."
-              : "Stand at the delivery address when you set this, so the rider finds you easily."}
+              ? "Place the pin on your building's entrance, so we find you easily."
+              : "Stand at the delivery address when you set this, so we find you easily."}
           </Text>
           {(locationError || errors.location) && <Text className="text-xs text-destructive">{locationError ?? errors.location}</Text>}
         </Pressable>

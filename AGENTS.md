@@ -4,7 +4,7 @@ A white-label single-vendor e-commerce platform, like a Shopify store: one selle
 
 `README.md` covers setup and commands. `docs/deployment.md` is the deployment runbook (servers and per-client app builds); follow it for any deploy or build. `TODO.md` lists deferred work.
 
-**Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until a phase lands, the code still contains stores, store pricing, delivery partners, the delivery app and the grocery order statuses. This file describes the target. Don't extend grocery-only features; remove or convert them only in the phase that covers them.
+**Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until a phase lands, the code still contains stores, store pricing and the grocery order statuses (with admin-driven "out for delivery" and "delivered" steps until shipping lands). This file describes the target. Don't extend grocery-only features; remove or convert them only in the phase that covers them.
 
 ## Repository
 

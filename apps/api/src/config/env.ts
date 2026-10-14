@@ -15,7 +15,7 @@ const optionalSecret = z.preprocess(
 const demoDashboardLogin = z.object({ email: z.email(), password: z.string().min(1) });
 const demoPhoneLogin = z.object({ phone: z.string().regex(/^\+[1-9]\d{6,14}$/), code: z.string().regex(/^\d{4,8}$/) });
 const demoLoginsSchema = z
-  .object({ admin: demoDashboardLogin, staff: demoDashboardLogin, customer: demoPhoneLogin, rider: demoPhoneLogin })
+  .object({ admin: demoDashboardLogin, staff: demoDashboardLogin, customer: demoPhoneLogin })
   .partial()
   .strict();
 
@@ -96,8 +96,6 @@ const envSchema = z.object({
 
   MIN_ORDER_VALUE: moneyEnv.default("99.00"),
 
-  DELIVERY_PARTNER_FEE: moneyEnv.default("30.00"),
-
   CURRENCY: z.string().regex(/^[A-Z]{3}$/, "Must be an ISO 4217 code, e.g. INR").default("INR"),
 
   // Public base URL of this API (https in production). Payment gateways send customers and
@@ -153,7 +151,7 @@ const envSchema = z.object({
 
   // Sales demos only: test-account sign-in details shown on the dashboard and app sign-in screens, so
   // prospects sign in with one tap. GET /settings returns them to anyone, so never use real accounts.
-  // JSON, any of: {"admin":{"email":"…","password":"…"},"staff":{…},"customer":{"phone":"+91…","code":"…"},"rider":{…}}
+  // JSON, any of: {"admin":{"email":"…","password":"…"},"staff":{…},"customer":{"phone":"+91…","code":"…"}}
   DEMO_LOGINS: demoLoginsEnv,
 
   // "log" writes pushes to the API log instead of sending them (development only).

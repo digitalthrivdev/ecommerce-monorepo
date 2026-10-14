@@ -9,16 +9,12 @@ import {
   createReviewProvider,
   OTP_PROVIDERS,
   REVIEW_PROVIDER,
-  RIDER_REVIEW_PROVIDER,
   type OtpProvider,
   type OtpProviderDefinition,
   type OtpProviderDeps,
 } from "./otp-provider.js";
 
 type ReviewLogin = { phone: string; codeHash: string };
-
-/** Which review login a number may use: the customer app's, the delivery app's, or none. */
-export type ReviewApp = "customer" | "rider" | null;
 
 /** Cached briefly; a change clears the cache on this instance, other instances pick it up within CACHE_MS. */
 const CACHE_MS = 30_000;
@@ -35,7 +31,7 @@ type LoadedProvider = {
 type Loaded = {
   providers: Map<string, LoadedProvider>;
   selected: string | null;
-  review: { customer: ReviewLogin | null; rider: ReviewLogin | null };
+  review: ReviewLogin | null;
 };
 
 function reviewLogin(enabled: boolean, phone: string | null, codeHash: string | null): ReviewLogin | null {
@@ -62,10 +58,7 @@ function readStored(definition: OtpProviderDefinition, sealed: string) {
  */
 export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prisma: PrismaClient }) {
   const logProvider = createLogProvider(deps.log);
-  const reviewProviders = {
-    customer: createReviewProvider(REVIEW_PROVIDER, deps.log, async () => (await loaded()).review.customer),
-    rider: createReviewProvider(RIDER_REVIEW_PROVIDER, deps.log, async () => (await loaded()).review.rider),
-  };
+  const reviewProvider = createReviewProvider(REVIEW_PROVIDER, deps.log, async () => (await loaded()).review);
   let cache: { expires: number; loaded: Promise<Loaded> } | null = null;
 
   function createProvider(definition: OtpProviderDefinition, credentials: Credentials | null) {
@@ -102,10 +95,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
     return {
       providers,
       selected: settings.otpProvider,
-      review: {
-        customer: reviewLogin(settings.reviewLoginEnabled, settings.reviewLoginPhone, settings.reviewLoginCodeHash),
-        rider: reviewLogin(settings.riderReviewLoginEnabled, settings.riderReviewLoginPhone, settings.riderReviewLoginCodeHash),
-      },
+      review: reviewLogin(settings.reviewLoginEnabled, settings.reviewLoginPhone, settings.reviewLoginCodeHash),
     };
   }
 
@@ -133,12 +123,12 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
   }
 
   /**
-   * The provider for a new OTP to `phone`. A review login's number gets its review provider when the
-   * account may use it (`reviewApp`). Without a provider, development writes codes to the log;
+   * The provider for a new OTP to `phone`. The review login's number gets the review provider when the
+   * account may use it (`reviewLogin`). Without a provider, development writes codes to the log;
    * production refuses.
    */
-  async function sender(phone: string, { reviewApp }: { reviewApp: ReviewApp }) {
-    if (reviewApp && (await loaded()).review[reviewApp]?.phone === phone) return reviewProviders[reviewApp];
+  async function sender(phone: string, { reviewLogin }: { reviewLogin: boolean }) {
+    if (reviewLogin && (await loaded()).review?.phone === phone) return reviewProvider;
     const provider = await active();
     if (provider) return provider;
     if (env.NODE_ENV !== "production") return logProvider;
@@ -148,8 +138,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
   /** The provider that sent a pending OTP, so it can still be checked after a switch. */
   async function byName(name: string) {
     if (name === logProvider.name) return logProvider;
-    if (name === REVIEW_PROVIDER) return reviewProviders.customer;
-    if (name === RIDER_REVIEW_PROVIDER) return reviewProviders.rider;
+    if (name === REVIEW_PROVIDER) return reviewProvider;
     return (await loaded()).providers.get(name)?.provider ?? null;
   }
 

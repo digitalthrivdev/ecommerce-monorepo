@@ -34,7 +34,6 @@ export async function getPlatformSettings(db: Db) {
       deliveryFee: env.DELIVERY_FEE,
       freeDeliveryThreshold: env.FREE_DELIVERY_THRESHOLD,
       minOrderValue: env.MIN_ORDER_VALUE,
-      deliveryPartnerFee: env.DELIVERY_PARTNER_FEE,
     },
   });
 }
@@ -95,8 +94,6 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     deliveryFee: settings.deliveryFee.toFixed(2),
     freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
     minOrderValue: settings.minOrderValue.toFixed(2),
-    deliveryPartnerFee: settings.deliveryPartnerFee.toFixed(2),
-    riderCashLimit: settings.riderCashLimit?.toFixed(2) ?? null,
     codMaxOrderValue: settings.codMaxOrderValue?.toFixed(2) ?? null,
     deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
     supportPhone: settings.supportPhone,
@@ -109,18 +106,10 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     playStoreUrl: settings.playStoreUrl,
     appStoreUrl: settings.appStoreUrl,
     appDownloadUrl: settings.appDownloadUrl,
-    deliveryPlayStoreUrl: settings.deliveryPlayStoreUrl,
-    deliveryAppStoreUrl: settings.deliveryAppStoreUrl,
-    deliveryDownloadUrl: settings.deliveryDownloadUrl,
     reviewLogin: {
       enabled: settings.reviewLoginEnabled,
       phone: settings.reviewLoginPhone,
       codeSet: settings.reviewLoginCodeHash !== null,
-    },
-    riderReviewLogin: {
-      enabled: settings.riderReviewLoginEnabled,
-      phone: settings.riderReviewLoginPhone,
-      codeSet: settings.riderReviewLoginCodeHash !== null,
     },
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
@@ -210,26 +199,18 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
   }
 
   /**
-   * The review login of the customer app (a customer or new number) or the delivery app (an existing
-   * rider's number). A blank code keeps the saved one, which only works for the same phone number.
+   * The review login: a customer or new number. A blank code keeps the saved one, which only works
+   * for the same phone number.
    */
-  async function saveReviewLogin(app: "customer" | "rider", input: ReviewLoginInput, adminId: string) {
+  async function saveReviewLogin(input: ReviewLoginInput, adminId: string) {
     const settings = await getPlatformSettings(prisma);
     const { enabled, phone, code } = input;
-    const saved =
-      app === "customer"
-        ? { phone: settings.reviewLoginPhone, codeHash: settings.reviewLoginCodeHash }
-        : { phone: settings.riderReviewLoginPhone, codeHash: settings.riderReviewLoginCodeHash };
+    const saved = { phone: settings.reviewLoginPhone, codeHash: settings.reviewLoginCodeHash };
 
     if (phone) {
       const owner = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
-      if (app === "customer" && owner && owner.role !== UserRole.CUSTOMER) {
-        throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin, store staff or rider. Use a number only reviewers will use.", {
-          field: "phone",
-        });
-      }
-      if (app === "rider" && owner?.role !== UserRole.DELIVERY_PARTNER) {
-        throw new AppError(400, "REVIEW_PHONE_NOT_RIDER", "Add this number as a delivery partner first, then use it here.", {
+      if (owner && owner.role !== UserRole.CUSTOMER) {
+        throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin or store staff. Use a number only reviewers will use.", {
           field: "phone",
         });
       }
@@ -242,12 +223,7 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     const codeHash = phone && code ? hashOtp(phone, code) : keepsCode ? saved.codeHash : null;
     const updated = await prisma.platformSettings.update({
       where: { id: SETTINGS_ID },
-      data: {
-        ...(app === "customer"
-          ? { reviewLoginEnabled: enabled, reviewLoginPhone: phone, reviewLoginCodeHash: codeHash }
-          : { riderReviewLoginEnabled: enabled, riderReviewLoginPhone: phone, riderReviewLoginCodeHash: codeHash }),
-        updatedById: adminId,
-      },
+      data: { reviewLoginEnabled: enabled, reviewLoginPhone: phone, reviewLoginCodeHash: codeHash, updatedById: adminId },
     });
     otp.invalidate();
     return toAdminView(prisma, otp, updated);

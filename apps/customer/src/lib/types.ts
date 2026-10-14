@@ -31,7 +31,7 @@ export type PublicSettings = {
 
 export type DemoPhoneLogin = { phone: string; code: string };
 
-export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";
+export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF";
 
 export type User = { id: string; phone: string; name: string | null; email: string | null; role: UserRole };
 
@@ -215,8 +215,6 @@ export type OrderStatus =
   | "PICKING"
   | "PACKED"
   | "READY_FOR_PICKUP"
-  | "ASSIGNED"
-  | "PICKED_UP"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
   | "CANCELLED";
@@ -235,8 +233,6 @@ export type OrderSummary = {
   store: { id: string; name: string };
   itemCount: number;
   canCancel: boolean;
-  /** When the current rider accepted the delivery; null until then, and again after a reassignment. */
-  riderAcceptedAt: string | null;
   /** Delivered in the last 7 days and not rated yet. */
   canRate: boolean;
 };
@@ -274,13 +270,7 @@ export type OrderDetail = {
   payment: { status: PaymentStatus; amount: string; refundedAmount: string; paidAt: string | null; refundedAt: string | null } | null;
   /** Set while an online payment is awaited; the order is cancelled after it. */
   paymentExpiresAt: string | null;
-  delivery: {
-    status: string;
-    partner: { name: string | null; phone: string; vehicleType: string | null; vehicleNumber: string | null } | null;
-    assignedAt: string | null;
-    pickedUpAt: string | null;
-    deliveredAt: string | null;
-  } | null;
+  deliveredAt: string | null;
   store: { id: string; name: string; phone: string | null };
   /** quantity and totalPrice are as ordered; the store could not supply unavailableQuantity units, which are not charged. */
   items: {
@@ -328,8 +318,6 @@ export type OrderDetail = {
   /** Delivered in the last 7 days and not rated yet. */
   canRate: boolean;
   createdAt: string;
-  /** Shown once a partner is on the way; the customer reads it out at the door. */
-  deliveryOtp: string | null;
 };
 
 export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
@@ -345,18 +333,6 @@ export type OrderComplaint = {
   createdAt: string;
   resolvedAt: string | null;
   items: { orderItemId: string; quantity: number }[];
-};
-
-/** `GET /orders/:id/tracking`. */
-export type OrderTracking = {
-  orderStatus: OrderStatus;
-  trackable: boolean;
-  /** The partner's last reported position; null until they share it, or after 10 minutes without an update. */
-  partnerLocation: (Coordinates & { heading: number | null; updatedAt: string }) | null;
-  store: Coordinates;
-  destination: Coordinates | null;
-  distanceKm: number | null;
-  etaMinutes: number | null;
 };
 
 export type HomeLink = { type: "none" } | { type: "category"; category: Category };

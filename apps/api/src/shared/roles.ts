@@ -3,7 +3,6 @@ import { AppError } from "./errors.js";
 
 const ROLE_WITH_ARTICLE: Record<UserRole, string> = {
   CUSTOMER: "a customer",
-  DELIVERY_PARTNER: "a delivery partner",
   STORE_STAFF: "store staff",
   ADMIN: "an admin",
 };
@@ -13,7 +12,7 @@ export function roleConflictError(role: UserRole) {
   return new AppError(409, "USER_HAS_OTHER_ROLE", `This phone number is already registered as ${ROLE_WITH_ARTICLE[role]}`);
 }
 
-/** Dashboard users sign in with email and password; customers and delivery partners with an OTP. */
+/** Dashboard users sign in with email and password; customers with an OTP. */
 export function signsInWithPassword(role: UserRole) {
   return role === UserRole.ADMIN || role === UserRole.STORE_STAFF;
 }

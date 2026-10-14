@@ -156,29 +156,6 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
         </Panel>
       </Section>
 
-      <Section title="What riders earn" hint="Paid for each delivered order. Past deliveries keep their old amount.">
-        <Panel className="p-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <TextField
-              name="deliveryPartnerFee"
-              label="Pay per delivery"
-              defaultValue={settings.deliveryPartnerFee}
-              error={fieldErrors.deliveryPartnerFee}
-              required
-              {...amount}
-            />
-            <TextField
-              name="riderCashLimit"
-              label="Cash a rider can hold"
-              defaultValue={settings.riderCashLimit}
-              error={fieldErrors.riderCashLimit}
-              description="From cash-on-delivery orders. At this amount they get no new orders until they deposit. Leave empty for no limit."
-              {...amount}
-            />
-          </div>
-        </Panel>
-      </Section>
-
       <Section title="Customer help line" hint="Shown in the customer app so people can reach you. Both are optional.">
         <Panel className="p-5">
           <div className="grid gap-5 sm:grid-cols-2">

@@ -2,7 +2,6 @@ import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
-import { createTrackingService } from "../delivery/tracking.service.js";
 import { sendPdf } from "../invoices/invoices.routes.js";
 import { createInvoicesService } from "../invoices/invoices.service.js";
 import { startPaymentBodySchema } from "../payments/payments.schemas.js";
@@ -14,7 +13,6 @@ import { createOrdersService } from "./orders.service.js";
 
 const ordersRoutes: FastifyPluginAsync = async (app) => {
   const ordersService = createOrdersService(app.prisma, app.payments);
-  const tracking = createTrackingService(app.prisma, app.redis);
   const discovery = createDiscoveryService(app.prisma);
   const invoices = createInvoicesService(app.prisma);
 
@@ -50,11 +48,6 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   app.post("/:id/invoice-link", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return invoices.customerLink(request.user.sub, id, publicBaseUrl(request));
-  });
-
-  app.get("/:id/tracking", async (request) => {
-    const { id } = idParamsSchema.parse(request.params);
-    return tracking.getCustomerTracking(request.user.sub, id);
   });
 
   app.post("/:id/cancel", async (request) => {

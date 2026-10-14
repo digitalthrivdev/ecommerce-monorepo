@@ -11,8 +11,8 @@ export const listCustomersQuerySchema = paginationQuerySchema.extend({
     .max(50)
     .optional()
     .transform((value) => value || undefined),
-  /** "refusals": refused REPEAT_REFUSALS or more deliveries. "blocked": blocked from COD or from ordering. */
-  filter: z.enum(["refusals", "blocked"]).optional(),
+  /** "blocked": blocked from COD or from ordering. */
+  filter: z.enum(["blocked"]).optional(),
 });
 
 export const blockCustomerBodySchema = z

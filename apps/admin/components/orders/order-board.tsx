@@ -2,30 +2,25 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Bike, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import { Elapsed } from "@/components/orders/elapsed";
-import { AssignPartnerDialog, NextStepButton, type StoreLocation } from "@/components/orders/order-actions";
+import { NextStepButton } from "@/components/orders/order-actions";
 import { ReviewAccountPill } from "@/components/status-pill";
 import { formatMoney, ORDER_STATUS_LABELS } from "@/lib/format";
-import { BOARD_COLUMNS, type BoardColumn } from "@/lib/order-flow";
-import type { DeliveryPartner, OrderListItem } from "@/lib/types";
+import { BOARD_COLUMNS, nextStep, type BoardColumn } from "@/lib/order-flow";
+import type { OrderListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type BoardProps = {
   orders: OrderListItem[];
   currency: string;
   showStore: boolean;
-  /** Online riders, for admins assigning from a Ready ticket. */
-  partners: DeliveryPartner[] | null;
-  /** Store positions by ID, to show how far each rider is from the order's store. */
-  storeLocations: Record<string, StoreLocation> | null;
 };
 
-function Ticket({ order, currency, showStore, partners, storeLocations }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
-  const canAssign = order.allowedActions.includes("assign");
+function Ticket({ order, currency, showStore }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
   const inPacking = order.status === "STORE_ACCEPTED" || order.status === "PICKING" || order.status === "PACKED";
-  const onTheWay = order.status === "ASSIGNED" || order.status === "PICKED_UP" || order.status === "OUT_FOR_DELIVERY";
+  const waiting = !nextStep(order.status, order.allowedActions);
 
   return (
     <article className="relative flex flex-col gap-2.5 rounded-xl border bg-card p-3.5 shadow-xs transition-shadow hover:shadow-md">
@@ -59,18 +54,10 @@ function Ticket({ order, currency, showStore, partners, storeLocations }: { orde
       {inPacking && order.status !== "PICKING" && (
         <p className="text-xs font-medium text-muted-foreground">{ORDER_STATUS_LABELS[order.status]}</p>
       )}
-      {order.status === "READY_FOR_PICKUP" && !canAssign && (
+      {waiting && (order.status === "READY_FOR_PICKUP" || order.status === "OUT_FOR_DELIVERY") && (
         <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Clock className="size-4" aria-hidden />
-          No rider yet
-        </p>
-      )}
-      {onTheWay && (
-        <p className="flex items-center gap-1.5 text-sm">
-          <Bike className="size-4 text-muted-foreground" aria-hidden />
-          <span className="truncate">
-            {order.rider?.name ?? order.rider?.phone ?? "Rider"} · {ORDER_STATUS_LABELS[order.status].toLowerCase()}
-          </span>
+          {order.status === "READY_FOR_PICKUP" ? "Waiting to go out" : "On the way"}
         </p>
       )}
 
@@ -84,16 +71,6 @@ function Ticket({ order, currency, showStore, partners, storeLocations }: { orde
           size="lg"
           className="w-full"
         />
-        {canAssign && (
-          <AssignPartnerDialog
-            storeId={order.store.id}
-            orderId={order.id}
-            mode="assign"
-            partners={partners ?? []}
-            store={storeLocations?.[order.store.id] ?? null}
-            className="w-full"
-          />
-        )}
       </div>
     </article>
   );

@@ -102,15 +102,6 @@ const APP_GROUPS = [
       { name: "appDownloadUrl", label: "Direct download", placeholder: "https://…/app.apk" },
     ],
   },
-  {
-    title: "Delivery partner app",
-    hint: "Shown on a separate partner page, linked from the footer. Send riders that page.",
-    fields: [
-      { name: "deliveryPlayStoreUrl", label: "Google Play", placeholder: "https://play.google.com/store/apps/details?id=…" },
-      { name: "deliveryAppStoreUrl", label: "App Store", placeholder: "https://apps.apple.com/in/app/…" },
-      { name: "deliveryDownloadUrl", label: "Direct download", placeholder: "https://…/partner.apk" },
-    ],
-  },
 ] as const;
 
 export function AppLinksForm({ settings }: { settings: PlatformSettings }) {

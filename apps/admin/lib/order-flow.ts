@@ -5,23 +5,26 @@ export type BoardColumn = { id: string; label: string; statuses: OrderStatus[]; 
 export const BOARD_COLUMNS: BoardColumn[] = [
   { id: "new", label: "New", statuses: ["CONFIRMED"], empty: "No new orders" },
   { id: "packing", label: "Packing", statuses: ["STORE_ACCEPTED", "PICKING", "PACKED"], empty: "Nothing being packed" },
-  { id: "ready", label: "Ready, waiting for rider", statuses: ["READY_FOR_PICKUP"], empty: "Nothing waiting for a rider" },
-  { id: "way", label: "On the way", statuses: ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"], empty: "Nothing on the way" },
+  { id: "ready", label: "Ready to send", statuses: ["READY_FOR_PICKUP"], empty: "Nothing waiting to go out" },
+  { id: "way", label: "On the way", statuses: ["OUT_FOR_DELIVERY"], empty: "Nothing on the way" },
 ];
 
 export const BOARD_STATUSES = BOARD_COLUMNS.flatMap((column) => column.statuses);
 
 /** "pack-ready" packs and marks ready in one tap; the API still records both steps. */
-export type NextStepAction = "accept" | "start-picking" | "pack-ready" | "ready";
+export type NextStepAction = "accept" | "start-picking" | "pack-ready" | "ready" | "out-for-delivery" | "mark-delivered";
 
 export const NEXT_STEP: Partial<Record<OrderStatus, { action: NextStepAction; label: string }>> = {
   CONFIRMED: { action: "accept", label: "Accept order" },
   STORE_ACCEPTED: { action: "start-picking", label: "Start packing" },
   PICKING: { action: "pack-ready", label: "Packed – ready" },
-  PACKED: { action: "ready", label: "Ready for rider" },
+  PACKED: { action: "ready", label: "Ready to send" },
+  // Admins only; the API leaves them out of staff's allowed actions.
+  READY_FOR_PICKUP: { action: "out-for-delivery", label: "Out for delivery" },
+  OUT_FOR_DELIVERY: { action: "mark-delivered", label: "Mark delivered" },
 };
 
-/** The step the store can take now, if the API allows it for this user. */
+/** The step that can be taken now, if the API allows it for this user. */
 export function nextStep(status: OrderStatus, allowedActions: OrderAction[]) {
   const step = NEXT_STEP[status];
   if (!step) return null;
@@ -36,8 +39,6 @@ const TIMER_LIMITS: Partial<Record<OrderStatus, [warn: number, late: number]>> =
   PICKING: [10, 20],
   PACKED: [5, 10],
   READY_FOR_PICKUP: [10, 20],
-  ASSIGNED: [10, 20],
-  PICKED_UP: [30, 45],
   OUT_FOR_DELIVERY: [30, 45],
 };
 

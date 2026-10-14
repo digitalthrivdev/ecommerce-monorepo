@@ -20,12 +20,8 @@ import type { CustomerListItem, Paginated } from "@/lib/types";
 export const metadata: Metadata = { title: "Customers" };
 
 const PAGE_SIZE = 25;
-/** Matches the API's threshold for flagging a customer. */
-const REPEAT_REFUSALS = 2;
-
-const TABS: { id: string; label: string; filter?: "refusals" | "blocked"; empty: string }[] = [
+const TABS: { id: string; label: string; filter?: "blocked"; empty: string }[] = [
   { id: "all", label: "All", empty: "No customers yet. They appear here after signing in to the app." },
-  { id: "refusals", label: "Repeat refusals", filter: "refusals", empty: "No customer has refused 2 or more deliveries." },
   { id: "blocked", label: "Blocked", filter: "blocked", empty: "No customer is blocked." },
 ];
 
@@ -106,14 +102,9 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
                           {personName(customer)}
                         </Link>
                         {customer.name && !customer.deletedAt && <div className="text-xs text-muted-foreground">{customer.phone}</div>}
-                        {(customer.orderBlock || customer.refusals > 0) && (
+                        {customer.orderBlock && (
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {customer.orderBlock && <Badge variant="destructive">{CUSTOMER_BLOCK_LABELS[customer.orderBlock]}</Badge>}
-                            {customer.refusals > 0 && (
-                              <Badge variant={customer.refusals >= REPEAT_REFUSALS ? "destructive" : "outline"}>
-                                {customer.refusals} refused at the door
-                              </Badge>
-                            )}
+                            <Badge variant="destructive">{CUSTOMER_BLOCK_LABELS[customer.orderBlock]}</Badge>
                           </div>
                         )}
                       </TableCell>

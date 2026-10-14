@@ -56,7 +56,6 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
         paymentMethod: true,
         store: { select: { name: true } },
         payment: { select: { status: true } },
-        delivery: { select: { partner: { select: { userId: true } } } },
       },
     });
 
@@ -70,7 +69,6 @@ export function createNotificationsService(prisma: PrismaClient, sender: PushSen
           paymentMethod: order.paymentMethod,
           paymentStatus: order.payment?.status ?? null,
           storeName: order.store.name,
-          partnerUserId: order.delivery?.partner?.userId ?? null,
         },
       ]),
     );

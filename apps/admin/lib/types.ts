@@ -1,4 +1,4 @@
-export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF" | "DELIVERY_PARTNER";
+export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF";
 export type DashboardRole = Extract<UserRole, "ADMIN" | "STORE_STAFF">;
 
 export const DASHBOARD_ROLES: readonly DashboardRole[] = ["ADMIN", "STORE_STAFF"];
@@ -15,7 +15,7 @@ export type CurrentUser = {
   name: string | null;
   email: string | null;
   role: UserRole;
-  /** A demo login. A test admin can only look and move orders to a rider; the API refuses other changes. */
+  /** A demo login. A test admin can only look and run the order flow; the API refuses other changes. */
   isTestAccount: boolean;
   store: StoreSummary | null;
 };
@@ -29,19 +29,16 @@ export type OrderStatus =
   | "PICKING"
   | "PACKED"
   | "READY_FOR_PICKUP"
-  | "ASSIGNED"
-  | "PICKED_UP"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
   | "CANCELLED";
 
 export type PaymentMethod = "COD" | "ONLINE";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED";
-export type DeliveryStatus = "PENDING" | "ASSIGNED" | "PICKED_UP" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED";
-export type DeliveryPartnerStatus = "OFFLINE" | "ONLINE" | "BUSY";
 
 export type StoreOrderAction = "accept" | "start-picking" | "pack" | "ready";
-export type OrderAction = StoreOrderAction | "assign" | "reassign" | "unassign" | "mark-delivered" | "cancel" | "mark-unavailable" | "refund";
+export type AdminOrderAction = "out-for-delivery" | "mark-delivered";
+export type OrderAction = StoreOrderAction | AdminOrderAction | "cancel" | "mark-unavailable" | "refund";
 
 export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
 export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
@@ -135,7 +132,6 @@ export type OrderListItem = {
   itemCount: number;
   /** When the order reached its current status. */
   statusChangedAt: string;
-  rider: { name: string | null; phone: string } | null;
   allowedActions: OrderAction[];
   /** Placed through the review login, by an app store or payment gateway reviewer. */
   reviewAccount: boolean;
@@ -145,7 +141,7 @@ export type OrderList = Paginated<OrderListItem> & {
   statusCounts: Partial<Record<OrderStatus, number>>;
 };
 
-export type AttentionReason = "STORE_NOT_ACCEPTED" | "NO_RIDER" | "RIDER_NOT_ACCEPTED";
+export type AttentionReason = "STORE_NOT_ACCEPTED" | "NOT_DISPATCHED";
 
 export type AttentionList = {
   items: Array<{
@@ -155,7 +151,6 @@ export type AttentionList = {
     reason: AttentionReason;
     /** When the order started waiting. */
     since: string;
-    rider: { name: string | null; phone: string | null } | null;
   }>;
   /** Minutes before each reason is flagged. */
   minutes: Record<AttentionReason, number>;
@@ -176,15 +171,7 @@ export type OrderDetail = {
     refundedAt: string | null;
   } | null;
   paymentExpiresAt: string | null;
-  delivery: {
-    status: DeliveryStatus;
-    partner: { name: string | null; phone: string; vehicleType: string | null; vehicleNumber: string | null } | null;
-    assignedAt: string | null;
-    pickedUpAt: string | null;
-    deliveredAt: string | null;
-    /** Why it failed, when an admin cancelled the order after pickup. */
-    failure: DeliveryFailure | null;
-  } | null;
+  deliveredAt: string | null;
   store: { id: string; name: string; phone: string | null };
   /** quantity and totalPrice are as ordered; unavailableQuantity units are not charged. */
   items: Array<{
@@ -410,28 +397,6 @@ export type StockChange = {
   changedBy: { id: string; name: string | null } | null;
 };
 
-export type DeliveryPartner = {
-  id: string;
-  name: string | null;
-  phone: string;
-  /** Set when the rider deleted their account; name and phone are gone. */
-  deletedAt: string | null;
-  status: DeliveryPartnerStatus;
-  isActive: boolean;
-  vehicleType: string | null;
-  vehicleNumber: string | null;
-  activeDelivery: { orderId: string; orderNumber: string; orderStatus: OrderStatus; accepted: boolean } | null;
-  /** Latest reported position; only kept for a few minutes. */
-  lastLocation: { latitude: number; longitude: number; updatedAt: string } | null;
-  /** Cash from cash-on-delivery orders not yet deposited; at the limit the rider can't be assigned. */
-  cash: { inHand: string; limitReached: boolean };
-  /** Delivery earnings not paid out yet. */
-  unpaidEarnings: string;
-  /** Average delivery rating from customers (one decimal); null until the first rating. */
-  rating: { average: string | null; count: number };
-  createdAt: string;
-};
-
 /** 1 to 5 stars; the items rating and comment are optional. */
 export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
@@ -457,85 +422,6 @@ export type ProductReview = {
 export type LowRating = OrderRating & {
   id: string;
   order: { id: string; orderNumber: string; customerName: string; customerPhone: string; store: { id: string; name: string }; deliveredAt: string | null };
-  rider: { id: string; name: string | null; phone: string } | null;
-};
-
-export type PayoutMethod = "CASH" | "UPI" | "BANK_TRANSFER" | "OTHER";
-
-export type EarningsSummary = { currency: string; since: string; earned: string; paid: string; unpaid: string };
-
-export type RiderPayout = {
-  id: string;
-  amount: string;
-  method: PayoutMethod;
-  note: string | null;
-  paidAt: string;
-  createdAt: string;
-  recordedBy: string | null;
-  voided: { at: string; reason: string | null; by: string | null } | null;
-};
-
-export type PayoutList = Paginated<RiderPayout> & { earnings: EarningsSummary };
-
-export type CashSummary = {
-  currency: string;
-  inHand: string;
-  collected: string;
-  deposited: string;
-  limit: string | null;
-  limitReached: boolean;
-};
-
-export type RiderCashRow = {
-  id: string;
-  name: string | null;
-  phone: string;
-  status: DeliveryPartnerStatus;
-  isActive: boolean;
-  lastDepositAt: string | null;
-  cash: CashSummary;
-};
-
-export type RiderCashList = Paginated<RiderCashRow> & { totalInHand: string; cashLimit: string | null; currency: string };
-
-export type RiderCashDetails = Omit<RiderCashRow, "lastDepositAt"> & { cashSince: string };
-
-export type CashDeposit = {
-  id: string;
-  amount: string;
-  note: string | null;
-  createdAt: string;
-  store: { id: string; name: string } | null;
-  recordedBy: string | null;
-  voided: { at: string; reason: string | null; by: string | null } | null;
-};
-
-export type PartnerList = Paginated<DeliveryPartner> & {
-  counts: { all: number; online: number; busy: number; offline: number; inactive: number };
-};
-
-export type DeliveryPartnerDetails = DeliveryPartner & {
-  stats: {
-    today: { deliveries: number; earnings: string; cashCollected: string };
-    allTime: { deliveries: number; earnings: string };
-  };
-};
-
-export type PartnerDelivery = {
-  id: string;
-  status: DeliveryStatus;
-  assignedAt: string | null;
-  pickedUpAt: string | null;
-  deliveredAt: string | null;
-  earning: string | null;
-  order: {
-    id: string;
-    orderNumber: string;
-    status: OrderStatus;
-    paymentMethod: PaymentMethod;
-    total: string;
-    store: { id: string; name: string };
-  };
 };
 
 export type Customer = {
@@ -550,12 +436,9 @@ export type Customer = {
 };
 
 export type CustomerBlock = "COD" | "ALL";
-export type DeliveryFailure = "REFUSED" | "UNREACHABLE" | "OTHER";
 
 export type CustomerListItem = Customer & {
   orderCount: number;
-  /** Deliveries cancelled because the customer refused them at the door. */
-  refusals: number;
   lastOrder: { id: string; orderNumber: string; status: OrderStatus; total: string; createdAt: string } | null;
 };
 
@@ -579,9 +462,6 @@ export type CustomerDetails = Customer & {
   orderBlockReason: string | null;
   orderBlockedAt: string | null;
   orderBlockedBy: string | null;
-  failedDeliveries: { refused: number; unreachable: number; other: number };
-  /** Refused enough deliveries for an admin to consider a block. */
-  repeatRefusals: boolean;
   addresses: CustomerAddress[];
   stats: { orders: number; delivered: number; cancelled: number; totalSpent: string; lastOrderAt: string | null };
 };
@@ -613,7 +493,6 @@ export type DemoLogins = {
   admin?: DemoDashboardLogin;
   staff?: DemoDashboardLogin;
   customer?: { phone: string; code: string };
-  rider?: { phone: string; code: string };
 };
 
 /** One credential of a gateway or SMS provider. Secret values are never sent back; `hint` says one is saved. */
@@ -674,9 +553,6 @@ export type PlatformSettings = {
   deliveryFee: string;
   freeDeliveryThreshold: string | null;
   minOrderValue: string;
-  deliveryPartnerFee: string;
-  /** Riders holding this much cash can't be assigned orders until they deposit; null means no limit. */
-  riderCashLimit: string | null;
   codMaxOrderValue: string | null;
   supportPhone: string | null;
   supportEmail: string | null;
@@ -693,13 +569,8 @@ export type PlatformSettings = {
   playStoreUrl: string | null;
   appStoreUrl: string | null;
   appDownloadUrl: string | null;
-  deliveryPlayStoreUrl: string | null;
-  deliveryAppStoreUrl: string | null;
-  deliveryDownloadUrl: string | null;
   /** One customer number that signs in with a fixed code, for app store and payment gateway reviewers. */
   reviewLogin: ReviewLogin;
-  /** The same for the delivery app: an existing rider's number. */
-  riderReviewLogin: ReviewLogin;
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];
@@ -875,9 +746,9 @@ export type DashboardStats = {
   today: { orders: number; revenue: string; delivered: number; cancelled: number };
   pipeline: Record<Exclude<OrderStatus, "PENDING_PAYMENT" | "DELIVERED" | "CANCELLED">, number>;
   activeOrders: number;
-  awaitingAssignment: number;
+  /** Packed and ready, not out for delivery yet. */
+  awaitingDispatch: number;
   lowStock: { count: number; threshold: number };
-  partners: { online: number; busy: number; offline: number } | null;
   customers: number | null;
   recentOrders: Array<{
     id: string;

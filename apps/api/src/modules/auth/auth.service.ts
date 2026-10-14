@@ -5,8 +5,8 @@ import { UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { verifyAgainstDummy, verifyPassword } from "../../shared/password.js";
 import { signsInWithPassword } from "../../shared/roles.js";
-import { REVIEW_PROVIDER, RIDER_REVIEW_PROVIDER } from "./otp-provider.js";
-import type { OtpRegistry, ReviewApp } from "./otp-registry.js";
+import { REVIEW_PROVIDER } from "./otp-provider.js";
+import type { OtpRegistry } from "./otp-registry.js";
 
 const OTP_TTL_SECONDS = 300;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -51,15 +51,9 @@ export function ipBucket(ip: string) {
 /** What is kept in Redis between sending and verifying: never the code itself. */
 type PendingOtp = { provider: string; reference: string };
 
-/** The only role each review login signs in to. */
-const REVIEW_ROLES: Record<string, UserRole> = {
-  [REVIEW_PROVIDER]: UserRole.CUSTOMER,
-  [RIDER_REVIEW_PROVIDER]: UserRole.DELIVERY_PARTNER,
-};
-
-function reviewAppFor(role: UserRole | undefined): ReviewApp {
-  if (!role || role === UserRole.CUSTOMER) return "customer";
-  return role === UserRole.DELIVERY_PARTNER ? "rider" : null;
+/** The review login only signs in to a customer account, or a new number. */
+function mayUseReviewLogin(role: UserRole | undefined) {
+  return !role || role === UserRole.CUSTOMER;
 }
 
 type TokenPayload = { sub: string; role: UserRole; test?: true };
@@ -99,7 +93,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       throw usePassword();
     }
 
-    const otpProvider = await otp.sender(phone, { reviewApp: reviewAppFor(existing?.role) });
+    const otpProvider = await otp.sender(phone, { reviewLogin: mayUseReviewLogin(existing?.role) });
 
     const sends = await redis.incr(keys.sends(phone));
     if (sends === 1) {
@@ -190,8 +184,7 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
     if (signsInWithPassword(user.role)) {
       throw usePassword();
     }
-    const reviewRole = REVIEW_ROLES[pending.provider];
-    if (reviewRole && user.role !== reviewRole) {
+    if (pending.provider === REVIEW_PROVIDER && user.role !== UserRole.CUSTOMER) {
       throw invalidOtp();
     }
 

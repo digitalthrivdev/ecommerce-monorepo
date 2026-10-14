@@ -41,7 +41,7 @@ export type Website = {
   business: PolicyBusiness;
   tagline: string | null;
   /** Null for an app with no links. */
-  apps: { customer: AppLinks | null; delivery: AppLinks | null };
+  apps: { customer: AppLinks | null };
   /** Cities with an active store. */
   cities: string[];
   pages: { slug: string; title: string; updatedAt: string | null }[];

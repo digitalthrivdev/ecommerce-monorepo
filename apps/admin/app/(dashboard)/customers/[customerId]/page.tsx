@@ -89,7 +89,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const lastPage = Math.max(1, Math.ceil(orders.total / PAGE_SIZE));
   const pageHref = (target: number) => (target > 1 ? `/customers/${customer.id}?page=${target}` : `/customers/${customer.id}`);
-  const { stats, failedDeliveries: failed } = customer;
+  const { stats } = customer;
 
   return (
     <>
@@ -105,7 +105,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
           !customer.deletedAt && (
             <>
               <BlockCustomerDialog customerId={customer.id} current={customer.orderBlock} />
-              <DeleteAccountButton kind="customer" id={customer.id} name={personName(customer)} />
+              <DeleteAccountButton id={customer.id} name={personName(customer)} />
             </>
           )
         }
@@ -131,26 +131,12 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
             )}
           </Notice>
         )}
-        {!customer.orderBlock && customer.repeatRefusals && (
-          <Notice tone="warning" title={`Refused ${failed.refused} deliveries at the door`}>
-            Consider blocking cash on delivery, so their next orders are paid online.
-          </Notice>
-        )}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Stat
             label="Orders"
             value={String(stats.orders)}
-            hint={
-              [
-                stats.cancelled > 0 && `${stats.cancelled} cancelled`,
-                failed.refused > 0 && `${failed.refused} refused at the door`,
-                failed.unreachable > 0 && `${failed.unreachable} unreachable`,
-                failed.other > 0 && `${failed.other} failed for other reasons`,
-              ]
-                .filter(Boolean)
-                .join(" · ") || undefined
-            }
+            hint={stats.cancelled > 0 ? `${stats.cancelled} cancelled` : undefined}
           />
           <Stat label="Delivered" value={String(stats.delivered)} />
           <Stat label="Total spent" value={money(stats.totalSpent)} hint="Delivered orders only" />

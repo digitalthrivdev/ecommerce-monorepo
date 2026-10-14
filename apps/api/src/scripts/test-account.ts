@@ -6,7 +6,7 @@ import { emailSchema, phoneSchema } from "../shared/schemas.js";
 import { revokedTokensKey } from "../shared/token-revocation.js";
 
 const USAGE = `Marks an existing account as a test account for demos, or makes it a normal account again.
-A test admin can only look and move orders to a rider; test staff, customers and riders are limited. The account is signed
+A test admin can only look and run the order flow; test staff and customers are limited. The account is signed
 out on every device so the change applies at its next sign-in.
 
   Development:  pnpm --filter @shop/api test-account --email demo-admin@example.com
@@ -15,11 +15,11 @@ out on every device so the change applies at its next sign-in.
 
 Options:
   --email  Email of an admin or store staff account.
-  --phone  Phone number (E.164) of a customer or rider account.
+  --phone  Phone number (E.164) of a customer account.
   --off    Make it a normal account again.
 
-Create the accounts first: admins with create-admin, staff and riders in the dashboard, and the
-customer by signing in to the app once.`;
+Create the accounts first: admins with create-admin, staff in the dashboard, and the customer by
+signing in to the app once.`;
 
 // Longer than any token lifetime; it only rejects tokens issued before now.
 const REVOCATION_TTL_SECONDS = 400 * 24 * 3600;

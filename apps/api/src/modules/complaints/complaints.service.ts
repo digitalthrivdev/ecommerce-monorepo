@@ -5,7 +5,7 @@ import { env } from "../../config/env.js";
 import { ComplaintReason, ComplaintStatus, OrderStatus, Prisma, RefundMethod, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import type { Notification } from "../notifications/order-notifications.js";
-import { lockOrder } from "../orders/order-status.js";
+import { deliveredAt, deliveredEntry, lockOrder } from "../orders/order-status.js";
 import { complaintDeadline } from "../orders/orders.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
 import type { ComplaintRefundInput, CreateComplaintInput, ListComplaintsQuery, OrderRefundInput, ResolveComplaintInput } from "./complaints.schemas.js";
@@ -43,7 +43,7 @@ export function createComplaintsService(
         id: true,
         status: true,
         items: { select: { id: true, quantity: true, unavailableQuantity: true } },
-        delivery: { select: { deliveredAt: true } },
+        statusHistory: deliveredEntry,
         complaint: { select: { id: true } },
       },
     });
@@ -57,7 +57,7 @@ export function createComplaintsService(
     if (order.complaint) {
       throw new AppError(409, "COMPLAINT_EXISTS", "You've already reported a problem with this order");
     }
-    const deadline = complaintDeadline(order.delivery?.deliveredAt);
+    const deadline = complaintDeadline(deliveredAt(order.statusHistory));
     if (!deadline || deadline <= new Date()) {
       throw new AppError(409, "COMPLAINT_WINDOW_CLOSED", "Problems can be reported up to 24 hours after delivery. Contact support for help.");
     }
@@ -218,7 +218,7 @@ export function createComplaintsService(
             customerPhone: true,
             createdAt: true,
             store: { select: { id: true, name: true } },
-            delivery: { select: { deliveredAt: true } },
+            statusHistory: deliveredEntry,
             payment: { select: { status: true, amount: true, refundedAmount: true } },
           },
         },
@@ -252,7 +252,7 @@ export function createComplaintsService(
         customerName: order.customerName,
         customerPhone: order.customerPhone,
         createdAt: order.createdAt,
-        deliveredAt: order.delivery?.deliveredAt ?? null,
+        deliveredAt: deliveredAt(order.statusHistory),
         store: order.store,
       },
       items: items.map(({ quantity, orderItem }) => ({

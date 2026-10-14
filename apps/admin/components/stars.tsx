@@ -16,15 +16,3 @@ export function Stars({ value, className }: { value: number; className?: string 
     </span>
   );
 }
-
-/** A rider's average delivery rating, e.g. "★ 4.6 (12)". */
-export function RatingSummary({ rating }: { rating: { average: string | null; count: number } }) {
-  if (!rating.average) return <span className="text-muted-foreground">No ratings</span>;
-  return (
-    <span className="inline-flex items-center gap-1 tabular-nums" title={`Average of ${rating.count} delivery ${rating.count === 1 ? "rating" : "ratings"}`}>
-      <Star aria-hidden className="size-3.5 fill-amber-400 text-amber-400" />
-      <span className="font-medium">{rating.average}</span>
-      <span className="text-muted-foreground">({rating.count})</span>
-    </span>
-  );
-}

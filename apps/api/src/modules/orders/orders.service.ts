@@ -10,7 +10,6 @@ import {
 import { AppError } from "../../shared/errors.js";
 import { lockCart } from "../cart/cart.service.js";
 import { checkCoupon } from "../coupons/coupons.service.js";
-import { deliveryOtp } from "../delivery/delivery-otp.js";
 import { reserveStock } from "../inventory/inventory.service.js";
 import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
@@ -20,7 +19,7 @@ import { customerVisible } from "../products/store-products.service.js";
 import { storeServesLocation } from "../stores/geo.js";
 import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
-import { ACTIVE_ORDER_STATUSES, transitionOrder } from "./order-status.js";
+import { ACTIVE_ORDER_STATUSES, deliveredAt, deliveredEntry, transitionOrder } from "./order-status.js";
 import { discountShares, includedTax } from "./tax.js";
 import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
@@ -30,12 +29,6 @@ export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
 ];
 
 const CUSTOMER_OPEN_STATUSES: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, ...ACTIVE_ORDER_STATUSES];
-
-const OTP_VISIBLE_STATUSES: OrderStatus[] = [
-  OrderStatus.ASSIGNED,
-  OrderStatus.PICKED_UP,
-  OrderStatus.OUT_FOR_DELIVERY,
-];
 
 const ORDER_NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -49,19 +42,6 @@ export const orderDetailInclude = {
   store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
   payment: { select: { method: true, status: true, amount: true, refundedAmount: true, paidAt: true, refundedAt: true } },
-  delivery: {
-    select: {
-      id: true,
-      status: true,
-      assignedAt: true,
-      pickedUpAt: true,
-      deliveredAt: true,
-      failure: true,
-      partner: {
-        select: { vehicleType: true, vehicleNumber: true, user: { select: { name: true, phone: true } } },
-      },
-    },
-  },
   statusHistory: {
     orderBy: { createdAt: "asc" },
     select: { fromStatus: true, toStatus: true, note: true, changedById: true, createdAt: true },
@@ -104,8 +84,8 @@ export function complaintDeadline(deliveredAt: Date | null | undefined) {
   return deliveredAt ? new Date(deliveredAt.getTime() + COMPLAINT_WINDOW_MS) : null;
 }
 
-function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "delivery">) {
-  const deadline = complaintDeadline(order.delivery?.deliveredAt);
+function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "statusHistory">) {
+  const deadline = complaintDeadline(deliveredAt(order.statusHistory));
   return order.status === OrderStatus.DELIVERED && !order.complaint && deadline !== null && deadline > new Date();
 }
 
@@ -116,8 +96,8 @@ export function ratingDeadline(deliveredAt: Date | null | undefined) {
   return deliveredAt ? new Date(deliveredAt.getTime() + RATING_WINDOW_MS) : null;
 }
 
-function canRate(order: { status: OrderStatus; rating: unknown; delivery: { deliveredAt: Date | null } | null }) {
-  const deadline = ratingDeadline(order.delivery?.deliveredAt);
+function canRate(order: { status: OrderStatus; rating: unknown; statusHistory: { toStatus: OrderStatus; createdAt: Date }[] }) {
+  const deadline = ratingDeadline(deliveredAt(order.statusHistory));
   return order.status === OrderStatus.DELIVERED && !order.rating && deadline !== null && deadline > new Date();
 }
 
@@ -136,18 +116,7 @@ export function toDetailView(order: OrderDetail) {
       refundedAt: order.payment.refundedAt,
     },
     paymentExpiresAt: order.status === OrderStatus.PENDING_PAYMENT ? paymentDeadline(order.createdAt) : null,
-    delivery: order.delivery && {
-      status: order.delivery.status,
-      partner: order.delivery.partner && {
-        name: order.delivery.partner.user.name,
-        phone: order.delivery.partner.user.phone,
-        vehicleType: order.delivery.partner.vehicleType,
-        vehicleNumber: order.delivery.partner.vehicleNumber,
-      },
-      assignedAt: order.delivery.assignedAt,
-      pickedUpAt: order.delivery.pickedUpAt,
-      deliveredAt: order.delivery.deliveredAt,
-    },
+    deliveredAt: deliveredAt(order.statusHistory),
     store: order.store,
     // quantity and totalPrice are as ordered; the units the store could not supply are not charged.
     items: order.items.map((item) => ({
@@ -213,10 +182,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
 
-    const view = toDetailView(order);
-    // Only the customer sees the OTP; they share it with the partner at the door.
-    const showOtp = order.delivery?.partner && OTP_VISIBLE_STATUSES.includes(order.status);
-    return { ...view, deliveryOtp: showOtp ? deliveryOtp(order.delivery!.id) : null };
+    return toDetailView(order);
   }
 
   async function listOrders(userId: string, { limit, offset, status, active }: ListOrdersQuery) {
@@ -239,7 +205,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           total: true,
           createdAt: true,
           store: { select: { id: true, name: true } },
-          delivery: { select: { acceptedAt: true, deliveredAt: true } },
+          statusHistory: deliveredEntry,
           rating: { select: { id: true } },
           _count: { select: { items: true } },
         },
@@ -248,14 +214,12 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     ]);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, delivery, rating, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, statusHistory, rating, ...order }) => ({
         ...order,
         total: orderTotal.toFixed(2),
         itemCount: _count.items,
-        // When the current rider accepted; the app opens the order then.
-        riderAcceptedAt: delivery?.acceptedAt ?? null,
         canCancel: CUSTOMER_CANCELLABLE_STATUSES.includes(order.status),
-        canRate: canRate({ status: order.status, rating, delivery }),
+        canRate: canRate({ status: order.status, rating, statusHistory }),
       })),
       total,
       limit,

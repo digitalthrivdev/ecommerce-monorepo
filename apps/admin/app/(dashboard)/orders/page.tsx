@@ -22,7 +22,7 @@ import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { BOARD_STATUSES } from "@/lib/order-flow";
 import { listOrders } from "@/lib/orders";
-import type { DeliveryPartner, OrderListItem, OrderStatus, Paginated, StoreDetails } from "@/lib/types";
+import type { OrderListItem, OrderStatus, Paginated, StoreDetails } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Orders" };
@@ -73,13 +73,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
     isAdmin ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
     getPublicSettings(),
   ]);
-
-  const needsRiders = view === "board" && orders.items.some((order) => order.allowedActions.includes("assign"));
-  const partners = needsRiders
-    ? await apiFetch<Paginated<DeliveryPartner>>("/delivery-partners", {
-        query: { isActive: true, limit: 100 },
-      })
-    : null;
 
   const href = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
@@ -142,12 +135,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
               orders={orders.items}
               currency={currency}
               showStore={showStore}
-              partners={partners?.items ?? null}
-              storeLocations={
-                stores
-                  ? Object.fromEntries(stores.items.map((store) => [store.id, { latitude: Number(store.latitude), longitude: Number(store.longitude) }]))
-                  : null
-              }
             />
             {orders.total > BOARD_LIMIT && (
               <p className="text-sm text-muted-foreground">

@@ -95,7 +95,7 @@ export function createReportsService(prisma: PrismaClient) {
   async function dailySales(query: ReportQuery) {
     const { start, end, store } = await scope(query);
     const rows = await prisma.$queryRaw<DailyRow[]>`
-      SELECT ${localDay(Prisma.sql`d."deliveredAt"`)} AS day,
+      SELECT ${localDay(Prisma.sql`h."createdAt"`)} AS day,
         count(*)::int AS orders,
         sum(o.subtotal) AS items,
         sum(o.discount) AS discount,
@@ -105,8 +105,8 @@ export function createReportsService(prisma: PrismaClient) {
         coalesce(sum(o.total) FILTER (WHERE o."paymentMethod" = 'COD'), 0) AS cod,
         coalesce(sum(o.total) FILTER (WHERE o."paymentMethod" = 'ONLINE'), 0) AS online
       FROM "Order" o
-      JOIN "Delivery" d ON d."orderId" = o.id
-      WHERE o.status = 'DELIVERED' AND d."deliveredAt" >= ${start} AND d."deliveredAt" < ${end} ${store}
+      JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
+      WHERE o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end} ${store}
       GROUP BY 1
     `;
     const byDay = new Map(rows.map((row) => [row.day, row]));
@@ -145,7 +145,7 @@ export function createReportsService(prisma: PrismaClient) {
    */
   async function gstSummary(query: ReportQuery) {
     const { start, end, store } = await scope(query);
-    const delivered = Prisma.sql`o.status = 'DELIVERED' AND d."deliveredAt" >= ${start} AND d."deliveredAt" < ${end} ${store}`;
+    const delivered = Prisma.sql`o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end} ${store}`;
     const rows = await prisma.$queryRaw<GstRow[]>`
       WITH lines AS (
         SELECT 'goods' AS kind, i."hsnCode" AS hsn, i."gstRate" AS rate, o."interStateSupply" AS inter,
@@ -154,12 +154,12 @@ export function createReportsService(prisma: PrismaClient) {
           i."taxAmount" AS tax
         FROM "OrderItem" i
         JOIN "Order" o ON o.id = i."orderId"
-        JOIN "Delivery" d ON d."orderId" = o.id
+        JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
         WHERE ${delivered} AND i.quantity > i."unavailableQuantity"
         UNION ALL
         SELECT 'delivery', ${DELIVERY_SAC}, o."deliveryFeeGstRate", o."interStateSupply", NULL, o."deliveryFee", o."deliveryFeeTax"
         FROM "Order" o
-        JOIN "Delivery" d ON d."orderId" = o.id
+        JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
         WHERE ${delivered} AND o."deliveryFee" > 0
       )
       SELECT kind, hsn, rate,

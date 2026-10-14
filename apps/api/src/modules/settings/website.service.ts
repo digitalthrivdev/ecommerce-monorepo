@@ -69,7 +69,6 @@ export function createWebsiteService(prisma: PrismaClient) {
       tagline: settings.websiteTagline,
       apps: {
         customer: appLinks(settings.playStoreUrl, settings.appStoreUrl, settings.appDownloadUrl),
-        delivery: appLinks(settings.deliveryPlayStoreUrl, settings.deliveryAppStoreUrl, settings.deliveryDownloadUrl),
       },
       cities: cities.map((store) => store.city),
       pages: POLICY_SLUGS.map((slug) => ({ slug, title: POLICY_TITLES[slug], updatedAt: updatedAt.get(slug) ?? null })),

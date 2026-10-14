@@ -15,8 +15,6 @@ export type OrderContext = {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus | null;
   storeName: string;
-  /** Kept on cancelled deliveries, so the partner who held the order can still be told. */
-  partnerUserId: string | null;
 };
 
 export type Notification = {
@@ -28,24 +26,6 @@ export type Notification = {
   sound?: string;
 };
 
-const HELD_BY_PARTNER: OrderStatus[] = [OrderStatus.ASSIGNED, OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY];
-
-/** Rings like a call: the delivery app creates this Android channel with its bundled ringtone. */
-const NEW_DELIVERY_ALERT = { channelId: "new-delivery", sound: "new_delivery.wav" };
-
-/** Tells the customer their delivery partner accepted the order. Accepting doesn't change the order status. */
-export function partnerAcceptedNotification(
-  order: { id: string; orderNumber: string; userId: string; storeName: string },
-  partnerName: string | null,
-): Notification {
-  return {
-    userId: order.userId,
-    title: "Delivery partner on the way",
-    body: `${partnerName ?? "Your delivery partner"} accepted order ${order.orderNumber} and is heading to ${order.storeName} to pick it up.`,
-    data: { type: "order_status", orderId: order.id, status: OrderStatus.ASSIGNED },
-  };
-}
-
 /**
  * Who to notify about an order status change, and what to say. Store staff and admins watch the
  * dashboard instead, and people are not notified about changes they made themselves.
@@ -53,12 +33,9 @@ export function partnerAcceptedNotification(
 export function orderNotifications(change: StatusChange, order: OrderContext): Notification[] {
   const data = { type: "order_status", orderId: order.id, status: change.toStatus };
   const customer = (title: string, body: string) => ({ userId: order.userId, title, body, data });
-  const partner = (title: string, body: string, alert?: typeof NEW_DELIVERY_ALERT) =>
-    order.partnerUserId && order.partnerUserId !== change.changedById ? [{ userId: order.partnerUserId, title, body, data, ...alert }] : [];
 
-  // The status did not move: the store marked items unavailable, and the note names them. An
-  // ASSIGNED to ASSIGNED change is a reassignment, handled below like a first assignment.
-  if (change.fromStatus === change.toStatus && change.toStatus !== OrderStatus.ASSIGNED) {
+  // The status did not move: the store marked items unavailable, and the note names them.
+  if (change.fromStatus === change.toStatus) {
     const refund = order.paymentMethod === PaymentMethod.ONLINE ? "You'll get a refund for them." : "You won't be charged for them.";
     return [customer("Item unavailable", `${order.storeName}: ${change.note ?? "an item is unavailable"} in order ${order.orderNumber}. ${refund}`)];
   }
@@ -67,11 +44,8 @@ export function orderNotifications(change: StatusChange, order: OrderContext): N
     case OrderStatus.CONFIRMED:
       return [customer("Order confirmed", `We've received order ${order.orderNumber}. ${order.storeName} will start packing it soon.`)];
 
-    case OrderStatus.ASSIGNED:
-      return partner("New delivery", `Order ${order.orderNumber} from ${order.storeName} is assigned to you. Open the app to accept it.`, NEW_DELIVERY_ALERT);
-
     case OrderStatus.OUT_FOR_DELIVERY:
-      return [customer("Your order is on the way", `Order ${order.orderNumber} is out for delivery. Keep your delivery OTP ready.`)];
+      return [customer("Your order is on the way", `Order ${order.orderNumber} is out for delivery.`)];
 
     case OrderStatus.DELIVERED:
       return [customer("Order delivered", `Order ${order.orderNumber} has been delivered. Enjoy!`)];
@@ -80,14 +54,9 @@ export function orderNotifications(change: StatusChange, order: OrderContext): N
       const paidOnline =
         order.paymentMethod === PaymentMethod.ONLINE &&
         (order.paymentStatus === PaymentStatus.PAID || order.paymentStatus === PaymentStatus.REFUNDED);
-      return [
-        ...(change.changedById === order.userId
-          ? []
-          : [customer("Order cancelled", `Order ${order.orderNumber} was cancelled.${paidOnline ? " Your payment will be refunded." : ""}`)]),
-        ...(change.fromStatus && HELD_BY_PARTNER.includes(change.fromStatus)
-          ? partner("Delivery cancelled", `Order ${order.orderNumber} was cancelled. If you have picked it up, return it to ${order.storeName}.`)
-          : []),
-      ];
+      return change.changedById === order.userId
+        ? []
+        : [customer("Order cancelled", `Order ${order.orderNumber} was cancelled.${paidOnline ? " Your payment will be refunded." : ""}`)];
     }
 
     default:

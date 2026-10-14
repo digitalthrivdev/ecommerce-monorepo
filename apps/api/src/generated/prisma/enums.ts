@@ -12,8 +12,7 @@
 export const UserRole = {
   CUSTOMER: 'CUSTOMER',
   ADMIN: 'ADMIN',
-  STORE_STAFF: 'STORE_STAFF',
-  DELIVERY_PARTNER: 'DELIVERY_PARTNER'
+  STORE_STAFF: 'STORE_STAFF'
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
@@ -52,8 +51,6 @@ export const OrderStatus = {
   PICKING: 'PICKING',
   PACKED: 'PACKED',
   READY_FOR_PICKUP: 'READY_FOR_PICKUP',
-  ASSIGNED: 'ASSIGNED',
-  PICKED_UP: 'PICKED_UP',
   OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
@@ -124,46 +121,6 @@ export const PaymentStatus = {
 } as const
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
-
-
-export const PayoutMethod = {
-  CASH: 'CASH',
-  UPI: 'UPI',
-  BANK_TRANSFER: 'BANK_TRANSFER',
-  OTHER: 'OTHER'
-} as const
-
-export type PayoutMethod = (typeof PayoutMethod)[keyof typeof PayoutMethod]
-
-
-export const DeliveryPartnerStatus = {
-  OFFLINE: 'OFFLINE',
-  ONLINE: 'ONLINE',
-  BUSY: 'BUSY'
-} as const
-
-export type DeliveryPartnerStatus = (typeof DeliveryPartnerStatus)[keyof typeof DeliveryPartnerStatus]
-
-
-export const DeliveryFailure = {
-  REFUSED: 'REFUSED',
-  UNREACHABLE: 'UNREACHABLE',
-  OTHER: 'OTHER'
-} as const
-
-export type DeliveryFailure = (typeof DeliveryFailure)[keyof typeof DeliveryFailure]
-
-
-export const DeliveryStatus = {
-  PENDING: 'PENDING',
-  ASSIGNED: 'ASSIGNED',
-  PICKED_UP: 'PICKED_UP',
-  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
-  DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED'
-} as const
-
-export type DeliveryStatus = (typeof DeliveryStatus)[keyof typeof DeliveryStatus]
 
 
 export const DevicePlatform = {

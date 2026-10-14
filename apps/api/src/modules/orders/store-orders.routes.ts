@@ -1,11 +1,15 @@
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-import { DeliveryFailure, UserRole } from "../../generated/prisma/client";
-import { assignBodySchema } from "../delivery/delivery.schemas.js";
-import { createDeliveryService } from "../delivery/delivery.service.js";
+import { UserRole } from "../../generated/prisma/client";
 import { manageOrdersQuerySchema } from "./orders.schemas.js";
-import { STORE_ACTIONS, createStoreOrdersService, type StoreAction } from "./store-orders.service.js";
+import {
+  ADMIN_ACTIONS,
+  STORE_ACTIONS,
+  createStoreOrdersService,
+  type AdminAction,
+  type StoreAction,
+} from "./store-orders.service.js";
 
 const idSchema = z.string().trim().min(1).max(64);
 const storeParamsSchema = z.object({ storeId: idSchema });
@@ -15,13 +19,8 @@ const actionBodySchema = z
   .object({ note: z.string().trim().min(1).max(300).optional() })
   .default({});
 
-const reasonBodySchema = z.object({
+const cancelBodySchema = z.object({
   reason: z.string().trim().min(1).max(300),
-});
-
-const cancelBodySchema = reasonBodySchema.extend({
-  /** Required when the rider already has the order. */
-  failure: z.enum(DeliveryFailure).optional(),
 });
 
 const itemParamsSchema = orderParamsSchema.extend({ itemId: idSchema });
@@ -33,7 +32,6 @@ const unavailableBodySchema = z
 
 const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
   const storeOrdersService = createStoreOrdersService(app.prisma, app.payments);
-  const deliveryService = createDeliveryService(app.prisma, app.redis, app.notifications.notify);
 
   app.addHook("preHandler", app.requireStoreAccess);
 
@@ -61,46 +59,26 @@ const storeOrdersRoutes: FastifyPluginAsync = async (app) => {
     });
   }
 
+  const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };
+
+  for (const action of Object.keys(ADMIN_ACTIONS) as AdminAction[]) {
+    app.post(`/:orderId/${action}`, adminOnly, async (request) => {
+      const { storeId, orderId } = orderParamsSchema.parse(request.params);
+      const { note } = actionBodySchema.parse(request.body ?? undefined);
+      return storeOrdersService.performAction(storeId, orderId, action, actor(request), note);
+    });
+  }
+
   app.post("/:orderId/cancel", async (request) => {
     const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { reason, failure } = cancelBodySchema.parse(request.body);
-    return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason, failure);
+    const { reason } = cancelBodySchema.parse(request.body);
+    return storeOrdersService.cancelOrder(storeId, orderId, actor(request), reason);
   });
 
   app.post("/:orderId/items/:itemId/unavailable", async (request) => {
     const { storeId, orderId, itemId } = itemParamsSchema.parse(request.params);
     const { quantity } = unavailableBodySchema.parse(request.body ?? undefined);
     return storeOrdersService.markItemUnavailable(storeId, orderId, itemId, quantity, actor(request));
-  });
-
-  const adminOnly = { preHandler: app.requireRole(UserRole.ADMIN) };
-
-  app.post("/:orderId/assign", adminOnly, async (request) => {
-    const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { partnerId } = assignBodySchema.parse(request.body);
-    await deliveryService.assign(storeId, orderId, partnerId, request.user.sub);
-    return storeOrdersService.getOrder(storeId, orderId, actor(request));
-  });
-
-  app.post("/:orderId/reassign", adminOnly, async (request) => {
-    const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { partnerId } = assignBodySchema.parse(request.body);
-    await deliveryService.reassign(storeId, orderId, partnerId, request.user.sub);
-    return storeOrdersService.getOrder(storeId, orderId, actor(request));
-  });
-
-  app.post("/:orderId/unassign", adminOnly, async (request) => {
-    const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { note } = actionBodySchema.parse(request.body ?? undefined);
-    await deliveryService.unassign(storeId, orderId, request.user.sub, note);
-    return storeOrdersService.getOrder(storeId, orderId, actor(request));
-  });
-
-  app.post("/:orderId/mark-delivered", adminOnly, async (request) => {
-    const { storeId, orderId } = orderParamsSchema.parse(request.params);
-    const { reason } = reasonBodySchema.parse(request.body);
-    await deliveryService.adminMarkDelivered(storeId, orderId, request.user.sub, reason);
-    return storeOrdersService.getOrder(storeId, orderId, actor(request));
   });
 };
 

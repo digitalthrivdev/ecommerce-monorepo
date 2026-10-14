@@ -69,7 +69,7 @@ function SmsStatus({ settings }: { settings: PlatformSettings }) {
   if (active) {
     return (
       <Notice tone="success" title={`Sign-in codes are sent by ${active.label}`}>
-        Customers, staff and riders get a text message with their code.
+        Customers get a text message with their code.
       </Notice>
     );
   }
@@ -100,9 +100,6 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
     { title: "Website", url: siteUrl },
     ...(policyPages ?? []).map((page) => ({ title: page.title, url: `${siteUrl}/${page.slug}` })),
     { title: "Contact Us", url: `${siteUrl}/contact` },
-    ...(settings.deliveryPlayStoreUrl || settings.deliveryAppStoreUrl || settings.deliveryDownloadUrl
-      ? [{ title: "Delivery partner app", url: `${siteUrl}/partner` }]
-      : []),
   ];
 
   const activeGateway = settings.paymentGateways.find((gateway) => gateway.name === settings.paymentProvider);
@@ -175,15 +172,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               hint="Google Play and payment gateways test the app before approving it. Give them this number and code."
             >
               <Panel className="p-5">
-                <ReviewLoginForm key={settings.updatedAt} app="customer" reviewLogin={settings.reviewLogin} />
-              </Panel>
-            </Section>
-            <Section
-              title="Delivery app review login"
-              hint="For reviewers of the delivery partner app, and for demos. Give them this number and code."
-            >
-              <Panel className="p-5">
-                <ReviewLoginForm key={settings.updatedAt} app="rider" reviewLogin={settings.riderReviewLogin} />
+                <ReviewLoginForm key={settings.updatedAt} reviewLogin={settings.reviewLogin} />
               </Panel>
             </Section>
           </div>

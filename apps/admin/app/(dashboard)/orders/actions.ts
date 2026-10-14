@@ -6,7 +6,7 @@ import { z } from "zod";
 import { ApiError, apiFetch } from "@/lib/api";
 import { getCurrentUser } from "@/lib/dal";
 import { getAttention, listOrders } from "@/lib/orders";
-import type { ActionResult, AttentionList, DeliveryFailure, OrderAction } from "@/lib/types";
+import type { ActionResult, AttentionList, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
 const targetSchema = z.object({ storeId: idSchema, orderId: idSchema });
@@ -15,10 +15,8 @@ const SUCCESS: Record<OrderAction, string> = {
   accept: "Order accepted",
   "start-picking": "Picking started",
   pack: "Order marked as packed",
-  ready: "Order is ready for pickup",
-  assign: "Rider assigned",
-  reassign: "Rider changed",
-  unassign: "Rider removed. The order is waiting for a rider again.",
+  ready: "Order is ready to send",
+  "out-for-delivery": "Order is out for delivery",
   "mark-delivered": "Order marked as delivered",
   cancel: "Order cancelled",
   "mark-unavailable": "Item marked unavailable",
@@ -46,7 +44,9 @@ function orderPath(storeId: string, orderId: string, action: string) {
   return `/stores/${encodeURIComponent(storeId)}/orders/${encodeURIComponent(orderId)}/${action}`;
 }
 
-const advanceSchema = targetSchema.extend({ action: z.enum(["accept", "start-picking", "pack", "ready", "pack-ready"]) });
+const advanceSchema = targetSchema.extend({
+  action: z.enum(["accept", "start-picking", "pack", "ready", "pack-ready", "out-for-delivery", "mark-delivered"]),
+});
 
 export async function advanceOrder(input: { storeId: string; orderId: string; action: string }): Promise<ActionResult> {
   const parsed = advanceSchema.safeParse(input);
@@ -56,7 +56,7 @@ export async function advanceOrder(input: { storeId: string; orderId: string; ac
     const packed = await run(orderPath(storeId, orderId, "pack"), {}, "pack");
     if (!packed.ok) return packed;
     const ready = await run(orderPath(storeId, orderId, "ready"), {}, "ready");
-    return ready.ok ? { ok: true, message: "Packed and ready for a rider" } : ready;
+    return ready.ok ? { ok: true, message: "Packed and ready to send" } : ready;
   }
   return run(orderPath(storeId, orderId, action), {}, action);
 }
@@ -87,14 +87,13 @@ export async function getNewOrders(): Promise<NewOrdersSnapshot> {
 
 const cancelSchema = targetSchema.extend({
   reason: z.string().trim().min(1, "Enter a reason for cancelling").max(300, "Keep the reason under 300 characters"),
-  failure: z.enum(["REFUSED", "UNREACHABLE", "OTHER"]).optional(),
 });
 
-export async function cancelOrder(input: { storeId: string; orderId: string; reason: string; failure?: DeliveryFailure }): Promise<ActionResult> {
+export async function cancelOrder(input: { storeId: string; orderId: string; reason: string }): Promise<ActionResult> {
   const parsed = cancelSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, orderId, reason, failure } = parsed.data;
-  return run(orderPath(storeId, orderId, "cancel"), { reason, failure }, "cancel");
+  const { storeId, orderId, reason } = parsed.data;
+  return run(orderPath(storeId, orderId, "cancel"), { reason }, "cancel");
 }
 
 const unavailableSchema = targetSchema.extend({
@@ -116,45 +115,6 @@ export async function markItemUnavailable(input: {
     { quantity },
     "mark-unavailable",
   );
-}
-
-const assignSchema = targetSchema.extend({
-  partnerId: idSchema,
-  mode: z.enum(["assign", "reassign"]),
-});
-
-export async function assignPartner(input: {
-  storeId: string;
-  orderId: string;
-  partnerId: string;
-  mode: "assign" | "reassign";
-}): Promise<ActionResult> {
-  const parsed = assignSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Choose a rider" };
-  const { storeId, orderId, partnerId, mode } = parsed.data;
-  return run(orderPath(storeId, orderId, mode), { partnerId }, mode);
-}
-
-const unassignSchema = targetSchema.extend({
-  note: z.string().trim().max(300, "Keep the reason under 300 characters").optional(),
-});
-
-export async function unassignPartner(input: { storeId: string; orderId: string; note?: string }): Promise<ActionResult> {
-  const parsed = unassignSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, orderId, note } = parsed.data;
-  return run(orderPath(storeId, orderId, "unassign"), note ? { note } : {}, "unassign");
-}
-
-const markDeliveredSchema = targetSchema.extend({
-  reason: z.string().trim().min(1, "Enter why you are marking it delivered").max(300, "Keep the reason under 300 characters"),
-});
-
-export async function markDelivered(input: { storeId: string; orderId: string; reason: string }): Promise<ActionResult> {
-  const parsed = markDeliveredSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, orderId, reason } = parsed.data;
-  return run(orderPath(storeId, orderId, "mark-delivered"), { reason }, "mark-delivered");
 }
 
 /** Polled by the attention banner (admins only). */

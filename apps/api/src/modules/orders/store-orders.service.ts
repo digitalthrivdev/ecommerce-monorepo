@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentMethod, Prisma, type DeliveryFailure, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { couponDiscount } from "../coupons/coupons.service.js";
 import { clearStockAsUnavailable } from "../inventory/inventory.service.js";
@@ -15,7 +15,16 @@ export const STORE_ACTIONS = {
   ready: { from: [OrderStatus.PACKED], to: OrderStatus.READY_FOR_PICKUP },
 } as const satisfies Record<string, { from: OrderStatus[]; to: OrderStatus }>;
 
+/** Delivery steps, moved on by an admin. Delivering counts cash on delivery as collected. */
+export const ADMIN_ACTIONS = {
+  "out-for-delivery": { from: [OrderStatus.READY_FOR_PICKUP], to: OrderStatus.OUT_FOR_DELIVERY },
+  "mark-delivered": { from: [OrderStatus.READY_FOR_PICKUP, OrderStatus.OUT_FOR_DELIVERY], to: OrderStatus.DELIVERED },
+} as const satisfies Record<string, { from: OrderStatus[]; to: OrderStatus }>;
+
 export type StoreAction = keyof typeof STORE_ACTIONS;
+export type AdminAction = keyof typeof ADMIN_ACTIONS;
+
+const ORDER_ACTIONS = { ...STORE_ACTIONS, ...ADMIN_ACTIONS };
 
 const STORE_CANCELLABLE: OrderStatus[] = [
   OrderStatus.CONFIRMED,
@@ -32,37 +41,20 @@ function hiddenStatuses(isAdmin: boolean) {
   return isAdmin ? [] : [OrderStatus.PENDING_PAYMENT];
 }
 
-// Admins can also cancel failed deliveries; the rider brings the items back, so stock is returned.
-const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [
-  OrderStatus.PENDING_PAYMENT,
-  OrderStatus.ASSIGNED,
-  OrderStatus.PICKED_UP,
-  OrderStatus.OUT_FOR_DELIVERY,
-];
-
-const WITH_RIDER: OrderStatus[] = [OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY];
+// Admins can also cancel failed deliveries; the items come back, so stock is returned.
+const ADMIN_ONLY_CANCELLABLE: OrderStatus[] = [OrderStatus.PENDING_PAYMENT, OrderStatus.OUT_FOR_DELIVERY];
 
 function cancellableFrom(isAdmin: boolean) {
   return isAdmin ? [...STORE_CANCELLABLE, ...ADMIN_ONLY_CANCELLABLE] : STORE_CANCELLABLE;
 }
 
 function allowedActions(status: OrderStatus, isAdmin: boolean) {
-  const actions: string[] = Object.entries(STORE_ACTIONS)
+  const actions: string[] = Object.entries(isAdmin ? ORDER_ACTIONS : STORE_ACTIONS)
     .filter(([, action]) => (action.from as readonly OrderStatus[]).includes(status))
     .map(([name]) => name);
 
   if (ITEMS_EDITABLE.includes(status)) {
     actions.push("mark-unavailable");
-  }
-
-  if (isAdmin && status === OrderStatus.READY_FOR_PICKUP) {
-    actions.push("assign");
-  }
-  if (isAdmin && status === OrderStatus.ASSIGNED) {
-    actions.push("reassign", "unassign");
-  }
-  if (isAdmin && WITH_RIDER.includes(status)) {
-    actions.push("mark-delivered");
   }
 
   if (cancellableFrom(isAdmin).includes(status)) {
@@ -125,7 +117,6 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
           _count: { select: { items: true } },
           // Enough recent entries to skip "item not found" notes, which do not change the status.
           statusHistory: { orderBy: { createdAt: "desc" }, take: 5, select: { fromStatus: true, toStatus: true, createdAt: true } },
-          delivery: { select: { partner: { select: { user: { select: { name: true, phone: true } } } } } },
         },
       }),
       prisma.order.count({ where }),
@@ -134,7 +125,7 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     const reviewUserId = await reviewAccountUserId(prisma);
 
     return {
-      items: orders.map(({ _count, total: orderTotal, statusHistory, delivery, userId, ...order }) => ({
+      items: orders.map(({ _count, total: orderTotal, statusHistory, userId, ...order }) => ({
         ...order,
         reviewAccount: userId === reviewUserId,
         total: orderTotal.toFixed(2),
@@ -142,7 +133,6 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         /** When the order reached its current status, for "waiting 8 min" timers. */
         statusChangedAt:
           statusHistory.find((entry) => entry.toStatus === order.status && entry.fromStatus !== entry.toStatus)?.createdAt ?? order.createdAt,
-        rider: delivery?.partner ? { name: delivery.partner.user.name, phone: delivery.partner.user.phone } : null,
         allowedActions: allowedActions(order.status, actor.isAdmin),
       })),
       total,
@@ -182,7 +172,6 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     const refundable = actor.isAdmin ? payments.refundableAmount(order, order.payment) : new Prisma.Decimal(0);
     return {
       ...view,
-      delivery: view.delivery && { ...view.delivery, failure: order.delivery?.failure ?? null },
       reviewAccount: order.userId === reviewUserId,
       statusHistory: order.statusHistory.map(({ changedById, ...entry }) => ({
         ...entry,
@@ -198,8 +187,9 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     };
   }
 
-  async function performAction(storeId: string, orderId: string, action: StoreAction, actor: Actor, note?: string) {
-    const { from, to } = STORE_ACTIONS[action];
+  /** Admin actions are admin-only; enforced by the route. */
+  async function performAction(storeId: string, orderId: string, action: StoreAction | AdminAction, actor: Actor, note?: string) {
+    const { from, to } = ORDER_ACTIONS[action];
 
     await prisma.$transaction((tx) =>
       transitionOrder(tx, {
@@ -216,10 +206,9 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
     return getOrder(storeId, orderId, actor);
   }
 
-  /** Cancelling after the rider picked the order up needs the delivery outcome, to spot repeat refusals. */
-  async function cancelOrder(storeId: string, orderId: string, actor: Actor, reason: string, failure?: DeliveryFailure) {
-    await prisma.$transaction(async (tx) => {
-      const { fromStatus } = await transitionOrder(tx, {
+  async function cancelOrder(storeId: string, orderId: string, actor: Actor, reason: string) {
+    await prisma.$transaction((tx) =>
+      transitionOrder(tx, {
         orderId,
         scope: { storeId },
         hiddenStatuses: hiddenStatuses(actor.isAdmin),
@@ -228,19 +217,8 @@ export function createStoreOrdersService(prisma: PrismaClient, payments: Payment
         changedById: actor.userId,
         note: reason,
         notAllowed: { code: "ORDER_NOT_CANCELLABLE", message: "This order can no longer be cancelled" },
-      });
-
-      if (!WITH_RIDER.includes(fromStatus)) {
-        if (failure) {
-          throw new AppError(400, "DELIVERY_OUTCOME_NOT_APPLICABLE", "A delivery outcome only applies once the rider has picked the order up");
-        }
-        return;
-      }
-      if (!failure) {
-        throw new AppError(400, "DELIVERY_OUTCOME_REQUIRED", "Choose what happened at delivery", { field: "failure" });
-      }
-      await tx.delivery.update({ where: { orderId }, data: { failure } });
-    });
+      }),
+    );
     await payments.settleCancelledOrder(orderId);
 
     return getOrder(storeId, orderId, actor);

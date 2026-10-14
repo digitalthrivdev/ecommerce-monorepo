@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KeyRound, MapPin, Navigation, ShoppingBasket, PackageCheck, Store, Truck, Wallet } from "lucide-react";
+import { Bell, MapPin, ReceiptText, ShoppingBasket, PackageCheck, Store, Truck, Wallet } from "lucide-react";
 
 import { AppBadges } from "@/components/app-badges";
 import { HomeSections, shownSections } from "@/components/home-sections";
@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const STEPS = [
   { icon: ShoppingBasket, title: "Order in the app", text: "Browse fruits, vegetables, dairy, snacks and household essentials, and check out in a few taps." },
   { icon: PackageCheck, title: "Packed at a store near you", text: "Your order goes to the nearest store that has everything in stock, where it is picked and packed." },
-  { icon: Truck, title: "Delivered to your door", text: "Follow your delivery partner live on the map and share your delivery code at the door." },
+  { icon: Truck, title: "Delivered to your door", text: "Follow every step in the app, from packing to your doorstep." },
 ];
 
 export default async function HomePage() {
@@ -28,8 +28,8 @@ export default async function HomePage() {
   const features = [
     { icon: Store, title: "From a store near you", text: "Stocked and packed close to home" },
     { icon: Wallet, title: payOnline ? "Pay online or cash" : "Cash on delivery", text: payOnline ? "UPI, cards, or cash at the door" : "Pay when your order arrives" },
-    { icon: Navigation, title: "Live order tracking", text: "See your delivery partner on the map" },
-    { icon: KeyRound, title: "Safe handover", text: "A delivery code confirms it's you" },
+    { icon: Bell, title: "Order updates", text: "Know when it's packed and on its way" },
+    { icon: ReceiptText, title: "GST invoice", text: "Download it from the app after delivery" },
   ];
 
   return (

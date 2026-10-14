@@ -1,12 +1,12 @@
 import {
   Ban,
   BellRing,
-  Bike,
   CircleCheck,
   Clock,
   FlaskConical,
   PackageCheck,
   PackageOpen,
+  Truck,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -62,9 +62,7 @@ export const ORDER_STATUS_STYLE: Record<OrderStatus, { tone: Tone; icon: LucideI
   PICKING: { tone: "amber", icon: PackageOpen },
   PACKED: { tone: "amber", icon: PackageCheck },
   READY_FOR_PICKUP: { tone: "violet", icon: PackageCheck },
-  ASSIGNED: { tone: "indigo", icon: Bike },
-  PICKED_UP: { tone: "indigo", icon: Bike },
-  OUT_FOR_DELIVERY: { tone: "indigo", icon: Bike },
+  OUT_FOR_DELIVERY: { tone: "indigo", icon: Truck },
   DELIVERED: { tone: "green", icon: CircleCheck },
   CANCELLED: { tone: "red", icon: Ban },
 };

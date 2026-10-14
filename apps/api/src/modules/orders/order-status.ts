@@ -1,6 +1,5 @@
-import { OrderStatus, Prisma } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import { cancelOpenDelivery } from "../delivery/delivery-cleanup.js";
 import { releaseStock } from "../inventory/inventory.service.js";
 import { assignInvoiceNumber } from "./tax.js";
 
@@ -13,15 +12,25 @@ export const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
   OrderStatus.PICKING,
   OrderStatus.PACKED,
   OrderStatus.READY_FOR_PICKUP,
-  OrderStatus.ASSIGNED,
-  OrderStatus.PICKED_UP,
   OrderStatus.OUT_FOR_DELIVERY,
 ];
+
+/** When the order was delivered, from its status history. */
+export function deliveredAt(statusHistory: { toStatus: OrderStatus; createdAt: Date }[]) {
+  return statusHistory.find((entry) => entry.toStatus === OrderStatus.DELIVERED)?.createdAt ?? null;
+}
+
+/** Selects only the DELIVERED entry, for `deliveredAt`. */
+export const deliveredEntry = {
+  where: { toStatus: OrderStatus.DELIVERED },
+  take: 1,
+  select: { toStatus: true, createdAt: true },
+} satisfies Prisma.Order$statusHistoryArgs;
 
 type TransitionParams = {
   orderId: string;
   /** Omit only for system changes (payments, expiry) that are not made on behalf of a caller. */
-  scope?: { userId: string } | { storeId: string } | { partnerId: string };
+  scope?: { userId: string } | { storeId: string };
   /** Orders in these statuses are treated as not found for this caller. */
   hiddenStatuses?: OrderStatus[];
   allowedFrom: OrderStatus[];
@@ -55,8 +64,8 @@ async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
 }
 
 /**
- * Locks the order row (404 if it is outside the caller's scope). Anything that changes an order or
- * its delivery locks the order first, so concurrent changes are serialised in the same order.
+ * Locks the order row (404 if it is outside the caller's scope). Anything that changes an order
+ * locks it first, so concurrent changes are serialised in the same order.
  */
 export async function lockOrder(
   tx: Tx,
@@ -68,11 +77,7 @@ export async function lockOrder(
     ? Prisma.empty
     : "userId" in scope
       ? Prisma.sql`AND "userId" = ${scope.userId}`
-      : "storeId" in scope
-        ? Prisma.sql`AND "storeId" = ${scope.storeId}`
-        : Prisma.sql`AND EXISTS (
-            SELECT 1 FROM "Delivery" d WHERE d."orderId" = "Order".id AND d."partnerId" = ${scope.partnerId}
-          )`;
+      : Prisma.sql`AND "storeId" = ${scope.storeId}`;
 
   const [locked] = await tx.$queryRaw<{ status: OrderStatus; storeId: string }[]>`
     SELECT status, "storeId" FROM "Order" WHERE id = ${orderId} ${scopeFilter} FOR UPDATE
@@ -87,8 +92,8 @@ export async function lockOrder(
 
 /**
  * Locks the order row, checks the current status, applies the change and records it in the
- * status history. Cancelling returns the order's stock and frees any assigned partner. Must run
- * inside a transaction.
+ * status history. Cancelling returns the order's stock; delivering assigns the invoice number and
+ * counts cash on delivery as collected. Must run inside a transaction.
  */
 export async function transitionOrder(tx: Tx, params: TransitionParams) {
   const locked = await lockOrder(tx, params.orderId, params.scope, params.hiddenStatuses);
@@ -104,11 +109,14 @@ export async function transitionOrder(tx: Tx, params: TransitionParams) {
 
   if (params.to === OrderStatus.CANCELLED) {
     await releaseOrderStock(tx, params.orderId, locked.storeId);
-    await cancelOpenDelivery(tx, params.orderId);
   }
 
   if (params.to === OrderStatus.DELIVERED) {
     await assignInvoiceNumber(tx, params.orderId);
+    await tx.payment.updateMany({
+      where: { orderId: params.orderId, method: PaymentMethod.COD, status: PaymentStatus.PENDING },
+      data: { status: PaymentStatus.PAID, paidAt: new Date(), provider: "cash" },
+    });
   }
 
   await tx.order.update({ where: { id: params.orderId }, data: { status: params.to } });

@@ -18,9 +18,6 @@ import catalogImportRoutes from "./modules/catalog-import/catalog-import.routes.
 import categoriesRoutes from "./modules/categories/categories.routes.js";
 import { adminComplaintsRoutes, customerComplaintsRoutes } from "./modules/complaints/complaints.routes.js";
 import adminCouponsRoutes from "./modules/coupons/coupons.routes.js";
-import cashRoutes from "./modules/delivery/cash.routes.js";
-import deliveryRoutes from "./modules/delivery/delivery.routes.js";
-import partnersRoutes from "./modules/delivery/partners.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import { dashboardInvoiceRoutes, invoiceLinkRoutes } from "./modules/invoices/invoices.routes.js";
 import notificationsRoutes from "./modules/notifications/notifications.routes.js";
@@ -114,9 +111,6 @@ export async function buildApp() {
   await app.register(adminRatingsRoutes, { prefix: "/admin/ratings" });
   await app.register(adminReviewsRoutes, { prefix: "/admin/reviews" });
   await app.register(adminCouponsRoutes, { prefix: "/admin/coupons" });
-  await app.register(partnersRoutes, { prefix: "/delivery-partners" });
-  await app.register(cashRoutes, { prefix: "/rider-cash" });
-  await app.register(deliveryRoutes, { prefix: "/delivery" });
   await app.register(settingsRoutes, { prefix: "/settings" });
   await app.register(homeRoutes, { prefix: "/home" });
   await app.register(notificationsRoutes, { prefix: "/notifications" });

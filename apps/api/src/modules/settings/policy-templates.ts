@@ -34,13 +34,12 @@ export const POLICY_TEMPLATES: Record<PolicySlug, string> = {
 
 ## Delivery
 - We deliver only to addresses inside the area our stores serve. Delivery times shown in the app are estimates.
-- At delivery you will be asked for a one-time delivery code shown in the app. Share it only when you receive your order.
 
 ## Cancellations and refunds
 Cancellations and refunds are covered by our Cancellation and Refund Policy.
 
 ## Using the app fairly
-Do not misuse the app: no false orders, abuse of delivery partners or staff, or attempts to interfere with the service. We may suspend accounts that do.
+Do not misuse the app: no false orders, abuse of couriers or staff, or attempts to interfere with the service. We may suspend accounts that do.
 
 ## Liability
 We take care to describe products correctly and deliver them in good condition. To the extent the law allows, our liability for any order is limited to the amount you paid for it.
@@ -61,7 +60,6 @@ These terms are governed by the laws of India. Courts at the place of our regist
 - Delivery addresses, including the map location you pin, to deliver your orders and check that we serve your area.
 - Your orders, payments and order history.
 - A notification token for your device, if you allow notifications, to tell you about your orders.
-- For delivery partners: their location while they are online in the delivery app, to assign and track deliveries.
 
 We do not collect your card or bank details: online payments are handled by our payment partner.
 
@@ -72,7 +70,7 @@ We do not collect your card or bank details: online payments are handled by our 
 - To meet our legal and tax obligations.
 
 ## Who we share it with
-- The store preparing your order and the delivery partner bringing it, who see your name, phone number and delivery address.
+- The store preparing your order and the courier delivering it, who see your name, phone number and delivery address.
 - Our payment partner, to process online payments and refunds.
 - Our SMS and notification providers, to send codes and updates.
 - Authorities, when the law requires it.
@@ -80,7 +78,7 @@ We do not collect your card or bank details: online payments are handled by our 
 We do not sell your personal information.
 
 ## How long we keep it
-We keep your account and order history while your account is active, and longer where the law requires it (for example, tax records). Delivery partner locations are kept only as needed to run and review deliveries.
+We keep your account and order history while your account is active, and longer where the law requires it (for example, tax records).
 
 ## Your rights
 You can ask us to access or correct your personal information by contacting us below. You can delete your account yourself in the app: open Account, tap your name to open Your profile, then tap Delete account at the bottom and confirm. The Delete Your Account page on our website explains the same steps. You can also ask us to delete it. Deleting it removes your name, email, phone number and saved addresses; records of past orders are kept where the law requires it (for example, tax records). We handle your information in line with India's Digital Personal Data Protection Act, 2023.
@@ -123,15 +121,14 @@ Check your order at delivery. If an item is damaged, wrong, missing or expired, 
 We deliver only to addresses inside the area served by our stores. The app checks your address when you add it and tells you if we do not deliver there yet.
 
 ## Delivery times
-Orders are delivered from the nearest store that has your items, usually the same day and often within the hour. Times shown in the app are estimates and can be longer at busy times or in bad weather. You can follow your order and your delivery partner in the app.
+Orders are delivered from the nearest store that has your items, usually the same day and often within the hour. Times shown in the app are estimates and can be longer at busy times or in bad weather. You can follow your order in the app.
 
 ## Delivery charges
 Any delivery charge, minimum order value or free-delivery threshold is shown in your cart and at checkout before you pay.
 
 ## Receiving your order
 - Someone must be available at the address to receive the order.
-- The delivery partner will ask for the one-time delivery code shown in the app. Share it only after you receive your order.
-- For cash on delivery, please pay the delivery partner the amount shown in the app.
+- For cash on delivery, please pay the amount shown in the app when you receive your order.
 
 ## If we cannot deliver
 If we cannot reach you or the address cannot be found, we may cancel the order. Online payments for cancelled orders are refunded as described in our Cancellation and Refund Policy.

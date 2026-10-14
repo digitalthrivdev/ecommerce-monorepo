@@ -1,13 +1,6 @@
 import { env } from "../../config/env.js";
 import { LOW_STOCK_THRESHOLD } from "../inventory/inventory.service.js";
-import {
-  DeliveryPartnerStatus,
-  DeliveryStatus,
-  OrderStatus,
-  Prisma,
-  UserRole,
-  type PrismaClient,
-} from "../../generated/prisma/client";
+import { OrderStatus, Prisma, UserRole, type PrismaClient } from "../../generated/prisma/client";
 import { startOfTodaySql } from "../../shared/time.js";
 import { ACTIVE_ORDER_STATUSES as ACTIVE_STATUSES } from "./order-status.js";
 
@@ -21,8 +14,7 @@ type TodayRow = {
 /** Minutes before a waiting order is flagged to admins. Matches the red timers on the order board. */
 export const ATTENTION_MINUTES = {
   STORE_NOT_ACCEPTED: 10,
-  NO_RIDER: 20,
-  RIDER_NOT_ACCEPTED: 5,
+  NOT_DISPATCHED: 20,
 } as const;
 
 export type AttentionReason = keyof typeof ATTENTION_MINUTES;
@@ -51,7 +43,7 @@ export function createDashboardService(prisma: PrismaClient) {
       ${storeFilter}
     `;
 
-    const [[today], pipeline, lowStock, recent, partners, customers] = await Promise.all([
+    const [[today], pipeline, lowStock, recent, customers] = await Promise.all([
       todayQuery,
       prisma.order.groupBy({
         by: ["status"],
@@ -80,9 +72,6 @@ export function createDashboardService(prisma: PrismaClient) {
           store: { select: { id: true, name: true } },
         },
       }),
-      isAdmin
-        ? prisma.deliveryPartner.groupBy({ by: ["status"], where: { isActive: true }, _count: { _all: true } })
-        : Promise.resolve(null),
       isAdmin ? prisma.user.count({ where: { role: UserRole.CUSTOMER } }) : Promise.resolve(null),
     ]);
 
@@ -90,9 +79,6 @@ export function createDashboardService(prisma: PrismaClient) {
     for (const row of pipeline) {
       pipelineCounts[row.status] = row._count._all;
     }
-
-    const partnerCount = (status: DeliveryPartnerStatus) =>
-      partners?.find((row) => row.status === status)?._count._all ?? 0;
 
     return {
       storeId: storeId ?? null,
@@ -106,75 +92,42 @@ export function createDashboardService(prisma: PrismaClient) {
       },
       pipeline: pipelineCounts,
       activeOrders: Object.values(pipelineCounts).reduce((sum, count) => sum + count, 0),
-      awaitingAssignment: pipelineCounts.READY_FOR_PICKUP,
+      awaitingDispatch: pipelineCounts.READY_FOR_PICKUP,
       lowStock: { count: lowStock, threshold: LOW_STOCK_THRESHOLD },
-      partners: partners && {
-        online: partnerCount(DeliveryPartnerStatus.ONLINE),
-        busy: partnerCount(DeliveryPartnerStatus.BUSY),
-        offline: partnerCount(DeliveryPartnerStatus.OFFLINE),
-      },
       customers,
       recentOrders: recent.map(({ total, ...order }) => ({ ...order, total: total.toFixed(2) })),
     };
   }
 
   /**
-   * Orders nobody has picked up: the store has not accepted, no rider is assigned, or the assigned
-   * rider has not accepted. Oldest first. Nothing changes automatically; an admin decides.
+   * Orders left waiting: the store has not accepted, or the packed order has not gone out for
+   * delivery. Oldest first. Nothing changes automatically; an admin decides.
    */
   async function getAttention() {
-    const [waiting, unaccepted] = await Promise.all([
-      prisma.$queryRaw<WaitingRow[]>`
-        SELECT o.id, o."orderNumber", o.status, o."storeId", s.name AS "storeName", h.since
-        FROM "Order" o
-        JOIN "Store" s ON s.id = o."storeId"
-        CROSS JOIN LATERAL (
-          SELECT coalesce(max(h."createdAt"), o."createdAt") AS since
-          FROM "OrderStatusHistory" h
-          WHERE h."orderId" = o.id AND h."toStatus" = o.status AND h."fromStatus" IS DISTINCT FROM h."toStatus"
-        ) h
-        WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.STORE_NOT_ACCEPTED)})
-           OR (o.status = 'READY_FOR_PICKUP' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NO_RIDER)})
-        ORDER BY h.since
-        LIMIT ${ATTENTION_LIMIT}
-      `,
-      prisma.delivery.findMany({
-        where: {
-          status: DeliveryStatus.ASSIGNED,
-          acceptedAt: null,
-          assignedAt: { lt: minutesAgo(ATTENTION_MINUTES.RIDER_NOT_ACCEPTED) },
-          order: { status: OrderStatus.ASSIGNED },
-        },
-        orderBy: { assignedAt: "asc" },
-        take: ATTENTION_LIMIT,
-        select: {
-          assignedAt: true,
-          order: { select: { id: true, orderNumber: true, store: { select: { id: true, name: true } } } },
-          partner: { select: { user: { select: { name: true, phone: true } } } },
-        },
-      }),
-    ]);
+    const waiting = await prisma.$queryRaw<WaitingRow[]>`
+      SELECT o.id, o."orderNumber", o.status, o."storeId", s.name AS "storeName", h.since
+      FROM "Order" o
+      JOIN "Store" s ON s.id = o."storeId"
+      CROSS JOIN LATERAL (
+        SELECT coalesce(max(h."createdAt"), o."createdAt") AS since
+        FROM "OrderStatusHistory" h
+        WHERE h."orderId" = o.id AND h."toStatus" = o.status AND h."fromStatus" IS DISTINCT FROM h."toStatus"
+      ) h
+      WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.STORE_NOT_ACCEPTED)})
+         OR (o.status = 'READY_FOR_PICKUP' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_DISPATCHED)})
+      ORDER BY h.since
+      LIMIT ${ATTENTION_LIMIT}
+    `;
 
-    const items = [
-      ...waiting.map((row) => ({
-        orderId: row.id,
-        orderNumber: row.orderNumber,
-        store: { id: row.storeId, name: row.storeName },
-        reason: (row.status === OrderStatus.CONFIRMED ? "STORE_NOT_ACCEPTED" : "NO_RIDER") as AttentionReason,
-        since: row.since,
-        rider: null,
-      })),
-      ...unaccepted.map((row) => ({
-        orderId: row.order.id,
-        orderNumber: row.order.orderNumber,
-        store: row.order.store,
-        reason: "RIDER_NOT_ACCEPTED" as AttentionReason,
-        since: row.assignedAt!,
-        rider: row.partner && { name: row.partner.user.name, phone: row.partner.user.phone },
-      })),
-    ].sort((a, b) => a.since.getTime() - b.since.getTime());
+    const items = waiting.map((row) => ({
+      orderId: row.id,
+      orderNumber: row.orderNumber,
+      store: { id: row.storeId, name: row.storeName },
+      reason: (row.status === OrderStatus.CONFIRMED ? "STORE_NOT_ACCEPTED" : "NOT_DISPATCHED") as AttentionReason,
+      since: row.since,
+    }));
 
-    return { items: items.slice(0, ATTENTION_LIMIT), minutes: ATTENTION_MINUTES };
+    return { items, minutes: ATTENTION_MINUTES };
   }
 
   return { getDashboard, getAttention };

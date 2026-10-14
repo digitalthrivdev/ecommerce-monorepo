@@ -80,11 +80,6 @@ export const ModelName = {
   OrderRating: 'OrderRating',
   ProductReview: 'ProductReview',
   WishlistItem: 'WishlistItem',
-  DeliveryPartner: 'DeliveryPartner',
-  CashDeposit: 'CashDeposit',
-  RiderPayout: 'RiderPayout',
-  Delivery: 'Delivery',
-  DeliveryLocation: 'DeliveryLocation',
   PlatformSettings: 'PlatformSettings',
   PolicyPage: 'PolicyPage',
   PaymentGatewayCredential: 'PaymentGatewayCredential',
@@ -568,92 +563,11 @@ export const WishlistItemScalarFieldEnum = {
 export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
 
 
-export const DeliveryPartnerScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  status: 'status',
-  isActive: 'isActive',
-  vehicleType: 'vehicleType',
-  vehicleNumber: 'vehicleNumber',
-  cashSince: 'cashSince',
-  earningsSince: 'earningsSince',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type DeliveryPartnerScalarFieldEnum = (typeof DeliveryPartnerScalarFieldEnum)[keyof typeof DeliveryPartnerScalarFieldEnum]
-
-
-export const CashDepositScalarFieldEnum = {
-  id: 'id',
-  partnerId: 'partnerId',
-  amount: 'amount',
-  storeId: 'storeId',
-  note: 'note',
-  recordedById: 'recordedById',
-  createdAt: 'createdAt',
-  voidedAt: 'voidedAt',
-  voidedById: 'voidedById',
-  voidReason: 'voidReason'
-} as const
-
-export type CashDepositScalarFieldEnum = (typeof CashDepositScalarFieldEnum)[keyof typeof CashDepositScalarFieldEnum]
-
-
-export const RiderPayoutScalarFieldEnum = {
-  id: 'id',
-  partnerId: 'partnerId',
-  amount: 'amount',
-  method: 'method',
-  note: 'note',
-  paidAt: 'paidAt',
-  recordedById: 'recordedById',
-  createdAt: 'createdAt',
-  voidedAt: 'voidedAt',
-  voidedById: 'voidedById',
-  voidReason: 'voidReason'
-} as const
-
-export type RiderPayoutScalarFieldEnum = (typeof RiderPayoutScalarFieldEnum)[keyof typeof RiderPayoutScalarFieldEnum]
-
-
-export const DeliveryScalarFieldEnum = {
-  id: 'id',
-  orderId: 'orderId',
-  partnerId: 'partnerId',
-  status: 'status',
-  assignedAt: 'assignedAt',
-  acceptedAt: 'acceptedAt',
-  pickedUpAt: 'pickedUpAt',
-  deliveredAt: 'deliveredAt',
-  deliveryOtpHash: 'deliveryOtpHash',
-  earning: 'earning',
-  failure: 'failure',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type DeliveryScalarFieldEnum = (typeof DeliveryScalarFieldEnum)[keyof typeof DeliveryScalarFieldEnum]
-
-
-export const DeliveryLocationScalarFieldEnum = {
-  id: 'id',
-  deliveryId: 'deliveryId',
-  latitude: 'latitude',
-  longitude: 'longitude',
-  recordedAt: 'recordedAt'
-} as const
-
-export type DeliveryLocationScalarFieldEnum = (typeof DeliveryLocationScalarFieldEnum)[keyof typeof DeliveryLocationScalarFieldEnum]
-
-
 export const PlatformSettingsScalarFieldEnum = {
   id: 'id',
   deliveryFee: 'deliveryFee',
   freeDeliveryThreshold: 'freeDeliveryThreshold',
   minOrderValue: 'minOrderValue',
-  deliveryPartnerFee: 'deliveryPartnerFee',
-  riderCashLimit: 'riderCashLimit',
   codMaxOrderValue: 'codMaxOrderValue',
   deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
@@ -666,15 +580,9 @@ export const PlatformSettingsScalarFieldEnum = {
   playStoreUrl: 'playStoreUrl',
   appStoreUrl: 'appStoreUrl',
   appDownloadUrl: 'appDownloadUrl',
-  deliveryPlayStoreUrl: 'deliveryPlayStoreUrl',
-  deliveryAppStoreUrl: 'deliveryAppStoreUrl',
-  deliveryDownloadUrl: 'deliveryDownloadUrl',
   reviewLoginEnabled: 'reviewLoginEnabled',
   reviewLoginPhone: 'reviewLoginPhone',
   reviewLoginCodeHash: 'reviewLoginCodeHash',
-  riderReviewLoginEnabled: 'riderReviewLoginEnabled',
-  riderReviewLoginPhone: 'riderReviewLoginPhone',
-  riderReviewLoginCodeHash: 'riderReviewLoginCodeHash',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   updatedById: 'updatedById',

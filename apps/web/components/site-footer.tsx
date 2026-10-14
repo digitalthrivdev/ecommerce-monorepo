@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bike, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 
 import { AppBadges } from "@/components/app-badges";
 import { BrandMark } from "@/components/brand-mark";
@@ -66,13 +66,6 @@ export function SiteFooter({ website }: { website: Website }) {
           <p>
             © {new Date().getFullYear()} {business.name}. All rights reserved.
           </p>
-          {apps.delivery && (
-            <Link href="/partner" className="inline-flex items-center gap-1.5 hover:text-white">
-              <Bike className="size-4" aria-hidden />
-              Are you a delivery partner?
-              <span className="font-medium text-white underline-offset-4 hover:underline">Get the partner app</span>
-            </Link>
-          )}
         </div>
       </div>
     </footer>

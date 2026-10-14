@@ -2,14 +2,10 @@ import type {
   ComplaintReason,
   ComplaintStatus,
   CustomerBlock,
-  DeliveryFailure,
-  DeliveryPartnerStatus,
-  DeliveryStatus,
   OrderAction,
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
-  PayoutMethod,
   RefundMethod,
   StockChangeReason,
   UserRole,
@@ -42,7 +38,7 @@ export function formatTime(value: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat(LOCALE, { timeStyle: "short", timeZone }).format(new Date(value));
 }
 
-/** A customer's or rider's display name; deleted accounts have no name or phone left. */
+/** A customer's display name; deleted accounts have no name or phone left. */
 export function personName(person: { name: string | null; phone: string; deletedAt: string | null }) {
   return person.deletedAt ? "Deleted account" : (person.name ?? person.phone);
 }
@@ -72,9 +68,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   STORE_ACCEPTED: "Accepted",
   PICKING: "Packing",
   PACKED: "Packed",
-  READY_FOR_PICKUP: "Ready for rider",
-  ASSIGNED: "Rider assigned",
-  PICKED_UP: "Picked up",
+  READY_FOR_PICKUP: "Ready to send",
   OUT_FOR_DELIVERY: "On the way",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
@@ -93,28 +87,6 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   REFUNDED: "Refunded",
 };
 
-export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
-  PENDING: "Waiting for rider",
-  ASSIGNED: "Rider assigned",
-  PICKED_UP: "Picked up",
-  OUT_FOR_DELIVERY: "On the way",
-  DELIVERED: "Delivered",
-  CANCELLED: "Cancelled",
-};
-
-export const PARTNER_STATUS_LABELS: Record<DeliveryPartnerStatus, string> = {
-  ONLINE: "Available",
-  BUSY: "On a delivery",
-  OFFLINE: "Off duty",
-};
-
-export const PAYOUT_METHOD_LABELS: Record<PayoutMethod, string> = {
-  CASH: "Cash",
-  UPI: "UPI",
-  BANK_TRANSFER: "Bank transfer",
-  OTHER: "Other",
-};
-
 /** Today's date ("2026-10-07") in the business time zone, for date inputs. */
 export function todayIn(timeZone: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
@@ -124,10 +96,8 @@ export const ORDER_ACTION_LABELS: Record<OrderAction, string> = {
   accept: "Accept order",
   "start-picking": "Start packing",
   pack: "Mark packed",
-  ready: "Ready for rider",
-  assign: "Assign rider",
-  reassign: "Change rider",
-  unassign: "Remove rider",
+  ready: "Ready to send",
+  "out-for-delivery": "Out for delivery",
   "mark-delivered": "Mark delivered",
   cancel: "Cancel order",
   "mark-unavailable": "Item not found",
@@ -153,12 +123,6 @@ export const CUSTOMER_BLOCK_LABELS: Record<CustomerBlock, string> = {
   ALL: "Can't order",
 };
 
-export const DELIVERY_FAILURE_LABELS: Record<DeliveryFailure, string> = {
-  REFUSED: "Refused at the door",
-  UNREACHABLE: "Customer unreachable",
-  OTHER: "Other reason",
-};
-
 export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
   GATEWAY: "Payment gateway",
   UPI: "UPI",
@@ -178,5 +142,4 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Owner / admin",
   STORE_STAFF: "Shop staff",
   CUSTOMER: "Customer",
-  DELIVERY_PARTNER: "Rider",
 };

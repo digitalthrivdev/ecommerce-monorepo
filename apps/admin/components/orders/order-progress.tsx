@@ -8,14 +8,14 @@ const STEPS: Array<{ label: string; statuses: OrderStatus[] }> = [
   { label: "Placed", statuses: ["CONFIRMED"] },
   { label: "Accepted", statuses: ["STORE_ACCEPTED"] },
   { label: "Packing", statuses: ["PICKING"] },
-  { label: "Ready", statuses: ["PACKED", "READY_FOR_PICKUP", "ASSIGNED"] },
-  { label: "Picked up", statuses: ["PICKED_UP", "OUT_FOR_DELIVERY"] },
+  { label: "Ready", statuses: ["PACKED", "READY_FOR_PICKUP"] },
+  { label: "On the way", statuses: ["OUT_FOR_DELIVERY"] },
   { label: "Delivered", statuses: ["DELIVERED"] },
 ];
 
 const stepOf = (status: OrderStatus) => STEPS.findIndex((step) => step.statuses.includes(status));
 
-/** Placed → Accepted → Packing → Ready → Picked up → Delivered, with the time each step was reached. */
+/** Placed → Accepted → Packing → Ready → On the way → Delivered, with the time each step was reached. */
 export function OrderProgress({ order, timezone }: { order: OrderDetail; timezone: string }) {
   const steps = order.statusHistory.filter((entry) => entry.fromStatus !== entry.toStatus);
   // A cancelled order shows how far it got.

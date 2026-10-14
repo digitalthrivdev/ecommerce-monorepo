@@ -2,16 +2,9 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Ban, Loader2, MoreHorizontal, PackageCheck, Printer, UserMinus } from "lucide-react";
+import { Ban, Loader2, MoreHorizontal, Printer } from "lucide-react";
 
-import {
-  advanceOrder,
-  assignPartner,
-  cancelOrder,
-  markDelivered,
-  markItemUnavailable,
-  unassignPartner,
-} from "@/app/(dashboard)/orders/actions";
+import { advanceOrder, cancelOrder, markItemUnavailable } from "@/app/(dashboard)/orders/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,12 +36,11 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DELIVERY_FAILURE_LABELS, ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
+import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
 import { nextStep } from "@/lib/order-flow";
 import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
-import type { ActionResult, DeliveryFailure, DeliveryPartner, OrderAction, OrderStatus } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import type { OrderAction, OrderStatus } from "@/lib/types";
 
 type Target = { storeId: string; orderId: string };
 
@@ -115,9 +107,6 @@ export function NextStepButton({
   );
 }
 
-const WITH_RIDER: OrderStatus[] = ["PICKED_UP", "OUT_FOR_DELIVERY"];
-const FAILURES: DeliveryFailure[] = ["REFUSED", "UNREACHABLE", "OTHER"];
-
 function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpenChange }: Target & {
   orderNumber: string;
   status: OrderStatus;
@@ -125,16 +114,14 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
   onOpenChange: (open: boolean) => void;
 }) {
   const [reason, setReason] = useState("");
-  const [failure, setFailure] = useState<DeliveryFailure | null>(null);
   const [pending, startTransition] = useTransition();
-  const failedDelivery = WITH_RIDER.includes(status);
+  const failedDelivery = status === "OUT_FOR_DELIVERY";
 
   function submit() {
     startTransition(async () => {
-      if (toastResult(await cancelOrder({ storeId, orderId, reason, failure: failure ?? undefined }))) {
+      if (toastResult(await cancelOrder({ storeId, orderId, reason }))) {
         onOpenChange(false);
         setReason("");
-        setFailure(null);
       }
     });
   }
@@ -146,28 +133,10 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
           <DialogTitle>Cancel order {orderNumber}?</DialogTitle>
           <DialogDescription>
             {failedDelivery
-              ? "The rider brings the items back to the store, and their stock is returned. Online payments are refunded automatically. This cannot be undone."
+              ? "Use this when the delivery failed and the items are coming back. Their stock is returned and online payments are refunded automatically. This cannot be undone."
               : "Stock is returned to the store and online payments are refunded automatically. This cannot be undone."}
           </DialogDescription>
         </DialogHeader>
-        {failedDelivery && (
-          <Field>
-            <FieldLabel htmlFor="cancel-failure">What happened at delivery?</FieldLabel>
-            <Select value={failure ?? ""} onValueChange={(value) => setFailure(value as DeliveryFailure)}>
-              <SelectTrigger id="cancel-failure" className="w-full">
-                <SelectValue placeholder="Choose one" />
-              </SelectTrigger>
-              <SelectContent>
-                {FAILURES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {DELIVERY_FAILURE_LABELS[value]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldDescription>Refusals are counted on the customer&apos;s page, to spot repeat offenders.</FieldDescription>
-          </Field>
-        )}
         <Field>
           <FieldLabel htmlFor="cancel-reason">Reason</FieldLabel>
           <Textarea
@@ -183,7 +152,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
           <DialogClose asChild>
             <Button variant="outline">Keep order</Button>
           </DialogClose>
-          <Button variant="destructive" disabled={pending || reason.trim().length === 0 || (failedDelivery && !failure)} onClick={submit}>
+          <Button variant="destructive" disabled={pending || reason.trim().length === 0} onClick={submit}>
             {pending && <Loader2 className="animate-spin" />}
             Cancel order
           </Button>
@@ -193,78 +162,13 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
   );
 }
 
-/** Asks for a reason, then runs an admin action on the order. */
-function ReasonDialog({ open, onOpenChange, title, description, label, placeholder, required, confirm, destructive, onSubmit }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  label: string;
-  placeholder: string;
-  required: boolean;
-  confirm: string;
-  destructive?: boolean;
-  onSubmit: (reason: string) => Promise<ActionResult>;
-}) {
-  const [reason, setReason] = useState("");
-  const [pending, startTransition] = useTransition();
-
-  function submit() {
-    startTransition(async () => {
-      if (toastResult(await onSubmit(reason.trim()))) {
-        onOpenChange(false);
-        setReason("");
-      }
-    });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <Field>
-          <FieldLabel htmlFor="action-reason">{label}</FieldLabel>
-          <Textarea
-            id="action-reason"
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            maxLength={300}
-            placeholder={placeholder}
-          />
-          <FieldDescription>Recorded in the order history.</FieldDescription>
-        </Field>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Go back</Button>
-          </DialogClose>
-          <Button
-            variant={destructive ? "destructive" : "default"}
-            disabled={pending || (required && reason.trim().length === 0)}
-            onClick={submit}
-          >
-            {pending && <Loader2 className="animate-spin" />}
-            {confirm}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 /** Less common actions, kept away from the main button so Cancel isn't tapped by mistake. */
-export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel, canUnassign, canMarkDelivered }: Target & {
+export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel }: Target & {
   orderNumber: string;
   status: OrderStatus;
   canCancel: boolean;
-  canUnassign?: boolean;
-  canMarkDelivered?: boolean;
 }) {
   const [cancelling, setCancelling] = useState(false);
-  const [unassigning, setUnassigning] = useState(false);
-  const [delivering, setDelivering] = useState(false);
 
   return (
     <>
@@ -282,18 +186,6 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel
               Print packing slip
             </Link>
           </DropdownMenuItem>
-          {canUnassign && (
-            <DropdownMenuItem onSelect={() => setUnassigning(true)}>
-              <UserMinus />
-              {ORDER_ACTION_LABELS.unassign}
-            </DropdownMenuItem>
-          )}
-          {canMarkDelivered && (
-            <DropdownMenuItem onSelect={() => setDelivering(true)}>
-              <PackageCheck />
-              {ORDER_ACTION_LABELS["mark-delivered"]}
-            </DropdownMenuItem>
-          )}
           {canCancel && (
             <>
               <DropdownMenuSeparator />
@@ -313,32 +205,6 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel
           status={status}
           open={cancelling}
           onOpenChange={setCancelling}
-        />
-      )}
-      {canUnassign && (
-        <ReasonDialog
-          open={unassigning}
-          onOpenChange={setUnassigning}
-          title={`Remove the rider from ${orderNumber}?`}
-          description="The order goes back to waiting for a rider, and the rider is free for other deliveries. Use this when the rider can't come and nobody else is free yet."
-          label="Reason (optional)"
-          placeholder="e.g. Rider's bike broke down"
-          required={false}
-          confirm="Remove rider"
-          onSubmit={(note) => unassignPartner({ storeId, orderId, note: note || undefined })}
-        />
-      )}
-      {canMarkDelivered && (
-        <ReasonDialog
-          open={delivering}
-          onOpenChange={setDelivering}
-          title={`Mark ${orderNumber} as delivered?`}
-          description="Only when you're sure the customer has the order, e.g. the delivery OTP is locked after wrong tries. The rider is paid for the delivery and cash orders count as collected by the rider."
-          label="Reason"
-          placeholder="e.g. Customer confirmed by phone; OTP locked"
-          required
-          confirm="Mark delivered"
-          onSubmit={(reason) => markDelivered({ storeId, orderId, reason })}
         />
       )}
     </>
@@ -412,183 +278,5 @@ export function MarkUnavailableDialog({ storeId, orderId, item, className }: Tar
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-export type StoreLocation = { latitude: number; longitude: number };
-
-const STATUS_RANK = { ONLINE: 0, BUSY: 1, OFFLINE: 2 } as const;
-
-function distanceKm(a: StoreLocation, b: StoreLocation) {
-  const rad = (degrees: number) => (degrees * Math.PI) / 180;
-  const h =
-    Math.sin(rad(b.latitude - a.latitude) / 2) ** 2 +
-    Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(rad(b.longitude - a.longitude) / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
-}
-
-const formatDistance = (km: number) => (km < 1 ? `${Math.max(10, Math.round(km * 100) * 10)} m` : `${km.toFixed(1)} km`);
-
-type RiderOption = { partner: DeliveryPartner; distanceKm: number | null };
-
-const canAssign = (partner: DeliveryPartner) => partner.status === "ONLINE" && !partner.cash.limitReached;
-
-/**
- * Free riders first, nearest to the store first (straight line from their last position, which is
- * at most 10 minutes old); riders without a recent position come after those with one.
- */
-function riderOptions(partners: DeliveryPartner[], store: StoreLocation | null): RiderOption[] {
-  return partners
-    .map((partner) => ({ partner, distanceKm: store && partner.lastLocation ? distanceKm(store, partner.lastLocation) : null }))
-    .sort(
-      (a, b) =>
-        STATUS_RANK[a.partner.status] - STATUS_RANK[b.partner.status] ||
-        (a.distanceKm ?? Number.MAX_VALUE) - (b.distanceKm ?? Number.MAX_VALUE),
-    );
-}
-
-/** The free rider closest to the store, if any has shared a position. */
-function nearestFreeRider(partners: DeliveryPartner[], store: StoreLocation | null) {
-  const [first] = riderOptions(partners, store);
-  return first && canAssign(first.partner) && first.distanceKm !== null ? first.partner.id : "";
-}
-
-function riderLabel({ partner, distanceKm }: RiderOption, nearest: boolean, store: StoreLocation | null) {
-  const parts = [partner.name ?? partner.phone];
-  if (partner.vehicleNumber) parts.push(partner.vehicleNumber);
-  if (partner.status === "BUSY") parts.push(`Busy${partner.activeDelivery ? ` with ${partner.activeDelivery.orderNumber}` : ""}`);
-  if (partner.status === "OFFLINE") parts.push("Offline");
-  if (partner.cash.limitReached) parts.push("Cash limit reached");
-  else if (partner.status === "ONLINE" && store) {
-    parts.push(distanceKm === null ? "location unknown" : `${formatDistance(distanceKm)} from store${nearest ? " (nearest)" : ""}`);
-  }
-  return parts.join(" · ");
-}
-
-function PartnerSelect({ id, partners, store, value, onChange }: {
-  id: string;
-  partners: DeliveryPartner[];
-  store: StoreLocation | null;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const nearest = nearestFreeRider(partners, store);
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger id={id} className="w-full">
-        <SelectValue placeholder="Choose a rider" />
-      </SelectTrigger>
-      <SelectContent>
-        {riderOptions(partners, store).map((option) => (
-          <SelectItem key={option.partner.id} value={option.partner.id} disabled={!canAssign(option.partner)}>
-            {riderLabel(option, option.partner.id === nearest, store)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-function noRidersText(partners: DeliveryPartner[]) {
-  if (partners.length === 0) return "No riders yet. Add one on the Riders page.";
-  if (partners.some(canAssign)) return null;
-  if (partners.some((partner) => partner.status === "ONLINE")) {
-    return "Every free rider has reached the cash limit. Record their deposit on the Rider cash page.";
-  }
-  return "No rider is free right now. Busy riders become free when they finish or decline their delivery; offline riders need to go online in the rider app.";
-}
-
-/** Starts with the nearest free rider chosen, so assigning them is one click. */
-function useAssign({ storeId, orderId, mode, initialPartnerId }: Target & { mode: "assign" | "reassign"; initialPartnerId: string }) {
-  const [partnerId, setPartnerId] = useState(initialPartnerId);
-  const [pending, startTransition] = useTransition();
-
-  function submit(onDone?: () => void) {
-    startTransition(async () => {
-      if (toastResult(await assignPartner({ storeId, orderId, partnerId, mode }))) {
-        setPartnerId("");
-        onDone?.();
-      }
-    });
-  }
-
-  return { partnerId, setPartnerId, pending, submit };
-}
-
-/** "Assign rider" on a board ticket. */
-export function AssignPartnerDialog({ storeId, orderId, mode, partners, store, className }: Target & {
-  mode: "assign" | "reassign";
-  partners: DeliveryPartner[];
-  store: StoreLocation | null;
-  className?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode, initialPartnerId: nearestFreeRider(partners, store) });
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="lg" variant={mode === "assign" ? "default" : "outline"} className={className}>
-          {ORDER_ACTION_LABELS[mode]}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{ORDER_ACTION_LABELS[mode]}</DialogTitle>
-          <DialogDescription>
-            {mode === "assign"
-              ? "The rider gets the delivery in their app and can accept or decline it."
-              : "The current rider is released and the delivery moves to the new rider."}
-          </DialogDescription>
-        </DialogHeader>
-        {partners.length > 0 && (
-          <Field>
-            <FieldLabel htmlFor={`partner-${orderId}`}>Rider</FieldLabel>
-            <PartnerSelect id={`partner-${orderId}`} partners={partners} store={store} value={partnerId} onChange={setPartnerId} />
-          </Field>
-        )}
-        {noRidersText(partners) && <p className="text-sm text-muted-foreground">{noRidersText(partners)}</p>}
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
-          </DialogClose>
-          <Button disabled={pending || !partnerId} onClick={() => submit(() => setOpen(false))}>
-            {pending && <Loader2 className="animate-spin" />}
-            {ORDER_ACTION_LABELS[mode]}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/** Choosing a rider right on the order page. */
-export function RiderPicker({ storeId, orderId, mode, partners, store, className }: Target & {
-  mode: "assign" | "reassign";
-  partners: DeliveryPartner[];
-  store: StoreLocation | null;
-  className?: string;
-}) {
-  const { partnerId, setPartnerId, pending, submit } = useAssign({ storeId, orderId, mode, initialPartnerId: nearestFreeRider(partners, store) });
-
-  const hint = noRidersText(partners);
-  if (partners.length === 0) {
-    return <p className={cn("text-sm text-muted-foreground", className)}>{hint}</p>;
-  }
-
-  return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <FieldLabel htmlFor="rider-picker">{mode === "assign" ? "Choose a rider" : "Change to another rider"}</FieldLabel>
-      <PartnerSelect id="rider-picker" partners={partners} store={store} value={partnerId} onChange={setPartnerId} />
-      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
-      <Button
-        variant={mode === "assign" ? "default" : "outline"}
-        disabled={pending || !partnerId}
-        onClick={() => submit()}
-      >
-        {pending && <Loader2 className="animate-spin" />}
-        {ORDER_ACTION_LABELS[mode]}
-      </Button>
-    </div>
   );
 }

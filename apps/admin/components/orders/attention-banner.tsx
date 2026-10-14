@@ -14,19 +14,18 @@ const SHOWN = 5;
 
 const REASONS: Record<AttentionReason, { label: string; status: OrderStatus }> = {
   STORE_NOT_ACCEPTED: { label: "Store hasn't accepted", status: "CONFIRMED" },
-  NO_RIDER: { label: "Waiting for a rider", status: "READY_FOR_PICKUP" },
-  RIDER_NOT_ACCEPTED: { label: "Rider hasn't accepted", status: "ASSIGNED" },
+  NOT_DISPATCHED: { label: "Not sent out yet", status: "READY_FOR_PICKUP" },
 };
 
 const keyOf = (item: AttentionList["items"][number]) => `${item.orderId}:${item.reason}`;
 
 /**
- * Orders nobody has picked up in time, on every dashboard page for admins. Checked every 30
+ * Orders left waiting too long, on every dashboard page for admins. Checked every 30
  * seconds; chimes (if order sounds are on) when a new order joins the list.
  */
 export function AttentionBanner({ initial }: { initial: AttentionList }) {
   const sound = useSoundSetting();
-  // A page refresh (e.g. after assigning a rider) brings a newer list than the last poll.
+  // A page refresh (e.g. after an order goes out) brings a newer list than the last poll.
   const [polled, setPolled] = useState<{ list: AttentionList; basis: AttentionList } | null>(null);
   const list = polled && polled.basis === initial ? polled.list : initial;
   const seen = useRef(new Set(initial.items.map(keyOf)));
@@ -74,7 +73,7 @@ export function AttentionBanner({ initial }: { initial: AttentionList }) {
                     {item.orderNumber}
                   </Link>
                   <span className="text-foreground/80">
-                    {[item.store.name, reason.label, item.rider && (item.rider.name ?? item.rider.phone)].filter(Boolean).join(" · ")}
+                    {[item.store.name, reason.label].join(" · ")}
                   </span>
                   <Elapsed since={item.since} status={reason.status} />
                 </li>

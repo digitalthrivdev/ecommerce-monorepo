@@ -42,7 +42,6 @@ export const invoiceSelect = {
       taxAmount: true,
     },
   },
-  delivery: { select: { deliveredAt: true } },
   statusHistory: { where: { toStatus: OrderStatus.DELIVERED }, orderBy: { createdAt: "asc" }, take: 1, select: { createdAt: true } },
 } satisfies Prisma.OrderSelect;
 
@@ -129,7 +128,7 @@ export function buildInvoice(order: InvoiceOrder) {
   }
 
   const sum = (key: "taxable" | "cgst" | "sgst" | "igst" | "tax" | "total") => lines.reduce((total, line) => total.plus(line[key]), zero());
-  const deliveredAt = order.delivery?.deliveredAt ?? order.statusHistory[0]?.createdAt ?? null;
+  const deliveredAt = order.statusHistory[0]?.createdAt ?? null;
   const address = [order.addressLine1, order.addressLine2, order.landmark && `Near ${order.landmark}`, order.city, `${order.state} ${order.postalCode}`]
     .filter(Boolean)
     .join(", ");

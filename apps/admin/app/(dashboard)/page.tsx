@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
           <StatCard
             title="Active orders"
             value={formatNumber(stats.activeOrders)}
-            hint={`${stats.awaitingAssignment} ready for pickup`}
+            hint={`${stats.awaitingDispatch} ready to send`}
             icon={PackageCheck}
             href={storeId ? `/orders?storeId=${storeId}` : "/orders"}
           />
@@ -151,34 +151,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
               </CardContent>
             </Card>
 
-            {stats.partners && (
+            {stats.customers !== null && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Riders</CardTitle>
-                  <CardDescription>Active partner accounts</CardDescription>
+                  <CardTitle>Customers</CardTitle>
+                  <CardDescription>Registered customer accounts</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <dl className="grid grid-cols-3 gap-2 text-center">
-                    {(
-                      [
-                        ["Online", stats.partners.online],
-                        ["Busy", stats.partners.busy],
-                        ["Offline", stats.partners.offline],
-                      ] as const
-                    ).map(([label, count]) => (
-                      <div key={label} className="rounded-lg bg-muted/50 p-3">
-                        <dd className="text-xl font-semibold tabular-nums">{count}</dd>
-                        <dt className="text-xs text-muted-foreground">{label}</dt>
-                      </div>
-                    ))}
-                  </dl>
-                  {stats.customers !== null && (
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      <Link href="/customers" className="underline-offset-4 hover:underline">
-                        {formatNumber(stats.customers)} registered customers
-                      </Link>
-                    </p>
-                  )}
+                  <Link href="/customers" className="text-2xl font-semibold tabular-nums underline-offset-4 hover:underline">
+                    {formatNumber(stats.customers)}
+                  </Link>
                 </CardContent>
               </Card>
             )}

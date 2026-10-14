@@ -37,7 +37,7 @@ export function SmsProviderForm({ sms }: { sms: SmsSettings }) {
       title: "Don't send texts",
       description:
         sms.fallback === "nobody"
-          ? "Nobody gets a code, so customers and riders cannot sign in."
+          ? "Nobody gets a code, so customers cannot sign in."
           : "Codes go to the server log instead. Only for testing.",
       disabled: locked,
     },
