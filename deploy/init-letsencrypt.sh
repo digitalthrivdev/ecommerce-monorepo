@@ -21,7 +21,7 @@ if [ -z "${SELF_SIGNED:-}" ]; then
   : "${LETSENCRYPT_EMAIL:?Set LETSENCRYPT_EMAIL in .env}"
 fi
 
-live=/etc/letsencrypt/live/grocery
+live=/etc/letsencrypt/live/shop
 certbot() { docker compose run --rm --entrypoint "$1" certbot "${@:2}"; }
 
 echo "Creating a temporary certificate so Nginx can start"
@@ -36,5 +36,5 @@ if [ -n "${SELF_SIGNED:-}" ]; then
   exit 0
 fi
 
-certbot sh -c "rm -rf /etc/letsencrypt/live/grocery /etc/letsencrypt/archive/grocery /etc/letsencrypt/renewal/grocery.conf"
+certbot sh -c "rm -rf /etc/letsencrypt/live/shop /etc/letsencrypt/archive/shop /etc/letsencrypt/renewal/shop.conf"
 ./request-certificate.sh

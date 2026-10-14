@@ -1,4 +1,4 @@
-import { STORE_CODE_PATTERN, TIME_PATTERN } from "@grocery/validation";
+import { STORE_CODE_PATTERN, TIME_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { StoreStatus } from "../../generated/prisma/client";

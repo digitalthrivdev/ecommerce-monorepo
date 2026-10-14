@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { STORE_CODE_PATTERN, TIME_PATTERN } from "@grocery/validation";
+import { STORE_CODE_PATTERN, TIME_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";

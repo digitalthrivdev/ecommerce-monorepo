@@ -3,7 +3,7 @@
     "name": "customer",
     "slug": "customer",
     "version": "1.0.0",
-    "scheme": "grocery",
+    "scheme": "shop",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,7 +11,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.groceryplatform.customer",
+      "package": "com.example.shop",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -69,11 +69,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "5517c901-44f4-464f-bd1b-5ca2bce8e4c9"
-      }
-    },
-    "owner": "folimah235"
+      "router": {}
+    }
   }
 }

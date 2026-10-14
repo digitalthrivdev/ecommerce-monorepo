@@ -8,7 +8,7 @@ import { emailSchema, phoneSchema } from "../shared/schemas.js";
 
 const USAGE = `Creates an admin account, or updates an existing admin: new password, phone number or name. Asks for the password.
 
-  Development:  pnpm --filter @grocery/api admin:create --email asha@example.com --phone +919876543210 --name "Asha Rao"
+  Development:  pnpm --filter @shop/api admin:create --email asha@example.com --phone +919876543210 --name "Asha Rao"
   Production:   docker compose run --rm api node dist/scripts/create-admin.js --email asha@example.com --phone +919876543210
   New phone:    docker compose run --rm api node dist/scripts/create-admin.js --email asha@example.com --phone +919812345678 --keep-password
 

@@ -23,7 +23,7 @@ export function androidApp() {
   return packageName && valid.length > 0 ? { packageName, fingerprints: valid } : null;
 }
 
-/** IOS_APP_ID is "<Apple Team ID>.<bundle ID>", e.g. "AB12CD34EF.com.acme.grocery". */
+/** IOS_APP_ID is "<Apple Team ID>.<bundle ID>", e.g. "AB12CD34EF.com.acme.store". */
 export function iosAppId() {
   const value = process.env.IOS_APP_ID?.trim();
   if (!value) return null;

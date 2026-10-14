@@ -5,9 +5,9 @@ import { buildApp } from "../src/app.js";
 
 /** Accounts created by the development seed (src/infrastructure/database/seed.ts). */
 export const SEED = {
-  password: "grocery-dev",
-  adminEmail: "admin@grocery.test",
-  staffEmail: "staff@grocery.test",
+  password: "shop-dev",
+  adminEmail: "admin@shop.test",
+  staffEmail: "staff@shop.test",
   customerPhone: "+919000000002",
   riderPhone: "+919000000004",
   storeCode: "BLR-KRM-01",

@@ -1,4 +1,4 @@
-import { DECIMAL_PATTERN, PHONE_PATTERN, SLUG_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN, PHONE_PATTERN, SLUG_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { Prisma } from "../generated/prisma/client";

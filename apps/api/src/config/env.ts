@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { DECIMAL_PATTERN, HEX_COLOR_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN, HEX_COLOR_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 const moneyEnv = z.string().regex(DECIMAL_PATTERN, "Must be a decimal amount, e.g. 25.00");
@@ -76,7 +76,7 @@ const envSchema = z.object({
 
   JWT_EXPIRES_IN: z.string().default("7d"),
 
-  APP_NAME: z.string().trim().min(1).max(50).default("Grocery"),
+  APP_NAME: z.string().trim().min(1).max(50).default("Shop"),
 
   LOGO_URL: z.url().optional(),
 

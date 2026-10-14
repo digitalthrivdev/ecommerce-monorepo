@@ -77,7 +77,7 @@ export async function buildApp() {
 
     return {
       status: "ok",
-      service: "grocery-api",
+      service: "shop-api",
       database: "ok",
       redis: redisStatus === "PONG" ? "ok" : "error",
     };

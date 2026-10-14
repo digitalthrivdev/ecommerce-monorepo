@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const BLOCKED_SCHEMES = new Set(["http", "https", "javascript", "data", "vbscript", "file", "blob", "about"]);
 
-/** The app's deep link that checkout returns to, e.g. grocery://payment-return or exp://… in Expo Go. */
+/** The app's deep link that checkout returns to, e.g. shop://payment-return or exp://… in Expo Go. */
 export const startPaymentBodySchema = z.object({
   returnUrl: z
     .string()

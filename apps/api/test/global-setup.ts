@@ -5,7 +5,7 @@ import pg from "pg";
 
 import { testDatabaseServerUrl, testEnv } from "./env.mjs";
 
-const TEST_DATABASE = /^grocery_test_\d+$/;
+const TEST_DATABASE = /^shop_test_\d+$/;
 
 async function onServer(statements: (client: pg.Client) => Promise<void>) {
   const client = new pg.Client({ connectionString: testDatabaseServerUrl });
@@ -23,10 +23,10 @@ export default async function setup() {
   if (!TEST_DATABASE.test(database)) throw new Error(`Unexpected test database name "${database}"`);
 
   await onServer(async (client) => {
-    const { rows } = await client.query<{ datname: string }>("SELECT datname FROM pg_database WHERE datname LIKE 'grocery_test_%'");
+    const { rows } = await client.query<{ datname: string }>("SELECT datname FROM pg_database WHERE datname LIKE 'shop_test_%'");
     // Left by runs interrupted over an hour ago; a run still in progress keeps its database.
     for (const { datname } of rows) {
-      const startedAt = Number(datname.slice("grocery_test_".length));
+      const startedAt = Number(datname.slice("shop_test_".length));
       if (TEST_DATABASE.test(datname) && Date.now() - startedAt > 3600_000) {
         await client.query(`DROP DATABASE "${datname}" WITH (FORCE)`);
       }

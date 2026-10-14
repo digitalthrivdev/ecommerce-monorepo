@@ -1,9 +1,9 @@
-import { canonicalState, gstinMatchesState, gstinProblem } from "@grocery/validation";
+import { canonicalState, gstinMatchesState, gstinProblem } from "@shop/validation";
 import { z } from "zod";
 
 import { Prisma } from "../generated/prisma/client";
 
-export { canonicalState, gstinCheckChar, gstinMatchesState, INDIAN_STATES, isSameState, stateCodes } from "@grocery/validation";
+export { canonicalState, gstinCheckChar, gstinMatchesState, INDIAN_STATES, isSameState, stateCodes } from "@shop/validation";
 
 /** A state or union territory of India, saved under its standard name. */
 export const stateSchema = z

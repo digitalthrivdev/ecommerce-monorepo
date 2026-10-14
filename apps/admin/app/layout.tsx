@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const logoUrl = (await getPublicSettings().catch(() => null))?.branding.logoUrl;
   return {
     title: { default: "Admin", template: "%s · Admin" },
-    description: "Grocery platform admin dashboard",
+    description: "Shop admin dashboard",
     icons: logoUrl ? { icon: logoUrl, apple: logoUrl } : { icon: "/favicon.ico" },
   };
 }

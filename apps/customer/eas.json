@@ -26,30 +26,30 @@
       "environment": "production",
       "autoIncrement": true
     },
-    "moozy-preview": {
+    "example-preview": {
       "extends": "preview",
       "env": {
-        "APP_BRAND": "moozy",
-        "APP_NAME": "Moozy",
-        "APP_ID": "in.moozy.app",
-        "APP_SCHEME": "moozy",
-        "SITE_DOMAIN": "moozy.in",
-        "EXPO_PUBLIC_API_URL": "https://api.moozy.in",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://c714c6fc2c721561ad9738bcc8fbf9d2@o4512215749951488.ingest.de.sentry.io/4512215776755792",
-        "SENTRY_PROJECT": "grocery"
+        "APP_BRAND": "example",
+        "APP_NAME": "Example Shop",
+        "APP_ID": "com.example.shop",
+        "APP_SCHEME": "exampleshop",
+        "SITE_DOMAIN": "example.com",
+        "EXPO_PUBLIC_API_URL": "https://api.example.com",
+        "EAS_PROJECT_ID": "",
+        "EXPO_OWNER": ""
       }
     },
-    "moozy-production": {
+    "example-production": {
       "extends": "production",
       "env": {
-        "APP_BRAND": "moozy",
-        "APP_NAME": "Moozy",
-        "APP_ID": "in.moozy.app",
-        "APP_SCHEME": "moozy",
-        "SITE_DOMAIN": "moozy.in",
-        "EXPO_PUBLIC_API_URL": "https://api.moozy.in",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://c714c6fc2c721561ad9738bcc8fbf9d2@o4512215749951488.ingest.de.sentry.io/4512215776755792",
-        "SENTRY_PROJECT": "grocery"
+        "APP_BRAND": "example",
+        "APP_NAME": "Example Shop",
+        "APP_ID": "com.example.shop",
+        "APP_SCHEME": "exampleshop",
+        "SITE_DOMAIN": "example.com",
+        "EXPO_PUBLIC_API_URL": "https://api.example.com",
+        "EAS_PROJECT_ID": "",
+        "EXPO_OWNER": ""
       }
     }
   },

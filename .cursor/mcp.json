@@ -7,7 +7,7 @@
         "code_review_graph",
         "serve"
       ],
-      "cwd": "/home/piyush/projects/grocery-platform",
+      "cwd": "/home/piyush/projects/shop-platform",
       "type": "stdio"
     },
     "shadcn": {

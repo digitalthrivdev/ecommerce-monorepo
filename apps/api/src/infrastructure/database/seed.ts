@@ -57,14 +57,14 @@ function single(
 }
 
 // Development only; the seed refuses to run in production.
-const DEV_PASSWORD = "grocery-dev";
+const DEV_PASSWORD = "shop-dev";
 
 const users = [
-  { phone: "+919000000001", name: "Platform Admin", email: "admin@grocery.test", role: UserRole.ADMIN },
+  { phone: "+919000000001", name: "Platform Admin", email: "admin@shop.test", role: UserRole.ADMIN },
   { phone: "+919000000002", name: "Test Customer", email: null, role: UserRole.CUSTOMER },
 ];
 
-const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff", email: "staff@grocery.test" };
+const storeStaff = { phone: "+919000000003", name: "Koramangala Store Staff", email: "staff@shop.test" };
 
 const deliveryPartner = {
   phone: "+919000000004",

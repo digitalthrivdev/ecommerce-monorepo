@@ -18,7 +18,7 @@ set +a
 : "${LETSENCRYPT_EMAIL:?Set LETSENCRYPT_EMAIL in .env}"
 
 echo "Requesting the Let's Encrypt certificate for $API_DOMAIN, $ADMIN_DOMAIN, $SITE_DOMAIN and www.$SITE_DOMAIN"
-docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot --cert-name grocery \
+docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot --cert-name shop \
   -d "$API_DOMAIN" -d "$ADMIN_DOMAIN" -d "$SITE_DOMAIN" -d "www.$SITE_DOMAIN" \
   --email "$LETSENCRYPT_EMAIL" --agree-tos --no-eff-email --non-interactive --expand ${STAGING:+--staging}
 

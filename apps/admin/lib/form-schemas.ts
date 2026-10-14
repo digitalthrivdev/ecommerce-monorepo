@@ -1,4 +1,4 @@
-import { DECIMAL_PATTERN, gstinProblem, PHONE_PATTERN, SLUG_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN, gstinProblem, PHONE_PATTERN, SLUG_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 export const idSchema = z.string().trim().min(1).max(64);

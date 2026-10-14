@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DECIMAL_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN } from "@shop/validation";
 import { Loader2 } from "lucide-react";
 
 import { updatePlatformSettings } from "@/app/(dashboard)/settings/actions";

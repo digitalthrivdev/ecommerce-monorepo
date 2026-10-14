@@ -3,7 +3,7 @@
 # Configuration: .env (domains, database password; see .env.example) and api.env (API settings and
 # secrets; see api.env.example). First start: ./init-letsencrypt.sh. Details in .env.example.
 
-name: ${COMPOSE_PROJECT_NAME:-grocery}
+name: ${COMPOSE_PROJECT_NAME:-shop}
 
 x-restart: &restart
   restart: unless-stopped
@@ -13,13 +13,13 @@ services:
     <<: *restart
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: grocery
+      POSTGRES_USER: shop
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      POSTGRES_DB: grocery
+      POSTGRES_DB: shop
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U grocery -d grocery"]
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,9 +42,9 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
       target: migrate
-    image: ${IMAGE_PREFIX:-${COMPOSE_PROJECT_NAME:-grocery}}-migrate
+    image: ${COMPOSE_PROJECT_NAME:-shop}-migrate
     environment:
-      DATABASE_URL: postgresql://grocery:${POSTGRES_PASSWORD}@postgres:5432/grocery
+      DATABASE_URL: postgresql://shop:${POSTGRES_PASSWORD}@postgres:5432/shop
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,14 +55,14 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
       target: runtime
-    image: ${IMAGE_PREFIX:-${COMPOSE_PROJECT_NAME:-grocery}}-api
+    image: ${COMPOSE_PROJECT_NAME:-shop}-api
     env_file: api.env
     # These take priority over api.env.
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: "4000"
-      DATABASE_URL: postgresql://grocery:${POSTGRES_PASSWORD}@postgres:5432/grocery
+      DATABASE_URL: postgresql://shop:${POSTGRES_PASSWORD}@postgres:5432/shop
       REDIS_URL: redis://redis:6379
       PUBLIC_API_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}
       PUBLIC_SITE_URL: https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
@@ -85,7 +85,7 @@ services:
     build:
       context: ..
       dockerfile: apps/admin/Dockerfile
-    image: ${IMAGE_PREFIX:-${COMPOSE_PROJECT_NAME:-grocery}}-admin
+    image: ${COMPOSE_PROJECT_NAME:-shop}-admin
     environment:
       API_URL: http://api:4000
       # For links to the public website in the dashboard.
@@ -101,7 +101,7 @@ services:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
-    image: ${IMAGE_PREFIX:-${COMPOSE_PROJECT_NAME:-grocery}}-web
+    image: ${COMPOSE_PROJECT_NAME:-shop}-web
     environment:
       API_URL: http://api:4000
       SENTRY_DSN: ${SENTRY_DSN:-}
@@ -151,8 +151,8 @@ services:
     image: postgres:17-alpine
     environment:
       PGHOST: postgres
-      PGUSER: grocery
-      PGDATABASE: grocery
+      PGUSER: shop
+      PGDATABASE: shop
       PGPASSWORD: ${POSTGRES_PASSWORD}
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
     volumes:

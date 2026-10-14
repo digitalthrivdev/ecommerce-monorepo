@@ -9,7 +9,7 @@ const USAGE = `Marks an existing account as a test account for demos, or makes i
 A test admin can only look and move orders to a rider; test staff, customers and riders are limited. The account is signed
 out on every device so the change applies at its next sign-in.
 
-  Development:  pnpm --filter @grocery/api test-account --email demo-admin@example.com
+  Development:  pnpm --filter @shop/api test-account --email demo-admin@example.com
   Production:   docker compose run --rm api node dist/scripts/test-account.js --phone +919000000010
   Undo:         docker compose run --rm api node dist/scripts/test-account.js --phone +919000000010 --off
 

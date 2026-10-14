@@ -1,4 +1,4 @@
-import { DECIMAL_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN } from "@shop/validation";
 
 import type { Listing, ProductDetail, ProductListings, Store } from "./types";
 import type { Draft, VariantDraft } from "./variant-drafts";

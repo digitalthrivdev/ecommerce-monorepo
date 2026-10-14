@@ -98,7 +98,7 @@ function requestOnce(url: URL, deadline: number): Promise<Hop> {
       {
         agent: false,
         lookup: publicLookup as never,
-        headers: { "user-agent": "GroceryCatalogImport/1.0", accept: "image/*" },
+        headers: { "user-agent": "ShopCatalogImport/1.0", accept: "image/*" },
         timeout: Math.max(1, deadline - Date.now()),
       },
       (response) => {

@@ -5,13 +5,13 @@
 # Run by the backup service; on demand: docker compose exec backup sh /usr/local/bin/backup.sh
 # Restore (stop the api first: docker compose stop api admin):
 #   docker compose cp backups/<file>.dump postgres:/tmp/restore.dump
-#   docker compose exec postgres pg_restore -U grocery -d grocery --clean --if-exists /tmp/restore.dump
+#   docker compose exec postgres pg_restore -U shop -d shop --clean --if-exists /tmp/restore.dump
 #   docker compose run --rm --no-deps --user root -v ./backups/uploads:/restore:ro api \
 #     sh -c 'cp -Rpu /restore/. uploads/ && chown -R node:node uploads'
 #   docker compose start api admin
 set -eu
 
-file="/backups/grocery-$(date -u +%Y%m%dT%H%M%SZ).dump"
+file="/backups/shop-$(date -u +%Y%m%dT%H%M%SZ).dump"
 if pg_dump --format=custom --file="$file.partial"; then
   mv "$file.partial" "$file"
   echo "Backup written: $file ($(du -h "$file" | cut -f1))"
@@ -21,7 +21,7 @@ else
   exit 1
 fi
 
-find /backups -name 'grocery-*.dump' -type f -mtime +"${BACKUP_KEEP_DAYS:-14}" -delete
+find /backups -name 'shop-*.dump' -type f -mtime +"${BACKUP_KEEP_DAYS:-14}" -delete
 
 if [ -d /uploads ]; then
   mkdir -p /backups/uploads

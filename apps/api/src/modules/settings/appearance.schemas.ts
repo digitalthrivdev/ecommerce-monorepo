@@ -1,4 +1,4 @@
-import { HEX_COLOR_PATTERN } from "@grocery/validation";
+import { HEX_COLOR_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 const hexColor = z

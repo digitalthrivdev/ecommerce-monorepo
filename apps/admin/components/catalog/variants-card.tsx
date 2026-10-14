@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronRight, ImageIcon, Plus, Trash2, X } from "lucide-react";
-import { DECIMAL_PATTERN } from "@grocery/validation";
+import { DECIMAL_PATTERN } from "@shop/validation";
 import { toast } from "sonner";
 
 import { MoneyInput } from "@/components/money-input";

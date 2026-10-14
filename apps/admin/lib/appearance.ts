@@ -1,4 +1,4 @@
-import { HEX_COLOR_PATTERN } from "@grocery/validation";
+import { HEX_COLOR_PATTERN } from "@shop/validation";
 
 import type { Appearance, AppearanceTheme, Category, CollectionItem, HomeSection, HomeSectionType, HomeTile, TabHeader, TabPage } from "./types";
 

@@ -8,7 +8,7 @@ services:
   nginx:
     ports: !reset []
     environment:
-      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-grocery}
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-shop}
     volumes: !override
       - ./nginx/behind-proxy:/etc/nginx/templates:ro
       - uploads:/srv/uploads:ro
@@ -19,15 +19,15 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.services.${COMPOSE_PROJECT_NAME:-grocery}.loadbalancer.server.port=80
-      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-grocery}-https.redirectscheme.scheme=https
-      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-grocery}-https.redirectscheme.permanent=true
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.entrypoints=http
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}-http.middlewares=${COMPOSE_PROJECT_NAME:-grocery}-https
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.entrypoints=https
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-grocery}.tls.certresolver=letsencrypt
+      - traefik.http.services.${COMPOSE_PROJECT_NAME:-shop}.loadbalancer.server.port=80
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-shop}-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-shop}-https.redirectscheme.permanent=true
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.entrypoints=http
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.middlewares=${COMPOSE_PROJECT_NAME:-shop}-https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.entrypoints=https
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.tls.certresolver=letsencrypt
 
   certbot:
     profiles: [certbot]

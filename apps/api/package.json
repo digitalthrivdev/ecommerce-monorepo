@@ -1,5 +1,5 @@
 {
-  "name": "@grocery/api",
+  "name": "@shop/api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -21,7 +21,7 @@
     "@fastify/jwt": "^10.2.2",
     "@fastify/multipart": "^10.1.2",
     "@fastify/static": "^10.1.5",
-    "@grocery/validation": "workspace:*",
+    "@shop/validation": "workspace:*",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@sentry/node": "^10.75.2",

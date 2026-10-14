@@ -6,8 +6,8 @@ const path = require("node:path");
  * .env for local builds, or as EAS environment variables for cloud builds. All are optional; the
  * values in app.json are the defaults.
  *
- *   APP_NAME              Name under the launcher icon, e.g. "Acme Grocery".
- *   APP_ID                Android package and iOS bundle ID, e.g. "com.acme.grocery". Permanent once the
+ *   APP_NAME              Name under the launcher icon, e.g. "Acme Store".
+ *   APP_ID                Android package and iOS bundle ID, e.g. "com.acme.store". Permanent once the
  *                         app is published, and two installs on one phone need different IDs.
  *   APP_SCHEME            Deep link scheme used to return from online payment, e.g. "acme".
  *   SITE_DOMAIN           The client's website, e.g. "acme.com" (SITE_DOMAIN in deploy/.env). Shared
@@ -16,7 +16,8 @@ const path = require("node:path");
  *                         use the APP_SCHEME link.
  *   APP_BRAND             Folder under brands/ with the client's icon and splash screen, e.g. "acme".
  *   EAS_PROJECT_ID, EXPO_OWNER, APP_SLUG
- *                         The client's own EAS project, when they have one.
+ *                         The client's EAS project. app.json has none, so every client needs its own
+ *                         (docs/deployment.md, "Mobile app per client").
  *   GOOGLE_MAPS_ANDROID_API_KEY
  *                         Google Maps key for Android, restricted to each APP_ID and its signing SHA-1.
  *                         Without it Android builds pin addresses to GPS only, with no map.

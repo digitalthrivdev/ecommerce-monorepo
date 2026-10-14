@@ -1,6 +1,6 @@
 "use client";
 
-import { INDIAN_STATES } from "@grocery/validation";
+import { INDIAN_STATES } from "@shop/validation";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 

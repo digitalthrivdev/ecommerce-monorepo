@@ -1,5 +1,5 @@
 # ${API_DOMAIN}, ${ADMIN_DOMAIN} and ${SITE_DOMAIN} are filled in from the environment when Nginx
-# starts. One certificate (name "grocery") covers them and www.${SITE_DOMAIN}; see
+# starts. One certificate (name "shop") covers them and www.${SITE_DOMAIN}; see
 # request-certificate.sh.
 
 server_tokens off;
@@ -39,8 +39,8 @@ server {
     http2 on;
     server_name ${API_DOMAIN};
 
-    ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/shop/privkey.pem;
 
     client_max_body_size 2m;
 
@@ -65,8 +65,8 @@ server {
     http2 on;
     server_name ${ADMIN_DOMAIN};
 
-    ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/shop/privkey.pem;
 
     # Image uploads (up to 10 MB) pass through the dashboard.
     client_max_body_size 12m;
@@ -84,8 +84,8 @@ server {
     http2 on;
     server_name ${SITE_DOMAIN};
 
-    ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/shop/privkey.pem;
 
     client_max_body_size 1m;
     add_header Strict-Transport-Security "max-age=31536000" always;
@@ -101,8 +101,8 @@ server {
     http2 on;
     server_name www.${SITE_DOMAIN};
 
-    ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/shop/privkey.pem;
 
     return 301 https://${SITE_DOMAIN}$request_uri;
 }
@@ -111,7 +111,7 @@ server {
 server {
     listen 80 default_server;
     listen 443 ssl default_server;
-    ssl_certificate /etc/letsencrypt/live/grocery/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/grocery/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/shop/privkey.pem;
     return 444;
 }

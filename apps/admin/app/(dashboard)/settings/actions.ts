@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { GST_RATE_PATTERN } from "@grocery/validation";
+import { GST_RATE_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";

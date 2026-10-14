@@ -1,4 +1,4 @@
-import { COUPON_CODE_PATTERN } from "@grocery/validation";
+import { COUPON_CODE_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { CouponDiscountType } from "../../generated/prisma/client";
