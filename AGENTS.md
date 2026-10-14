@@ -1,78 +1,84 @@
-# Grocery Platform — Project Instructions
+# Shop Platform — Project Instructions
 
-A white-label quick-commerce grocery platform (a simplified Blinkit). One codebase, deployed separately for each client. The goal is the smallest production-capable B1 MVP: for every decision, ask "does this help deliver and operate a real grocery client?" If not, defer it.
+A white-label single-vendor e-commerce platform, like a Shopify store: one seller per deployment, selling any kind of physical product through a website and a mobile app. Orders ship through third-party logistics (Shiprocket, Fship, any other carrier, or manual self-ship); payment is online through a gateway, or cash on delivery. One codebase, deployed separately for each client. The goal is the smallest production-capable MVP: for every decision, ask "does this help deliver and operate a real shop?" If not, defer it.
 
 `README.md` covers setup and commands. `docs/deployment.md` is the deployment runbook (servers and per-client app builds); follow it for any deploy or build. `TODO.md` lists deferred work.
+
+**Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until a phase lands, the code still contains stores, store pricing, delivery partners, the delivery app and the grocery order statuses. This file describes the target. Don't extend grocery-only features; remove or convert them only in the phase that covers them.
 
 ## Repository
 
 - `apps/api`: Fastify modular monolith (TypeScript, Prisma 7.10, PostgreSQL, Redis via ioredis, Zod).
-  - Modules live in `src/modules/`: auth, users, stores, categories, brands, products, catalog-import, inventory, cart, coupons, orders, payments, delivery, ratings, reviews, notifications, settings, uploads.
+  - Modules live in `src/modules/`: auth, users, categories, brands, products, catalog-import, inventory, cart, wishlist, coupons, orders, invoices, payments, shipping, returns, ratings, reviews, notifications, reports, settings, uploads.
   - Infrastructure is in `src/infrastructure/` (database, redis) and Fastify plugins in `src/plugins/`.
-- `apps/admin`: Next.js 16 dashboard for admins and store staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
-- `apps/web`: Next.js 16 public website on the client's main domain: home page built from the Appearance home sections (like the customer app), policy pages and app download links. Read-only for now; web ordering would follow the app's flow through the same API. It calls the API only from the server (`API_URL`).
-- `apps/customer`, `apps/delivery`: Expo / React Native apps.
+- `apps/admin`: Next.js 16 dashboard for admins and staff (Tailwind, shadcn/ui). It calls the API only from the server (`API_URL`).
+- `apps/web`: Next.js 16 storefront on the client's main domain: home page from the Appearance sections, category and search listings, product pages, cart, checkout, account, and policy pages. It calls the API only from the server (`API_URL`); the customer's token lives in an httpOnly secure cookie.
+- `apps/customer`: Expo / React Native customer app. There is no delivery or rider app.
 - `deploy/`: production stack. `docker/`: dev PostgreSQL and Redis. `packages/validation`: validation patterns, Indian states and GSTIN checks shared by the API and admin (TypeScript source, no dependencies, no build).
 - pnpm workspaces and Turborepo. Do not split the backend into microservices.
 
-## B1 scope
+## MVP scope
 
-- **Customers:** phone OTP, profile, addresses, current location, serviceability, nearest store, catalog and search, cart, checkout (COD and online), order status and live tracking, history, cancellation where allowed.
-- **Store staff:** incoming orders, accept, pick, mark items unavailable, pack, ready for pickup, inventory adjustments, product availability.
-- **Admins:** dashboard, stores, categories, products, store pricing, inventory, orders, customers, delivery partners, assign/reassign, monitor delivery, cancellation and refunds, delivery charges, basic analytics, settings.
-- **Delivery partners:** online/offline, assigned deliveries, accept, navigate to store and customer, pickup, call customer, delivery OTP, mark delivered, history and earnings.
+- **Customers (website and app):** phone OTP, profile, addresses, catalog, search and filters, product page with variants and a pincode check, wishlist, cart, checkout (COD and online), order status and shipment tracking, history, cancellation before shipping, returns.
+- **Staff:** orders, pack, ship (create the shipment, print the label), inventory adjustments, product availability.
+- **Admins:** dashboard, categories, brands, products and variants (price, stock, weight, dimensions), inventory, orders, customers, shipping (carriers, pickup locations, shipments, NDR and RTO), cancellations, returns and refunds, coupons, shipping fees, reports, appearance, website and settings.
 
-Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING → PACKED → READY_FOR_PICKUP → ASSIGNED → PICKED_UP → OUT_FOR_DELIVERY → DELIVERED`, plus cancellation where the rules allow. Do not invent states. Record every status change in `OrderStatusHistory`.
+Order lifecycle: `PENDING_PAYMENT → CONFIRMED → PACKED → SHIPPED → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED`, plus `CANCELLED` (before `SHIPPED`) and `RTO` (returned to origin by the carrier). Do not invent states. Record every status change in `OrderStatusHistory`.
 
 **Do not build unless explicitly asked:**
-- microservices or a multi-vendor marketplace;
-- multi-store carts;
-- warehouse features: bins, batches, expiry, suppliers, procurement, purchase orders, stock transfers, barcode scanning (a variant's barcode is just a searchable field);
-- route optimization, delivery batching, dispatch algorithms or a driver marketplace;
+- microservices, multiple vendors or a marketplace;
+- multiple shipments per order, exchanges, digital products or subscriptions, guest checkout;
+- live carrier rate shopping (the shipping fee comes from settings);
+- warehouse features: bins, batches, expiry, suppliers, procurement, purchase orders, multiple warehouses, barcode scanning (a variant's barcode is just a searchable field);
+- an own delivery fleet, rider app or dispatch;
 - dynamic pricing, wallet, loyalty, referrals, recommendations or a complex coupon engine;
-- a custom map engine, chat, an analytics warehouse, or commissions and payouts.
+- chat, an analytics warehouse, or commissions and payouts.
 
 ## Domain rules
 
-- **Store selection:** the nearest active store that serves the location and has every cart item in stock.
-- **Delivery assignment:** manual. A semi-automatic suggestion is fine.
-- **Live tracking:** partner locations go through Redis and realtime. Don't persist every GPS update; `DeliveryLocation` is only for useful history.
-- **Catalog:** `Product` is the global catalog entry (brand, category, tags, HSN/GST, compliance details). Its variants (`ProductVariant`: SKU, pack size, per-order limit) are the sellable units.
-  - Products may define up to 3 option axes (`ProductOption` / `ProductOptionValue`, e.g. Size × Flavour); each variant picks one value per axis. A product without options has exactly one default variant with an empty `name`.
+- **Catalog:** `Product` is the catalog entry: brand, category, tags, HSN/GST, manufacturer, country of origin, and specifications (an ordered list of key/value pairs). Its variants (`ProductVariant`) are the sellable units: SKU, price, `compareAtPrice`, weight (`weightGrams`), dimensions (`lengthCm`, `breadthCm`, `heightCm`), per-order limit and barcode.
+  - Products may define up to 3 option axes (`ProductOption` / `ProductOptionValue`, e.g. Size × Colour); each variant picks one value per axis. A product without options has exactly one default variant with an empty `name`.
   - `ProductImage` belongs to the product, optionally to one variant.
-  - `StoreProduct` is one store's price and availability for a variant, and `Inventory` is a quantity per `StoreProduct`. Never duplicate products per store. Inventory is only a quantity.
-  - Manual stock changes need a reason (RESTOCK, CORRECTION, DAMAGE) and are logged in `InventoryAdjustment`, as are items staff mark unavailable.
+  - `Inventory` is one quantity per variant. Inventory is only a quantity.
+  - Manual stock changes need a reason (RESTOCK, CORRECTION, DAMAGE) and are logged in `InventoryAdjustment`, as are restocks from returns and RTO.
   - Categories are at most two levels deep; filtering by a category includes its sub-categories.
-- **Store hours:** `StoreHours` per weekday in the `TIMEZONE` env time zone. No rows means always open. Checkout is refused while the store is closed.
-- **Cart:** a cart belongs to one store and holds variants. Revalidate or clear it when the store changes. Quantity per item is capped by the variant's limit and `MAX_QUANTITY_PER_ITEM`.
-- **Order snapshots:** order items store the product and variant name, SKU, image, unit price, MRP, HSN, GST rate and included tax; orders store the tax total and the delivery address (name, phone, address lines, landmark, city, state, postal code, latitude, longitude). Never read current product or address data to show an old order.
-- **Tax:** prices include GST; the included tax is `amount × rate / (100 + rate)`. An invoice number (`INV/<financial year>/000001`) is assigned when the order is delivered.
-- **Order creation** is one transaction: validate the cart, store and stock; calculate prices; create the order and items; decrement stock; create the payment; clear the cart; write the first history entry. Never leave a partial order.
+- **Pickup locations:** `PickupLocation` is an address and phone number carriers collect parcels from. Exactly one is the default.
+- **Cart:** one per customer, holding variants. Quantity per item is capped by the variant's limit, `MAX_QUANTITY_PER_ITEM` and the stock.
+- **Order snapshots:** order items store the product and variant name, SKU, image, unit price, MRP, HSN, GST rate and included tax. Orders store the tax total, shipping fee, COD fee and their tax, and the delivery address (name, phone, address lines, landmark, city, state, pincode, optional latitude and longitude). Never read current product or address data to show an old order.
+- **Tax:** prices include GST; the included tax is `amount × rate / (100 + rate)`. An invoice number (`INV/<financial year>/000001`) is assigned when the order is packed.
+- **Shipping fee:** from settings (flat rate, free-shipping threshold, COD fee, optional weight slabs), calculated on the server with Decimal and snapshotted on the order. Minimum order amount and per-item limits apply.
+- **Serviceability:** whether a pincode is served, and whether COD is available there, comes from the active carrier (pickup pincode, delivery pincode, weight, COD), cached in Redis. The manual carrier accepts every pincode. Order creation refuses unserviceable pincodes and COD where it isn't available.
+- **Order creation** is one transaction: validate the cart, stock and address; calculate prices, shipping and COD fees; create the order and items; decrement stock; create the payment; clear the cart; write the first history entry. Never leave a partial order.
 - **Stock changes** are atomic (a conditional update inside a transaction), never read, check, then write.
-- **Payments:** COD and ONLINE. Provider fields stay generic (`provider`, `transactionId`, `providerOrderId`). Statuses: PENDING, PROCESSING, PAID, FAILED, REFUNDED.
-- **Delivery** is separate from the order: Order → Delivery → DeliveryPartner.
-  - Partner statuses: OFFLINE, ONLINE, BUSY.
-  - Delivery statuses: PENDING, ASSIGNED, PICKED_UP, OUT_FOR_DELIVERY, DELIVERED, CANCELLED.
+- **Cancellation:** allowed before `SHIPPED`. It restocks the items and refunds online payments.
+- **Payments:** COD and ONLINE. Gateways implement `PaymentProvider` and are registered in the gateway registry. Provider fields stay generic (`provider`, `transactionId`, `providerOrderId`). Statuses: PENDING, PROCESSING, PAID, FAILED, REFUNDED.
+- **Shipping** is separate from the order: Order → `Shipment` (one per order) → `ShipmentEvent`.
+  - Carriers implement `ShippingProvider` in `modules/shipping` and are registered in the `CARRIERS` registry, the same way as payment gateways: `manual` (admin enters courier name, AWB and tracking URL), `mock` (outside production only), Shiprocket and Fship. Only one carrier is active at a time.
+  - `Shipment` keeps generic provider fields: `provider`, `providerOrderId`, `providerShipmentId`, `awb`, `courierName`, `trackingUrl`, `labelUrl`.
+  - Shipment statuses: PENDING, AWB_ASSIGNED, PICKUP_SCHEDULED, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, NDR, RTO_IN_TRANSIT, RTO_DELIVERED, CANCELLED, LOST. Each carrier maps its own statuses to these.
+  - Shipment status changes update the order status through one mapping, written to `OrderStatusHistory`.
+  - Carrier webhooks verify their signature or token and are idempotent: a repeated event changes nothing.
+- **Returns:** a customer requests a return per item within the return window from settings, with a reason and photos. An admin approves or rejects it; the reverse pickup goes through the carrier when it supports it, otherwise manually. On receipt the admin restocks (logged) and refunds through the `Refund` flow. For RTO shipments the admin confirms receipt, restocks, and refunds online payments.
 - **Money:** `Decimal @db.Decimal(10, 2)` and Decimal arithmetic for subtotals, fees, discounts, totals and payment amounts. Never JavaScript floats.
 
 ## Authentication
 
-- **Customers and delivery partners** sign in with phone OTP. OTPs live in Redis with a TTL (`otp:{phone}`); never store them in PostgreSQL.
-- **Admins and store staff** sign in to the dashboard with email and password (`POST /auth/login`) and cannot use OTP.
+- **Customers** sign in with phone OTP. OTPs live in Redis with a TTL (`otp:{phone}`); never store them in PostgreSQL.
+- **Admins and staff** sign in to the dashboard with email and password (`POST /auth/login`) and cannot use OTP.
   - Passwords are scrypt hashes (`shared/password.ts`), and failed attempts are rate-limited per email and network.
   - Admins set and reset staff passwords in the dashboard. The first admin, and any admin password reset, uses the `create-admin` script.
 - **SMS fallback:** in development, OTPs are written to the API log until an SMS provider is set up. In production, OTP sign-in is unavailable until an admin configures SMS. `OTP_PROVIDER` in the environment overrides the dashboard choice, for recovery.
-- **Review login** (Settings → SMS sign-in), for app store and payment gateway reviewers and sales demos: one phone number signs in to a customer account, and one to an existing rider account, with a fixed code and no SMS.
- - Off by default. Codes are stored only as HMACs. The customer number never applies to admin, staff or rider accounts, and orders from it are flagged "Review account" (not when it is a test account, as on a demo); the rider number only signs in to a rider account.
- - Do not extend it to other roles or numbers.
-- **Test accounts** (`User.isTestAccount`, set with the `test-account` script) are demo accounts for prospects. The flag is in the sign-in token: a test admin can only read, plus run the store's fulfilment steps (accept, pick, mark unavailable, pack, ready) and assign riders, and test staff, customers and riders are limited.
+- **Review login** (Settings → SMS sign-in), for app store and payment gateway reviewers and sales demos: one phone number signs in to a customer account with a fixed code and no SMS.
+  - Off by default. The code is stored only as an HMAC. The number never applies to admin or staff accounts, and orders from it are flagged "Review account" (not when it is a test account, as on a demo).
+  - Do not extend it to other roles or numbers.
+- **Test accounts** (`User.isTestAccount`, set with the `test-account` script) are demo accounts for prospects. The flag is in the sign-in token: a test admin can only read, plus run the order fulfilment steps, and test staff and customers are limited.
 
 ## White-label
 
-- **No shared-database multi-tenancy.** Each client has its own API, PostgreSQL, Redis, secrets, dashboard and app builds. No `tenantId`.
-- **Branding and business settings** (name, logo, colors, currency, timezone, fees, minimum order, service radius, home sections) live in dashboard settings or env defaults, never in business logic.
-- **Mobile builds:** each client has build profiles in `apps/*/eas.json` (name, package ID, scheme, API URL) and a brand folder `apps/*/brands/<brand>/` (icon, splash), read by each app's `app.config.js`. Shared EAS environments hold only values common to all clients. See `docs/deployment.md`.
-- **Secrets** are environment variables. The one exception: payment gateway keys (Razorpay, Cashfree, …) and SMS provider keys (Message Central, …) may also be entered in the dashboard.
+- **No shared-database multi-tenancy.** Each client has its own API, PostgreSQL, Redis, secrets, dashboard, website and app builds. No `tenantId`.
+- **Branding and business settings** (name, logo, colors, currency, timezone, shipping fees, minimum order, return window, home sections) live in dashboard settings or env defaults, never in business logic.
+- **Mobile builds:** each client has its own EAS project and Firebase project, build profiles in `apps/customer/eas.json` (name, package ID, scheme, API URL, EAS project) and a brand folder `apps/customer/brands/<brand>/` (icon, splash), read by `app.config.js`. See `docs/deployment.md`.
+- **Secrets** are environment variables. The one exception: payment gateway keys (Razorpay, Cashfree, …), SMS provider keys (Message Central, …) and shipping carrier keys (Shiprocket, Fship, …) may also be entered in the dashboard.
   - They're stored AES-256-GCM encrypted with `SECRETS_ENCRYPTION_KEY` and are write-only: the API never returns them.
   - Keys set in the environment take priority.
   - Do not extend this to other secrets without an explicit decision.
@@ -83,18 +89,19 @@ Images are uploaded through the `uploads` module (`POST /images`), converted to 
 
 ## Security
 
-- Hash passwords and delivery OTPs. OTPs are short-lived.
-- The JWT secret comes from the environment. Use Helmet and configure CORS.
+- Hash passwords. OTPs are short-lived.
+- The JWT secret comes from the environment. Use Helmet and configure CORS. On the website the customer token is an httpOnly, secure cookie, never readable by browser scripts.
 - Validate body, query, params and important config with Zod, and keep database constraints too.
-- The server calculates all prices and totals and checks stock, store and serviceability. Never trust client input.
-- Never expose database credentials or payment secrets.
+- The server calculates all prices, fees and totals and checks stock and serviceability. Never trust client input.
+- Payment and carrier webhooks verify their signature or token before changing anything.
+- Never expose database credentials, payment or carrier secrets.
 - Never commit `.env` files, secrets, keys or production credentials. Never reuse development credentials in production.
 
 ## Backend code
 
 - Structure: route → handler → service → data access → Prisma. Combine layers in simple modules. No enterprise patterns, no queries scattered through handlers, no business logic in `server.ts`.
 - Routes are resource-oriented and predictable (`GET /orders/:id`, `POST /orders/:id/cancel`).
-- Paginate and limit lists, and avoid N+1 queries and huge payloads. Use indexes, transactions, Redis caching where useful and WebSockets for realtime. Don't optimize prematurely.
+- Paginate and limit lists, and avoid N+1 queries and huge payloads. Use indexes, transactions and Redis caching where useful. Don't optimize prematurely.
 
 ## Prisma 7.10.0
 
@@ -106,10 +113,10 @@ Never upgrade to Prisma 8 or use Prisma 8 APIs; the project hit a 7/8 mismatch b
 
 ## Environment
 
-- **Machine:** Windows with WSL2, project at `/home/piyush/projects/grocery-platform`. Docker Engine runs inside WSL; never suggest Docker Desktop. Node 24, pnpm 11.
-- **Dev services** (`docker/docker-compose.yml`): PostgreSQL 17 on host port 5433 (5432 is taken by a Windows PostgreSQL) and Redis 7 on 6379. Database, user and password: `grocery` / `grocery` / `grocery_dev`. These are for development only.
+- **Machine:** Windows with WSL2, project at `/home/piyush/projects/shop-platform`. Docker Engine runs inside WSL; never suggest Docker Desktop. Node 24, pnpm 11.
+- **Dev services** (`docker/docker-compose.yml`, Compose project `shop`): PostgreSQL 17 on host port 5434 and Redis 7 on host port 6380, so they run next to other projects' containers (5432 is taken by a Windows PostgreSQL). Database, user and password: `shop` / `shop` / `shop_dev`. These are for development only.
 - **Production** (`deploy/`): one Compose stack per client.
-  - It runs PostgreSQL, Redis, migrations, the API, the dashboard, the public website (`apps/web` on `SITE_DOMAIN`), Nginx with Let's Encrypt, an uploads volume and daily backups.
+  - It runs PostgreSQL, Redis, migrations, the API, the dashboard, the storefront (`apps/web` on `SITE_DOMAIN`), Nginx with Let's Encrypt, an uploads volume and daily backups.
   - Configured by `deploy/.env` and `deploy/api.env` on the server. Setup steps are in `deploy/.env.example`.
 - **Health check:** `GET /health` returns `status`, `database` and `redis` as `ok`.
 

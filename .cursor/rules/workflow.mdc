@@ -19,14 +19,14 @@ git commit -m "feat(scope): what changed"
 ```
 
 ## Save tokens and time
-- Never block on or poll long tasks (EAS builds, Docker builds on the VPS, deploys). Start them with `--no-wait`, or `nohup … > ~/.cache/grocery-build/<name>.log 2>&1 &`, or hand the command to the developer and ask for the result.
+- Never block on or poll long tasks (EAS builds, Docker builds on a server, deploys). Start them with `--no-wait`, or `nohup … > ~/.cache/shop-build/<name>.log 2>&1 &`, or hand the command to the developer and ask for the result.
 - Search with `rg`/Grep and read only what's needed. The generated Prisma client and `pnpm-lock.yaml` are kept out of the index; read `schema.prisma` instead.
 - Keep progress notes to a sentence or two.
 - When the conversation is long or the topic changes, suggest starting a new chat.
 
 ## Verification depth
 - Copy, styling and small UI changes: typecheck and lint only.
-- Money, auth, stock, orders, database, uploads, deploy config: full checks (see "Done means verified" in AGENTS.md).
+- Money, auth, stock, orders, shipping, returns, database, uploads, deploy config: full checks (see "Done means verified" in AGENTS.md).
 
 ## code-review-graph
 Useful for reviewing large diffs (`detect_changes_tool`) and checking what a change affects. It can be stale and leaves many calls unresolved, so confirm exact checks with `rg`: every caller, every query returning a model, every use before a rename.

@@ -1,15 +1,18 @@
-# Grocery Platform
+# Shop Platform
 
-A white-label quick-commerce grocery delivery platform: a customer app, a delivery partner app, an admin and store staff dashboard, and the API behind them. The same code is deployed separately for each client, with its own database, Redis, secrets and app builds.
+A white-label single-vendor e-commerce platform, like a Shopify store: one seller per deployment, any kind of physical product. Customers buy on the storefront website or the customer app; admins and staff run the shop from a dashboard; orders ship through third-party carriers (Shiprocket, Fship, any courier, or manual self-ship), with online payment or cash on delivery. The same code is deployed separately for each client, with its own database, Redis, secrets and app builds.
+
+> **Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until that is finished, parts of the code (stores, store pricing, delivery partners, `apps/delivery`) still follow the grocery model. `AGENTS.md` describes the target.
 
 ## What's in the repository
 
 | App | Path | Stack | Used by |
 | --- | --- | --- | --- |
 | API | `apps/api` | Fastify, Prisma 7, PostgreSQL, Redis, Zod | All apps |
-| Dashboard | `apps/admin` | Next.js 16, React, Tailwind CSS, shadcn/ui | Admins and store staff |
+| Dashboard | `apps/admin` | Next.js 16, React, Tailwind CSS, shadcn/ui | Admins and staff |
+| Storefront | `apps/web` | Next.js 16 | Customers, on the client's main domain |
 | Customer app | `apps/customer` | Expo, React Native | Customers |
-| Delivery app | `apps/delivery` | Expo, React Native | Delivery partners |
+| Delivery app | `apps/delivery` | Expo, React Native | Being removed |
 
 Other folders:
 
@@ -17,26 +20,17 @@ Other folders:
 - `deploy/`: the production stack (Docker Compose, Nginx, Let's Encrypt, daily backups).
 - `packages/validation`: validation rules shared by the API and the dashboard (phone, money, SKU and code patterns, Indian states, GSTIN checks). Plain TypeScript with no dependencies, loaded as source (no build step).
 - `AGENTS.md`: product scope, architecture and coding rules. Read it before making larger changes.
-- `docs/deployment.md`: deploying a client's server and building their apps.
+- `docs/deployment.md`: deploying a client's server and building their app.
 - `TODO.md`: known gaps and planned work.
 
-The API is a modular monolith. Each domain lives in `apps/api/src/modules/` (auth, users, stores, categories, products, inventory, cart, orders, payments, delivery, notifications, settings).
-
-## Features
-
-- **Customers:** phone OTP sign-in, addresses, nearest serviceable store, catalog and search, cart, checkout with cash on delivery or online payment, live order tracking, order history and cancellation.
-- **Store staff:** incoming orders, accept, pick, mark items unavailable, pack, ready for pickup, inventory adjustments.
-- **Admins:** stores, categories, products, store pricing, inventory, orders, customers, delivery partners and assignment, refunds, delivery charges, branding and platform settings, payment and SMS provider keys.
-- **Delivery partners:** online/offline status, assigned deliveries, pickup, navigation, delivery OTP, history and earnings.
-
-Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING → PACKED → READY_FOR_PICKUP → ASSIGNED → PICKED_UP → OUT_FOR_DELIVERY → DELIVERED`, with cancellation where the rules allow it.
+The API is a modular monolith. Each domain lives in `apps/api/src/modules/`.
 
 ## Requirements
 
 - Node.js 24
 - pnpm 11 (`corepack enable` picks up the version pinned in `package.json`)
 - Docker Engine with Docker Compose (on Windows, run it inside WSL2)
-- For the mobile apps: Expo Go or a development build on a phone, and an [Expo](https://expo.dev) account for EAS builds
+- For the mobile app: Expo Go or a development build on a phone, and an [Expo](https://expo.dev) account for EAS builds
 
 ## Local development
 
@@ -46,7 +40,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
    pnpm install
    ```
 
-2. Start PostgreSQL (host port 5433) and Redis (port 6379):
+2. Start PostgreSQL (host port 5434) and Redis (host port 6380). The Compose project is named `shop`, so it runs next to other projects' containers:
 
    ```bash
    docker compose -f docker/docker-compose.yml up -d
@@ -57,8 +51,8 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
    ```bash
    cp apps/api/.env.example apps/api/.env
    cp apps/admin/.env.example apps/admin/.env
+   cp apps/web/.env.example apps/web/.env
    cp apps/customer/.env.example apps/customer/.env
-   cp apps/delivery/.env.example apps/delivery/.env
    ```
 
    In `apps/api/.env`, set `JWT_SECRET` to a long random string and `SECRETS_ENCRYPTION_KEY` to the output of `openssl rand -base64 32`. The defaults work for everything else.
@@ -72,9 +66,9 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
    cd ../..
    ```
 
-   The seed is idempotent and creates an admin, a customer, a store with staff, a delivery partner, 7 categories and 30 products with stock.
+   The seed is idempotent and creates an admin, staff, a customer, categories and products with stock.
 
-5. Start the API (http://localhost:4000) and the dashboard (http://localhost:3000):
+5. Start the API (http://localhost:4000), the dashboard (http://localhost:3000) and the storefront (http://localhost:3001):
 
    ```bash
    pnpm dev
@@ -82,11 +76,10 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 
    Check the API with `curl localhost:4000/health`.
 
-6. Start a mobile app in another terminal and open it in Expo Go:
+6. Start the customer app in another terminal and open it in Expo Go:
 
    ```bash
    pnpm --filter customer start
-   pnpm --filter delivery start
    ```
 
    Local Metro always talks to the API on the machine running Expo (port 4000), not the production URL in `eas.json`. If the phone can't reach it, set `EXPO_PUBLIC_DEV_API_URL` in the app's `.env` (LAN IP, `http://10.0.2.2:4000` on the Android emulator, or a tunnel).
@@ -95,10 +88,9 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → STORE_ACCEPTED → PICKING �
 
 | Who | Sign in with |
 | --- | --- |
-| Admin | `admin@grocery.test`, password `grocery-dev` |
-| Store staff | `staff@grocery.test`, password `grocery-dev` |
+| Admin | `admin@shop.test`, password `shop-dev` |
+| Staff | `staff@shop.test`, password `shop-dev` |
 | Customer | `+919000000002` and an OTP |
-| Delivery partner | `+919000000004` and an OTP |
 
 In development, OTPs are written to the API log unless an SMS provider is configured. To be sure no real SMS goes out while testing, start the API with `OTP_PROVIDER=log`.
 
@@ -107,20 +99,20 @@ In development, OTPs are written to the API log unless an SMS provider is config
 Run these from the repository root:
 
 ```bash
-pnpm dev          # API and dashboard in watch mode
+pnpm dev          # API, dashboard and storefront in watch mode
 pnpm typecheck    # all apps
 pnpm lint         # all apps
 pnpm test         # API tests (needs the dev PostgreSQL and Redis running)
 pnpm build        # all apps
 ```
 
-For a single app, add a filter: `pnpm --filter @grocery/api typecheck`, `pnpm --filter admin lint`, and so on.
+For a single app, add a filter: `pnpm --filter @shop/api typecheck`, `pnpm --filter admin lint`, and so on.
 
 ### Tests
 
-The API tests (`apps/api/test`, Vitest) call the API in-process, without a server. Each run creates its own database (`grocery_test_<timestamp>`) on the dev PostgreSQL, applies the migrations and the seed, and drops it at the end; Redis database 15 is used and flushed. They never touch the dev database or `apps/api/.env`, and OTPs are only logged. Run one file with `pnpm --filter @grocery/api test orders`, or watch with `pnpm --filter @grocery/api test:watch`.
+The API tests (`apps/api/test`, Vitest) call the API in-process, without a server. Each run creates its own database (`shop_test_<timestamp>`) on the dev PostgreSQL, applies the migrations and the seed, and drops it at the end; Redis database 15 is used and flushed. They never touch the dev database or `apps/api/.env`, and OTPs are only logged. Run one file with `pnpm --filter @shop/api test orders`, or watch with `pnpm --filter @shop/api test:watch`.
 
-GitHub Actions (`.github/workflows/ci.yml`) runs the Prisma checks, typecheck, lint and tests on every push and pull request, and on `main` also builds the production images (see [docs/deployment.md](docs/deployment.md#prebuilt-images-recommended-for-small-servers)).
+GitHub Actions (`.github/workflows/ci.yml`) runs the Prisma checks, typecheck, lint and tests on every push and pull request. It doesn't build images or deploy.
 
 ### Changing the database schema
 
@@ -138,23 +130,24 @@ Commit the new folder under `prisma/migrations/`. Stay on Prisma 7; don't upgrad
 
 ## Sign-in
 
-- **Customers and delivery partners** sign in with their phone number and an OTP sent by SMS. OTPs live only in Redis and expire after 5 minutes. Sends are rate-limited per phone and per network.
-- **Admins and store staff** sign in to the dashboard with email and password, and can't use OTP. Passwords are stored as scrypt hashes, and failed attempts are rate-limited. Admins set and reset staff passwords on the store page.
+- **Customers** sign in with their phone number and an OTP sent by SMS. OTPs live only in Redis and expire after 5 minutes. Sends are rate-limited per phone and per network.
+- **Admins and staff** sign in to the dashboard with email and password, and can't use OTP. Passwords are stored as scrypt hashes, and failed attempts are rate-limited. Admins set and reset staff passwords in the dashboard.
 - **The first admin** of a deployment is created with a script, which asks for the password. Running it again resets that admin's password:
 
   ```bash
   # development
-  pnpm --filter @grocery/api admin:create --email you@example.com --phone +919876543210 --name "Your Name"
+  pnpm --filter @shop/api admin:create --email you@example.com --phone +919876543210 --name "Your Name"
   # production (from deploy/)
   docker compose run --rm api node dist/scripts/create-admin.js --email you@example.com --phone +919876543210
   ```
 
-## Payments and SMS
+## Payments, SMS and shipping
 
 Admins configure providers in the dashboard under **Settings**:
 
 - **Payments:** cash on delivery always works. For online payments, add Razorpay or Cashfree keys and choose the active gateway. Outside production, a test gateway that charges nothing is also available.
-- **SMS (customer and delivery partner OTPs):** add Message Central keys and select it as the SMS provider.
+- **SMS (customer OTPs):** add Message Central keys and select it as the SMS provider.
+- **Shipping:** choose the active carrier (manual self-ship, Shiprocket, Fship; a mock carrier outside production) and add its keys.
 
 Keys saved in the dashboard are encrypted with `SECRETS_ENCRYPTION_KEY` and are never shown again. Keys set as environment variables take priority over them. `apps/api/.env.example` lists every setting.
 
@@ -162,7 +155,7 @@ Keys saved in the dashboard are encrypted with `SECRETS_ENCRYPTION_KEY` and are 
 
 Product, category, logo and banner images are uploaded in the dashboard. You can also paste a link to an image hosted elsewhere.
 
-- **Processing:** the API (`POST /images`, admins and store staff) converts each upload to WebP in two sizes, 1200 px and 400 px on the longest side. It also turns photos upright and removes their metadata. Uploads are limited to 10 MB in JPEG, PNG, WebP, AVIF or GIF.
+- **Processing:** the API (`POST /images`, admins and staff) converts each upload to WebP in two sizes, 1200 px and 400 px on the longest side. It also turns photos upright and removes their metadata. Uploads are limited to 10 MB in JPEG, PNG, WebP, AVIF or GIF.
 - **Storage:** files go on the server's disk in `UPLOADS_DIR`, named by their content. Uploading the same file twice stores it once.
 - **Serving:**
   - Production: Nginx serves `/uploads/` directly, with a one-year cache.
@@ -178,21 +171,21 @@ Each client gets its own server (or Compose project) running `deploy/compose.yml
 
 - PostgreSQL and Redis, which aren't exposed to the internet;
 - a one-off service that runs database migrations on every start;
-- the API and the dashboard;
+- the API, the dashboard and the storefront;
 - Nginx with Let's Encrypt certificates that renew automatically;
 - a volume for uploaded images, served by Nginx;
 - a daily `pg_dump` backup kept for 14 days, plus a copy of new images.
 
-To update a server: `deploy/update.sh`. It pulls the code and either the images CI built for that commit (`IMAGE_PREFIX` in `deploy/.env`) or builds them on the server. Migrations run automatically.
+To update a server: `deploy/update.sh`. It pulls the code and builds the images on the server. Migrations run automatically.
 
 **[docs/deployment.md](docs/deployment.md)** is the full runbook: setting up a new client, updating safely (pending migrations, backups), rollback and restore, and the launch checklist.
 
 ## Mobile app builds
 
-Both Expo apps are built with EAS. Each client gets:
+The customer app is built with EAS. Each client gets their own EAS project and Firebase project, plus:
 
-- a brand folder, `apps/<app>/brands/<brand>/`, with the launcher icon, splash screen and their colours;
-- build profiles in `apps/<app>/eas.json`, such as `acme-preview` (an APK to install directly) and `acme-production` (Play Store), with the app name, package ID, link scheme and API URL.
+- a brand folder, `apps/customer/brands/<brand>/`, with the launcher icon, splash screen and their colours;
+- build profiles in `apps/customer/eas.json`, such as `acme-preview` (an APK to install directly) and `acme-production` (Play Store), with the app name, package ID, link scheme, API URL and EAS project. Copy the `example-*` profiles.
 
 ```bash
 cd apps/customer
@@ -201,11 +194,11 @@ npx eas build --profile acme-preview --platform android
 
 When the EAS build quota is used up, build on your own machine with `--local`; setup and commands are in [docs/deployment.md](docs/deployment.md#5-building-locally-when-eas-cloud-builds-run-out).
 
-The shared EAS environments hold only values common to every client (the Firebase file). Colours, logo and texts inside the app come from the client's dashboard at runtime, so they don't need a rebuild. Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Details are in [docs/deployment.md](docs/deployment.md#mobile-apps-per-client).
+Colours, logo and texts inside the app come from the client's dashboard at runtime, so they don't need a rebuild. Anything prefixed with `EXPO_PUBLIC_` is bundled into the app, so never put secrets there. Details are in [docs/deployment.md](docs/deployment.md#mobile-app-per-client).
 
 ## Security notes
 
 - Never commit `.env`, `deploy/.env`, `deploy/api.env`, keys or production credentials. All of them are gitignored.
 - Development credentials, such as the Docker database password and the seed passwords, are for local use only.
-- The server calculates all prices and totals, and checks stock, store and serviceability; client input is never trusted.
-- Delivery OTPs and passwords are stored only as hashes.
+- The server calculates all prices, fees and totals, and checks stock and serviceability; client input is never trusted.
+- Passwords are stored only as hashes; payment, SMS and carrier keys only encrypted.

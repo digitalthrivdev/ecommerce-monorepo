@@ -1,26 +1,19 @@
 # Deferred work
 
-Items intentionally postponed to finish the B1 MVP first. Move an item into active work only when it is needed.
+Items intentionally postponed to finish the MVP first. Move an item into active work only when it is needed. The conversion from the grocery platform (single seller, shipping carriers, storefront, returns) is planned separately and is not listed here.
 
 ## Before the first production launch
 
 - [ ] **Payment gateway go-live check.** Razorpay and Cashfree are implemented but only tested against fake credentials. Before launch, run a sandbox payment, a failed payment and a refund on each gateway the client will use, with `PUBLIC_API_URL` and `SECRETS_ENCRYPTION_KEY` set and webhooks registered (see `apps/api/.env.example`).
 - [ ] **Off-site backups.** `deploy/` keeps daily database dumps and a copy of uploaded images on the server only (`deploy/backups`); copy them to object storage or another machine (e.g. a nightly rclone/rsync job).
 
-## Sales demo (moozy)
+## Deployment
 
-- [ ] **Nightly demo reset.** Restore clean demo data every night (orders, carts, stock, cash deposits, uploads made by prospects) while keeping the four demo accounts, their test flags, the review logins and `DEMO_LOGINS`. Back up first; moozy is the only demo instance.
-- [ ] **Delete the local demo credentials** (`~/.cache/grocery-build/moozy-demo.env`) once they are saved elsewhere. App builds don't need the file. (The `api.env` backup on moozy was deleted on 11 Oct, after confirming moozy runs with `DEMO_LOGINS`.)
+- [ ] **Prebuilt images.** Servers build their own images on every update (about 5 minutes and 1.5 GB of RAM). For small servers, CI could build the `api`, `migrate`, `admin` and `web` images once per commit and push them to a registry, and `update.sh` could pull them instead.
+- [ ] **Automatic deploys** from CI to a client's server, once there are live clients (restricted SSH key, backup before update, health check after).
 
-## Delivery
+## Orders and payments
 
-- [ ] **Live tracking over WebSockets.** Push partner location and order status to the customer app (`@fastify/websocket`, Redis pub/sub so it works across API instances). Today the customer app polls `GET /orders/:id/tracking` every 10 seconds and glides the partner's marker on the map between updates; WebSockets are only worth it at much higher order volumes.
-- [ ] Push to the previous partner when an admin reassigns or removes them from an order (only the new partner is notified today).
-- [ ] Place suggestions while typing (Google Places autocomplete through the API). Search today finds a typed address with the phone's geocoder or Nominatim, without suggestions.
-
-## Orders and store workflow
-
-- [ ] Undo for an item marked unavailable by mistake (today the refund is issued immediately, so it is final).
 - [ ] Automatic refund of a duplicate online payment (currently logged as an error for manual refund).
 
 ## Catalog
@@ -33,13 +26,10 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Growth (after launch)
 
-- [ ] Small-cart or handling fee (today only a delivery fee and a free-delivery threshold).
-- [ ] Rider tips.
-- [ ] WhatsApp or SMS order updates for customers who turned off notifications.
-- [ ] Hindi and other local languages in the apps and website.
-- [ ] Scheduled delivery slots.
-- [ ] Substitutions when an item is out of stock.
-- [ ] **Product reviews: website and replies.** Reviews are built: customers who received a product rate it in the app, admins add named reviews and hide or delete any of them in the dashboard. Still open: showing the rating and reviews on the website's product page (`/p/<id>`), and admin replies shown under a review.
+- [ ] WhatsApp or SMS order and shipment updates for customers who turned off notifications.
+- [ ] Hindi and other local languages in the app and website.
+- [ ] Admin replies shown under a product review.
+- [ ] Abandoned cart reminders.
 
 ## Auth
 
@@ -47,5 +37,5 @@ Items intentionally postponed to finish the B1 MVP first. Move an item into acti
 
 ## Engineering
 
-- [ ] More API tests: payments (webhooks, refunds), delivery assignment and the partner flow, inventory adjustments, coupons. `apps/api/test` covers auth, checkout, cancellation, products and GST today.
-- [ ] Use `@grocery/validation` in the customer and delivery apps too (they still keep their own copy of the state list); needs Metro to resolve the workspace package.
+- [ ] More API tests: payments (webhooks, refunds), inventory adjustments, coupons. `apps/api/test` covers auth, checkout, cancellation, products and GST today.
+- [ ] Use `@shop/validation` in the customer app too (it still keeps its own copy of the state list); needs Metro to resolve the workspace package.

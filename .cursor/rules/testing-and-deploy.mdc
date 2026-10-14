@@ -1,30 +1,31 @@
 ---
-description: Local testing setup, WSL limits and the VPS deployment workflow
+description: Local testing setup, WSL limits and the server deployment workflow
 alwaysApply: true
 ---
 
 # Local testing
-- Start test servers with OTP logging and a separate port, so no real SMS is sent (the dev database may have Message Central selected; real SMS went out once):
+- Start test servers with OTP logging and a separate port, so no real SMS is sent (the dev database may have an SMS provider selected):
   ```bash
-  cd apps/api && OTP_PROVIDER=log PORT=4100 nohup pnpm exec tsx src/server.ts > ~/.cache/grocery-build/api-test.log 2>&1 &
+  cd apps/api && OTP_PROVIDER=log PORT=4100 nohup pnpm exec tsx src/server.ts > ~/.cache/shop-build/api-test.log 2>&1 &
   ```
 - Stop every server you started before finishing (`pkill -f "tsx src/server.ts"`, then check with `pgrep`).
-- Seed accounts: `admin@grocery.test` and `staff@grocery.test`, password `grocery-dev`. Customer `+919000000002`, partner `+919000000004` (OTP in the API log).
-- WSL memory is limited: run one heavy build at a time (Next.js build, Docker build) and write logs to `~/.cache/grocery-build/`, not `/tmp` (WSL restarts wipe it).
+- Seed accounts: `admin@shop.test` and `staff@shop.test`, password `shop-dev`. Customer `+919000000002` (OTP in the API log).
+- Test orders with the test payment gateway and the `mock` or `manual` carrier. Never create shipments, pickups or labels against a live carrier account while testing: they book real couriers and cost money. Carrier tests use recorded sample responses, never real API calls.
+- API tests: `pnpm test` (per-run test database; needs the dev PostgreSQL and Redis). Don't run it alongside a Docker or Next.js build.
+- WSL memory is limited: run one heavy build at a time (Next.js build, Docker build) and write logs to `~/.cache/shop-build/`, not `/tmp` (WSL restarts wipe it).
 
 # Deploying and building apps
 Follow `docs/deployment.md` (runbook and the table of current clients). The rules that must not be skipped:
-- Deploy only what the developer has pushed; the server pulls from GitHub.
+- Deploy only what the developer has pushed; the server pulls from GitHub. There are no automatic deploys: CI only checks.
 - Before deploying, check the deployed commit and read every pending migration (`git diff --name-only <deployed>..origin/main -- apps/api/prisma/migrations`). If one moves data, drops columns or adds `NOT NULL`, check it against the live data and run an on-demand backup first.
 - After deploying, confirm `docker compose ps` is healthy and `/health` is `ok`.
 - Update every client's server before handing out new app builds.
-- Each client is isolated: never reuse secrets between clients, never point one client's app at another's API.
-- App builds: per-client values go in that client's `eas.json` profiles and `brands/<brand>/`, never in the shared EAS environments. `APP_ID` is permanent once published; never change it for a published app. Never delete EAS credentials (signing keys). Submit with `--id <build id>`, never `--latest`.
+- Each client is isolated: never reuse secrets, EAS projects, Firebase projects or carrier and payment accounts between clients, and never point one client's app or website at another's API.
+- App builds: per-client values go in that client's `eas.json` profiles and `brands/<brand>/`. `APP_ID` is permanent once published; never change it for a published app. Never delete EAS credentials (signing keys). Submit with `--id <build id>`, never `--latest`.
 
-# Production VPS (test client "moozy")
-- Connect with `ssh moozy-contabo` (key-based, `deploy` user in the `docker` group, no sudo). The stack is in `~/moozy/deploy`; domains are `api.moozy.in`, `admin.moozy.in` and `moozy.in`.
-- The server is shared: Coolify and other people's apps (WordPress, n8n, Chatwoot, …) run there too. Its Traefik proxy handles HTTPS for moozy (`compose.coolify.yml`). Never touch other containers, Coolify or Traefik, and never reboot or restart Docker. `ssh contabo-vps` is root; use it only when `deploy` can't do the job.
-- Moozy deploys automatically: every push to `main` that passes CI runs the `deploy-moozy` job (`deploy/ci-deploy.sh` through a restricted SSH key). So before the developer pushes a migration, flag anything that moves data, drops columns or adds `NOT NULL`. Check a deploy with `gh run list` / `gh run view <id>`, not by polling the server. A manual `update.sh` on moozy needs a GHCR login (`IMAGE_PREFIX` is set); prefer "Re-run jobs" on the run.
-- API tests: `pnpm test` (per-run test database; needs the dev PostgreSQL and Redis). Don't run it alongside a Docker or Next.js build.
-- Never print values from `deploy/.env` or `deploy/api.env`; show variable names only. Never ask for passwords in chat.
+# Client servers
+- Servers, SSH hosts and stack folders are listed in `docs/deployment.md` ("Current clients"). Use only the access listed there.
+- A server may be shared with other apps (for example behind Coolify's Traefik, `compose.coolify.yml`). Never touch other containers, proxies or Coolify, and never reboot or restart Docker.
+- Run long commands on a server (builds, `update.sh`) with `nohup` and a log file, and hand back to the developer instead of polling.
+- Never print values from `deploy/.env` or `deploy/api.env`; show variable names only. Never ask for passwords or API keys in chat.
 - Before anything destructive on the server (deleting volumes, data, containers), back up, explain, and get confirmation.
