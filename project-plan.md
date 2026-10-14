@@ -40,7 +40,28 @@
   Verify per AGENTS.md "Done means verified". Do only the phase below, then stop
   and report what changed, what was verified, and what is left.
 
-  Phase 0: Detach from the grocery project and rewrite the docs
+  Progress (update when a phase is committed)
+
+  [x] Phase 0 – done (commit 7434e6e)
+  [x] Phase 1 – done (commit f53aa21)
+  [x] Phase 2 – done (commit d662ce4). Left open: customer address PIN
+      codes accept 3+ characters (only pickup locations check 6 digits);
+      the app still shows "Delivery in about N minutes"; grocery wording in
+      the website and app; leaflet packages unused in apps/admin.
+  [x] Phase 3 – done (commit 5f179d3). Manual and mock carriers, Shipment and
+      ShipmentEvent, new OrderStatus, webhooks at /shipping/webhooks/:carrier,
+      invoice numbered at PACKED. Left open: web tracking timeline (the
+      website has no order pages until Phase 7); demo admins can't book
+      shipments; RTO restocking is Phase 9.
+  [ ] Phase 4 – Shiprocket
+  [ ] Phase 5 – Fship
+  [ ] Phase 6 – Checkout shipping and COD
+  [ ] Phase 7 – Website storefront
+  [ ] Phase 8 – Customer app
+  [ ] Phase 9 – Returns and RTO
+  [ ] Phase 10 – Admin cleanup and deploy
+
+  Phase 0: Detach from the grocery project and rewrite the docs [DONE]
 
   Phase 0 – detach and re-document. No feature code yet.
   1. Remove the deploy-moozy job from .github/workflows/ci.yml and delete
@@ -59,7 +80,7 @@
      environment, security and verification sections. Remove moozy specifics.
   Do not delete apps/delivery yet. Verify: pnpm install, typecheck, lint.
 
-  Phase 1: Remove delivery and riders
+  Phase 1: Remove delivery and riders [DONE]
 
   Phase 1 – remove delivery partners entirely.
   Delete apps/delivery and the API delivery module (partners, cash deposits,
@@ -73,7 +94,7 @@
   (Phase 2 rebuilds the migration baseline). Verify: prisma validate,
   prisma generate, typecheck, lint for all apps.
 
-  Phase 2: Single seller, prices and stock on variants, fresh migration
+  Phase 2: Single seller, prices and stock on variants, fresh migration [DONE]
 
   Phase 2 – single seller.
   Remove Store, StoreHours, StoreProduct, geo/serviceability/nearest-store
@@ -91,7 +112,7 @@
   catalog, cart and COD order creation (success, invalid input,
   unauthorized, not found, out of stock).
 
-  Phase 3: Shipping provider layer, order lifecycle, manual and mock carriers
+  Phase 3: Shipping provider layer, order lifecycle, manual and mock carriers [DONE]
 
   Phase 3 – shipping abstraction and new order lifecycle.
   Create apps/api/src/modules/shipping modelled on payments/payment-provider.ts
