@@ -79,7 +79,7 @@ describe("order status from shipment status", () => {
 describe("carrier settings", () => {
   it("lists carriers without secrets and refuses unknown ones", async () => {
     const settings = await call(app, "GET", "/settings/platform", { token: admin });
-    expect(settings.body.shippingCarriers.map((carrier: { name: string }) => carrier.name)).toEqual(["manual", "shiprocket", "mock"]);
+    expect(settings.body.shippingCarriers.map((carrier: { name: string }) => carrier.name)).toEqual(["manual", "shiprocket", "fship", "mock"]);
     expect(settings.body.shippingCarriers[0]).toMatchObject({ configured: true, needsCredentials: false, editable: false });
 
     const unknown = await call(app, "PATCH", "/settings/platform", { token: admin, body: { shippingProvider: "nope" } });

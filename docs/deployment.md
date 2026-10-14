@@ -72,7 +72,8 @@ Admins choose the active carrier under Settings → Shipping. Keys entered there
 
 - **Manual:** no keys. The admin books the courier themselves and types the courier name, AWB and tracking URL on the order. Every pincode counts as serviceable.
 - **Mock:** outside production only, for testing the whole flow without a carrier account.
-- **Fship:** setup steps are added here when the carrier is implemented.
+- **Shiprocket:** see below.
+- **Fship:** no webhooks; setup below.
 
 ### Shiprocket
 
@@ -84,6 +85,15 @@ Shiprocket aggregates couriers: the API books the order, assigns the courier and
 4. **Save the keys:** Settings → Shipping, pick Shiprocket and enter the API user email and password, the webhook token and the pickup location nickname. Secrets entered here are encrypted with `SECRETS_ENCRYPTION_KEY`. To set them from the server instead, use `SHIPROCKET_API_EMAIL`, `SHIPROCKET_API_PASSWORD`, `SHIPROCKET_WEBHOOK_TOKEN` and `SHIPROCKET_PICKUP_LOCATION` in `deploy/api.env` (all four or none); `deploy/api.env` wins.
 
 The API logs in once and caches the token in Redis for nine days (Shiprocket tokens last ten). Tracking webhooks are matched by AWB, verified with the token and applied once; the same updates can always be pulled from the order page.
+
+### Fship
+
+Fship aggregates couriers: the API books the order and registers the pickup in one go (the waybill and label come back immediately), then fetches tracking from Fship's tracking API.
+
+1. **Client Key:** in the Fship panel go to **Settings → API Details** and copy the **Client Key** (the security token key).
+2. **Warehouse:** under **Manage Warehouse**, add the pickup address couriers collect from and note its numeric **address id**.
+3. **Save the keys:** Settings → Shipping, pick Fship and enter the Client Key and the warehouse address id. Secrets entered here are encrypted with `SECRETS_ENCRYPTION_KEY`. To set them from the server instead, use `FSHIP_CLIENT_KEY` and `FSHIP_PICKUP_ADDRESS_ID` in `deploy/api.env` (both or neither); `deploy/api.env` wins. Add `FSHIP_BASE_URL=https://capi-qc.fship.in` to use Fship's staging API.
+4. **No webhooks:** Fship has none, so tracking is pulled with the refresh-tracking action on the order page; the same action applies to any carrier.
 
 In development, save the same credentials under Settings → Shipping; outside production the Mock carrier is also available.
 

@@ -136,6 +136,12 @@ const envSchema = z.object({
   SHIPROCKET_WEBHOOK_TOKEN: optionalSecret,
   SHIPROCKET_PICKUP_LOCATION: optionalSecret,
 
+  // Fship (capi.fship.in). The Client Key is the security token key under Settings → API Details,
+  // the address id is the pickup warehouse under Manage Warehouse. Blank uses the production API.
+  FSHIP_CLIENT_KEY: optionalSecret,
+  FSHIP_PICKUP_ADDRESS_ID: optionalSecret,
+  FSHIP_BASE_URL: z.preprocess((value) => (value === "" ? undefined : value), z.url().optional()),
+
   PAYMENT_TIMEOUT_MINUTES: z.coerce.number().int().min(1).max(120).default(15),
 
   // 0 disables the background check for unpaid orders and pending refunds.
@@ -193,6 +199,10 @@ const envSchema = z.object({
       value.SHIPROCKET_PICKUP_LOCATION,
     ]),
   { message: "Set all SHIPROCKET_* variables, or none", path: ["SHIPROCKET_API_EMAIL"] },
+).refine((value) => allOrNone([value.FSHIP_CLIENT_KEY, value.FSHIP_PICKUP_ADDRESS_ID]), {
+  message: "Set both FSHIP_CLIENT_KEY and FSHIP_PICKUP_ADDRESS_ID, or neither",
+  path: ["FSHIP_CLIENT_KEY"],
+},
 ).refine((value) => !(value.NODE_ENV === "production" && value.OTP_PROVIDER === "log"), {
   message: "OTP_PROVIDER=log is not allowed in production; configure an SMS provider",
   path: ["OTP_PROVIDER"],

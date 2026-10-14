@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "../../config/env.js";
 import type { Prisma, ShipmentStatus } from "../../generated/prisma/client";
 import type { CredentialField, Credentials } from "../../shared/credentials.js";
+import { createFshipProvider } from "./fship-carrier.js";
 import { manualCarrier } from "./manual-carrier.js";
 import { mockCarrier } from "./mock-carrier.js";
 import { createShiprocketProvider } from "./shiprocket-carrier.js";
@@ -188,6 +189,34 @@ export const CARRIERS: readonly CarrierDefinition[] = [
           }
         : null,
     create: createShiprocketProvider,
+  }),
+  defineCarrier({
+    name: "fship",
+    label: "Fship",
+    fields: [
+      {
+        key: "clientKey",
+        label: "Client Key",
+        secret: true,
+        help: "The security token key under Settings → API Details in your Fship account.",
+      },
+      {
+        key: "pickupAddressId",
+        label: "Warehouse address id",
+        secret: false,
+        help: "The address id of your pickup warehouse under Manage Warehouse in the Fship panel.",
+      },
+    ],
+    webhookEvents: null,
+    schema: z.object({
+      clientKey: required.min(10, "Enter the Client Key from Fship → Settings → API Details"),
+      pickupAddressId: required.regex(/^\d+$/, "Enter the numeric warehouse address id"),
+    }),
+    fromEnv: () =>
+      env.FSHIP_CLIENT_KEY && env.FSHIP_PICKUP_ADDRESS_ID
+        ? { clientKey: env.FSHIP_CLIENT_KEY, pickupAddressId: env.FSHIP_PICKUP_ADDRESS_ID }
+        : null,
+    create: (credentials) => createFshipProvider({ ...credentials, baseUrl: env.FSHIP_BASE_URL }),
   }),
   ...(env.NODE_ENV === "production"
     ? []
