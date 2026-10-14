@@ -1,63 +1,49 @@
-import type { FastifyPluginAsync, FastifyRequest } from "fastify";
+import type { FastifyPluginAsync } from "fastify";
 
 import { UserRole } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { idParamsSchema } from "../../shared/schemas.js";
+import { createCatalogService } from "./catalog.service.js";
 import { createDiscoveryService } from "./discovery.service.js";
 import {
   addImageBodySchema,
   alsoBoughtQuerySchema,
+  catalogBrandsQuerySchema,
+  catalogProductParamsSchema,
   createProductBodySchema,
-  createStoreVariantBodySchema,
   deleteProductsBodySchema,
+  listCatalogQuerySchema,
   listProductsQuerySchema,
-  listStoreProductsQuerySchema,
   productImageParamsSchema,
   reorderImagesBodySchema,
-  setPricesBodySchema,
-  storeParamsSchema,
-  storeBrandsQuerySchema,
-  storeProductParamsSchema,
-  storeVariantParamsSchema,
   updateImageBodySchema,
   updateProductBodySchema,
-  updateStoreVariantBodySchema,
+  updateVariantBodySchema,
+  variantParamsSchema,
   variantsBodySchema,
 } from "./products.schemas.js";
 import { createProductsService } from "./products.service.js";
-import { createStoreProductsService } from "./store-products.service.js";
 
+/** The catalog as the dashboard manages it. Prefix: /products */
 export const productsRoutes: FastifyPluginAsync = async (app) => {
   const productsService = createProductsService(app.prisma);
-  const storeProductsService = createStoreProductsService(app.prisma);
   const requireAdmin = app.requireRole(UserRole.ADMIN);
+  const requireDashboard = app.requireRole(UserRole.ADMIN, UserRole.STAFF);
 
-  const isAdmin = async (request: FastifyRequest) =>
-    (await app.tryAuthenticate(request)) && request.user.role === UserRole.ADMIN;
-
-  app.get("/", async (request) => {
+  app.get("/", { preHandler: requireDashboard }, async (request) => {
     const query = listProductsQuerySchema.parse(request.query);
-
-    if (query.includeInactive) {
-      await requireAdmin(request);
-    }
-
     return productsService.listProducts(query);
   });
 
-  app.get("/:id", async (request) => {
+  app.get("/:id", { preHandler: requireDashboard }, async (request) => {
     const { id } = idParamsSchema.parse(request.params);
-    return productsService.getProduct(id, { includeInactive: await isAdmin(request) });
+    return productsService.getProduct(id);
   });
 
+  /** Public: what a shared product link shows. */
   app.get("/:id/preview", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
     return productsService.getPreview(id);
-  });
-
-  app.get("/:id/listings", { preHandler: requireAdmin }, async (request) => {
-    const { id } = idParamsSchema.parse(request.params);
-    return storeProductsService.listProductListings(id);
   });
 
   app.post("/", { preHandler: requireAdmin }, async (request, reply) => {
@@ -84,12 +70,6 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
     return productsService.setVariants(id, body);
   });
 
-  app.put("/:id/prices", { preHandler: requireAdmin }, async (request) => {
-    const { id } = idParamsSchema.parse(request.params);
-    const body = setPricesBodySchema.parse(request.body);
-    return storeProductsService.setPrices(id, body);
-  });
-
   app.post("/:id/images", { preHandler: requireAdmin }, async (request, reply) => {
     const { id } = idParamsSchema.parse(request.params);
     const body = addImageBodySchema.parse(request.body);
@@ -114,71 +94,50 @@ export const productsRoutes: FastifyPluginAsync = async (app) => {
   });
 };
 
-export const storeProductsRoutes: FastifyPluginAsync = async (app) => {
-  const storeProductsService = createStoreProductsService(app.prisma);
+/** One variant's price and on/off switch. Staff may only switch it on or off. Prefix: /variants */
+export const variantsRoutes: FastifyPluginAsync = async (app) => {
+  const productsService = createProductsService(app.prisma);
+
+  app.patch(
+    "/:variantId",
+    { preHandler: [app.requireRole(UserRole.ADMIN, UserRole.STAFF), app.forbidTestAccount] },
+    async (request) => {
+      const { variantId } = variantParamsSchema.parse(request.params);
+      const body = updateVariantBodySchema.parse(request.body);
+
+      if (request.user.role !== UserRole.ADMIN && (body.price !== undefined || body.compareAtPrice !== undefined)) {
+        throw new AppError(403, "FORBIDDEN", "Only admins can change prices");
+      }
+
+      return productsService.updateVariant(variantId, body);
+    },
+  );
+};
+
+/** What customers browse, with prices and stock. Public. Prefix: /catalog/products */
+export const catalogProductsRoutes: FastifyPluginAsync = async (app) => {
+  const catalog = createCatalogService(app.prisma);
   const discovery = createDiscoveryService(app.prisma);
 
+  app.get("/", async (request) => catalog.listProducts(listCatalogQuerySchema.parse(request.query)));
+
   app.get("/also-bought", async (request) => {
-    const { storeId } = storeParamsSchema.parse(request.params);
     const { productIds, limit } = alsoBoughtQuerySchema.parse(request.query);
-    return discovery.alsoBought(storeId, productIds, limit);
-  });
-
-  const canManage = async (request: FastifyRequest, storeId: string) =>
-    (await app.tryAuthenticate(request)) && (await app.canManageStore(request, storeId));
-
-  app.get("/", async (request) => {
-    const { storeId } = storeParamsSchema.parse(request.params);
-    const query = listStoreProductsQuerySchema.parse(request.query);
-
-    if (query.includeUnavailable) {
-      await app.requireStoreAccess(request);
-    }
-
-    return storeProductsService.listStoreProducts(storeId, query, {
-      canManage: await canManage(request, storeId),
-    });
+    return discovery.alsoBought(productIds, limit);
   });
 
   app.get("/:productId", async (request) => {
-    const { storeId, productId } = storeProductParamsSchema.parse(request.params);
-    return storeProductsService.getStoreProduct(storeId, productId, {
-      canManage: await canManage(request, storeId),
-    });
+    const { productId } = catalogProductParamsSchema.parse(request.params);
+    return catalog.getProduct(productId);
   });
 };
 
-/** Brands with something in stock at the store. */
-export const storeBrandsRoutes: FastifyPluginAsync = async (app) => {
+/** Brands with something in stock, optionally within a category. Public. Prefix: /catalog/brands */
+export const catalogBrandsRoutes: FastifyPluginAsync = async (app) => {
   const discovery = createDiscoveryService(app.prisma);
 
   app.get("/", async (request) => {
-    const { storeId } = storeParamsSchema.parse(request.params);
-    const { categoryId, limit } = storeBrandsQuerySchema.parse(request.query);
-    return discovery.listStoreBrands(storeId, categoryId, limit);
-  });
-};
-
-/** A store's listing of each variant: price, MRP and whether it is offered. */
-export const storeVariantsRoutes: FastifyPluginAsync = async (app) => {
-  const storeProductsService = createStoreProductsService(app.prisma);
-  const requireAdmin = app.requireRole(UserRole.ADMIN);
-
-  app.post("/", { preHandler: requireAdmin }, async (request, reply) => {
-    const { storeId } = storeParamsSchema.parse(request.params);
-    const body = createStoreVariantBodySchema.parse(request.body);
-    const listing = await storeProductsService.createStoreVariant(storeId, body);
-    return reply.status(201).send(listing);
-  });
-
-  app.patch("/:variantId", { preHandler: [app.requireStoreAccess, app.forbidTestAccount] }, async (request) => {
-    const { storeId, variantId } = storeVariantParamsSchema.parse(request.params);
-    const body = updateStoreVariantBodySchema.parse(request.body);
-
-    if (request.user.role !== UserRole.ADMIN && (body.sellingPrice !== undefined || body.mrp !== undefined)) {
-      throw new AppError(403, "FORBIDDEN", "Only admins can change prices");
-    }
-
-    return storeProductsService.updateStoreVariant(storeId, variantId, body);
+    const { categoryId, limit } = catalogBrandsQuerySchema.parse(request.query);
+    return { items: await discovery.inStockBrands({ categoryId, limit }) };
   });
 };

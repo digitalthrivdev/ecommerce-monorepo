@@ -1,8 +1,12 @@
+import { DECIMAL_PATTERN } from "@shop/validation";
+
 import type { ProductDetail } from "./types";
 
 export const MAX_OPTIONS = 3;
 export const MAX_OPTION_VALUES = 30;
 export const MAX_VARIANTS = 100;
+const MAX_WEIGHT_GRAMS = 1_000_000;
+const MAX_DIMENSION_CM = 10_000;
 
 export type OptionDraft = { key: string; name: string; values: string[] };
 
@@ -16,8 +20,17 @@ export type VariantDraft = {
   quantity: string;
   unit: string;
   maxOrderQuantity: string;
+  price: string;
+  compareAtPrice: string;
+  weightGrams: string;
+  lengthCm: string;
+  breadthCm: string;
+  heightCm: string;
   isActive: boolean;
 };
+
+/** Price and parcel fields a new size copies from the closest one. */
+export const COPIED_FIELDS = ["price", "compareAtPrice", "weightGrams", "lengthCm", "breadthCm", "heightCm"] as const;
 
 export type Draft = { options: OptionDraft[]; variants: VariantDraft[] };
 
@@ -31,6 +44,12 @@ export type VariantsPayload = {
     unit: string | null;
     quantity: string | null;
     maxOrderQuantity: number | null;
+    price: string;
+    compareAtPrice: string | null;
+    weightGrams: number | null;
+    lengthCm: string | null;
+    breadthCm: string | null;
+    heightCm: string | null;
     isActive: boolean;
     optionValues: string[];
   }>;
@@ -68,9 +87,17 @@ function newVariant(values: Record<string, string>, options: OptionDraft[], slug
     quantity: "",
     unit: "",
     maxOrderQuantity: "",
+    price: "",
+    compareAtPrice: "",
+    weightGrams: "",
+    lengthCm: "",
+    breadthCm: "",
+    heightCm: "",
     isActive: true,
   };
 }
+
+const decimalText = (value: string | null) => (value ? Number(value).toString() : "");
 
 export function draftFromProduct(product: Pick<ProductDetail, "options" | "variants">): Draft {
   const options: OptionDraft[] = product.options.map((option) => ({
@@ -87,6 +114,12 @@ export function draftFromProduct(product: Pick<ProductDetail, "options" | "varia
     quantity: variant.quantity ? Number(variant.quantity).toString() : "",
     unit: variant.unit ?? "",
     maxOrderQuantity: variant.maxOrderQuantity?.toString() ?? "",
+    price: decimalText(variant.price),
+    compareAtPrice: decimalText(variant.compareAtPrice),
+    weightGrams: variant.weightGrams?.toString() ?? "",
+    lengthCm: decimalText(variant.lengthCm),
+    breadthCm: decimalText(variant.breadthCm),
+    heightCm: decimalText(variant.heightCm),
     isActive: variant.isActive,
   }));
   return { options, variants };
@@ -102,10 +135,50 @@ export function toPayload({ options, variants }: Draft): VariantsPayload {
       quantity: variant.quantity.trim() || null,
       unit: variant.unit.trim() || null,
       maxOrderQuantity: variant.maxOrderQuantity.trim() ? Number(variant.maxOrderQuantity) : null,
+      price: variant.price.trim(),
+      compareAtPrice: variant.compareAtPrice.trim() || null,
+      weightGrams: variant.weightGrams.trim() ? Number(variant.weightGrams) : null,
+      lengthCm: variant.lengthCm.trim() || null,
+      breadthCm: variant.breadthCm.trim() || null,
+      heightCm: variant.heightCm.trim() || null,
       isActive: variant.isActive,
       optionValues: options.map((option) => variant.values[option.key] ?? ""),
     })),
   };
+}
+
+const isPositiveDecimal = (value: string) => DECIMAL_PATTERN.test(value) && Number(value) > 0;
+
+/** Problems with a size's price and parcel fields, keyed by field name. */
+export function variantFieldProblems(variant: Pick<VariantDraft, (typeof COPIED_FIELDS)[number]>) {
+  const problems: Record<string, string> = {};
+  const price = variant.price.trim();
+  const compareAt = variant.compareAtPrice.trim();
+  const weight = variant.weightGrams.trim();
+  if (!isPositiveDecimal(price)) problems.price = "Enter a price like 499 or 499.50";
+  if (compareAt && !isPositiveDecimal(compareAt)) problems.compareAtPrice = "Enter a price like 699, or leave it empty";
+  else if (compareAt && isPositiveDecimal(price) && Number(compareAt) < Number(price)) {
+    problems.compareAtPrice = "The compare-at price can't be lower than the price";
+  }
+  if (weight && !(/^\d+$/.test(weight) && Number(weight) >= 1 && Number(weight) <= MAX_WEIGHT_GRAMS)) {
+    problems.weightGrams = "Enter the weight in whole grams, or leave it empty";
+  }
+  for (const field of ["lengthCm", "breadthCm", "heightCm"] as const) {
+    const value = variant[field].trim();
+    if (value && !(isPositiveDecimal(value) && Number(value) <= MAX_DIMENSION_CM)) {
+      problems[field] = `Enter centimetres up to ${MAX_DIMENSION_CM}, or leave it empty`;
+    }
+  }
+  return problems;
+}
+
+/** Problems of every size, keyed `variants.<index>.<field>` like the API's. */
+export function variantsProblems(draft: Draft) {
+  const problems: Record<string, string> = {};
+  draft.variants.forEach((variant, index) => {
+    for (const [field, message] of Object.entries(variantFieldProblems(variant))) problems[`variants.${index}.${field}`] = message;
+  });
+  return problems;
 }
 
 export const variantLabel = (options: OptionDraft[], variant: VariantDraft) =>

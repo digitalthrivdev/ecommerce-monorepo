@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-import { Prisma } from "../../generated/prisma/client";
 import { positiveDecimalSchema, slugify } from "../../shared/schemas.js";
 import { MAX_QUANTITY_PER_ITEM } from "../products/catalog.js";
 import {
+  MAX_WEIGHT_GRAMS,
   barcodeSchema,
-  fssaiLicenseSchema,
+  compareAtPriceProblem,
+  dimensionSchema,
   gstRateSchema,
   hsnCodeSchema,
   optionNameSchema,
@@ -28,13 +29,9 @@ export const COLUMNS = [
   "tags",
   "hsn_code",
   "gst_rate",
-  "is_veg",
   "manufacturer_name",
   "manufacturer_address",
   "country_of_origin",
-  "fssai_license",
-  "shelf_life",
-  "ingredients",
   "option1_name",
   "option1_value",
   "option2_name",
@@ -47,9 +44,13 @@ export const COLUMNS = [
   "unit",
   "max_order_quantity",
   "price",
-  "mrp",
+  "compare_at_price",
   "available",
   "stock",
+  "weight_grams",
+  "length_cm",
+  "breadth_cm",
+  "height_cm",
   "image_url",
 ] as const;
 
@@ -67,13 +68,9 @@ export const PRODUCT_COLUMNS: Column[] = [
   "tags",
   "hsn_code",
   "gst_rate",
-  "is_veg",
   "manufacturer_name",
   "manufacturer_address",
   "country_of_origin",
-  "fssai_license",
-  "shelf_life",
-  "ingredients",
 ];
 
 export const OPTION_SLOTS = [
@@ -124,13 +121,9 @@ export const rowSchema = z
       .nullish(),
     hsn_code: hsnCodeSchema.nullish(),
     gst_rate: gstRateSchema.nullish(),
-    is_veg: yesNo.nullish(),
     manufacturer_name: text(200),
     manufacturer_address: text(500),
     country_of_origin: text(100),
-    fssai_license: fssaiLicenseSchema.nullish(),
-    shelf_life: text(100),
-    ingredients: text(2000),
     option1_name: optionNameSchema.nullish(),
     option1_value: optionValueSchema.nullish(),
     option2_name: optionNameSchema.nullish(),
@@ -143,9 +136,13 @@ export const rowSchema = z
     unit: text(20),
     max_order_quantity: wholeNumber(1, MAX_QUANTITY_PER_ITEM).nullish(),
     price: z.string({ error: "Required" }).pipe(positiveDecimalSchema),
-    mrp: positiveDecimalSchema.nullish(),
+    compare_at_price: positiveDecimalSchema.nullish(),
     available: yesNo.nullish(),
     stock: wholeNumber(0, MAX_STOCK).nullish(),
+    weight_grams: wholeNumber(1, MAX_WEIGHT_GRAMS).nullish(),
+    length_cm: dimensionSchema.nullish(),
+    breadth_cm: dimensionSchema.nullish(),
+    height_cm: dimensionSchema.nullish(),
     image_url: z.url({ protocol: /^https?$/, error: "Must be a full address starting with http:// or https://" }).max(500).nullish(),
   })
   .superRefine((row, ctx) => {
@@ -164,15 +161,13 @@ export const rowSchema = z
       }
       names.push(name);
     }
-    if (row.price && row.mrp && new Prisma.Decimal(row.mrp).lt(row.price)) {
-      ctx.addIssue({ code: "custom", path: ["mrp"], message: "MRP must be at least the price" });
-    }
+    const priceProblem = row.price ? compareAtPriceProblem(row.price, row.compare_at_price) : null;
+    if (priceProblem) ctx.addIssue({ code: "custom", path: ["compare_at_price"], message: priceProblem });
   });
 
 export type ImportRow = z.infer<typeof rowSchema>;
 
 export const importBodySchema = z.object({
-  storeId: z.string().trim().min(1).max(64),
   // Characters, not bytes; the byte size is checked separately.
   csv: z.string().min(1, "The file is empty").max(MAX_FILE_BYTES),
 });

@@ -14,10 +14,7 @@ import { reserveStock } from "../inventory/inventory.service.js";
 import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
-import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
-import { customerVisible } from "../products/store-products.service.js";
-import { storeServesLocation } from "../stores/geo.js";
-import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
+import { customerVisibleVariant, imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, deliveredAt, deliveredEntry, transitionOrder } from "./order-status.js";
 import { discountShares, includedTax } from "./tax.js";
@@ -39,7 +36,6 @@ function generateOrderNumber() {
 }
 
 export const orderDetailInclude = {
-  store: { select: { id: true, name: true, phone: true } },
   items: { orderBy: { createdAt: "asc" } },
   payment: { select: { method: true, status: true, amount: true, refundedAmount: true, paidAt: true, refundedAt: true } },
   statusHistory: {
@@ -117,8 +113,7 @@ export function toDetailView(order: OrderDetail) {
     },
     paymentExpiresAt: order.status === OrderStatus.PENDING_PAYMENT ? paymentDeadline(order.createdAt) : null,
     deliveredAt: deliveredAt(order.statusHistory),
-    store: order.store,
-    // quantity and totalPrice are as ordered; the units the store could not supply are not charged.
+    // quantity and totalPrice are as ordered; the units that could not be supplied are not charged.
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,
@@ -130,7 +125,7 @@ export function toDetailView(order: OrderDetail) {
       quantity: item.quantity,
       unavailableQuantity: item.unavailableQuantity,
       unitPrice: item.unitPrice.toFixed(2),
-      mrp: item.mrp?.toFixed(2) ?? null,
+      compareAtPrice: item.compareAtPrice?.toFixed(2) ?? null,
       totalPrice: item.totalPrice.toFixed(2),
       chargedTotal: item.unitPrice.mul(item.quantity - item.unavailableQuantity).toFixed(2),
       hsnCode: item.hsnCode,
@@ -204,7 +199,6 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           paymentMethod: true,
           total: true,
           createdAt: true,
-          store: { select: { id: true, name: true } },
           statusHistory: deliveredEntry,
           rating: { select: { id: true } },
           _count: { select: { items: true } },
@@ -270,17 +264,11 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
                 },
               },
             },
-            store: { select: { hours: { select: hoursSelect, orderBy: hoursOrder } } },
           },
         });
 
-        if (!cart.storeId || cart.items.length === 0) {
+        if (cart.items.length === 0) {
           throw new AppError(409, "CART_EMPTY", "Your cart is empty");
-        }
-        const storeId = cart.storeId;
-
-        if (!isStoreOpen(cart.store?.hours ?? [])) {
-          throw new AppError(409, "STORE_CLOSED", "The store is closed right now. Please order when it opens.");
         }
 
         const address = await tx.address.findFirst({ where: { id: addressId, userId } });
@@ -288,30 +276,12 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         if (!address) {
           throw new AppError(404, "ADDRESS_NOT_FOUND", "Address not found");
         }
-        if (address.latitude === null || address.longitude === null) {
-          throw new AppError(400, "ADDRESS_LOCATION_REQUIRED", "Address needs a map location before ordering");
-        }
 
-        const serves = await storeServesLocation(
-          tx,
-          storeId,
-          address.latitude.toNumber(),
-          address.longitude.toNumber(),
-        );
-
-        if (!serves) {
-          throw new AppError(409, "STORE_NOT_SERVICEABLE", "The store in your cart does not deliver to this address");
-        }
-
-        const storeProducts = await tx.storeProduct.findMany({
-          where: {
-            storeId,
-            variantId: { in: cart.items.map((item) => item.variantId) },
-            ...customerVisible,
-          },
-          select: { id: true, variantId: true, sellingPrice: true, mrp: true },
+        const sellable = await tx.productVariant.findMany({
+          where: { id: { in: cart.items.map((item) => item.variantId) }, ...customerVisibleVariant },
+          select: { id: true, price: true, compareAtPrice: true },
         });
-        const byVariantId = new Map(storeProducts.map((sp) => [sp.variantId, sp]));
+        const byVariantId = new Map(sellable.map((row) => [row.id, row]));
 
         const describe = (item: (typeof cart.items)[number]) => ({
           productId: item.variant.product.id,
@@ -337,19 +307,18 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
 
         const priced = cart.items.map((item) => {
           const { variant } = item;
-          const storeProduct = byVariantId.get(item.variantId)!;
+          const { price, compareAtPrice } = byVariantId.get(item.variantId)!;
           return {
-            storeProductId: storeProduct.id,
             productId: variant.product.id,
             variantId: variant.id,
             productName: variant.product.name,
             variantName: variantLabel(variant),
             sku: variant.sku,
             imageUrl: imagesFor(variant.product.images, variant.id)[0]?.url ?? null,
-            mrp: storeProduct.mrp,
+            compareAtPrice,
             quantity: item.quantity,
-            unitPrice: storeProduct.sellingPrice,
-            totalPrice: storeProduct.sellingPrice.mul(item.quantity),
+            unitPrice: price,
+            totalPrice: price.mul(item.quantity),
             hsnCode: variant.product.hsnCode,
             gstRate: variant.product.gstRate,
           };
@@ -388,16 +357,16 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           await reserveStock(tx, lines);
         } catch (error) {
           if (error instanceof AppError && error.code === "INSUFFICIENT_STOCK" && Array.isArray(error.details)) {
-            const byStoreProductId = new Map(lines.map((line) => [line.storeProductId, line]));
+            const byVariantId = new Map(lines.map((line) => [line.variantId, line]));
             throw new AppError(
               409,
               "INSUFFICIENT_STOCK",
               "Some items do not have enough stock",
-              error.details.map((shortage: { storeProductId: string; requested: number; available: number }) => ({
-                productId: byStoreProductId.get(shortage.storeProductId)?.productId,
-                variantId: byStoreProductId.get(shortage.storeProductId)?.variantId,
-                name: byStoreProductId.get(shortage.storeProductId)?.productName,
-                variantLabel: byStoreProductId.get(shortage.storeProductId)?.variantName,
+              error.details.map((shortage: { variantId: string; requested: number; available: number }) => ({
+                productId: byVariantId.get(shortage.variantId)?.productId,
+                variantId: shortage.variantId,
+                name: byVariantId.get(shortage.variantId)?.productName,
+                variantLabel: byVariantId.get(shortage.variantId)?.variantName,
                 requested: shortage.requested,
                 available: shortage.available,
               })),
@@ -412,7 +381,6 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           data: {
             orderNumber: generateOrderNumber(),
             userId,
-            storeId,
             addressId: address.id,
             status,
             subtotal,
@@ -435,7 +403,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             latitude: address.latitude,
             longitude: address.longitude,
             items: {
-              create: lines.map(({ storeProductId: _storeProductId, ...line }) => line),
+              create: lines,
             },
             payment: { create: { method: paymentMethod, amount: total } },
             statusHistory: {
@@ -446,7 +414,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         });
 
         await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-        await tx.cart.update({ where: { id: cart.id }, data: { storeId: null, couponCode: null } });
+        await tx.cart.update({ where: { id: cart.id }, data: { couponCode: null } });
 
         return order.id;
       },

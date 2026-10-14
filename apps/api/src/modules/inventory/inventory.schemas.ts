@@ -6,12 +6,7 @@ import { paginationQuerySchema } from "../../shared/schemas.js";
 const idSchema = z.string().trim().min(1).max(64);
 const MAX_STOCK = 1_000_000;
 
-export const storeParamsSchema = z.object({
-  storeId: idSchema,
-});
-
 export const inventoryItemParamsSchema = z.object({
-  storeId: idSchema,
   variantId: idSchema,
 });
 
@@ -23,12 +18,12 @@ export const listInventoryQuerySchema = paginationQuerySchema.extend({
     .optional()
     .transform((value) => value || undefined),
   maxQuantity: z.coerce.number().int().min(0).max(MAX_STOCK).optional(),
-  isAvailable: z
+  isActive: z
     .enum(["true", "false"])
     .transform((value) => value === "true")
     .optional(),
   categoryId: idSchema.optional(),
-  /** `low`: available and at or below the low-stock threshold; `out`: no stock. */
+  /** `low`: active and at or below the low-stock threshold; `out`: no stock. */
   stock: z.enum(["low", "out"]).optional(),
 });
 

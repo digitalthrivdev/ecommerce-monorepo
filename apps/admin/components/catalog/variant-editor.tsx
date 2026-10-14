@@ -7,8 +7,8 @@ import { toast } from "sonner";
 
 import { uploadImage } from "@/app/(dashboard)/actions";
 import { addProductImage, saveProductChanges, setImageVariant } from "@/app/(dashboard)/products/actions";
-import { PricingCard, StockCard } from "@/components/catalog/price-stock";
-import { CodeFields, pricePart, stockPart, TextField } from "@/components/catalog/product-editor";
+import { CodeFields, TextField } from "@/components/catalog/product-editor";
+import { ParcelCard, PriceCard, StockCard } from "@/components/catalog/variant-cards";
 import { StockHistoryDialog } from "@/components/inventory/inventory-controls";
 import { PageHeader } from "@/components/page-header";
 import { SaveBar } from "@/components/save-bar";
@@ -19,10 +19,9 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { toastResult } from "@/lib/action-toast";
 import { formatMoney, productTitle } from "@/lib/format";
-import { priceDraftFor, priceDraftsFromListings, priceRange, priceRows, totalStock, type PriceDraft, type PriceRow, type StockRow } from "@/lib/product-editor";
-import type { ProductDetail, ProductImage, ProductListings, Store } from "@/lib/types";
+import type { ProductDetail, ProductImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { draftFromProduct, toPayload, variantLabel, type Draft, type VariantDraft } from "@/lib/variant-drafts";
+import { draftFromProduct, toPayload, variantLabel, variantsProblems, type Draft, type VariantDraft } from "@/lib/variant-drafts";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_IMAGES = 20;
@@ -154,21 +153,15 @@ function setOptionValue(draft: Draft, variantKey: string, optionKey: string, val
 
 type VariantEditorProps = {
   product: ProductDetail;
-  listings: ProductListings;
   variantId: string;
   currency: string;
   timezone: string;
 };
 
-export function VariantEditor({ product, listings, variantId, currency, timezone }: VariantEditorProps) {
+export function VariantEditor({ product, variantId, currency, timezone }: VariantEditorProps) {
   const [pending, startTransition] = useTransition();
-  const stores: Store[] = listings.items.map((item) => item.store);
-  const [initial] = useState(() => {
-    const prices = priceDraftsFromListings(listings);
-    return { draft: draftFromProduct(product), prices, price: prices[variantId] ?? priceDraftFor(stores, () => null) };
-  });
+  const [initial] = useState(() => ({ draft: draftFromProduct(product) }));
   const [draft, setDraft] = useState<Draft>(initial.draft);
-  const [price, setPrice] = useState<PriceDraft>(initial.price);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const index = draft.variants.findIndex((variant) => variant.id === variantId);
@@ -180,10 +173,7 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
     (other) => other.key !== variant.key && draft.options.every((option) => (other.values[option.key] ?? "").toLowerCase() === (variant.values[option.key] ?? "").toLowerCase()),
   );
 
-  const variantsDirty = !same(toPayload(draft), toPayload(initial.draft));
-  const priceDirty = !same(pricePart(price), pricePart(initial.price));
-  const stockDirty = !same(stockPart(price), stockPart(initial.price));
-  const dirty = variantsDirty || priceDirty || stockDirty;
+  const dirty = !same(toPayload(draft), toPayload(initial.draft));
 
   const update = (changes: Partial<VariantDraft>) =>
     setDraft({ ...draft, variants: draft.variants.map((candidate) => (candidate.key === variant.key ? { ...candidate, ...changes } : candidate)) });
@@ -196,7 +186,6 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
 
   function discard() {
     setDraft(initial.draft);
-    setPrice(initial.price);
     setErrors({});
   }
 
@@ -209,20 +198,15 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
       toast.error("Fill in every option");
       return;
     }
-    let prices: PriceRow[] | undefined;
-    let stock: StockRow[] | undefined;
-    if (priceDirty || stockDirty) {
-      const result = priceRows(variantId, price, stores);
-      if (Object.keys(result.errors).length > 0) {
-        setErrors(result.errors);
-        toast.error("Check the highlighted boxes");
-        return;
-      }
-      prices = priceDirty ? result.rows : undefined;
-      stock = result.stock;
+    const problems = variantsProblems(draft);
+    if (Object.keys(problems).length > 0) {
+      setErrors(problems);
+      const mine = Object.keys(problems).some((key) => key.startsWith(`${prefix}.`));
+      toast.error(mine ? "Check the highlighted boxes" : "Another size has a problem; fix it on the product page");
+      return;
     }
     startTransition(async () => {
-      const result = await saveProductChanges({ productId: product.id, variants: variantsDirty ? toPayload(draft) : undefined, prices, stock });
+      const result = await saveProductChanges({ productId: product.id, variants: toPayload(draft) });
       if (result.ok) {
         setErrors({});
         toast.success(result.message);
@@ -235,7 +219,7 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
 
   const mainImage = product.images.find((image) => image.variantId === null)?.url ?? product.images[0]?.url;
   const imageFor = (id: string) => product.images.find((image) => image.variantId === id)?.url ?? mainImage;
-  const money = (value: number) => formatMoney(String(value), currency);
+  const money = (value: string) => formatMoney(value, currency);
 
   return (
     <>
@@ -269,10 +253,8 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
           <Panel className="overflow-hidden">
             <h2 className="border-b px-4 py-3 font-semibold">Sizes</h2>
             <ul className="divide-y">
-              {listings.variants.map((entry) => {
+              {product.variants.map((entry) => {
                 const current = entry.id === variantId;
-                const range = priceRange(initial.prices[entry.id]);
-                const stock = totalStock(initial.prices[entry.id]);
                 return (
                   <li key={entry.id}>
                     <Link
@@ -287,8 +269,7 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{entry.label || entry.sku}</span>
                         <span className={cn("block text-xs", current ? "text-primary-ink/80" : "text-muted-foreground")}>
-                          {range ? (range.min === range.max ? money(range.min) : `${money(range.min)} – ${money(range.max)}`) : "No price"}
-                          {range && ` · ${stock === 0 ? "out of stock" : `${stock} in stock`}`}
+                          {money(entry.price)} · {entry.stockQuantity === 0 ? "out of stock" : `${entry.stockQuantity} in stock`}
                         </span>
                       </span>
                       {!entry.isActive && <Pill tone="gray">Off</Pill>}
@@ -333,17 +314,12 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
 
           <SizePhotos product={product} variantId={variantId} />
 
-          <PricingCard variantId={variantId} stores={stores} draft={price} onChange={setPrice} errors={errors} currency={currency} />
+          <PriceCard variant={variant} onChange={update} errors={errors} errorPrefix={prefix} currency={currency} />
           <StockCard
-            variantId={variantId}
-            stores={stores}
-            draft={price}
-            onChange={setPrice}
-            errors={errors}
+            stock={saved.stockQuantity}
+            sku={saved.sku}
             codes={<CodeFields variant={variant} onChange={update} errors={errors} errorPrefix={prefix} />}
-            history={(storeId) => (
-              <StockHistoryDialog storeId={storeId} variantId={variantId} title={productTitle(product.name, saved.label)} timezone={timezone} />
-            )}
+            history={<StockHistoryDialog variantId={variantId} title={productTitle(product.name, saved.label)} timezone={timezone} />}
           />
 
           <Block title="Pack">
@@ -356,10 +332,12 @@ export function VariantEditor({ product, listings, variantId, currency, timezone
               <Switch id="variant-active" checked={variant.isActive} onCheckedChange={(isActive) => update({ isActive })} className="mt-0.5" />
               <div className="flex flex-col gap-0.5">
                 <FieldLabel htmlFor="variant-active">Size switched on</FieldLabel>
-                <FieldDescription>Turn off to stop selling this size at every store, without deleting it.</FieldDescription>
+                <FieldDescription>Turn off to stop selling this size, without deleting it.</FieldDescription>
               </div>
             </Field>
           </Block>
+
+          <ParcelCard variant={variant} onChange={update} errors={errors} errorPrefix={prefix} />
         </div>
       </div>
     </>

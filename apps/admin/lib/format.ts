@@ -136,10 +136,8 @@ export const STOCK_REASON_LABELS: Record<StockChangeReason, string> = {
   ORDER_UNAVAILABLE: "Not found while packing",
 };
 
-export const WEEKDAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Owner / admin",
-  STORE_STAFF: "Shop staff",
+  STAFF: "Shop staff",
   CUSTOMER: "Customer",
 };

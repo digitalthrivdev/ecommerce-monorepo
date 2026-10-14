@@ -25,11 +25,7 @@ const lowRatingsFields = paginationQuerySchema.extend({
 const datesInOrder = (query: { from?: string; to?: string }) => !query.from || !query.to || query.from <= query.to;
 const datesMessage = { message: "The start date must be on or before the end date", path: ["from"] };
 
-export const storeLowRatingsQuerySchema = lowRatingsFields.refine(datesInOrder, datesMessage);
-
-export const adminLowRatingsQuerySchema = lowRatingsFields
-  .extend({ storeId: z.string().trim().min(1).max(64).optional() })
-  .refine(datesInOrder, datesMessage);
+export const lowRatingsQuerySchema = lowRatingsFields.refine(datesInOrder, datesMessage);
 
 export type RateOrderInput = z.infer<typeof rateOrderBodySchema>;
-export type LowRatingsQuery = z.infer<typeof adminLowRatingsQuerySchema>;
+export type LowRatingsQuery = z.infer<typeof lowRatingsQuerySchema>;

@@ -1,6 +1,5 @@
 import { env } from "../../config/env.js";
 import { Prisma, type PrismaClient } from "../../generated/prisma/client";
-import { AppError } from "../../shared/errors.js";
 import { endOfDay, startOfDay } from "../../shared/time.js";
 import { DELIVERY_SAC } from "../invoices/invoice.js";
 import type { ReportQuery } from "./reports.schemas.js";
@@ -67,7 +66,6 @@ type MoneyRow = {
   type: "PAYMENT" | "REFUND";
   orderNumber: string;
   invoiceNumber: string | null;
-  store: string;
   method: string;
   provider: string | null;
   reference: string | null;
@@ -80,20 +78,13 @@ type MoneyRow = {
  * date; payments and refunds by when the money moved. Days are in the deployment's TIMEZONE.
  */
 export function createReportsService(prisma: PrismaClient) {
-  async function scope({ from, to, storeId }: ReportQuery) {
-    if (storeId && !(await prisma.store.findUnique({ where: { id: storeId }, select: { id: true } }))) {
-      throw new AppError(404, "STORE_NOT_FOUND", "Store not found");
-    }
-    return {
-      start: startOfDay(from),
-      end: endOfDay(to),
-      store: storeId ? Prisma.sql`AND o."storeId" = ${storeId}` : Prisma.empty,
-    };
+  function scope({ from, to }: ReportQuery) {
+    return { start: startOfDay(from), end: endOfDay(to) };
   }
 
   /** One line per day, including days without sales, then a total. */
   async function dailySales(query: ReportQuery) {
-    const { start, end, store } = await scope(query);
+    const { start, end } = scope(query);
     const rows = await prisma.$queryRaw<DailyRow[]>`
       SELECT ${localDay(Prisma.sql`h."createdAt"`)} AS day,
         count(*)::int AS orders,
@@ -106,7 +97,7 @@ export function createReportsService(prisma: PrismaClient) {
         coalesce(sum(o.total) FILTER (WHERE o."paymentMethod" = 'ONLINE'), 0) AS online
       FROM "Order" o
       JOIN "OrderStatusHistory" h ON h."orderId" = o.id AND h."toStatus" = 'DELIVERED'
-      WHERE o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end} ${store}
+      WHERE o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end}
       GROUP BY 1
     `;
     const byDay = new Map(rows.map((row) => [row.day, row]));
@@ -144,8 +135,8 @@ export function createReportsService(prisma: PrismaClient) {
    * the snapshot have their GST under gst_not_split.
    */
   async function gstSummary(query: ReportQuery) {
-    const { start, end, store } = await scope(query);
-    const delivered = Prisma.sql`o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end} ${store}`;
+    const { start, end } = scope(query);
+    const delivered = Prisma.sql`o.status = 'DELIVERED' AND h."createdAt" >= ${start} AND h."createdAt" < ${end}`;
     const rows = await prisma.$queryRaw<GstRow[]>`
       WITH lines AS (
         SELECT 'goods' AS kind, i."hsnCode" AS hsn, i."gstRate" AS rate, o."interStateSupply" AS inter,
@@ -218,11 +209,11 @@ export function createReportsService(prisma: PrismaClient) {
    * refunds as negative amounts. Streamed in batches; ends with the totals.
    */
   async function payments(query: ReportQuery) {
-    return paymentLines(await scope(query));
+    return paymentLines(scope(query));
   }
 
-  async function* paymentLines({ start, end, store }: Awaited<ReturnType<typeof scope>>) {
-    yield csvLine(["date_time", "type", "order_number", "invoice_number", "store", "method", "provider", "reference", "amount", "reason"]);
+  async function* paymentLines({ start, end }: ReturnType<typeof scope>) {
+    yield csvLine(["date_time", "type", "order_number", "invoice_number", "method", "provider", "reference", "amount", "reason"]);
 
     const time = new Intl.DateTimeFormat("sv-SE", { timeZone: env.TIMEZONE, dateStyle: "short", timeStyle: "medium" });
     let received = zero();
@@ -232,20 +223,18 @@ export function createReportsService(prisma: PrismaClient) {
       const after: Prisma.Sql = cursor ? Prisma.sql`WHERE (at, id) > (${cursor.at}, ${cursor.id})` : Prisma.empty;
       const rows: MoneyRow[] = await prisma.$queryRaw<MoneyRow[]>`
         SELECT * FROM (
-          SELECT p."paidAt" AS at, p.id, 'PAYMENT' AS type, o."orderNumber", o."invoiceNumber", s.name AS store,
+          SELECT p."paidAt" AS at, p.id, 'PAYMENT' AS type, o."orderNumber", o."invoiceNumber",
             'ONLINE' AS method, p.provider, p."transactionId" AS reference, p.amount, NULL AS reason
           FROM "Payment" p
           JOIN "Order" o ON o.id = p."orderId"
-          JOIN "Store" s ON s.id = o."storeId"
-          WHERE p.method = 'ONLINE' AND p."paidAt" >= ${start} AND p."paidAt" < ${end} ${store}
+          WHERE p.method = 'ONLINE' AND p."paidAt" >= ${start} AND p."paidAt" < ${end}
           UNION ALL
-          SELECT r."createdAt", r.id, 'REFUND', o."orderNumber", o."invoiceNumber", s.name,
+          SELECT r."createdAt", r.id, 'REFUND', o."orderNumber", o."invoiceNumber",
             r.method::text, CASE WHEN r.method = 'GATEWAY' THEN p.provider END, r.reference, -r.amount, r.reason
           FROM "Refund" r
           JOIN "Payment" p ON p.id = r."paymentId"
           JOIN "Order" o ON o.id = r."orderId"
-          JOIN "Store" s ON s.id = o."storeId"
-          WHERE r."createdAt" >= ${start} AND r."createdAt" < ${end} ${store}
+          WHERE r."createdAt" >= ${start} AND r."createdAt" < ${end}
         ) money
         ${after}
         ORDER BY at, id
@@ -260,7 +249,6 @@ export function createReportsService(prisma: PrismaClient) {
           row.type === "PAYMENT" ? "Payment" : "Refund",
           row.orderNumber,
           row.invoiceNumber,
-          row.store,
           row.method,
           row.provider,
           row.reference,

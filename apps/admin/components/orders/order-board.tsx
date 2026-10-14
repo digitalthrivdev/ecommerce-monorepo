@@ -15,10 +15,9 @@ import { cn } from "@/lib/utils";
 type BoardProps = {
   orders: OrderListItem[];
   currency: string;
-  showStore: boolean;
 };
 
-function Ticket({ order, currency, showStore }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
+function Ticket({ order, currency }: { order: OrderListItem } & Omit<BoardProps, "orders">) {
   const inPacking = order.status === "STORE_ACCEPTED" || order.status === "PICKING" || order.status === "PACKED";
   const waiting = !nextStep(order.status, order.allowedActions);
 
@@ -47,7 +46,6 @@ function Ticket({ order, currency, showStore }: { order: OrderListItem } & Omit<
         ) : (
           <p className="text-muted-foreground">Paid online · {formatMoney(order.total, currency)}</p>
         )}
-        {showStore && <p className="truncate text-xs text-muted-foreground">{order.store.name}</p>}
         {order.reviewAccount && <ReviewAccountPill />}
       </div>
 
@@ -64,7 +62,6 @@ function Ticket({ order, currency, showStore }: { order: OrderListItem } & Omit<
       {/* Above the ticket's link so the buttons stay clickable. */}
       <div className="relative z-10 empty:hidden">
         <NextStepButton
-          storeId={order.store.id}
           orderId={order.id}
           status={order.status}
           allowedActions={order.allowedActions}

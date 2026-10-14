@@ -16,13 +16,13 @@ export function sendPdf(reply: FastifyReply, { fileName, pdf }: { fileName: stri
 
 const orderParamsSchema = z.object({ orderId: z.string().trim().min(1).max(64) });
 
-/** `GET /admin/orders/:orderId/invoice` for the dashboard: admins, and staff for their own store. */
+/** `GET /admin/orders/:orderId/invoice` for the dashboard: admins and staff. */
 export const dashboardInvoiceRoutes: FastifyPluginAsync = async (app) => {
   const invoices = createInvoicesService(app.prisma);
 
-  app.get("/:orderId/invoice", { preHandler: app.requireRole(UserRole.ADMIN, UserRole.STORE_STAFF) }, async (request, reply) => {
+  app.get("/:orderId/invoice", { preHandler: app.requireRole(UserRole.ADMIN, UserRole.STAFF) }, async (request, reply) => {
     const { orderId } = orderParamsSchema.parse(request.params);
-    return sendPdf(reply, await invoices.forDashboard(request.user, orderId), "attachment");
+    return sendPdf(reply, await invoices.forDashboard(orderId), "attachment");
   });
 };
 

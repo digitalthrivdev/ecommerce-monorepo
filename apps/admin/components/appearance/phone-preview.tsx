@@ -87,7 +87,7 @@ function ProductRailPreview({ card, appearance, palette, dark, deals }: { card: 
           <span className="w-fit rounded px-1 text-[8px] font-semibold" style={{ backgroundColor: palette.placeholder, color: palette.muted }}>8 MINS</span>
           <div className="h-2 w-4/5 rounded" style={{ backgroundColor: palette.placeholder }} />
           {deals ? (
-            <span className="text-[8px] font-bold" style={{ color: colors.primary }}>{[35, 28, 20][index]}% OFF on MRP</span>
+            <span className="text-[8px] font-bold" style={{ color: colors.primary }}>{[35, 28, 20][index]}% OFF</span>
           ) : (
             <div className="h-2 w-1/2 rounded" style={{ backgroundColor: palette.placeholder }} />
           )}

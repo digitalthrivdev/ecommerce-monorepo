@@ -554,7 +554,7 @@ function SectionFields({
             value={String(section.limit)}
             onChange={(limit) => onChange({ ...section, limit: Number.parseInt(limit, 10) || 0 })}
             error={at("limit")}
-            description="Only products in stock at the customer's store are shown."
+            description="Only products in stock are shown."
             className="w-28"
           />
         </FieldGroup>
@@ -625,7 +625,7 @@ function SectionFields({
             value={String(section.limit)}
             onChange={(limit) => onChange({ ...section, limit: Number.parseInt(limit, 10) || 0 })}
             error={at("limit")}
-            description="The biggest discounts off MRP among products in stock at the customer's store."
+            description="The biggest discounts off the compare-at price among products in stock."
             className="w-28"
           />
         </FieldGroup>
@@ -941,7 +941,7 @@ function SectionFields({
           <div className="space-y-3 border-t pt-5">
             <div>
               <p className="text-sm font-medium">Featured categories</p>
-              <FieldDescription>Tiles on the right (up to 4). Add or remove them here; each shows its best discount when the store has one.</FieldDescription>
+              <FieldDescription>Tiles on the right (up to 4). Add or remove them here; each shows its best discount when there is one.</FieldDescription>
             </div>
             {section.categoryIds.map((categoryId, index) => (
               <div key={`${section.id}-category-${index}`} className="flex flex-col gap-3 rounded-lg border p-3">

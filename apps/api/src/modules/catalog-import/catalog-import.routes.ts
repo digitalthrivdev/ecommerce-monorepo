@@ -12,7 +12,7 @@ import { createCatalogImportService, importTemplate } from "./catalog-import.ser
 /** The CSV travels as a JSON string, where quotes and line breaks are escaped. */
 const BODY_LIMIT = MAX_FILE_BYTES * 2 + 64 * 1024;
 
-/** Bulk import of products, variants, one store's prices and stock from a CSV file. Admins only. */
+/** Bulk import of products, variants, prices and stock from a CSV file. Admins only. */
 const catalogImportRoutes: FastifyPluginAsync = async (app) => {
   const service = createCatalogImportService(app.prisma);
   const jobs = createImportJobs({
@@ -35,14 +35,14 @@ const catalogImportRoutes: FastifyPluginAsync = async (app) => {
 
   /** Checks the file and reports what an import would do. Saves nothing. */
   app.post("/preview", { bodyLimit: BODY_LIMIT }, async (request) => {
-    const { storeId, csv } = importBodySchema.parse(request.body);
-    return service.summarize(await service.plan(storeId, csv));
+    const { csv } = importBodySchema.parse(request.body);
+    return service.summarize(await service.plan(csv));
   });
 
   /** Checks the file again and, if it has no errors, starts the import in the background. */
   app.post("/", { bodyLimit: BODY_LIMIT }, async (request, reply) => {
-    const { storeId, csv } = importBodySchema.parse(request.body);
-    const plan = await service.plan(storeId, csv);
+    const { csv } = importBodySchema.parse(request.body);
+    const plan = await service.plan(csv);
     if (plan.errors.length > 0) {
       const { errors, errorCount } = service.summarize(plan);
       throw new AppError(400, "IMPORT_INVALID", "Fix the errors in the file before importing", { errors, errorCount });

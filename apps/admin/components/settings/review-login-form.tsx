@@ -53,7 +53,7 @@ export function ReviewLoginForm({ reviewLogin }: { reviewLogin: ReviewLogin }) {
         </div>
       </FieldGroup>
       <p className="text-sm text-muted-foreground">
-        No SMS is sent to this number; the code above works instead. Orders from it are marked “Review account” so stores can
+        No SMS is sent to this number; the code above works instead. Orders from it are marked “Review account” so you can
         cancel them. Turn this off once your app and payment account are approved.
       </p>
       <div>

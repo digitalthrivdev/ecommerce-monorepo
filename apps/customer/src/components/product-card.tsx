@@ -13,10 +13,10 @@ import { discountPercent, formatCount, formatMoney, unitPrice } from "@/lib/form
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
-import type { StoreProduct } from "@/lib/types";
+import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type ProductCardProps = { product: StoreProduct; currency: string; className?: string };
+type ProductCardProps = { product: Product; currency: string; className?: string };
 
 /** Shows the first in-stock variant; products with several variants add through a picker. */
 export function ProductCard({ product, currency, className }: ProductCardProps) {
@@ -27,8 +27,8 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
   if (!variant) return null;
 
   const imageUrl = variant.imageUrl ?? product.imageUrl;
-  const discount = discountPercent(variant.sellingPrice, variant.mrp);
-  const perUnit = unitPrice(variant.sellingPrice, variant.quantity, variant.unit, currency);
+  const discount = discountPercent(variant.price, variant.compareAtPrice);
+  const perUnit = unitPrice(variant.price, variant.quantity, variant.unit, currency);
   const soldOut = !product.variants.some((candidate) => candidate.inStock);
 
   return (
@@ -51,7 +51,6 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
           <DiscountRibbon percent={discount} />
         ) : null}
         <WishlistButton productId={product.productId} size={16} onImage className="absolute right-1 top-1 size-7 bg-white/90" />
-        {product.isVeg !== null && <VegMark veg={product.isVeg} className="absolute right-[11px] top-9" />}
         {variant.label ? (
           <View className="absolute bottom-1.5 left-1.5 max-w-[48%] rounded-md bg-muted px-1.5 py-0.5">
             <Text className="text-[11px] font-semibold" numberOfLines={1}>
@@ -67,10 +66,10 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
       <View className="mt-1 gap-0.5 px-0.5">
         {perUnit && <Text className="text-[11px] text-muted-foreground">{perUnit}</Text>}
         <View className="flex-row flex-wrap items-baseline gap-x-1.5">
-          <Text className="text-base font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
-          {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.mrp!, currency)}</Text>}
+          <Text className="text-base font-extrabold">{formatMoney(variant.price, currency)}</Text>
+          {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.compareAtPrice!, currency)}</Text>}
         </View>
-        {discount && <Text className="text-[11px] font-bold text-primary">{discount}% OFF on MRP</Text>}
+        {discount && <Text className="text-[11px] font-bold text-primary">{discount}% OFF</Text>}
         <Text className="text-[13px] font-semibold leading-tight" numberOfLines={3}>
           {product.name}
         </Text>
@@ -126,18 +125,6 @@ function DiscountRibbon({ percent }: { percent: number }) {
     <View className="absolute left-1.5 top-0 items-center rounded-b-md bg-primary px-1.5 pb-1 pt-0.5" accessibilityLabel={`${percent}% off`}>
       <Text className="text-[11px] font-black leading-tight text-primary-foreground">{percent}%</Text>
       <Text className="text-[9px] font-extrabold leading-none text-primary-foreground">OFF</Text>
-    </View>
-  );
-}
-
-/** The green or brown square-and-dot mark Indian food packs carry. */
-export function VegMark({ veg, className }: { veg: boolean; className?: string }) {
-  return (
-    <View
-      className={cn("size-3.5 items-center justify-center rounded-[2px] border bg-white", veg ? "border-green-700" : "border-amber-800", className)}
-      accessibilityLabel={veg ? "Vegetarian" : "Non-vegetarian"}
-    >
-      <View className={cn("size-1.5 rounded-full", veg ? "bg-green-700" : "bg-amber-800")} />
     </View>
   );
 }

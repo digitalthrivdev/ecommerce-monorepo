@@ -6,24 +6,21 @@ import { call, dashboardLogin, otpLogin, SEED, startApp } from "./helpers";
 let app: FastifyInstance;
 let admin: string;
 let customer: string;
-let storeId: string;
 let categoryId: string;
 let savedSections: unknown;
 
-/** A new product priced and stocked at the seeded store. */
+/** A new product, priced and in stock. */
 async function stockedProduct() {
   const sku = `DEL-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
   const created = await call(app, "POST", "/products", {
     token: admin,
-    body: { name: `Delete Test ${sku}`, categoryId, gstRate: "5", variants: [{ sku }] },
+    body: { name: `Delete Test ${sku}`, categoryId, gstRate: "5", variants: [{ sku, price: "500" }] },
   });
   expect(created.status).toBe(201);
   const id: string = created.body.id;
   const variantId: string = created.body.variants[0].id;
 
-  const priced = await call(app, "PUT", `/products/${id}/prices`, { token: admin, body: { prices: [{ storeId, variantId, sellingPrice: "500" }] } });
-  expect(priced.status).toBeLessThan(300);
-  const stocked = await call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } });
+  const stocked = await call(app, "PATCH", `/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } });
   expect(stocked.status).toBeLessThan(300);
   return { id, variantId };
 }
@@ -49,7 +46,6 @@ beforeAll(async () => {
   app = await startApp();
   admin = await dashboardLogin(app, SEED.adminEmail);
   customer = await otpLogin(app, SEED.customerPhone);
-  storeId = (await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } })).id;
   categoryId = (await app.prisma.category.findFirstOrThrow({ where: { parentId: { not: null } } })).id;
   savedSections = (await call(app, "GET", "/settings/appearance", { token: admin })).body.homeSections;
 });
@@ -77,17 +73,15 @@ describe("bulk product deletion", () => {
         city: "Bengaluru",
         state: "Karnataka",
         postalCode: "560034",
-        latitude: 12.9355,
-        longitude: 77.6249,
       },
     });
     expect(address.status).toBe(201);
     await call(app, "DELETE", "/cart", { token: customer });
-    expect((await call(app, "POST", "/cart/items", { token: customer, body: { storeId, variantId: ordered.variantId, quantity: 1 } })).status).toBeLessThan(300);
+    expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId: ordered.variantId, quantity: 1 } })).status).toBeLessThan(300);
     const order = await call(app, "POST", "/orders", { token: customer, body: { addressId: address.body.id, paymentMethod: "COD" } });
     expect(order.status).toBe(201);
 
-    expect((await call(app, "POST", "/cart/items", { token: customer, body: { storeId, variantId: unordered.variantId, quantity: 1 } })).status).toBeLessThan(300);
+    expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId: unordered.variantId, quantity: 1 } })).status).toBeLessThan(300);
 
     const homeSections = [...(savedSections as unknown[]), saleHero(featured.id)];
     expect((await call(app, "PATCH", "/settings/appearance", { token: admin, body: { homeSections } })).status).toBe(200);
@@ -107,12 +101,12 @@ describe("bulk product deletion", () => {
     const { prisma } = app;
     expect(await prisma.product.findUnique({ where: { id: unordered.id } })).toBeNull();
     expect(await prisma.productVariant.count({ where: { id: unordered.variantId } })).toBe(0);
-    expect(await prisma.storeProduct.count({ where: { variantId: unordered.variantId } })).toBe(0);
+    expect(await prisma.inventory.count({ where: { variantId: unordered.variantId } })).toBe(0);
     expect(await prisma.cartItem.count({ where: { variantId: unordered.variantId } })).toBe(0);
     expect(await prisma.productImage.count({ where: { productId: unordered.id } })).toBe(0);
 
     expect(await prisma.product.findUniqueOrThrow({ where: { id: ordered.id } })).toMatchObject({ isActive: false });
-    expect(await prisma.storeProduct.count({ where: { variantId: ordered.variantId } })).toBe(1);
+    expect(await prisma.inventory.count({ where: { variantId: ordered.variantId } })).toBe(1);
     const pastOrder = await call(app, "GET", `/orders/${order.body.id}`, { token: customer });
     expect(pastOrder.status).toBe(200);
 
@@ -159,7 +153,7 @@ describe("category deletion", () => {
 
     const created = await call(app, "POST", "/products", {
       token: admin,
-      body: { name: "Category Delete Test", categoryId: child, gstRate: "5", isActive: false, variants: [{ sku: `CAT-DEL-${Date.now()}` }] },
+      body: { name: "Category Delete Test", categoryId: child, gstRate: "5", isActive: false, variants: [{ sku: `CAT-DEL-${Date.now()}`, price: "100" }] },
     });
     expect(created.status).toBe(201);
     const withProduct = await remove(child);

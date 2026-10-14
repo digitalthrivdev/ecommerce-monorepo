@@ -4,7 +4,7 @@ import type { Coordinates } from "./types";
 
 const FIX_TIMEOUT_MS = 15_000;
 
-export class LocationError extends Error {
+class LocationError extends Error {
   constructor(
     readonly reason: "denied" | "disabled" | "unavailable",
     message: string,

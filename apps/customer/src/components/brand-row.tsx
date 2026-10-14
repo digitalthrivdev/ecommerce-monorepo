@@ -8,10 +8,10 @@ import { Text } from "@/components/ui/text";
 import { useCardSurface } from "@/lib/app-theme";
 import { smallImage } from "@/lib/images";
 import { openBrand } from "@/lib/navigation";
-import type { StoreBrand } from "@/lib/types";
+import type { CatalogBrand } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function BrandTile({ brand }: { brand: StoreBrand }) {
+function BrandTile({ brand }: { brand: CatalogBrand }) {
   const surface = useCardSurface();
   const [failed, setFailed] = useState(false);
   const bandText = useBandText();
@@ -37,7 +37,7 @@ function BrandTile({ brand }: { brand: StoreBrand }) {
 }
 
 /** A titled row of brand logos that open the brand's products. */
-export function BrandRow({ title, description, brands }: { title: string; description?: string | null; brands: StoreBrand[] }) {
+export function BrandRow({ title, description, brands }: { title: string; description?: string | null; brands: CatalogBrand[] }) {
   if (brands.length === 0) return null;
 
   return (

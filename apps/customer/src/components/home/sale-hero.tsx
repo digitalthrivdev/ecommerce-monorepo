@@ -195,7 +195,7 @@ function DealCard({ deals, titleColor, running }: { deals: Deals; titleColor: st
   const product = deals.products[index % count]!;
   const variant = defaultVariant(product.variants);
   const imageUrl = variant?.imageUrl ?? product.imageUrl;
-  const discount = variant ? discountPercent(variant.sellingPrice, variant.mrp) : null;
+  const discount = variant ? discountPercent(variant.price, variant.compareAtPrice) : null;
 
   return (
     <Pressable
@@ -210,13 +210,13 @@ function DealCard({ deals, titleColor, running }: { deals: Deals; titleColor: st
       <Animated.View style={[styles.deal, fade]}>
         {variant && (
           <View className="mt-2 items-center gap-0.5">
-            {discount && variant.mrp && (
+            {discount && variant.compareAtPrice && (
               <View className="rounded bg-black/50 px-1.5">
-                <Text className="text-[10px] font-semibold text-white line-through">{formatMoney(variant.mrp, currency)}</Text>
+                <Text className="text-[10px] font-semibold text-white line-through">{formatMoney(variant.compareAtPrice, currency)}</Text>
               </View>
             )}
             <View className="rounded bg-primary px-2 py-0.5">
-              <Text className="text-sm font-extrabold text-primary-foreground">{formatMoney(variant.sellingPrice, currency)}</Text>
+              <Text className="text-sm font-extrabold text-primary-foreground">{formatMoney(variant.price, currency)}</Text>
             </View>
           </View>
         )}

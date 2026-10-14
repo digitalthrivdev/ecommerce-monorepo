@@ -195,8 +195,7 @@ describe("test accounts", () => {
       }
 
       // The delivery steps stay open (the full order flow is in orders.test.ts).
-      const store = await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } });
-      const delivered = await call(app, "POST", `/stores/${store.id}/orders/not-an-order/mark-delivered`, { token });
+      const delivered = await call(app, "POST", "/admin/orders/not-an-order/mark-delivered", { token });
       expect(delivered.status).toBe(404);
     });
 
@@ -224,23 +223,21 @@ describe("test accounts", () => {
     const READ_ONLY = { error: "TEST_ACCOUNT_READ_ONLY", message: "Demo account: changes are disabled" };
     let staff: string;
     let customer: string;
-    let storeId: string;
     let variantId: string;
 
     beforeAll(async () => {
       const users = await app.prisma.user.findMany({
         where: { OR: [{ email: SEED.staffEmail }, { phone: SEED.customerPhone }] },
-        select: { id: true, role: true, storeId: true },
+        select: { id: true, role: true },
       });
       const userFor = (role: string) => users.find((candidate) => candidate.role === role)!;
       const tokenFor = (role: string) => {
         const user = userFor(role);
         return app.jwt.sign({ sub: user.id, role: user.role, test: true, jti: randomUUID() });
       };
-      staff = tokenFor("STORE_STAFF");
+      staff = tokenFor("STAFF");
       customer = tokenFor("CUSTOMER");
-      storeId = userFor("STORE_STAFF").storeId!;
-      variantId = (await app.prisma.storeProduct.findFirstOrThrow({ where: { storeId, isAvailable: true, inventory: { isNot: null } }, select: { variantId: true } })).variantId;
+      variantId = (await app.prisma.productVariant.findFirstOrThrow({ where: { isActive: true, inventory: { isNot: null } }, select: { id: true } })).id;
     });
 
     /** A one-file multipart upload, as the dashboard sends it. */
@@ -263,13 +260,13 @@ describe("test accounts", () => {
 
     it("blocks test staff from stock and availability changes and uploads; normal staff can", async () => {
       const normal = await dashboardLogin(app, SEED.staffEmail);
-      const inventoryPath = `/stores/${storeId}/inventory/${variantId}`;
+      const inventoryPath = `/inventory/${variantId}`;
       const restock = { delta: 1, reason: "RESTOCK" };
-      const availability = { isAvailable: true };
+      const availability = { isActive: true };
 
       for (const response of [
         await call(app, "PATCH", inventoryPath, { token: staff, body: restock }),
-        await call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: staff, body: availability }),
+        await call(app, "PATCH", `/variants/${variantId}`, { token: staff, body: availability }),
         await uploadImage(staff),
       ]) {
         expect(response.status).toBe(403);
@@ -278,7 +275,7 @@ describe("test accounts", () => {
 
       expect((await call(app, "PATCH", inventoryPath, { token: normal, body: restock })).status).toBe(200);
       expect((await call(app, "PATCH", inventoryPath, { token: normal, body: { delta: -1, reason: "CORRECTION" } })).status).toBe(200);
-      expect((await call(app, "PATCH", `/stores/${storeId}/variants/${variantId}`, { token: normal, body: availability })).status).toBe(200);
+      expect((await call(app, "PATCH", `/variants/${variantId}`, { token: normal, body: availability })).status).toBe(200);
       expect((await uploadImage(normal)).status).toBe(201);
     });
 
@@ -297,7 +294,7 @@ describe("test accounts", () => {
       // Wrong role: the usual 403 FORBIDDEN, not the demo message.
       for (const response of [
         await call(app, "DELETE", "/users/me", { token: staff }),
-        await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: customer }),
+        await call(app, "POST", "/admin/orders/not-an-order/accept", { token: customer }),
         await call(app, "POST", "/images", { token: customer }),
       ]) {
         expect(response.status).toBe(403);
@@ -305,7 +302,7 @@ describe("test accounts", () => {
       }
 
       // Allowed routes still validate input.
-      expect((await call(app, "POST", `/stores/${storeId}/orders/not-an-order/accept`, { token: staff })).status).toBe(404);
+      expect((await call(app, "POST", "/admin/orders/not-an-order/accept", { token: staff })).status).toBe(404);
       expect((await call(app, "PATCH", "/users/me", { token: customer, body: {} })).status).toBe(400);
     });
   });

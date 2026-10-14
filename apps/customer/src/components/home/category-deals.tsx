@@ -41,7 +41,7 @@ function DealTile({ category }: { category: DealCategory }) {
   );
 }
 
-/** Category tiles showing the biggest discount off MRP in each. */
+/** Category tiles showing the biggest discount in each. */
 export function CategoryDeals({ section }: { section: CategoryDealsSection }) {
   return (
     <View>

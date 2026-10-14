@@ -15,8 +15,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMoney } from "@/lib/format";
-import { draftPriceRange, type PriceDraft } from "@/lib/product-editor";
-import type { ProductImage, Store } from "@/lib/types";
+import type { ProductImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   addMissingCombinations,
@@ -35,7 +34,7 @@ import {
 } from "@/lib/variant-drafts";
 
 const ALL = "all";
-/** Tick box, size, then price, MRP, stock and actions as columns from sm up. */
+/** Tick box, size, then price, compare-at price, stock and actions as columns from sm up. */
 const ROW_GRID = "grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[1.25rem_minmax(0,1fr)_6.5rem_6.5rem_4.5rem_4.5rem]";
 
 const FIELD_LABELS: Record<string, string> = {
@@ -46,21 +45,22 @@ const FIELD_LABELS: Record<string, string> = {
   maxOrderQuantity: "max per order",
   optionValues: "options",
   price: "price",
-  mrp: "MRP",
-  stock: "stock",
+  compareAtPrice: "compare-at price",
+  weightGrams: "weight",
+  lengthCm: "length",
+  breadthCm: "breadth",
+  heightCm: "height",
 };
 
-/** "1 kg, price: " for "variants.2.sku" or "price.<key>.all.price". */
-function errorLabel(path: string, draft: Draft, stores: Store[]) {
-  const parts = path.split(".");
+/** Shown with the single size's own boxes instead of in the list of problems. */
+const SINGLE_SIZE_FIELDS = /^variants\.0\.(quantity|unit|maxOrderQuantity|sku|barcode|price|compareAtPrice|weightGrams|lengthCm|breadthCm|heightCm)$/;
+
+const isPrice = (value: string) => DECIMAL_PATTERN.test(value.trim()) && Number(value) > 0;
+
+/** "1 kg, product code: " for "variants.2.sku". */
+function errorLabel(path: string, draft: Draft) {
   const name = (variant: VariantDraft | undefined, fallback: string) => (variant ? variantLabel(draft.options, variant) || "Size" : fallback);
-  if (parts[0] === "price") {
-    const [, key, scope, field] = parts;
-    const variant = draft.variants.find((candidate) => candidate.key === key);
-    const store = stores.find((candidate) => candidate.id === scope);
-    return `${name(variant, "Size")}, ${FIELD_LABELS[field ?? ""] ?? field}${store && stores.length > 1 ? ` at ${store.name}` : ""}: `;
-  }
-  const [list, index, field] = parts;
+  const [list, index, field] = path.split(".");
   if (list === "variants" && index !== undefined) {
     return `${name(draft.variants[Number(index)], `Size ${Number(index) + 1}`)}${field ? `, ${FIELD_LABELS[field] ?? field}` : ""}: `;
   }
@@ -209,38 +209,27 @@ function Thumb({ url }: { url: string | null }) {
 function BulkBar({
   count,
   currency,
-  storeName,
   onPrice,
-  onStock,
   onActive,
   onClear,
 }: {
   count: number;
   currency: string;
-  storeName: string | null;
-  onPrice: (price: string, mrp: string) => void;
-  onStock: (stock: string) => void;
+  onPrice: (price: string, compareAtPrice: string) => void;
   onActive: (active: boolean) => void;
   onClear: () => void;
 }) {
   const [price, setPrice] = useState("");
-  const [mrp, setMrp] = useState("");
-  const [stock, setStock] = useState("");
+  const [compareAt, setCompareAt] = useState("");
 
   function applyPrice() {
     const p = price.trim();
-    const m = mrp.trim();
-    if (!DECIMAL_PATTERN.test(p) || Number(p) <= 0) return toast.error("Enter a price like 68 or 68.50");
-    if (m && (!DECIMAL_PATTERN.test(m) || Number(m) < Number(p))) return toast.error("MRP must be a number no lower than the price");
-    onPrice(p, m);
+    const c = compareAt.trim();
+    if (!isPrice(p)) return toast.error("Enter a price like 499 or 499.50");
+    if (c && (!isPrice(c) || Number(c) < Number(p))) return toast.error("The compare-at price must be a number no lower than the price");
+    onPrice(p, c);
     setPrice("");
-    setMrp("");
-  }
-
-  function applyStock() {
-    if (!/^\d{1,7}$/.test(stock.trim())) return toast.error("Enter a whole number");
-    onStock(stock.trim());
-    setStock("");
+    setCompareAt("");
   }
 
   return (
@@ -262,24 +251,20 @@ function BulkBar({
             <MoneyInput id="bulk-price" currency={currency} value={price} onChange={(event) => setPrice(event.target.value)} className="h-9 bg-card" />
           </Field>
           <Field className="w-28">
-            <FieldLabel htmlFor="bulk-mrp" className="text-xs">
-              MRP
+            <FieldLabel htmlFor="bulk-compare-at" className="text-xs">
+              Compare-at
             </FieldLabel>
-            <MoneyInput id="bulk-mrp" currency={currency} value={mrp} onChange={(event) => setMrp(event.target.value)} placeholder="Keep" className="h-9 bg-card" />
+            <MoneyInput
+              id="bulk-compare-at"
+              currency={currency}
+              value={compareAt}
+              onChange={(event) => setCompareAt(event.target.value)}
+              placeholder="Keep"
+              className="h-9 bg-card"
+            />
           </Field>
           <Button type="button" variant="outline" className="bg-card" onClick={applyPrice}>
             Set price
-          </Button>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <Field className="w-24">
-            <FieldLabel htmlFor="bulk-stock" className="text-xs">
-              Stock{storeName ? ` at ${storeName}` : ""}
-            </FieldLabel>
-            <Input id="bulk-stock" inputMode="numeric" value={stock} onChange={(event) => setStock(event.target.value.replace(/\D/g, ""))} className="h-9 bg-card" />
-          </Field>
-          <Button type="button" variant="outline" className="bg-card" onClick={applyStock}>
-            Set stock
           </Button>
         </div>
         <div className="flex gap-2">
@@ -291,7 +276,7 @@ function BulkBar({
           </Button>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">The price applies at every store. Nothing is saved until you press Save.</p>
+      <p className="text-xs text-muted-foreground">Nothing is saved until you press Save. Stock is changed on the Stock page.</p>
     </div>
   );
 }
@@ -304,23 +289,19 @@ type VariantsCardProps = {
   draft: Draft;
   onChange: (draft: Draft) => void;
   errors: Record<string, string>;
-  stores: Store[];
-  /** Price and stock of each size, keyed by variant key. */
-  prices: Record<string, PriceDraft>;
-  onPricesChange: (prices: Record<string, PriceDraft>) => void;
+  /** Stock of each saved size, by variant id. */
+  stock: Map<string, number>;
   currency: string;
 };
 
-export function VariantsCard({ productId, slug, images, draft, onChange, errors, stores, prices, onPricesChange, currency }: VariantsCardProps) {
+export function VariantsCard({ productId, slug, images, draft, onChange, errors, stock, currency }: VariantsCardProps) {
   const [adding, setAdding] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [storeId, setStoreId] = useState(stores[0]?.id ?? "");
   const { options, variants } = draft;
   const money = (value: number) => formatMoney(String(value), currency);
   const missing = missingCombinations(draft).length;
   const hasOptions = options.length > 0;
-  const store = stores.find((candidate) => candidate.id === storeId) ?? null;
   const mainImage = images.find((image) => image.variantId === null)?.url ?? images[0]?.url ?? null;
   const imageFor = (variant: VariantDraft) => (variant.id && images.find((image) => image.variantId === variant.id)?.url) || mainImage;
 
@@ -333,12 +314,8 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
     return true;
   }
 
-  const setPrice = (key: string, update: (draft: PriceDraft) => PriceDraft) => {
-    const current = prices[key];
-    if (current) onPricesChange({ ...prices, [key]: update(current) });
-  };
-  const setStoreRow = (pd: PriceDraft, changes: Partial<PriceDraft["stores"][string]>): PriceDraft =>
-    store ? { ...pd, stores: { ...pd.stores, [store.id]: { ...pd.stores[store.id]!, ...changes } } } : pd;
+  const updateVariant = (key: string, changes: Partial<VariantDraft>) =>
+    onChange({ ...draft, variants: variants.map((variant) => (variant.key === key ? { ...variant, ...changes } : variant)) });
 
   const single = variants[0]!;
   const singleField = (name: "quantity" | "unit" | "maxOrderQuantity") => ({
@@ -362,38 +339,25 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
     return ticked === 0 ? false : ticked === keys.length ? true : ("indeterminate" as const);
   };
 
-  function bulkPrice(price: string, mrp: string) {
-    const next = { ...prices };
-    for (const key of liveSelected) {
-      const pd = next[key];
-      if (pd) next[key] = { ...pd, same: true, price, mrp: mrp || pd.mrp };
-    }
-    onPricesChange(next);
-  }
-  function bulkStock(stock: string) {
-    const next = { ...prices };
-    for (const key of liveSelected) {
-      const pd = next[key];
-      if (pd) next[key] = setStoreRow(pd, { stock });
-    }
-    onPricesChange(next);
+  function bulkPrice(price: string, compareAtPrice: string) {
+    onChange({
+      ...draft,
+      variants: variants.map((variant) =>
+        liveSelected.has(variant.key) ? { ...variant, price, compareAtPrice: compareAtPrice || variant.compareAtPrice } : variant,
+      ),
+    });
   }
   function bulkActive(isActive: boolean) {
     onChange({ ...draft, variants: variants.map((variant) => (liveSelected.has(variant.key) ? { ...variant, isActive } : variant)) });
   }
 
   const row = (variant: VariantDraft, nested: boolean) => {
-    const pd = prices[variant.key];
+    const index = variants.indexOf(variant);
     const label = variantLabel(options, variant) || "Only size";
     const shownLabel = nested ? options.slice(1).map((option) => variant.values[option.key]).join(" · ") || label : label;
-    const priceScope = pd?.same ? "all" : storeId;
-    const priceError = errors[`price.${variant.key}.${priceScope}.price`];
-    const mrpError = errors[`price.${variant.key}.${priceScope}.mrp`];
-    const stockError = errors[`price.${variant.key}.${storeId}.stock`];
-    const storeRow = pd && store ? pd.stores[store.id] : undefined;
-    const stockChanged = storeRow && /^\d+$/.test(storeRow.stock) && Number(storeRow.stock) !== storeRow.stockLoaded;
-    const setPriceField = (field: "price" | "mrp", value: string) =>
-      setPrice(variant.key, (current) => (current.same ? { ...current, [field]: value } : setStoreRow(current, { [field]: value })));
+    const priceError = errors[`variants.${index}.price`];
+    const compareAtError = errors[`variants.${index}.compareAtPrice`];
+    const inStock = variant.id ? stock.get(variant.id) : undefined;
     return (
       <div key={variant.key} data-variant-row className={cn(ROW_GRID, "border-t py-2", nested && "sm:pl-8", !variant.isActive && "text-muted-foreground")}>
         <Checkbox checked={liveSelected.has(variant.key)} onCheckedChange={(on) => toggle([variant.key], on === true)} aria-label={`Tick ${label}`} />
@@ -418,52 +382,40 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
         <div className="col-span-3 grid grid-cols-3 gap-2 pl-8 sm:contents">
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-medium text-muted-foreground sm:sr-only">Price</span>
-            {pd && (
-              <MoneyInput
-                currency={currency}
-                value={pd.same ? pd.price : (storeRow?.price ?? "")}
-                onChange={(event) => setPriceField("price", event.target.value)}
-                placeholder="No price"
-                aria-label={`Price of ${label}`}
-                aria-invalid={Boolean(priceError)}
-                title={priceError}
-                className="h-9"
-              />
-            )}
+            <MoneyInput
+              currency={currency}
+              value={variant.price}
+              onChange={(event) => updateVariant(variant.key, { price: event.target.value })}
+              placeholder="No price"
+              aria-label={`Price of ${label}`}
+              aria-invalid={Boolean(priceError)}
+              title={priceError}
+              className="h-9"
+            />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-muted-foreground sm:sr-only">MRP</span>
-            {pd && (
-              <MoneyInput
-                currency={currency}
-                value={pd.same ? pd.mrp : (storeRow?.mrp ?? "")}
-                onChange={(event) => setPriceField("mrp", event.target.value)}
-                placeholder="—"
-                aria-label={`MRP of ${label}`}
-                aria-invalid={Boolean(mrpError)}
-                title={mrpError}
-                className="h-9"
-              />
-            )}
+            <span className="text-[11px] font-medium text-muted-foreground sm:sr-only">Compare-at</span>
+            <MoneyInput
+              currency={currency}
+              value={variant.compareAtPrice}
+              onChange={(event) => updateVariant(variant.key, { compareAtPrice: event.target.value })}
+              placeholder="—"
+              aria-label={`Compare-at price of ${label}`}
+              aria-invalid={Boolean(compareAtError)}
+              title={compareAtError}
+              className="h-9"
+            />
           </label>
-          <label className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1">
             <span className="text-[11px] font-medium text-muted-foreground sm:sr-only">Stock</span>
-            {storeRow && (
-              <Input
-                value={storeRow.stock}
-                inputMode="numeric"
-                onChange={(event) => setPrice(variant.key, (current) => setStoreRow(current, { stock: event.target.value.replace(/\D/g, "") }))}
-                aria-label={`Stock of ${label}${store && stores.length > 1 ? ` at ${store.name}` : ""}`}
-                aria-invalid={Boolean(stockError)}
-                title={stockError ?? (stockChanged ? `Was ${storeRow.stockLoaded}` : undefined)}
-                className={cn("h-9 text-right tabular-nums", stockChanged && "border-amber-500")}
-              />
-            )}
-          </label>
+            <span className={cn("flex h-9 items-center justify-end text-sm tabular-nums", inStock === 0 && "text-destructive")}>
+              {inStock === undefined ? "—" : inStock}
+            </span>
+          </div>
         </div>
         <div className="col-start-3 row-start-1 flex items-center justify-end sm:col-start-auto sm:row-start-auto">
           {variant.id && productId && (
-            <Button asChild variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label={`Open ${label}`} title="Photo, barcode and price per store">
+            <Button asChild variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label={`Open ${label}`} title="Photo, barcode, parcel size and stock">
               <Link href={`/products/${productId}/variants/${variant.id}`}>
                 <ChevronRight />
               </Link>
@@ -493,16 +445,14 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
         .filter((group) => group.variants.length > 0)
     : [];
   const errorEntries = Object.entries(errors).filter(
-    ([path]) =>
-      (path.startsWith("variants.") || path.startsWith("options.") || (hasOptions && path.startsWith("price."))) &&
-      (hasOptions || !/^variants\.0\.(quantity|unit|maxOrderQuantity|sku|barcode)$/.test(path)),
+    ([path]) => (path.startsWith("variants.") || path.startsWith("options.")) && (hasOptions || !SINGLE_SIZE_FIELDS.test(path)),
   );
   const hasNew = variants.some((variant) => !variant.id);
 
   return (
     <Block
       title={hasOptions ? "Sizes and options" : "Size"}
-      hint={hasOptions ? "Type prices and stock here, or tick sizes to change many at once. Open a size for its photo, barcode and price per store." : undefined}
+      hint={hasOptions ? "Type prices here, or tick sizes to change many at once. Open a size for its photo, barcode, parcel size and stock history." : undefined}
     >
       {!hasOptions && (
         <div className="grid gap-4 sm:grid-cols-3">
@@ -569,49 +519,31 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
 
       {hasOptions && (
         <>
-          {(variants.length > 3 || stores.length > 1) && (
+          {variants.length > 3 && (
             <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-              {variants.length > 3 &&
-                options.map((option) => (
-                  <Select
-                    key={option.key}
-                    value={filters[option.key] || ALL}
-                    onValueChange={(value) => setFilters({ ...filters, [option.key]: value === ALL ? "" : value })}
+              {options.map((option) => (
+                <Select
+                  key={option.key}
+                  value={filters[option.key] || ALL}
+                  onValueChange={(value) => setFilters({ ...filters, [option.key]: value === ALL ? "" : value })}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className={cn("w-40", filters[option.key] && "border-primary bg-primary-soft text-primary-ink")}
+                    aria-label={`Show only one ${option.name}`}
                   >
-                    <SelectTrigger
-                      size="sm"
-                      className={cn("w-40", filters[option.key] && "border-primary bg-primary-soft text-primary-ink")}
-                      aria-label={`Show only one ${option.name}`}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>Every {option.name.toLowerCase()}</SelectItem>
-                      {option.values.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ))}
-              {stores.length > 1 && (
-                <div className="ml-auto flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Stock at</span>
-                  <Select value={storeId} onValueChange={setStoreId}>
-                    <SelectTrigger size="sm" className="w-44" aria-label="Store for the stock column">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stores.map((candidate) => (
-                        <SelectItem key={candidate.id} value={candidate.id}>
-                          {candidate.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Every {option.name.toLowerCase()}</SelectItem>
+                    {option.values.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ))}
             </div>
           )}
 
@@ -619,9 +551,7 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
             <BulkBar
               count={liveSelected.size}
               currency={currency}
-              storeName={stores.length > 1 ? (store?.name ?? null) : null}
               onPrice={bulkPrice}
-              onStock={bulkStock}
               onActive={bulkActive}
               onClear={() => setSelected(new Set())}
             />
@@ -636,15 +566,15 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
               />
               <span>Size</span>
               <span className="hidden sm:block">Price</span>
-              <span className="hidden sm:block">MRP</span>
-              <span className="hidden sm:block">{stores.length > 1 ? "Stock here" : "Stock"}</span>
+              <span className="hidden sm:block">Compare-at</span>
+              <span className="hidden text-right sm:block">Stock</span>
             </div>
             {grouped
               ? groups.flatMap((group) => {
                   const keys = group.variants.map((variant) => variant.key);
-                  const ranges = group.variants.map((variant) => draftPriceRange(prices[variant.key])).filter((range) => range !== null);
-                  const min = ranges.length ? Math.min(...ranges.map((range) => range.min)) : null;
-                  const max = ranges.length ? Math.max(...ranges.map((range) => range.max)) : null;
+                  const groupPrices = group.variants.filter((variant) => isPrice(variant.price)).map((variant) => Number(variant.price));
+                  const min = groupPrices.length ? Math.min(...groupPrices) : null;
+                  const max = groupPrices.length ? Math.max(...groupPrices) : null;
                   return [
                     <div key={`group-${group.value}`} className="-mx-5 flex items-center gap-3 border-t bg-muted/40 px-5 py-2">
                       <Checkbox checked={tickState(keys)} onCheckedChange={(on) => toggle(keys, on === true)} aria-label={`Tick every ${group.value}`} />
@@ -663,7 +593,7 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
 
           {hasNew && (
             <p className="-mt-1 text-sm text-muted-foreground">
-              New sizes start with the price of the closest size and no stock. Change them before saving if needed.
+              New sizes start with the price and parcel size of the closest size, and no stock. Change them before saving if needed.
             </p>
           )}
         </>
@@ -673,7 +603,7 @@ export function VariantsCard({ productId, slug, images, draft, onChange, errors,
         <ul className="list-disc pl-5 text-sm text-destructive">
           {errorEntries.map(([path, message]) => (
             <li key={path}>
-              {errorLabel(path, draft, stores)}
+              {errorLabel(path, draft)}
               {message}
             </li>
           ))}

@@ -9,7 +9,7 @@ import {
   isSameState,
   splitIntraState,
   stateSchema,
-  storeInvoiceGstin,
+  invoiceGstin,
 } from "../src/shared/gst.js";
 
 const D = (value: string) => new Prisma.Decimal(value);
@@ -35,11 +35,10 @@ describe("GSTIN", () => {
     expect(gstinMatchesState("28ABCDE1234F1Z0", "Andhra Pradesh")).toBe(true);
   });
 
-  it("uses the settings GSTIN only for stores in its state", () => {
-    expect(storeInvoiceGstin({ gstin: null, state: "Karnataka" }, "29ABCDE1234F1ZW")).toBe("29ABCDE1234F1ZW");
-    expect(storeInvoiceGstin({ gstin: null, state: "Uttar Pradesh" }, "29ABCDE1234F1ZW")).toBeNull();
-    expect(storeInvoiceGstin({ gstin: "27AAPFU0939F1ZV", state: "Maharashtra" }, "29ABCDE1234F1ZW")).toBe("27AAPFU0939F1ZV");
-    expect(storeInvoiceGstin({ gstin: null, state: "Karnataka" }, null)).toBeNull();
+  it("uses the settings GSTIN only for a pickup location in its state", () => {
+    expect(invoiceGstin("Karnataka", "29ABCDE1234F1ZW")).toBe("29ABCDE1234F1ZW");
+    expect(invoiceGstin("Uttar Pradesh", "29ABCDE1234F1ZW")).toBeNull();
+    expect(invoiceGstin("Karnataka", null)).toBeNull();
   });
 });
 

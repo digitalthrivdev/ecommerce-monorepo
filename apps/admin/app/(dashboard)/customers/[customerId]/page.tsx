@@ -174,7 +174,7 @@ export default async function CustomerPage({ params, searchParams }: PageProps<"
                             {order.orderNumber}
                           </Link>
                           <div className="text-xs text-muted-foreground">
-                            {order.store.name} · {formatDateTime(order.createdAt, settings.timezone)}
+                            {formatDateTime(order.createdAt, settings.timezone)}
                           </div>
                         </TableCell>
                         <TableCell>

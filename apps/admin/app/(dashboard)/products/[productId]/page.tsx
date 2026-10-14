@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { editorRevision, getProductWithListings } from "@/app/(dashboard)/products/data";
+import { editorRevision, getProduct } from "@/app/(dashboard)/products/data";
 import { AddReviewDialog } from "@/components/catalog/add-review-dialog";
 import { DeleteProductButton } from "@/components/catalog/delete-products";
 import { ProductEditor } from "@/components/catalog/product-editor";
@@ -14,21 +14,19 @@ export const metadata: Metadata = { title: "Product" };
 export default async function ProductPage({ params }: PageProps<"/products/[productId]">) {
   await requireAdmin();
   const { productId } = await params;
-  const [{ product, listings }, categories, brands, settings] = await Promise.all([
-    getProductWithListings(productId),
+  const [product, categories, brands, settings] = await Promise.all([
+    getProduct(productId),
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
     apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
     getPublicSettings(),
   ]);
   const parent = categories.items.find((category) => category.id === product.category.parentId);
-  const isSelling = listings.items.some((item) => item.listings.some((entry) => entry.listing));
+  const inStock = product.variants.some((variant) => variant.isActive && variant.stockQuantity > 0);
 
   return (
     <ProductEditor
-      key={editorRevision(product, listings)}
+      key={editorRevision(product)}
       product={product}
-      listings={listings}
-      stores={listings.items.map((item) => item.store)}
       categories={categories.items}
       brands={brands.items}
       currency={settings.currency}
@@ -41,13 +39,13 @@ export default async function ProductPage({ params }: PageProps<"/products/[prod
           <Pill tone="red" size="md">
             Hidden from app
           </Pill>
-        ) : isSelling ? (
+        ) : inStock ? (
           <Pill tone="green" size="md">
             Selling
           </Pill>
         ) : (
           <Pill tone="amber" size="md">
-            Not selling yet
+            Out of stock
           </Pill>
         )
       }

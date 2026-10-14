@@ -13,7 +13,7 @@ type TodayRow = {
 
 /** Minutes before a waiting order is flagged to admins. Matches the red timers on the order board. */
 export const ATTENTION_MINUTES = {
-  STORE_NOT_ACCEPTED: 10,
+  NOT_ACCEPTED: 10,
   NOT_DISPATCHED: 20,
 } as const;
 
@@ -21,16 +21,12 @@ export type AttentionReason = keyof typeof ATTENTION_MINUTES;
 
 const ATTENTION_LIMIT = 50;
 
-type WaitingRow = { id: string; orderNumber: string; status: OrderStatus; storeId: string; storeName: string; since: Date };
+type WaitingRow = { id: string; orderNumber: string; status: OrderStatus; since: Date };
 
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000);
 
 export function createDashboardService(prisma: PrismaClient) {
-  /** storeId undefined means all stores (admins only). */
-  async function getDashboard({ storeId, isAdmin }: { storeId?: string; isAdmin: boolean }) {
-    const storeFilter = storeId ? Prisma.sql`AND "storeId" = ${storeId}` : Prisma.empty;
-    const orderWhere: Prisma.OrderWhereInput = storeId ? { storeId } : {};
-
+  async function getDashboard({ isAdmin }: { isAdmin: boolean }) {
     // "Today" is the calendar day in the client's time zone. Unpaid online orders are not counted.
     const todayQuery = prisma.$queryRaw<TodayRow[]>`
       SELECT
@@ -40,25 +36,24 @@ export function createDashboardService(prisma: PrismaClient) {
         count(*) FILTER (WHERE status = 'CANCELLED') AS cancelled
       FROM "Order"
       WHERE "createdAt" >= ${startOfTodaySql()}
-      ${storeFilter}
     `;
 
     const [[today], pipeline, lowStock, recent, customers] = await Promise.all([
       todayQuery,
       prisma.order.groupBy({
         by: ["status"],
-        where: { ...orderWhere, status: { in: ACTIVE_STATUSES } },
+        where: { status: { in: ACTIVE_STATUSES } },
         _count: { _all: true },
       }),
-      prisma.storeProduct.count({
+      prisma.productVariant.count({
         where: {
-          ...(storeId && { storeId }),
-          isAvailable: true,
-          OR: [{ inventory: { is: null } }, { inventory: { quantity: { lte: LOW_STOCK_THRESHOLD } } }],
+          isActive: true,
+          product: { isActive: true },
+          OR: [{ inventory: { is: null } }, { inventory: { is: { quantity: { lte: LOW_STOCK_THRESHOLD } } } }],
         },
       }),
       prisma.order.findMany({
-        where: { ...orderWhere, status: { not: OrderStatus.PENDING_PAYMENT } },
+        where: { status: { not: OrderStatus.PENDING_PAYMENT } },
         orderBy: { createdAt: "desc" },
         take: 8,
         select: {
@@ -69,7 +64,6 @@ export function createDashboardService(prisma: PrismaClient) {
           paymentMethod: true,
           customerName: true,
           createdAt: true,
-          store: { select: { id: true, name: true } },
         },
       }),
       isAdmin ? prisma.user.count({ where: { role: UserRole.CUSTOMER } }) : Promise.resolve(null),
@@ -81,7 +75,6 @@ export function createDashboardService(prisma: PrismaClient) {
     }
 
     return {
-      storeId: storeId ?? null,
       timezone: env.TIMEZONE,
       currency: env.CURRENCY,
       today: {
@@ -100,20 +93,19 @@ export function createDashboardService(prisma: PrismaClient) {
   }
 
   /**
-   * Orders left waiting: the store has not accepted, or the packed order has not gone out for
+   * Orders left waiting: not yet accepted, or the packed order has not gone out for
    * delivery. Oldest first. Nothing changes automatically; an admin decides.
    */
   async function getAttention() {
     const waiting = await prisma.$queryRaw<WaitingRow[]>`
-      SELECT o.id, o."orderNumber", o.status, o."storeId", s.name AS "storeName", h.since
+      SELECT o.id, o."orderNumber", o.status, h.since
       FROM "Order" o
-      JOIN "Store" s ON s.id = o."storeId"
       CROSS JOIN LATERAL (
         SELECT coalesce(max(h."createdAt"), o."createdAt") AS since
         FROM "OrderStatusHistory" h
         WHERE h."orderId" = o.id AND h."toStatus" = o.status AND h."fromStatus" IS DISTINCT FROM h."toStatus"
       ) h
-      WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.STORE_NOT_ACCEPTED)})
+      WHERE (o.status = 'CONFIRMED' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_ACCEPTED)})
          OR (o.status = 'READY_FOR_PICKUP' AND h.since < ${minutesAgo(ATTENTION_MINUTES.NOT_DISPATCHED)})
       ORDER BY h.since
       LIMIT ${ATTENTION_LIMIT}
@@ -122,8 +114,7 @@ export function createDashboardService(prisma: PrismaClient) {
     const items = waiting.map((row) => ({
       orderId: row.id,
       orderNumber: row.orderNumber,
-      store: { id: row.storeId, name: row.storeName },
-      reason: (row.status === OrderStatus.CONFIRMED ? "STORE_NOT_ACCEPTED" : "NOT_DISPATCHED") as AttentionReason,
+      reason: (row.status === OrderStatus.CONFIRMED ? "NOT_ACCEPTED" : "NOT_DISPATCHED") as AttentionReason,
       since: row.since,
     }));
 

@@ -8,11 +8,10 @@ import { getImportStatus, previewImport, startImport } from "@/app/(dashboard)/p
 import { Notice } from "@/components/notice";
 import { Section } from "@/components/section";
 import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { ImportJob, ImportPreview, ImportRowError, Store } from "@/lib/types";
+import type { ImportJob, ImportPreview, ImportRowError } from "@/lib/types";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const POLL_MS = 2000;
@@ -71,7 +70,6 @@ function PreviewSummary({ preview }: { preview: ImportPreview }) {
         <li>
           Sizes: {preview.variants.create.toLocaleString("en-IN")} new, {preview.variants.update.toLocaleString("en-IN")} updated
         </li>
-        <li>Prices for {preview.store.name}</li>
         <li>Stock set on {count(preview.stockRows, "size")}</li>
         <li>{count(preview.imageRows, "row")} with an image link</li>
       </ul>
@@ -106,7 +104,7 @@ function JobResult({ job }: { job: ImportJob }) {
     <div className="flex flex-col gap-3">
       <Notice
         tone={finishedClean ? (result.imagesFailed > 0 ? "warning" : "success") : "danger"}
-        title={job.status === "done" ? `Import finished for ${job.store.name}` : "The import did not finish"}
+        title={job.status === "done" ? "Import finished" : "The import did not finish"}
       >
         {job.error && <p>{job.error}</p>}
         <p>
@@ -130,10 +128,9 @@ function JobResult({ job }: { job: ImportJob }) {
   );
 }
 
-export function CatalogImport({ stores, initialJob }: { stores: Store[]; initialJob: ImportJob | null }) {
+export function CatalogImport({ initialJob }: { initialJob: ImportJob | null }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [storeId, setStoreId] = useState(() => (stores.find((store) => store.status === "ACTIVE") ?? stores[0])!.id);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [errors, setErrors] = useState<{ list: ImportRowError[]; total: number } | null>(null);
@@ -163,7 +160,6 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
 
   function formData() {
     const data = new FormData();
-    data.set("storeId", storeId);
     data.set("file", file!);
     return data;
   }
@@ -206,7 +202,7 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
 
   if (job) {
     return (
-      <Section title={running ? "Importing" : "Result"} hint={`Into ${job.store.name}, started ${new Date(job.startedAt).toLocaleString("en-IN")}`}>
+      <Section title={running ? "Importing" : "Result"} hint={`Started ${new Date(job.startedAt).toLocaleString("en-IN")}`}>
         {running ? <JobProgress job={job} /> : <JobResult job={job} />}
         {message && <p className="text-sm text-destructive">{message}</p>}
         {!running && (
@@ -247,7 +243,12 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
             <code>category</code> and <code>subcategory</code> (two levels at most) and <code>brand</code> are matched by name; missing ones are created.
           </li>
           <li>
-            <code>price</code> and <code>mrp</code> like 49.50, price at most the MRP. <code>stock</code>: blank keeps the current stock, a number replaces it.
+            <code>price</code> and <code>compare_at_price</code> like 49.50; the compare-at price, shown struck through, must be at least the price.{" "}
+            <code>available</code>: yes or no. <code>stock</code>: blank keeps the current stock, a number replaces it.
+          </li>
+          <li>
+            <code>weight_grams</code>, <code>length_cm</code>, <code>breadth_cm</code> and <code>height_cm</code>: the packed parcel, used for
+            shipping.
           </li>
           <li>
             <code>image_url</code>: a public link to a JPEG, PNG or WebP up to 10 MB. It is used only where the product has no photo yet; a failed image
@@ -259,28 +260,6 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
 
       <Section step={2} title="Check the file" hint="Nothing is saved yet.">
         <div className="flex flex-wrap items-end gap-4">
-          <Field className="w-56">
-            <FieldLabel htmlFor="import-store">Prices and stock for</FieldLabel>
-            <Select
-              value={storeId}
-              onValueChange={(value) => {
-                setStoreId(value);
-                reset();
-              }}
-            >
-              <SelectTrigger id="import-store" className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {stores.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}
-                    {store.status === "INACTIVE" && " (inactive)"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
           <Field className="w-72">
             <FieldLabel htmlFor="import-file">CSV file</FieldLabel>
             <Input
@@ -298,12 +277,11 @@ export function CatalogImport({ stores, initialJob }: { stores: Store[]; initial
             Check file
           </Button>
         </div>
-        <FieldDescription>The products are shared by every store; the prices, availability and stock in the file are for the chosen store.</FieldDescription>
         {message && <p className="text-sm text-destructive">{message}</p>}
         {preview && (
           <Notice
             tone={errors ? "danger" : "success"}
-            title={errors ? `${count(errors.total, "problem")} to fix before importing` : `Ready to import into ${preview.store.name}`}
+            title={errors ? `${count(errors.total, "problem")} to fix before importing` : "Ready to import"}
           >
             <PreviewSummary preview={preview} />
           </Notice>

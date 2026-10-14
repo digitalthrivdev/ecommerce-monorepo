@@ -12,7 +12,7 @@
 export const UserRole = {
   CUSTOMER: 'CUSTOMER',
   ADMIN: 'ADMIN',
-  STORE_STAFF: 'STORE_STAFF'
+  STAFF: 'STAFF'
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
@@ -24,14 +24,6 @@ export const CustomerBlock = {
 } as const
 
 export type CustomerBlock = (typeof CustomerBlock)[keyof typeof CustomerBlock]
-
-
-export const StoreStatus = {
-  ACTIVE: 'ACTIVE',
-  INACTIVE: 'INACTIVE'
-} as const
-
-export type StoreStatus = (typeof StoreStatus)[keyof typeof StoreStatus]
 
 
 export const InventoryAdjustmentReason = {

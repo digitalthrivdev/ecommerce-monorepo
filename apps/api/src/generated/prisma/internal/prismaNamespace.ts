@@ -399,8 +399,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Address: 'Address',
-  Store: 'Store',
-  StoreHours: 'StoreHours',
+  PickupLocation: 'PickupLocation',
   Category: 'Category',
   Brand: 'Brand',
   Product: 'Product',
@@ -409,7 +408,6 @@ export const ModelName = {
   ProductVariant: 'ProductVariant',
   ProductVariantOptionValue: 'ProductVariantOptionValue',
   ProductImage: 'ProductImage',
-  StoreProduct: 'StoreProduct',
   Inventory: 'Inventory',
   InventoryAdjustment: 'InventoryAdjustment',
   Cart: 'Cart',
@@ -447,7 +445,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "store" | "storeHours" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "storeProduct" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "wishlistItem" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
+    modelProps: "user" | "address" | "pickupLocation" | "category" | "brand" | "product" | "productOption" | "productOptionValue" | "productVariant" | "productVariantOptionValue" | "productImage" | "inventory" | "inventoryAdjustment" | "cart" | "cartItem" | "order" | "orderItem" | "invoiceSequence" | "orderStatusHistory" | "payment" | "refund" | "complaint" | "complaintItem" | "coupon" | "orderRating" | "productReview" | "wishlistItem" | "platformSettings" | "policyPage" | "paymentGatewayCredential" | "otpProviderCredential" | "appAppearance" | "pushToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -599,151 +597,77 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    Store: {
-      payload: Prisma.$StorePayload<ExtArgs>
-      fields: Prisma.StoreFieldRefs
+    PickupLocation: {
+      payload: Prisma.$PickupLocationPayload<ExtArgs>
+      fields: Prisma.PickupLocationFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.StoreFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload> | null
+          args: Prisma.PickupLocationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.StoreFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         findFirst: {
-          args: Prisma.StoreFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload> | null
+          args: Prisma.PickupLocationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.StoreFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         findMany: {
-          args: Prisma.StoreFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>[]
+          args: Prisma.PickupLocationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>[]
         }
         create: {
-          args: Prisma.StoreCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         createMany: {
-          args: Prisma.StoreCreateManyArgs<ExtArgs>
+          args: Prisma.PickupLocationCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.StoreCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>[]
+          args: Prisma.PickupLocationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>[]
         }
         delete: {
-          args: Prisma.StoreDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         update: {
-          args: Prisma.StoreUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         deleteMany: {
-          args: Prisma.StoreDeleteManyArgs<ExtArgs>
+          args: Prisma.PickupLocationDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.StoreUpdateManyArgs<ExtArgs>
+          args: Prisma.PickupLocationUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.StoreUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>[]
+          args: Prisma.PickupLocationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>[]
         }
         upsert: {
-          args: Prisma.StoreUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StorePayload>
+          args: Prisma.PickupLocationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PickupLocationPayload>
         }
         aggregate: {
-          args: Prisma.StoreAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateStore>
+          args: Prisma.PickupLocationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePickupLocation>
         }
         groupBy: {
-          args: Prisma.StoreGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreGroupByOutputType>[]
+          args: Prisma.PickupLocationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PickupLocationGroupByOutputType>[]
         }
         count: {
-          args: Prisma.StoreCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreCountAggregateOutputType> | number
-        }
-      }
-    }
-    StoreHours: {
-      payload: Prisma.$StoreHoursPayload<ExtArgs>
-      fields: Prisma.StoreHoursFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.StoreHoursFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.StoreHoursFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        findFirst: {
-          args: Prisma.StoreHoursFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.StoreHoursFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        findMany: {
-          args: Prisma.StoreHoursFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>[]
-        }
-        create: {
-          args: Prisma.StoreHoursCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        createMany: {
-          args: Prisma.StoreHoursCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.StoreHoursCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>[]
-        }
-        delete: {
-          args: Prisma.StoreHoursDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        update: {
-          args: Prisma.StoreHoursUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        deleteMany: {
-          args: Prisma.StoreHoursDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.StoreHoursUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.StoreHoursUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>[]
-        }
-        upsert: {
-          args: Prisma.StoreHoursUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreHoursPayload>
-        }
-        aggregate: {
-          args: Prisma.StoreHoursAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreHours>
-        }
-        groupBy: {
-          args: Prisma.StoreHoursGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreHoursGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.StoreHoursCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreHoursCountAggregateOutputType> | number
+          args: Prisma.PickupLocationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PickupLocationCountAggregateOutputType> | number
         }
       }
     }
@@ -1336,80 +1260,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ProductImageCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ProductImageCountAggregateOutputType> | number
-        }
-      }
-    }
-    StoreProduct: {
-      payload: Prisma.$StoreProductPayload<ExtArgs>
-      fields: Prisma.StoreProductFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.StoreProductFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.StoreProductFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        findFirst: {
-          args: Prisma.StoreProductFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.StoreProductFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        findMany: {
-          args: Prisma.StoreProductFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>[]
-        }
-        create: {
-          args: Prisma.StoreProductCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        createMany: {
-          args: Prisma.StoreProductCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.StoreProductCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>[]
-        }
-        delete: {
-          args: Prisma.StoreProductDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        update: {
-          args: Prisma.StoreProductUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        deleteMany: {
-          args: Prisma.StoreProductDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.StoreProductUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.StoreProductUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>[]
-        }
-        upsert: {
-          args: Prisma.StoreProductUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreProductPayload>
-        }
-        aggregate: {
-          args: Prisma.StoreProductAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreProduct>
-        }
-        groupBy: {
-          args: Prisma.StoreProductGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreProductGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.StoreProductCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.StoreProductCountAggregateOutputType> | number
         }
       }
     }
@@ -3087,7 +2937,6 @@ export const UserScalarFieldEnum = {
   email: 'email',
   role: 'role',
   passwordHash: 'passwordHash',
-  storeId: 'storeId',
   deletedAt: 'deletedAt',
   orderBlock: 'orderBlock',
   orderBlockReason: 'orderBlockReason',
@@ -3123,36 +2972,24 @@ export const AddressScalarFieldEnum = {
 export type AddressScalarFieldEnum = (typeof AddressScalarFieldEnum)[keyof typeof AddressScalarFieldEnum]
 
 
-export const StoreScalarFieldEnum = {
+export const PickupLocationScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  code: 'code',
+  contactName: 'contactName',
   phone: 'phone',
-  status: 'status',
+  email: 'email',
   addressLine1: 'addressLine1',
   addressLine2: 'addressLine2',
+  landmark: 'landmark',
   city: 'city',
   state: 'state',
   postalCode: 'postalCode',
-  latitude: 'latitude',
-  longitude: 'longitude',
-  serviceRadiusKm: 'serviceRadiusKm',
-  gstin: 'gstin',
+  isDefault: 'isDefault',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
-
-
-export const StoreHoursScalarFieldEnum = {
-  storeId: 'storeId',
-  dayOfWeek: 'dayOfWeek',
-  opensAt: 'opensAt',
-  closesAt: 'closesAt'
-} as const
-
-export type StoreHoursScalarFieldEnum = (typeof StoreHoursScalarFieldEnum)[keyof typeof StoreHoursScalarFieldEnum]
+export type PickupLocationScalarFieldEnum = (typeof PickupLocationScalarFieldEnum)[keyof typeof PickupLocationScalarFieldEnum]
 
 
 export const CategoryScalarFieldEnum = {
@@ -3193,13 +3030,10 @@ export const ProductScalarFieldEnum = {
   tags: 'tags',
   hsnCode: 'hsnCode',
   gstRate: 'gstRate',
-  isVeg: 'isVeg',
   manufacturerName: 'manufacturerName',
   manufacturerAddress: 'manufacturerAddress',
   countryOfOrigin: 'countryOfOrigin',
-  fssaiLicense: 'fssaiLicense',
-  shelfLife: 'shelfLife',
-  ingredients: 'ingredients',
+  specifications: 'specifications',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -3236,6 +3070,12 @@ export const ProductVariantScalarFieldEnum = {
   name: 'name',
   unit: 'unit',
   quantity: 'quantity',
+  price: 'price',
+  compareAtPrice: 'compareAtPrice',
+  weightGrams: 'weightGrams',
+  lengthCm: 'lengthCm',
+  breadthCm: 'breadthCm',
+  heightCm: 'heightCm',
   maxOrderQuantity: 'maxOrderQuantity',
   isActive: 'isActive',
   sortOrder: 'sortOrder',
@@ -3267,23 +3107,9 @@ export const ProductImageScalarFieldEnum = {
 export type ProductImageScalarFieldEnum = (typeof ProductImageScalarFieldEnum)[keyof typeof ProductImageScalarFieldEnum]
 
 
-export const StoreProductScalarFieldEnum = {
-  id: 'id',
-  storeId: 'storeId',
-  variantId: 'variantId',
-  sellingPrice: 'sellingPrice',
-  mrp: 'mrp',
-  isAvailable: 'isAvailable',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type StoreProductScalarFieldEnum = (typeof StoreProductScalarFieldEnum)[keyof typeof StoreProductScalarFieldEnum]
-
-
 export const InventoryScalarFieldEnum = {
   id: 'id',
-  storeProductId: 'storeProductId',
+  variantId: 'variantId',
   quantity: 'quantity',
   updatedAt: 'updatedAt'
 } as const
@@ -3293,7 +3119,7 @@ export type InventoryScalarFieldEnum = (typeof InventoryScalarFieldEnum)[keyof t
 
 export const InventoryAdjustmentScalarFieldEnum = {
   id: 'id',
-  storeProductId: 'storeProductId',
+  variantId: 'variantId',
   delta: 'delta',
   quantityAfter: 'quantityAfter',
   reason: 'reason',
@@ -3308,7 +3134,6 @@ export type InventoryAdjustmentScalarFieldEnum = (typeof InventoryAdjustmentScal
 export const CartScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  storeId: 'storeId',
   couponCode: 'couponCode',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -3333,7 +3158,6 @@ export const OrderScalarFieldEnum = {
   id: 'id',
   orderNumber: 'orderNumber',
   userId: 'userId',
-  storeId: 'storeId',
   addressId: 'addressId',
   status: 'status',
   subtotal: 'subtotal',
@@ -3377,7 +3201,7 @@ export const OrderItemScalarFieldEnum = {
   variantName: 'variantName',
   sku: 'sku',
   imageUrl: 'imageUrl',
-  mrp: 'mrp',
+  compareAtPrice: 'compareAtPrice',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   totalPrice: 'totalPrice',
@@ -3749,20 +3573,6 @@ export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMo
 
 
 /**
- * Reference to a field of type 'StoreStatus'
- */
-export type EnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus'>
-    
-
-
-/**
- * Reference to a field of type 'StoreStatus[]'
- */
-export type ListEnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus[]'>
-    
-
-
-/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -3773,6 +3583,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -3899,20 +3723,6 @@ export type EnumReviewSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'ReviewSource[]'
  */
 export type ListEnumReviewSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReviewSource[]'>
-    
-
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -4096,8 +3906,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   address?: Prisma.AddressOmit
-  store?: Prisma.StoreOmit
-  storeHours?: Prisma.StoreHoursOmit
+  pickupLocation?: Prisma.PickupLocationOmit
   category?: Prisma.CategoryOmit
   brand?: Prisma.BrandOmit
   product?: Prisma.ProductOmit
@@ -4106,7 +3915,6 @@ export type GlobalOmitConfig = {
   productVariant?: Prisma.ProductVariantOmit
   productVariantOptionValue?: Prisma.ProductVariantOptionValueOmit
   productImage?: Prisma.ProductImageOmit
-  storeProduct?: Prisma.StoreProductOmit
   inventory?: Prisma.InventoryOmit
   inventoryAdjustment?: Prisma.InventoryAdjustmentOmit
   cart?: Prisma.CartOmit

@@ -51,7 +51,7 @@ export default async function ComplaintPage({ params }: PageProps<"/complaints/[
         back={{ href: "/complaints", label: "Complaints" }}
         title={COMPLAINT_REASON_LABELS[complaint.reason]}
         status={<ComplaintStatusPill status={complaint.status} size="md" />}
-        description={`Order ${order.orderNumber} · ${order.store.name} · reported ${date(complaint.createdAt)}`}
+        description={`Order ${order.orderNumber} · reported ${date(complaint.createdAt)}`}
         actions={
           isOpen && (
             <>

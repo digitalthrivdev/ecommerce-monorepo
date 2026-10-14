@@ -7,7 +7,7 @@ import type { Website } from "@/lib/types";
 import { sitePages } from "@/lib/website";
 
 export function SiteFooter({ website }: { website: Website }) {
-  const { business, apps, cities, pages } = website;
+  const { business, apps, pages } = website;
 
   return (
     <footer className="bg-[oklch(0.18_0.01_70)] text-white/70">
@@ -17,10 +17,7 @@ export function SiteFooter({ website }: { website: Website }) {
             <BrandMark appName={business.appName} logoUrl={business.logoUrl} />
             <span className="text-lg tracking-tight">{business.appName}</span>
           </Link>
-          <p className="max-w-sm text-sm leading-6">
-            Groceries and daily essentials from a store near you, delivered to your door.
-            {cities.length > 0 && ` Now delivering in ${cities.join(", ")}.`}
-          </p>
+          <p className="max-w-sm text-sm leading-6">Groceries and daily essentials from {business.appName}, delivered to your door.</p>
           {apps.customer && <AppBadges links={apps.customer} appName={business.appName} className="mt-2 [&_a]:h-12 [&_a]:min-w-40" />}
         </div>
 

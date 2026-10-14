@@ -210,7 +210,7 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
     if (phone) {
       const owner = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
       if (owner && owner.role !== UserRole.CUSTOMER) {
-        throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin or store staff. Use a number only reviewers will use.", {
+        throw new AppError(400, "REVIEW_PHONE_NOT_CUSTOMER", "This number belongs to an admin or staff. Use a number only reviewers will use.", {
           field: "phone",
         });
       }

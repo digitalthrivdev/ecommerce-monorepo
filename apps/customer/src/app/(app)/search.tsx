@@ -8,13 +8,11 @@ import { CartBar } from "@/components/cart-bar";
 import { CategoryGrid, CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
-import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
 import { topLevelCategories } from "@/lib/catalog";
-import { useDeliveryLocation } from "@/lib/delivery-location";
-import { useCategories, useStoreProducts } from "@/lib/queries";
+import { useCategories, useProducts } from "@/lib/queries";
 import { useRecentSearches } from "@/lib/recent-searches";
 import { useRotatingSearchHint } from "@/lib/search-hints";
 
@@ -52,7 +50,6 @@ function RecentSearches({ searches, onSelect, onClear }: { searches: string[]; o
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const { neutral } = useAppTheme();
-  const { store } = useDeliveryLocation();
   const categories = useCategories();
   const recent = useRecentSearches();
   const hint = useRotatingSearchHint();
@@ -66,7 +63,7 @@ export default function SearchScreen() {
   }, [text]);
 
   const searching = term.length >= MIN_SEARCH_LENGTH;
-  const results = useStoreProducts(store?.id, { search: term }, { enabled: searching });
+  const results = useProducts({ search: term }, { enabled: searching });
   const found = searching && (results.data?.pages[0]?.items.length ?? 0) > 0;
 
   // The debounce also settles on half-typed words, so only the last term that found products is saved, once the screen closes.
@@ -121,9 +118,7 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      {!store ? (
-        <StoreRequired />
-      ) : searching ? (
+      {searching ? (
         <ProductList key={term} query={results} emptyText={`No results for "${term}". Try another word.`} />
       ) : (
         <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerClassName="pb-8">

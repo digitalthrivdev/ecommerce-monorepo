@@ -6,7 +6,6 @@ import { call, dashboardLogin, otpLogin, SEED, startApp } from "./helpers";
 let app: FastifyInstance;
 let admin: string;
 let customer: string;
-let storeId: string;
 let categoryId: string;
 let received: string;
 let unavailable: string;
@@ -16,12 +15,11 @@ async function stockedProduct() {
   const sku = `REV-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
   const created = await call(app, "POST", "/products", {
     token: admin,
-    body: { name: `Review Test ${sku}`, categoryId, gstRate: "5", variants: [{ sku }] },
+    body: { name: `Review Test ${sku}`, categoryId, gstRate: "5", variants: [{ sku, price: "120" }] },
   });
   expect(created.status).toBe(201);
   const variantId: string = created.body.variants[0].id;
-  expect((await call(app, "PUT", `/products/${created.body.id}/prices`, { token: admin, body: { prices: [{ storeId, variantId, sellingPrice: "120" }] } })).status).toBeLessThan(300);
-  expect((await call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } })).status).toBeLessThan(300);
+  expect((await call(app, "PATCH", `/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } })).status).toBeLessThan(300);
   return { id: created.body.id as string, variantId };
 }
 
@@ -33,7 +31,6 @@ beforeAll(async () => {
   app = await startApp();
   admin = await dashboardLogin(app, SEED.adminEmail);
   customer = await otpLogin(app, SEED.customerPhone);
-  storeId = (await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } })).id;
   categoryId = (await app.prisma.category.findFirstOrThrow({ where: { parentId: { not: null } } })).id;
 
   const [first, second] = [await stockedProduct(), await stockedProduct()];
@@ -49,14 +46,12 @@ beforeAll(async () => {
       city: "Bengaluru",
       state: "Karnataka",
       postalCode: "560034",
-      latitude: 12.9355,
-      longitude: 77.6249,
     },
   });
   expect(address.status).toBe(201);
   await call(app, "DELETE", "/cart", { token: customer });
   for (const variantId of [first.variantId, second.variantId]) {
-    expect((await call(app, "POST", "/cart/items", { token: customer, body: { storeId, variantId, quantity: 1 } })).status).toBeLessThan(300);
+    expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId, quantity: 1 } })).status).toBeLessThan(300);
   }
   const order = await call(app, "POST", "/orders", { token: customer, body: { addressId: address.body.id, paymentMethod: "COD" } });
   expect(order.status).toBe(201);

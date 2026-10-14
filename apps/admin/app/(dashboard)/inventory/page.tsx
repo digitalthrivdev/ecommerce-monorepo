@@ -3,19 +3,18 @@ import Form from "next/form";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
-import { AvailabilitySwitch, StockAdjustDialog, StockHistoryDialog } from "@/components/inventory/inventory-controls";
+import { StockAdjustDialog, StockHistoryDialog, VariantActiveSwitch } from "@/components/inventory/inventory-controls";
 import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
-import { StoreFilter } from "@/components/store-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
-import { getCurrentUser, getPublicSettings } from "@/lib/dal";
+import { getPublicSettings } from "@/lib/dal";
 import { formatDateTime, productTitle } from "@/lib/format";
-import type { InventoryList, Paginated, Store } from "@/lib/types";
+import type { InventoryList } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Stock" };
@@ -26,7 +25,7 @@ const TABS = [
   { id: "all", label: "All products", query: {} },
   { id: "low", label: "Low stock", query: { stock: "low" } },
   { id: "out", label: "Out of stock", query: { stock: "out" } },
-  { id: "unavailable", label: "Not selling", query: { isAvailable: false } },
+  { id: "unavailable", label: "Not selling", query: { isActive: false } },
 ] as const;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -42,33 +41,13 @@ function StockCell({ quantity, threshold }: { quantity: number; threshold: numbe
 }
 
 export default async function InventoryPage({ searchParams }: PageProps<"/inventory">) {
-  const user = await getCurrentUser();
-  const isAdmin = user.role === "ADMIN";
   const params = await searchParams;
-
-  const stores = isAdmin ? await apiFetch<Paginated<Store>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null;
-  const requestedStore = first(params.storeId);
-  const store = isAdmin
-    ? (stores!.items.find((candidate) => candidate.id === requestedStore) ??
-      stores!.items.find((candidate) => candidate.status === "ACTIVE") ??
-      stores!.items[0])
-    : user.store!;
-
   const tab = TABS.find((candidate) => candidate.id === first(params.tab)) ?? TABS[0];
   const q = first(params.q)?.trim().slice(0, 100) || undefined;
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  if (!store) {
-    return (
-      <>
-        <PageHeader title="Stock" />
-        <p className="p-6 text-sm text-muted-foreground">Create a store before managing inventory.</p>
-      </>
-    );
-  }
-
   const [inventory, settings] = await Promise.all([
-    apiFetch<InventoryList>(`/stores/${encodeURIComponent(store.id)}/inventory`, {
+    apiFetch<InventoryList>("/inventory", {
       query: { ...tab.query, search: q, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
     }),
     getPublicSettings(),
@@ -76,7 +55,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
 
   const href = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { storeId: isAdmin ? store.id : undefined, tab: tab.id, q, ...changes };
+    const merged = { tab: tab.id, q, ...changes };
     for (const [key, value] of Object.entries(merged)) {
       if (value && !(key === "tab" && value === "all")) next.set(key, value);
     }
@@ -87,11 +66,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
 
   return (
     <>
-      <PageHeader
-        title="Stock"
-        description={`Stock and availability at ${store.name}`}
-        actions={stores && stores.items.length > 1 && <StoreFilter stores={stores.items} allowAll={false} value={store.id} />}
-      />
+      <PageHeader title="Stock" description="How many of each size you have, and which sizes customers can buy" />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -106,7 +81,6 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
           </nav>
 
           <Form action="/inventory" className="flex gap-2">
-            {isAdmin && <input type="hidden" name="storeId" value={store.id} />}
             {tab.id !== "all" && <input type="hidden" name="tab" value={tab.id} />}
             <Input name="q" type="search" defaultValue={q} maxLength={100} placeholder="Product name, brand or code" aria-label="Search products" className="w-64" />
             <Button type="submit" variant="outline" size="icon" aria-label="Search">
@@ -119,7 +93,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
           <CardContent>
             {inventory.items.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                {q ? `No products match “${q}”.` : tab.id === "all" ? "No products are listed at this store yet." : "Nothing here right now."}
+                {q ? `No products match “${q}”.` : tab.id === "all" ? "No products yet." : "Nothing here right now."}
               </p>
             ) : (
               <Table>
@@ -128,7 +102,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead className="text-right">Stock</TableHead>
-                    <TableHead>Available</TableHead>
+                    <TableHead>Selling</TableHead>
                     <TableHead>Last updated</TableHead>
                     <TableHead className="text-right">
                       <span className="sr-only">Adjust</span>
@@ -137,7 +111,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                 </TableHeader>
                 <TableBody>
                   {inventory.items.map((item) => (
-                    <TableRow key={item.storeProductId} className={cn(!item.isAvailable && "text-muted-foreground")}>
+                    <TableRow key={item.variantId} className={cn(!item.variantIsActive && "text-muted-foreground")}>
                       <TableCell className="whitespace-normal">
                         <div className="font-medium">
                           {item.name}
@@ -145,11 +119,7 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {item.sku}
-                          {!item.productIsActive ? (
-                            <Badge variant="outline">Removed from catalog</Badge>
-                          ) : (
-                            !item.variantIsActive && <Badge variant="outline">Size switched off</Badge>
-                          )}
+                          {!item.productIsActive && <Badge variant="outline">Product hidden</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>{item.category.name}</TableCell>
@@ -157,11 +127,10 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                         <StockCell quantity={item.stockQuantity} threshold={inventory.lowStockThreshold} />
                       </TableCell>
                       <TableCell>
-                        <AvailabilitySwitch
-                          storeId={store.id}
+                        <VariantActiveSwitch
                           variantId={item.variantId}
                           title={productTitle(item.name, item.variantLabel)}
-                          isAvailable={item.isAvailable}
+                          isActive={item.variantIsActive}
                         />
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -170,13 +139,11 @@ export default async function InventoryPage({ searchParams }: PageProps<"/invent
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           <StockHistoryDialog
-                            storeId={store.id}
                             variantId={item.variantId}
                             title={productTitle(item.name, item.variantLabel)}
                             timezone={settings.timezone}
                           />
                           <StockAdjustDialog
-                            storeId={store.id}
                             variantId={item.variantId}
                             title={productTitle(item.name, item.variantLabel)}
                             currentStock={item.stockQuantity}

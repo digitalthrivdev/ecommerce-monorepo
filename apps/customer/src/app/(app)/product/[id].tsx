@@ -9,12 +9,10 @@ import { AddToCartButton } from "@/components/add-to-cart";
 import { BrandRow } from "@/components/brand-row";
 import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
-import { VegMark } from "@/components/product-card";
 import { RatingLine, ReviewsCard } from "@/components/product-reviews";
 import { ProductRow } from "@/components/product-row";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
-import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
@@ -22,16 +20,15 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ApiError } from "@/lib/api";
 import { useCardSurface } from "@/lib/app-theme";
 import { defaultVariant, exactVariant, imagesFor, pickVariant, sellableValues } from "@/lib/catalog";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { discountPercent, formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { openBrand, openCategory, productShareUrl } from "@/lib/navigation";
-import { useAlsoBought, useStoreBrands, useStoreProduct, useStoreProducts } from "@/lib/queries";
+import { useAlsoBought, useBrands, useProduct, useProducts } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
-import type { ProductImage, StoreProductDetail } from "@/lib/types";
+import type { ProductDetail, ProductImage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Variant = StoreProductDetail["variants"][number];
+type Variant = ProductDetail["variants"][number];
 
 function Gallery({ images, name }: { images: ProductImage[]; name: string }) {
   const { width } = useWindowDimensions();
@@ -97,12 +94,12 @@ function Chip({ label, selected, dimmed, onPress }: { label: string; selected: b
 }
 
 /**
- * One row of choices per option. Values the store doesn't sell are hidden; ones that don't combine
+ * One row of choices per option. Values not on sale are hidden; ones that don't combine
  * with the other choices, or are out of stock, are dashed and switch the other choices when picked.
  */
 function PackCard({ variant, label, selected, onPress }: { variant: Variant; label: string; selected: boolean; onPress: () => void }) {
   const { currency } = useSettings();
-  const discount = discountPercent(variant.sellingPrice, variant.mrp);
+  const discount = discountPercent(variant.price, variant.compareAtPrice);
 
   return (
     <Pressable
@@ -117,19 +114,19 @@ function PackCard({ variant, label, selected, onPress }: { variant: Variant; lab
     >
       <Text className={cn("text-sm font-semibold", !variant.inStock && "text-muted-foreground")}>{label}</Text>
       <View className="flex-row items-baseline gap-1.5">
-        <Text className="text-[15px] font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
-        {discount && <Text className="text-[11px] text-muted-foreground line-through">MRP {formatMoney(variant.mrp!, currency)}</Text>}
+        <Text className="text-[15px] font-extrabold">{formatMoney(variant.price, currency)}</Text>
+        {discount && <Text className="text-[11px] text-muted-foreground line-through">{formatMoney(variant.compareAtPrice!, currency)}</Text>}
       </View>
       {!variant.inStock ? (
         <Text className="text-[11px] font-semibold text-destructive">Out of stock</Text>
       ) : discount ? (
-        <Text className="text-[11px] font-bold text-primary">{discount}% OFF on MRP</Text>
+        <Text className="text-[11px] font-bold text-primary">{discount}% OFF</Text>
       ) : null}
     </Pressable>
   );
 }
 
-function VariantChoices({ product, variant, onSelect }: { product: StoreProductDetail; variant: Variant; onSelect: (variantId: string) => void }) {
+function VariantChoices({ product, variant, onSelect }: { product: ProductDetail; variant: Variant; onSelect: (variantId: string) => void }) {
   if (product.options.length === 0) {
     if (product.variants.length < 2) return null;
     return (
@@ -186,25 +183,15 @@ function VariantChoices({ product, variant, onSelect }: { product: StoreProductD
   );
 }
 
-function LabelDetails({ product }: { product: StoreProductDetail }) {
+function DetailRows({ title, rows }: { title: string; rows: [string, string][] }) {
   const surface = useCardSurface();
-  const manufacturer = [product.manufacturerName, product.manufacturerAddress].filter(Boolean).join(", ");
-  const rows = [
-    ["Brand", product.brand?.name],
-    ["Manufacturer", manufacturer],
-    ["Country of origin", product.countryOfOrigin],
-    ["FSSAI licence", product.fssaiLicense],
-    ["Shelf life", product.shelfLife],
-    ["Ingredients", product.ingredients],
-  ].filter((row): row is [string, string] => Boolean(row[1]));
-
   if (rows.length === 0) return null;
 
   return (
     <View className={cn("mx-4 gap-3 rounded-lg p-4", surface)}>
-      <Text className="text-base font-bold">Label details</Text>
-      {rows.map(([label, value]) => (
-        <View key={label} className="gap-0.5">
+      <Text className="text-base font-bold">{title}</Text>
+      {rows.map(([label, value], index) => (
+        <View key={`${index}:${label}`} className="gap-0.5">
           <Text className="text-xs font-semibold text-muted-foreground">{label}</Text>
           <Text className="text-sm leading-5">{value}</Text>
         </View>
@@ -213,12 +200,22 @@ function LabelDetails({ product }: { product: StoreProductDetail }) {
   );
 }
 
-type DetailsProps = { product: StoreProductDetail; variant: Variant; onSelect: (variantId: string) => void };
+function LabelDetails({ product }: { product: ProductDetail }) {
+  const manufacturer = [product.manufacturerName, product.manufacturerAddress].filter(Boolean).join(", ");
+  const rows = [
+    ["Brand", product.brand?.name],
+    ["Manufacturer", manufacturer],
+    ["Country of origin", product.countryOfOrigin],
+  ].filter((row): row is [string, string] => Boolean(row[1]));
+  return <DetailRows title="Label details" rows={rows} />;
+}
+
+type DetailsProps = { product: ProductDetail; variant: Variant; onSelect: (variantId: string) => void };
 
 function ProductDetails({ product, variant, onSelect }: DetailsProps) {
   const { currency } = useSettings();
   const surface = useCardSurface();
-  const discount = discountPercent(variant.sellingPrice, variant.mrp);
+  const discount = discountPercent(variant.price, variant.compareAtPrice);
 
   return (
     <ScrollView contentContainerClassName="gap-4 pb-10">
@@ -233,24 +230,22 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
           {product.brand && <Text className="text-xs font-semibold uppercase text-muted-foreground">{product.brand.name}</Text>}
           <View className="flex-row items-start gap-2">
             <Text className="flex-1 text-2xl font-extrabold leading-tight">{product.name}</Text>
-            {product.isVeg !== null && <VegMark veg={product.isVeg} className="mt-2" />}
           </View>
           {variant.label ? <Text className="text-sm text-muted-foreground">{variant.label}</Text> : null}
           <RatingLine productId={product.productId} />
         </View>
 
         <View className="flex-row flex-wrap items-center gap-2">
-          <Text className="text-2xl font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
+          <Text className="text-2xl font-extrabold">{formatMoney(variant.price, currency)}</Text>
           {discount && (
             <>
-              <Text className="text-base text-muted-foreground line-through">MRP {formatMoney(variant.mrp!, currency)}</Text>
+              <Text className="text-base text-muted-foreground line-through">{formatMoney(variant.compareAtPrice!, currency)}</Text>
               <View className="rounded-md bg-primary px-2 py-0.5">
                 <Text className="text-xs font-extrabold text-primary-foreground">{discount}% OFF</Text>
               </View>
             </>
           )}
         </View>
-        {discount && <Text className="text-sm font-bold text-primary">{discount}% OFF on MRP</Text>}
         <Text className="text-xs text-muted-foreground">Inclusive of all taxes</Text>
 
         <VariantChoices product={product} variant={variant} onSelect={onSelect} />
@@ -258,7 +253,7 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
         {!variant.inStock && (
           <View className="flex-row items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5">
             <Icon as={PackageX} size={18} className="text-destructive" />
-            <Text className="flex-1 text-sm font-semibold text-destructive">Out of stock at your store right now</Text>
+            <Text className="flex-1 text-sm font-semibold text-destructive">Out of stock right now</Text>
           </View>
         )}
       </View>
@@ -272,6 +267,8 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
         </View>
       ) : null}
 
+      <DetailRows title="Specifications" rows={product.specifications.map((spec) => [spec.name, spec.value])} />
+
       <LabelDetails product={product} />
 
       <ReviewsCard productId={product.productId} />
@@ -283,7 +280,7 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
   );
 }
 
-function BrandLink({ brand }: { brand: NonNullable<StoreProductDetail["brand"]> }) {
+function BrandLink({ brand }: { brand: NonNullable<ProductDetail["brand"]> }) {
   const surface = useCardSurface();
   const [failed, setFailed] = useState(false);
   return (
@@ -309,30 +306,27 @@ function BrandLink({ brand }: { brand: NonNullable<StoreProductDetail["brand"]> 
 const SIMILAR_LIMIT = 10;
 const BRANDS_LIMIT = 12;
 
-/** Other products in the same category at this store. */
-function SimilarProducts({ product }: { product: StoreProductDetail }) {
-  const { store } = useDeliveryLocation();
-  const query = useStoreProducts(store?.id, { categoryId: product.category.id });
+/** Other products in the same category. */
+function SimilarProducts({ product }: { product: ProductDetail }) {
+  const query = useProducts({ categoryId: product.category.id });
   const similar = (query.data?.pages[0]?.items ?? []).filter((candidate) => candidate.productId !== product.productId).slice(0, SIMILAR_LIMIT);
   return <ProductRow title="Similar products" products={similar} onSeeAll={() => openCategory(product.category)} />;
 }
 
-function AlsoBought({ product }: { product: StoreProductDetail }) {
-  const { store } = useDeliveryLocation();
-  const query = useAlsoBought(store?.id, [product.productId]);
+function AlsoBought({ product }: { product: ProductDetail }) {
+  const query = useAlsoBought([product.productId]);
   return <ProductRow title="People also bought" products={query.data?.items ?? []} />;
 }
 
 /** Brands in this product's category; a lone brand would just repeat the brand link above. */
-function CategoryBrands({ product }: { product: StoreProductDetail }) {
-  const { store } = useDeliveryLocation();
-  const query = useStoreBrands(store?.id, { categoryId: product.category.id, limit: BRANDS_LIMIT });
+function CategoryBrands({ product }: { product: ProductDetail }) {
+  const query = useBrands({ categoryId: product.category.id, limit: BRANDS_LIMIT });
   const brands = query.data?.items ?? [];
   if (brands.length < 2) return null;
   return <BrandRow title={`Top brands in ${product.category.name}`} brands={brands} />;
 }
 
-type HeaderActionsProps = { productId: string; product: StoreProductDetail | undefined; variant: Variant | undefined };
+type HeaderActionsProps = { productId: string; product: ProductDetail | undefined; variant: Variant | undefined };
 
 function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
   const { appName, currency } = useSettings();
@@ -341,7 +335,7 @@ function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
     if (!product || !variant) return;
     const url = productShareUrl(product.productId);
     const name = variant.label ? `${product.name} (${variant.label})` : product.name;
-    Share.share({ message: `${name} for ${formatMoney(variant.sellingPrice, currency)} on ${appName}\n${url}` }).catch(() => {});
+    Share.share({ message: `${name} for ${formatMoney(variant.price, currency)} on ${appName}\n${url}` }).catch(() => {});
   }
 
   return (
@@ -363,7 +357,7 @@ function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
   );
 }
 
-function ProductFooter({ product, variant }: { product: StoreProductDetail; variant: Variant }) {
+function ProductFooter({ product, variant }: { product: ProductDetail; variant: Variant }) {
   const insets = useSafeAreaInsets();
   const { currency } = useSettings();
 
@@ -374,7 +368,7 @@ function ProductFooter({ product, variant }: { product: StoreProductDetail; vari
           <Text className="text-xs text-muted-foreground" numberOfLines={1}>
             {variant.label || product.name}
           </Text>
-          <Text className="text-lg font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
+          <Text className="text-lg font-extrabold">{formatMoney(variant.price, currency)}</Text>
         </View>
         <AddToCartButton product={product} variant={variant} size="lg" />
       </View>
@@ -400,8 +394,7 @@ function DetailsSkeleton() {
 export default function ProductScreen() {
   const { id, variant: openedVariantId } = useLocalSearchParams<{ id: string; variant?: string }>();
   const insets = useSafeAreaInsets();
-  const { store } = useDeliveryLocation();
-  const product = useStoreProduct(store?.id, id);
+  const product = useProduct(id);
   const [selectedId, setSelectedId] = useState(openedVariantId);
   const variants = product.data?.variants ?? [];
   const variant = variants.find((candidate) => candidate.variantId === selectedId) ?? defaultVariant(variants);
@@ -411,10 +404,8 @@ export default function ProductScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <ScreenHeader title={product.data?.name ?? ""} right={<HeaderActions productId={id} product={product.data} variant={variant} />} />
-      {!store ? (
-        <StoreRequired />
-      ) : unavailable ? (
-        <Text className="px-8 py-12 text-center text-sm text-muted-foreground">This product isn&apos;t available at your store.</Text>
+      {unavailable ? (
+        <Text className="px-8 py-12 text-center text-sm text-muted-foreground">This product isn&apos;t available.</Text>
       ) : product.data && variant ? (
         <>
           <ProductDetails product={product.data} variant={variant} onSelect={setSelectedId} />

@@ -13,7 +13,7 @@ const POLL_MS = 30_000;
 const SHOWN = 5;
 
 const REASONS: Record<AttentionReason, { label: string; status: OrderStatus }> = {
-  STORE_NOT_ACCEPTED: { label: "Store hasn't accepted", status: "CONFIRMED" },
+  NOT_ACCEPTED: { label: "Not accepted yet", status: "CONFIRMED" },
   NOT_DISPATCHED: { label: "Not sent out yet", status: "READY_FOR_PICKUP" },
 };
 
@@ -73,7 +73,7 @@ export function AttentionBanner({ initial }: { initial: AttentionList }) {
                     {item.orderNumber}
                   </Link>
                   <span className="text-foreground/80">
-                    {[item.store.name, reason.label].join(" · ")}
+                    {reason.label}
                   </span>
                   <Elapsed since={item.since} status={reason.status} />
                 </li>

@@ -72,17 +72,13 @@ export function validateVariants({ options, variants }: VariantsInput) {
   });
 }
 
-/** Deletes variants that were never ordered, with their store listings, stock and cart items. */
+/** Deletes variants that were never ordered, with their stock, stock log and cart items. */
 export async function deleteVariants(tx: Tx, variantIds: string[]) {
   if (variantIds.length === 0) return;
 
-  const listings = await tx.storeProduct.findMany({ where: { variantId: { in: variantIds } }, select: { id: true } });
-  const listingIds = listings.map((listing) => listing.id);
-
   await tx.cartItem.deleteMany({ where: { variantId: { in: variantIds } } });
-  await tx.inventoryAdjustment.deleteMany({ where: { storeProductId: { in: listingIds } } });
-  await tx.inventory.deleteMany({ where: { storeProductId: { in: listingIds } } });
-  await tx.storeProduct.deleteMany({ where: { id: { in: listingIds } } });
+  await tx.inventoryAdjustment.deleteMany({ where: { variantId: { in: variantIds } } });
+  await tx.inventory.deleteMany({ where: { variantId: { in: variantIds } } });
   await tx.productVariant.deleteMany({ where: { id: { in: variantIds } } });
 }
 
@@ -162,6 +158,12 @@ export async function saveVariants(tx: Tx, productId: string, input: VariantsInp
       barcode: variant.barcode ?? null,
       unit: variant.unit ?? null,
       quantity: variant.quantity ?? null,
+      price: variant.price,
+      compareAtPrice: variant.compareAtPrice ?? null,
+      weightGrams: variant.weightGrams ?? null,
+      lengthCm: variant.lengthCm ?? null,
+      breadthCm: variant.breadthCm ?? null,
+      heightCm: variant.heightCm ?? null,
       maxOrderQuantity: variant.maxOrderQuantity ?? null,
       name: values.join(" · "),
       sortOrder,
@@ -176,7 +178,9 @@ export async function saveVariants(tx: Tx, productId: string, input: VariantsInp
         data: { ...data, ...(variant.isActive !== undefined && { isActive: variant.isActive }) },
       });
     } else {
-      await tx.productVariant.create({ data: { ...data, productId, isActive: variant.isActive ?? true } });
+      await tx.productVariant.create({
+        data: { ...data, productId, isActive: variant.isActive ?? true, inventory: { create: { quantity: 0 } } },
+      });
     }
   }
 }

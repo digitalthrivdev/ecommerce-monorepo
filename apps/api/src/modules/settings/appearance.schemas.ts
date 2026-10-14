@@ -224,7 +224,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     ...sectionBase,
-    /** In-stock products with the biggest discount off MRP. */
+    /** In-stock products with the biggest discount off the compare-at price. */
     type: z.literal("deals_rail"),
     title: label(40, "a title"),
     description: sectionDescription,
@@ -244,7 +244,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     type: z.literal("brand_rail"),
     title: label(40, "a title"),
     description: sectionDescription,
-    /** Empty shows the brands with the most products in stock at the customer's store. */
+    /** Empty shows the brands with the most products in stock. */
     brandIds: z.array(brandId).max(20, "Choose at most 20 brands"),
   }),
   z.object({
@@ -253,7 +253,7 @@ export const homeSectionSchema = z.discriminatedUnion("type", [
     type: z.literal("category_deals"),
     title: label(40, "a title"),
     description: sectionDescription,
-    /** Empty uses every top-level category. Categories without a discount at the store are left out. */
+    /** Empty uses every top-level category. Categories without a discount are left out. */
     categoryIds: z.array(categoryId).max(12, "Choose at most 12 categories"),
   }),
   z.object({
@@ -389,7 +389,6 @@ export const updateAppearanceBodySchema = appearanceSchema
   .refine((body) => Object.keys(body).length > 0, "Provide at least one part to update");
 
 export const homeQuerySchema = z.object({
-  storeId: z.string().trim().min(1).max(64).optional(),
   /** Returns that tab's page instead of the "All" home screen. */
   tabId: itemId.optional(),
 });

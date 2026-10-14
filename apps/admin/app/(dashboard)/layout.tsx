@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser();
-  const isStaff = user.role === "STORE_STAFF";
+  const isStaff = user.role === "STAFF";
   const isAdmin = user.role === "ADMIN";
   const [settings, newOrders, attention, openComplaints, cookieStore] = await Promise.all([
     getPublicSettings().catch(() => null),
-    listOrders(user, { status: ["CONFIRMED"], sort: "oldest", limit: 1, offset: 0 })
+    listOrders({ status: ["CONFIRMED"], sort: "oldest", limit: 1, offset: 0 })
       .then((orders) => orders.total)
       .catch(() => 0),
     isAdmin ? getAttention().catch(() => null) : null,

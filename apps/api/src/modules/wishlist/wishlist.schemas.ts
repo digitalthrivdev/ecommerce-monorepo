@@ -7,10 +7,7 @@ export const MAX_WISHLIST_ITEMS = 500;
 
 const idSchema = z.string().trim().min(1).max(64);
 
-export const wishlistQuerySchema = paginationQuerySchema.extend({
-  /** The store whose price and stock to show; without it, items have no `product`. */
-  storeId: idSchema.optional(),
-});
+export const wishlistQuerySchema = paginationQuerySchema;
 
 export const wishlistParamsSchema = z.object({ productId: idSchema });
 

@@ -30,7 +30,7 @@ export const deliveredEntry = {
 type TransitionParams = {
   orderId: string;
   /** Omit only for system changes (payments, expiry) that are not made on behalf of a caller. */
-  scope?: { userId: string } | { storeId: string };
+  scope?: { userId: string };
   /** Orders in these statuses are treated as not found for this caller. */
   hiddenStatuses?: OrderStatus[];
   allowedFrom: OrderStatus[];
@@ -41,24 +41,17 @@ type TransitionParams = {
   notAllowed?: { code: string; message: string };
 };
 
-async function releaseOrderStock(tx: Tx, orderId: string, storeId: string) {
+async function releaseOrderStock(tx: Tx, orderId: string) {
   const items = await tx.orderItem.findMany({
     where: { orderId },
     select: { variantId: true, quantity: true, unavailableQuantity: true },
   });
-  const storeProducts = await tx.storeProduct.findMany({
-    where: { storeId, variantId: { in: items.map((item) => item.variantId) } },
-    select: { id: true, variantId: true },
-  });
-  const storeProductIdByVariantId = new Map(storeProducts.map((sp) => [sp.variantId, sp.id]));
-
   await releaseStock(
     tx,
     // Units marked unavailable were never on the shelf, so only the picked units go back.
     items.flatMap((item) => {
-      const storeProductId = storeProductIdByVariantId.get(item.variantId);
       const quantity = item.quantity - item.unavailableQuantity;
-      return storeProductId && quantity > 0 ? [{ storeProductId, quantity }] : [];
+      return quantity > 0 ? [{ variantId: item.variantId, quantity }] : [];
     }),
   );
 }
@@ -73,14 +66,10 @@ export async function lockOrder(
   scope?: TransitionParams["scope"],
   hiddenStatuses?: OrderStatus[],
 ) {
-  const scopeFilter = !scope
-    ? Prisma.empty
-    : "userId" in scope
-      ? Prisma.sql`AND "userId" = ${scope.userId}`
-      : Prisma.sql`AND "storeId" = ${scope.storeId}`;
+  const scopeFilter = scope ? Prisma.sql`AND "userId" = ${scope.userId}` : Prisma.empty;
 
-  const [locked] = await tx.$queryRaw<{ status: OrderStatus; storeId: string }[]>`
-    SELECT status, "storeId" FROM "Order" WHERE id = ${orderId} ${scopeFilter} FOR UPDATE
+  const [locked] = await tx.$queryRaw<{ status: OrderStatus }[]>`
+    SELECT status FROM "Order" WHERE id = ${orderId} ${scopeFilter} FOR UPDATE
   `;
 
   if (!locked || hiddenStatuses?.includes(locked.status)) {
@@ -108,7 +97,7 @@ export async function transitionOrder(tx: Tx, params: TransitionParams) {
   }
 
   if (params.to === OrderStatus.CANCELLED) {
-    await releaseOrderStock(tx, params.orderId, locked.storeId);
+    await releaseOrderStock(tx, params.orderId);
   }
 
   if (params.to === OrderStatus.DELIVERED) {
@@ -130,5 +119,5 @@ export async function transitionOrder(tx: Tx, params: TransitionParams) {
     },
   });
 
-  return { fromStatus: locked.status, storeId: locked.storeId };
+  return { fromStatus: locked.status };
 }

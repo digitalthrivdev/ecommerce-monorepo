@@ -7,16 +7,13 @@ import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
 import { ScreenHeader } from "@/components/screen-header";
-import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
-import { useDeliveryLocation } from "@/lib/delivery-location";
-import { useStoreProducts } from "@/lib/queries";
+import { useProducts } from "@/lib/queries";
 
 export default function BrandScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const insets = useSafeAreaInsets();
-  const { store } = useDeliveryLocation();
-  const products = useStoreProducts(store?.id, { brandId: id });
+  const products = useProducts({ brandId: id });
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -29,7 +26,7 @@ export default function BrandScreen() {
           </Pressable>
         }
       />
-      {store ? <ProductList query={products} emptyText="No products from this brand at your store yet." /> : <StoreRequired />}
+      <ProductList query={products} emptyText="No products from this brand yet." />
       <CartBar />
     </View>
   );

@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, ChevronDown, Search } from "lucide-react-native";
+import { ArrowLeft, Search } from "lucide-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,13 +8,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
-import { StoreRequired } from "@/components/store-required";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { subCategories } from "@/lib/catalog";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { smallImage } from "@/lib/images";
-import { useCategories, useStoreProducts } from "@/lib/queries";
+import { useCategories, useProducts } from "@/lib/queries";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -86,9 +84,8 @@ export default function CategoryScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { store, location } = useDeliveryLocation();
   const categories = useCategories();
-  const products = useStoreProducts(store?.id, { categoryId: id });
+  const products = useProducts({ categoryId: id });
   const { current, top, children } = categoryContext(categories.data?.items ?? [], id);
   const title = top?.name ?? current?.name ?? name ?? "Products";
   const rail = top && children.length > 0 ? [{ id: top.id, name: "All", imageUrl: top.imageUrl }, ...children] : [];
@@ -100,24 +97,9 @@ export default function CategoryScreen() {
         <Pressable onPress={() => router.back()} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Back" hitSlop={8}>
           <Icon as={ArrowLeft} size={22} />
         </Pressable>
-        <Pressable
-          onPress={() => router.push("/location")}
-          className="flex-1 rounded-lg px-1 py-1 active:bg-accent"
-          accessibilityLabel={location ? `${title}, delivering to ${location.summary}. Change location` : title}
-        >
-          <Text className="text-base font-bold" numberOfLines={1}>
-            {title}
-          </Text>
-          {location && (
-            <View className="flex-row items-center gap-0.5">
-              <Text className="shrink text-xs" numberOfLines={1}>
-                <Text className="text-xs font-semibold text-primary">Delivering to {location.label}: </Text>
-                <Text className="text-xs text-muted-foreground">{location.summary}</Text>
-              </Text>
-              <Icon as={ChevronDown} size={14} className="text-muted-foreground" />
-            </View>
-          )}
-        </Pressable>
+        <Text className="flex-1 px-1 text-base font-bold" numberOfLines={1} accessibilityRole="header">
+          {title}
+        </Text>
         <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={8}>
           <Icon as={Search} size={21} />
         </Pressable>
@@ -125,17 +107,13 @@ export default function CategoryScreen() {
       <View className="flex-1 flex-row">
         {rail.length > 0 && <SubCategoryRail key={`rail-${top?.id}`} items={rail} selectedId={id} />}
         <View className="flex-1">
-          {store ? (
-            <ProductList
-              key={`products-${id}`}
-              query={products}
-              emptyText="No products in this category yet."
-              width={rail.length > 0 ? width - SIDEBAR_WIDTH : width}
-              sidePadding={rail.length > 0 ? 10 : 16}
-            />
-          ) : (
-            <StoreRequired />
-          )}
+          <ProductList
+            key={`products-${id}`}
+            query={products}
+            emptyText="No products in this category yet."
+            width={rail.length > 0 ? width - SIDEBAR_WIDTH : width}
+            sidePadding={rail.length > 0 ? 10 : 16}
+          />
         </View>
       </View>
       <CartBar />

@@ -175,7 +175,7 @@ export function AppearanceEditor({ initial, categories, brands, products, initia
           selectedSection={tab === "home" ? expanded : null}
           onSelectSection={editSection}
         />
-        <p className="text-center text-xs text-muted-foreground">Click a section to edit it. Product cards show placeholders; the app fills them from each store&apos;s stock.</p>
+        <p className="text-center text-xs text-muted-foreground">Click a section to edit it. Product cards show placeholders; the app fills them from your stock.</p>
       </aside>
     </div>
   );

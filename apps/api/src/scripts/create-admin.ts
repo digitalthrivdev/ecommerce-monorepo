@@ -103,7 +103,6 @@ async function main() {
     return 1;
   }
   if (existing && existing.role !== UserRole.ADMIN && existing.role !== UserRole.CUSTOMER) {
-    // Staff accounts are tied to a store.
     console.error(`That account is ${existing.role}. Use a different email and phone number for the admin.`);
     return 1;
   }

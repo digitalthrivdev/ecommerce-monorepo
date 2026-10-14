@@ -9,10 +9,17 @@ import { Pill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatMoney } from "@/lib/format";
 import type { ProductListItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function ProductsTable({ products }: { products: ProductListItem[] }) {
+function priceText({ priceRange }: ProductListItem, currency: string) {
+  if (!priceRange) return "No active size";
+  const min = formatMoney(priceRange.min, currency);
+  return priceRange.min === priceRange.max ? min : `${min} – ${formatMoney(priceRange.max, currency)}`;
+}
+
+export function ProductsTable({ products, currency }: { products: ProductListItem[]; currency: string }) {
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   // Only rows on this page count; the choice from another page or filter is dropped.
   const selected = products.filter((product) => chosen.has(product.id)).map((product) => product.id);
@@ -57,7 +64,8 @@ export function ProductsTable({ products }: { products: ProductListItem[] }) {
             <TableHead>Product</TableHead>
             <TableHead>Category</TableHead>
             <TableHead className="text-right">Sizes</TableHead>
-            <TableHead className="text-right">Stores</TableHead>
+            <TableHead className="text-right">Price</TableHead>
+            <TableHead className="text-right">In stock</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -87,8 +95,9 @@ export function ProductsTable({ products }: { products: ProductListItem[] }) {
               </TableCell>
               <TableCell>{product.category.name}</TableCell>
               <TableCell className="text-right tabular-nums">{product.variantCount}</TableCell>
-              <TableCell className={cn("text-right tabular-nums", product.storeCount === 0 && "text-muted-foreground")}>
-                {product.storeCount === 0 ? "Not selling" : product.storeCount}
+              <TableCell className={cn("text-right tabular-nums", !product.priceRange && "text-muted-foreground")}>{priceText(product, currency)}</TableCell>
+              <TableCell className={cn("text-right tabular-nums", product.stockQuantity === 0 && "text-muted-foreground")}>
+                {product.stockQuantity === 0 ? "Out of stock" : product.stockQuantity}
               </TableCell>
               <TableCell>{product.isActive ? <Pill tone="green">In the app</Pill> : <Pill tone="gray">Hidden</Pill>}</TableCell>
             </TableRow>

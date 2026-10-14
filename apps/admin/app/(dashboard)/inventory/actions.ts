@@ -8,10 +8,10 @@ import type { ActionResult, Paginated, StockChange } from "@/lib/types";
 
 const MAX_STOCK = 1_000_000;
 const idSchema = z.string().trim().min(1).max(64);
-const targetSchema = z.object({ storeId: idSchema, variantId: idSchema });
+const targetSchema = z.object({ variantId: idSchema });
 
-function variantPath(base: "inventory" | "variants", storeId: string, variantId: string) {
-  return `/stores/${encodeURIComponent(storeId)}/${base}/${encodeURIComponent(variantId)}`;
+function variantPath(base: "inventory" | "variants", variantId: string) {
+  return `/${base}/${encodeURIComponent(variantId)}`;
 }
 
 async function patch(path: string, body: unknown, message: string): Promise<ActionResult> {
@@ -50,7 +50,7 @@ const adjustSchema = targetSchema.extend({
 export async function adjustStock(input: z.input<typeof adjustSchema>): Promise<ActionResult> {
   const parsed = adjustSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, variantId, mode, amount, reason, note } = parsed.data;
+  const { variantId, mode, amount, reason, note } = parsed.data;
 
   if (mode !== "set" && amount === 0) {
     return { ok: false, error: "Enter a quantity greater than zero" };
@@ -58,32 +58,29 @@ export async function adjustStock(input: z.input<typeof adjustSchema>): Promise<
 
   const change = mode === "set" ? { quantity: amount } : { delta: mode === "add" ? amount : -amount };
   const message = mode === "set" ? `Stock set to ${amount}` : mode === "add" ? `Added ${amount} to stock` : `Removed ${amount} from stock`;
-  return patch(variantPath("inventory", storeId, variantId), { ...change, reason, ...(note && { note }) }, message);
+  return patch(variantPath("inventory", variantId), { ...change, reason, ...(note && { note }) }, message);
 }
 
-const availabilitySchema = targetSchema.extend({ isAvailable: z.boolean() });
+const activeSchema = targetSchema.extend({ isActive: z.boolean() });
 
-export async function setAvailability(input: z.input<typeof availabilitySchema>): Promise<ActionResult> {
-  const parsed = availabilitySchema.safeParse(input);
+/** Switches a size on or off for customers; staff may do this too. */
+export async function setVariantActive(input: z.input<typeof activeSchema>): Promise<ActionResult> {
+  const parsed = activeSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };
-  const { storeId, variantId, isAvailable } = parsed.data;
-  return patch(
-    variantPath("variants", storeId, variantId),
-    { isAvailable },
-    isAvailable ? "Now selling" : "Not selling now",
-  );
+  const { variantId, isActive } = parsed.data;
+  return patch(variantPath("variants", variantId), { isActive }, isActive ? "Now selling" : "Not selling now");
 }
 
 export type StockHistoryResult = { ok: true; history: Paginated<StockChange> } | { ok: false; error: string };
 
-/** The latest stock changes of a variant at a store. */
+/** The latest stock changes of a variant. */
 export async function getStockHistory(input: z.input<typeof targetSchema>): Promise<StockHistoryResult> {
   const parsed = targetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };
-  const { storeId, variantId } = parsed.data;
+  const { variantId } = parsed.data;
 
   try {
-    const history = await apiFetch<Paginated<StockChange>>(`${variantPath("inventory", storeId, variantId)}/adjustments`, {
+    const history = await apiFetch<Paginated<StockChange>>(`${variantPath("inventory", variantId)}/adjustments`, {
       query: { limit: 50 },
     });
     return { ok: true, history };

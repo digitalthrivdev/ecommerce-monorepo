@@ -11,13 +11,13 @@ import { useProductCartQuantity } from "@/lib/cart";
 import { discountPercent, formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { useSettings } from "@/lib/settings";
-import type { StoreProduct, StoreVariant } from "@/lib/types";
+import type { Product, ProductVariant } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function VariantRow({ product, variant, currency }: { product: StoreProduct; variant: StoreVariant; currency: string }) {
+function VariantRow({ product, variant, currency }: { product: Product; variant: ProductVariant; currency: string }) {
   const [failed, setFailed] = useState(false);
   const imageUrl = variant.imageUrl ?? product.imageUrl;
-  const discount = discountPercent(variant.sellingPrice, variant.mrp);
+  const discount = discountPercent(variant.price, variant.compareAtPrice);
 
   return (
     <View className="flex-row items-center gap-3 py-3">
@@ -33,8 +33,8 @@ function VariantRow({ product, variant, currency }: { product: StoreProduct; var
           {variant.label || product.name}
         </Text>
         <View className="flex-row flex-wrap items-baseline gap-x-1.5">
-          <Text className="text-sm font-extrabold">{formatMoney(variant.sellingPrice, currency)}</Text>
-          {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.mrp!, currency)}</Text>}
+          <Text className="text-sm font-extrabold">{formatMoney(variant.price, currency)}</Text>
+          {discount && <Text className="text-xs text-muted-foreground line-through">{formatMoney(variant.compareAtPrice!, currency)}</Text>}
           {discount && <Text className="text-xs font-bold text-primary">{discount}% off</Text>}
         </View>
         {!variant.inStock && <Text className="text-xs font-semibold text-destructive">Out of stock</Text>}
@@ -44,7 +44,7 @@ function VariantRow({ product, variant, currency }: { product: StoreProduct; var
   );
 }
 
-type VariantPickerProps = { product: StoreProduct; open: boolean; onClose: () => void };
+type VariantPickerProps = { product: Product; open: boolean; onClose: () => void };
 
 /** Bottom sheet listing a product's variants, each with its own add-to-cart. */
 export function VariantPicker({ product, open, onClose }: VariantPickerProps) {
@@ -78,7 +78,7 @@ export function VariantPicker({ product, open, onClose }: VariantPickerProps) {
 }
 
 /** For a product with several variants: opens the picker. Once some are in the cart it shows their total, and both buttons open the picker. */
-function ChooseVariantButton({ product }: { product: StoreProduct }) {
+function ChooseVariantButton({ product }: { product: Product }) {
   const [open, setOpen] = useState(false);
   const quantity = useProductCartQuantity(product.productId);
   const show = () => setOpen(true);
@@ -97,7 +97,7 @@ function ChooseVariantButton({ product }: { product: StoreProduct }) {
 }
 
 /** Add-to-cart for a product card: direct for a single variant, through the picker for several. */
-export function ProductCartControl({ product, variant }: { product: StoreProduct; variant: StoreVariant }) {
+export function ProductCartControl({ product, variant }: { product: Product; variant: ProductVariant }) {
   if (product.variants.length > 1) return <ChooseVariantButton product={product} />;
   return <AddToCartButton product={product} variant={variant} />;
 }

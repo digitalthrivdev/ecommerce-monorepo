@@ -1,6 +1,7 @@
-import { BARCODE_PATTERN, FSSAI_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@shop/validation";
+import { BARCODE_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
+import { Prisma } from "../../generated/prisma/client";
 import {
   booleanQuery,
   paginationQuerySchema,
@@ -32,6 +33,9 @@ export const MAX_OPTION_VALUES = 30;
 export const MAX_VARIANTS = 100;
 export const MAX_IMAGES = 20;
 const MAX_TAGS = 30;
+const MAX_SPECIFICATIONS = 30;
+export const MAX_WEIGHT_GRAMS = 1_000_000;
+const MAX_DIMENSION_CM = 10_000;
 
 export const gstRateSchema = z
   .string({ error: 'Give the GST rate as a percentage, e.g. "5" or "18", or "0" for exempt goods' })
@@ -48,11 +52,6 @@ export const hsnCodeSchema = z
   .trim()
   .regex(HSN_PATTERN, "HSN code must be 4 to 8 digits");
 
-export const fssaiLicenseSchema = z
-  .string()
-  .trim()
-  .regex(FSSAI_PATTERN, "FSSAI licence number must be 14 digits");
-
 export const skuSchema = z
   .string()
   .trim()
@@ -64,6 +63,22 @@ export const barcodeSchema = z
   .trim()
   .regex(BARCODE_PATTERN, "Barcode must be 4-32 letters or digits");
 
+export const weightGramsSchema = z.number().int().min(1).max(MAX_WEIGHT_GRAMS);
+
+export const dimensionSchema = positiveDecimalSchema.refine(
+  (value) => new Prisma.Decimal(value).lte(MAX_DIMENSION_CM),
+  `Must be at most ${MAX_DIMENSION_CM} cm`,
+);
+
+/** The compare-at price is the higher, struck-through one. */
+export function compareAtPriceProblem(price: string | Prisma.Decimal, compareAtPrice: string | Prisma.Decimal | null | undefined) {
+  return compareAtPrice != null && new Prisma.Decimal(compareAtPrice).lt(price) ? "The compare-at price cannot be lower than the price" : null;
+}
+
+const specificationsSchema = z
+  .array(z.object({ name: z.string().trim().min(1).max(50), value: z.string().trim().min(1).max(500) }))
+  .max(MAX_SPECIFICATIONS);
+
 const productFieldsSchema = z.object({
   categoryId: idSchema,
   brandId: idSchema.nullish(),
@@ -74,31 +89,39 @@ const productFieldsSchema = z.object({
   hsnCode: hsnCodeSchema.nullish(),
   // Decides the GST on every sale, so it can't be left out ("0" for exempt goods) or cleared.
   gstRate: gstRateSchema,
-  isVeg: z.boolean().nullish(),
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
   countryOfOrigin: optionalText(100),
-  fssaiLicense: fssaiLicenseSchema.nullish(),
-  shelfLife: optionalText(100),
-  ingredients: optionalText(2000),
+  specifications: specificationsSchema.optional(),
   isActive: z.boolean().optional(),
 });
 
 export const optionNameSchema = z.string().trim().min(1).max(50);
 export const optionValueSchema = z.string().trim().min(1).max(50);
 
-const variantInputSchema = z.object({
-  /** Existing variant to update; omit to create one. */
-  id: idSchema.optional(),
-  sku: skuSchema,
-  barcode: barcodeSchema.nullish(),
-  unit: z.string().trim().min(1).max(20).nullish(),
-  quantity: positiveDecimalSchema.nullish(),
-  maxOrderQuantity: z.number().int().min(1).max(MAX_QUANTITY_PER_ITEM).nullish(),
-  isActive: z.boolean().optional(),
-  /** One value per option, in the order of `options`. Empty for a product without options. */
-  optionValues: z.array(optionValueSchema).max(MAX_OPTIONS).default([]),
-});
+const variantInputSchema = z
+  .object({
+    /** Existing variant to update; omit to create one. */
+    id: idSchema.optional(),
+    sku: skuSchema,
+    barcode: barcodeSchema.nullish(),
+    unit: z.string().trim().min(1).max(20).nullish(),
+    quantity: positiveDecimalSchema.nullish(),
+    price: positiveDecimalSchema,
+    compareAtPrice: positiveDecimalSchema.nullish(),
+    weightGrams: weightGramsSchema.nullish(),
+    lengthCm: dimensionSchema.nullish(),
+    breadthCm: dimensionSchema.nullish(),
+    heightCm: dimensionSchema.nullish(),
+    maxOrderQuantity: z.number().int().min(1).max(MAX_QUANTITY_PER_ITEM).nullish(),
+    isActive: z.boolean().optional(),
+    /** One value per option, in the order of `options`. Empty for a product without options. */
+    optionValues: z.array(optionValueSchema).max(MAX_OPTIONS).default([]),
+  })
+  .superRefine((variant, ctx) => {
+    const problem = compareAtPriceProblem(variant.price, variant.compareAtPrice);
+    if (problem) ctx.addIssue({ code: "custom", path: ["compareAtPrice"], message: problem });
+  });
 
 /**
  * The full set of options and variants of a product. Variants missing from the list are deleted
@@ -123,9 +146,8 @@ export const listProductsQuerySchema = paginationQuerySchema.extend({
   brandId: idSchema.optional(),
   search: searchQuery,
   includeInactive: booleanQuery,
-  /** Admin filters; they need `includeInactive`. */
+  /** Filters; `status` needs `includeInactive`. */
   status: z.enum(["active", "hidden"]).optional(),
-  selling: z.enum(["yes", "no"]).optional(),
   outOfStock: booleanQuery,
   /** Products without a GST rate or HSN code. */
   missingTax: booleanQuery,
@@ -154,25 +176,18 @@ export const reorderImagesBodySchema = z.object({
   imageIds: z.array(idSchema).min(1).max(MAX_IMAGES),
 });
 
-export const storeParamsSchema = z.object({
-  storeId: idSchema,
-});
-
-export const storeProductParamsSchema = z.object({
-  storeId: idSchema,
+export const catalogProductParamsSchema = z.object({
   productId: idSchema,
 });
 
-export const storeVariantParamsSchema = z.object({
-  storeId: idSchema,
+export const variantParamsSchema = z.object({
   variantId: idSchema,
 });
 
-export const listStoreProductsQuerySchema = paginationQuerySchema.extend({
+export const listCatalogQuerySchema = paginationQuerySchema.extend({
   categoryId: idSchema.optional(),
   brandId: idSchema.optional(),
   search: searchQuery,
-  includeUnavailable: booleanQuery,
 });
 
 const idList = z
@@ -195,54 +210,24 @@ export const alsoBoughtQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(20).default(10),
 });
 
-export const storeBrandsQuerySchema = z.object({
+export const catalogBrandsQuerySchema = z.object({
   categoryId: idSchema.optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export const buyAgainQuerySchema = z.object({
-  storeId: idSchema,
   limit: z.coerce.number().int().min(1).max(30).default(12),
 });
 
-export const createStoreVariantBodySchema = z.object({
-  variantId: idSchema,
-  sellingPrice: positiveDecimalSchema,
-  mrp: positiveDecimalSchema.nullish(),
-  isAvailable: z.boolean().optional(),
-});
-
-export const updateStoreVariantBodySchema = z
+/** Quick changes from the product list or inventory; staff may only switch a variant on or off. */
+export const updateVariantBodySchema = z
   .object({
-    sellingPrice: positiveDecimalSchema,
-    mrp: positiveDecimalSchema.nullable(),
-    isAvailable: z.boolean(),
+    price: positiveDecimalSchema,
+    compareAtPrice: positiveDecimalSchema.nullable(),
+    isActive: z.boolean(),
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, "Provide at least one field to update");
-
-const MAX_PRICE_ROWS = 1000;
-
-/** Prices of a product's variants at many stores at once; missing listings are created. */
-export const setPricesBodySchema = z.object({
-  prices: z
-    .array(
-      z.object({
-        storeId: idSchema,
-        variantId: idSchema,
-        sellingPrice: positiveDecimalSchema,
-        mrp: positiveDecimalSchema.nullish().transform((value) => value ?? null),
-        /** New listings default to available. */
-        isAvailable: z.boolean().optional(),
-      }),
-    )
-    .min(1)
-    .max(MAX_PRICE_ROWS)
-    .refine(
-      (rows) => new Set(rows.map((row) => `${row.storeId}:${row.variantId}`)).size === rows.length,
-      "Each store and variant can appear only once",
-    ),
-});
 
 export type CreateProductInput = z.infer<typeof createProductBodySchema>;
 export type UpdateProductInput = z.infer<typeof updateProductBodySchema>;
@@ -250,7 +235,5 @@ export type VariantsInput = z.infer<typeof variantsBodySchema>;
 export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
 export type AddImageInput = z.infer<typeof addImageBodySchema>;
 export type UpdateImageInput = z.infer<typeof updateImageBodySchema>;
-export type ListStoreProductsQuery = z.infer<typeof listStoreProductsQuerySchema>;
-export type CreateStoreVariantInput = z.infer<typeof createStoreVariantBodySchema>;
-export type UpdateStoreVariantInput = z.infer<typeof updateStoreVariantBodySchema>;
-export type SetPricesInput = z.infer<typeof setPricesBodySchema>;
+export type ListCatalogQuery = z.infer<typeof listCatalogQuerySchema>;
+export type UpdateVariantInput = z.infer<typeof updateVariantBodySchema>;

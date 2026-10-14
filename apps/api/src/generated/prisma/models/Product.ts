@@ -43,13 +43,9 @@ export type ProductMinAggregateOutputType = {
   description: string | null
   hsnCode: string | null
   gstRate: runtime.Decimal | null
-  isVeg: boolean | null
   manufacturerName: string | null
   manufacturerAddress: string | null
   countryOfOrigin: string | null
-  fssaiLicense: string | null
-  shelfLife: string | null
-  ingredients: string | null
   isActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -64,13 +60,9 @@ export type ProductMaxAggregateOutputType = {
   description: string | null
   hsnCode: string | null
   gstRate: runtime.Decimal | null
-  isVeg: boolean | null
   manufacturerName: string | null
   manufacturerAddress: string | null
   countryOfOrigin: string | null
-  fssaiLicense: string | null
-  shelfLife: string | null
-  ingredients: string | null
   isActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -86,13 +78,10 @@ export type ProductCountAggregateOutputType = {
   tags: number
   hsnCode: number
   gstRate: number
-  isVeg: number
   manufacturerName: number
   manufacturerAddress: number
   countryOfOrigin: number
-  fssaiLicense: number
-  shelfLife: number
-  ingredients: number
+  specifications: number
   isActive: number
   createdAt: number
   updatedAt: number
@@ -117,13 +106,9 @@ export type ProductMinAggregateInputType = {
   description?: true
   hsnCode?: true
   gstRate?: true
-  isVeg?: true
   manufacturerName?: true
   manufacturerAddress?: true
   countryOfOrigin?: true
-  fssaiLicense?: true
-  shelfLife?: true
-  ingredients?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -138,13 +123,9 @@ export type ProductMaxAggregateInputType = {
   description?: true
   hsnCode?: true
   gstRate?: true
-  isVeg?: true
   manufacturerName?: true
   manufacturerAddress?: true
   countryOfOrigin?: true
-  fssaiLicense?: true
-  shelfLife?: true
-  ingredients?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -160,13 +141,10 @@ export type ProductCountAggregateInputType = {
   tags?: true
   hsnCode?: true
   gstRate?: true
-  isVeg?: true
   manufacturerName?: true
   manufacturerAddress?: true
   countryOfOrigin?: true
-  fssaiLicense?: true
-  shelfLife?: true
-  ingredients?: true
+  specifications?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -269,13 +247,10 @@ export type ProductGroupByOutputType = {
   tags: string[]
   hsnCode: string | null
   gstRate: runtime.Decimal | null
-  isVeg: boolean | null
   manufacturerName: string | null
   manufacturerAddress: string | null
   countryOfOrigin: string | null
-  fssaiLicense: string | null
-  shelfLife: string | null
-  ingredients: string | null
+  specifications: runtime.JsonValue
   isActive: boolean
   createdAt: Date
   updatedAt: Date
@@ -314,13 +289,10 @@ export type ProductWhereInput = {
   tags?: Prisma.StringNullableListFilter<"Product">
   hsnCode?: Prisma.StringNullableFilter<"Product"> | string | null
   gstRate?: Prisma.DecimalNullableFilter<"Product"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.BoolNullableFilter<"Product"> | boolean | null
   manufacturerName?: Prisma.StringNullableFilter<"Product"> | string | null
   manufacturerAddress?: Prisma.StringNullableFilter<"Product"> | string | null
   countryOfOrigin?: Prisma.StringNullableFilter<"Product"> | string | null
-  fssaiLicense?: Prisma.StringNullableFilter<"Product"> | string | null
-  shelfLife?: Prisma.StringNullableFilter<"Product"> | string | null
-  ingredients?: Prisma.StringNullableFilter<"Product"> | string | null
+  specifications?: Prisma.JsonFilter<"Product">
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
@@ -344,13 +316,10 @@ export type ProductOrderByWithRelationInput = {
   tags?: Prisma.SortOrder
   hsnCode?: Prisma.SortOrderInput | Prisma.SortOrder
   gstRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  isVeg?: Prisma.SortOrderInput | Prisma.SortOrder
   manufacturerName?: Prisma.SortOrderInput | Prisma.SortOrder
   manufacturerAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   countryOfOrigin?: Prisma.SortOrderInput | Prisma.SortOrder
-  fssaiLicense?: Prisma.SortOrderInput | Prisma.SortOrder
-  shelfLife?: Prisma.SortOrderInput | Prisma.SortOrder
-  ingredients?: Prisma.SortOrderInput | Prisma.SortOrder
+  specifications?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -377,13 +346,10 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   tags?: Prisma.StringNullableListFilter<"Product">
   hsnCode?: Prisma.StringNullableFilter<"Product"> | string | null
   gstRate?: Prisma.DecimalNullableFilter<"Product"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.BoolNullableFilter<"Product"> | boolean | null
   manufacturerName?: Prisma.StringNullableFilter<"Product"> | string | null
   manufacturerAddress?: Prisma.StringNullableFilter<"Product"> | string | null
   countryOfOrigin?: Prisma.StringNullableFilter<"Product"> | string | null
-  fssaiLicense?: Prisma.StringNullableFilter<"Product"> | string | null
-  shelfLife?: Prisma.StringNullableFilter<"Product"> | string | null
-  ingredients?: Prisma.StringNullableFilter<"Product"> | string | null
+  specifications?: Prisma.JsonFilter<"Product">
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
@@ -407,13 +373,10 @@ export type ProductOrderByWithAggregationInput = {
   tags?: Prisma.SortOrder
   hsnCode?: Prisma.SortOrderInput | Prisma.SortOrder
   gstRate?: Prisma.SortOrderInput | Prisma.SortOrder
-  isVeg?: Prisma.SortOrderInput | Prisma.SortOrder
   manufacturerName?: Prisma.SortOrderInput | Prisma.SortOrder
   manufacturerAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   countryOfOrigin?: Prisma.SortOrderInput | Prisma.SortOrder
-  fssaiLicense?: Prisma.SortOrderInput | Prisma.SortOrder
-  shelfLife?: Prisma.SortOrderInput | Prisma.SortOrder
-  ingredients?: Prisma.SortOrderInput | Prisma.SortOrder
+  specifications?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -437,13 +400,10 @@ export type ProductScalarWhereWithAggregatesInput = {
   tags?: Prisma.StringNullableListFilter<"Product">
   hsnCode?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   gstRate?: Prisma.DecimalNullableWithAggregatesFilter<"Product"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.BoolNullableWithAggregatesFilter<"Product"> | boolean | null
   manufacturerName?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   manufacturerAddress?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   countryOfOrigin?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  fssaiLicense?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  shelfLife?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  ingredients?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  specifications?: Prisma.JsonWithAggregatesFilter<"Product">
   isActive?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
@@ -457,13 +417,10 @@ export type ProductCreateInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -487,13 +444,10 @@ export type ProductUncheckedCreateInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -513,13 +467,10 @@ export type ProductUpdateInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -543,13 +494,10 @@ export type ProductUncheckedUpdateInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -571,13 +519,10 @@ export type ProductCreateManyInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -591,13 +536,10 @@ export type ProductUpdateManyMutationInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -613,13 +555,10 @@ export type ProductUncheckedUpdateManyInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -653,13 +592,10 @@ export type ProductCountOrderByAggregateInput = {
   tags?: Prisma.SortOrder
   hsnCode?: Prisma.SortOrder
   gstRate?: Prisma.SortOrder
-  isVeg?: Prisma.SortOrder
   manufacturerName?: Prisma.SortOrder
   manufacturerAddress?: Prisma.SortOrder
   countryOfOrigin?: Prisma.SortOrder
-  fssaiLicense?: Prisma.SortOrder
-  shelfLife?: Prisma.SortOrder
-  ingredients?: Prisma.SortOrder
+  specifications?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -678,13 +614,9 @@ export type ProductMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   hsnCode?: Prisma.SortOrder
   gstRate?: Prisma.SortOrder
-  isVeg?: Prisma.SortOrder
   manufacturerName?: Prisma.SortOrder
   manufacturerAddress?: Prisma.SortOrder
   countryOfOrigin?: Prisma.SortOrder
-  fssaiLicense?: Prisma.SortOrder
-  shelfLife?: Prisma.SortOrder
-  ingredients?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -699,13 +631,9 @@ export type ProductMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   hsnCode?: Prisma.SortOrder
   gstRate?: Prisma.SortOrder
-  isVeg?: Prisma.SortOrder
   manufacturerName?: Prisma.SortOrder
   manufacturerAddress?: Prisma.SortOrder
   countryOfOrigin?: Prisma.SortOrder
-  fssaiLicense?: Prisma.SortOrder
-  shelfLife?: Prisma.SortOrder
-  ingredients?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -813,10 +741,6 @@ export type ProductUpdatetagsInput = {
   push?: string | string[]
 }
 
-export type NullableBoolFieldUpdateOperationsInput = {
-  set?: boolean | null
-}
-
 export type ProductCreateNestedOneWithoutOptionsInput = {
   create?: Prisma.XOR<Prisma.ProductCreateWithoutOptionsInput, Prisma.ProductUncheckedCreateWithoutOptionsInput>
   connectOrCreate?: Prisma.ProductCreateOrConnectWithoutOptionsInput
@@ -909,13 +833,10 @@ export type ProductCreateWithoutCategoryInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -937,13 +858,10 @@ export type ProductUncheckedCreateWithoutCategoryInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -994,13 +912,10 @@ export type ProductScalarWhereInput = {
   tags?: Prisma.StringNullableListFilter<"Product">
   hsnCode?: Prisma.StringNullableFilter<"Product"> | string | null
   gstRate?: Prisma.DecimalNullableFilter<"Product"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.BoolNullableFilter<"Product"> | boolean | null
   manufacturerName?: Prisma.StringNullableFilter<"Product"> | string | null
   manufacturerAddress?: Prisma.StringNullableFilter<"Product"> | string | null
   countryOfOrigin?: Prisma.StringNullableFilter<"Product"> | string | null
-  fssaiLicense?: Prisma.StringNullableFilter<"Product"> | string | null
-  shelfLife?: Prisma.StringNullableFilter<"Product"> | string | null
-  ingredients?: Prisma.StringNullableFilter<"Product"> | string | null
+  specifications?: Prisma.JsonFilter<"Product">
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Product"> | Date | string
@@ -1014,13 +929,10 @@ export type ProductCreateWithoutBrandInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1042,13 +954,10 @@ export type ProductUncheckedCreateWithoutBrandInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1094,13 +1003,10 @@ export type ProductCreateWithoutOptionsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1123,13 +1029,10 @@ export type ProductUncheckedCreateWithoutOptionsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1164,13 +1067,10 @@ export type ProductUpdateWithoutOptionsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1193,13 +1093,10 @@ export type ProductUncheckedUpdateWithoutOptionsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1218,13 +1115,10 @@ export type ProductCreateWithoutVariantsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1247,13 +1141,10 @@ export type ProductUncheckedCreateWithoutVariantsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1288,13 +1179,10 @@ export type ProductUpdateWithoutVariantsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1317,13 +1205,10 @@ export type ProductUncheckedUpdateWithoutVariantsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1342,13 +1227,10 @@ export type ProductCreateWithoutImagesInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1371,13 +1253,10 @@ export type ProductUncheckedCreateWithoutImagesInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1412,13 +1291,10 @@ export type ProductUpdateWithoutImagesInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1441,13 +1317,10 @@ export type ProductUncheckedUpdateWithoutImagesInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1466,13 +1339,10 @@ export type ProductCreateWithoutOrderItemsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1495,13 +1365,10 @@ export type ProductUncheckedCreateWithoutOrderItemsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1536,13 +1403,10 @@ export type ProductUpdateWithoutOrderItemsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1565,13 +1429,10 @@ export type ProductUncheckedUpdateWithoutOrderItemsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1590,13 +1451,10 @@ export type ProductCreateWithoutReviewsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1619,13 +1477,10 @@ export type ProductUncheckedCreateWithoutReviewsInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1660,13 +1515,10 @@ export type ProductUpdateWithoutReviewsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1689,13 +1541,10 @@ export type ProductUncheckedUpdateWithoutReviewsInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1714,13 +1563,10 @@ export type ProductCreateWithoutWishlistInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1743,13 +1589,10 @@ export type ProductUncheckedCreateWithoutWishlistInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1784,13 +1627,10 @@ export type ProductUpdateWithoutWishlistInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1813,13 +1653,10 @@ export type ProductUncheckedUpdateWithoutWishlistInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1839,13 +1676,10 @@ export type ProductCreateManyCategoryInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1859,13 +1693,10 @@ export type ProductUpdateWithoutCategoryInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1887,13 +1718,10 @@ export type ProductUncheckedUpdateWithoutCategoryInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1914,13 +1742,10 @@ export type ProductUncheckedUpdateManyWithoutCategoryInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1935,13 +1760,10 @@ export type ProductCreateManyBrandInput = {
   tags?: Prisma.ProductCreatetagsInput | string[]
   hsnCode?: string | null
   gstRate?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: boolean | null
   manufacturerName?: string | null
   manufacturerAddress?: string | null
   countryOfOrigin?: string | null
-  fssaiLicense?: string | null
-  shelfLife?: string | null
-  ingredients?: string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1955,13 +1777,10 @@ export type ProductUpdateWithoutBrandInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1983,13 +1802,10 @@ export type ProductUncheckedUpdateWithoutBrandInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2010,13 +1826,10 @@ export type ProductUncheckedUpdateManyWithoutBrandInput = {
   tags?: Prisma.ProductUpdatetagsInput | string[]
   hsnCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   gstRate?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
-  isVeg?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   manufacturerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   manufacturerAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   countryOfOrigin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fssaiLicense?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  shelfLife?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ingredients?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specifications?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2108,13 +1921,10 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   tags?: boolean
   hsnCode?: boolean
   gstRate?: boolean
-  isVeg?: boolean
   manufacturerName?: boolean
   manufacturerAddress?: boolean
   countryOfOrigin?: boolean
-  fssaiLicense?: boolean
-  shelfLife?: boolean
-  ingredients?: boolean
+  specifications?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2139,13 +1949,10 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   tags?: boolean
   hsnCode?: boolean
   gstRate?: boolean
-  isVeg?: boolean
   manufacturerName?: boolean
   manufacturerAddress?: boolean
   countryOfOrigin?: boolean
-  fssaiLicense?: boolean
-  shelfLife?: boolean
-  ingredients?: boolean
+  specifications?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2163,13 +1970,10 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   tags?: boolean
   hsnCode?: boolean
   gstRate?: boolean
-  isVeg?: boolean
   manufacturerName?: boolean
   manufacturerAddress?: boolean
   countryOfOrigin?: boolean
-  fssaiLicense?: boolean
-  shelfLife?: boolean
-  ingredients?: boolean
+  specifications?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2187,19 +1991,16 @@ export type ProductSelectScalar = {
   tags?: boolean
   hsnCode?: boolean
   gstRate?: boolean
-  isVeg?: boolean
   manufacturerName?: boolean
   manufacturerAddress?: boolean
   countryOfOrigin?: boolean
-  fssaiLicense?: boolean
-  shelfLife?: boolean
-  ingredients?: boolean
+  specifications?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "categoryId" | "brandId" | "name" | "slug" | "description" | "tags" | "hsnCode" | "gstRate" | "isVeg" | "manufacturerName" | "manufacturerAddress" | "countryOfOrigin" | "fssaiLicense" | "shelfLife" | "ingredients" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "categoryId" | "brandId" | "name" | "slug" | "description" | "tags" | "hsnCode" | "gstRate" | "manufacturerName" | "manufacturerAddress" | "countryOfOrigin" | "specifications" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   category?: boolean | Prisma.CategoryDefaultArgs<ExtArgs>
   brand?: boolean | Prisma.Product$brandArgs<ExtArgs>
@@ -2242,13 +2043,10 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     tags: string[]
     hsnCode: string | null
     gstRate: runtime.Decimal | null
-    isVeg: boolean | null
     manufacturerName: string | null
     manufacturerAddress: string | null
     countryOfOrigin: string | null
-    fssaiLicense: string | null
-    shelfLife: string | null
-    ingredients: string | null
+    specifications: runtime.JsonValue
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -2692,13 +2490,10 @@ export interface ProductFieldRefs {
   readonly tags: Prisma.FieldRef<"Product", 'String[]'>
   readonly hsnCode: Prisma.FieldRef<"Product", 'String'>
   readonly gstRate: Prisma.FieldRef<"Product", 'Decimal'>
-  readonly isVeg: Prisma.FieldRef<"Product", 'Boolean'>
   readonly manufacturerName: Prisma.FieldRef<"Product", 'String'>
   readonly manufacturerAddress: Prisma.FieldRef<"Product", 'String'>
   readonly countryOfOrigin: Prisma.FieldRef<"Product", 'String'>
-  readonly fssaiLicense: Prisma.FieldRef<"Product", 'String'>
-  readonly shelfLife: Prisma.FieldRef<"Product", 'String'>
-  readonly ingredients: Prisma.FieldRef<"Product", 'String'>
+  readonly specifications: Prisma.FieldRef<"Product", 'Json'>
   readonly isActive: Prisma.FieldRef<"Product", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Product", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Product", 'DateTime'>

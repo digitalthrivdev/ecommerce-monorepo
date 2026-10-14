@@ -154,7 +154,6 @@ export function createCustomersService(prisma: PrismaClient) {
           paymentMethod: true,
           total: true,
           createdAt: true,
-          store: { select: { id: true, name: true } },
           _count: { select: { items: true } },
         },
       }),

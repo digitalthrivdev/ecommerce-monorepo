@@ -1,4 +1,4 @@
-import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { slugify } from "../../shared/schemas.js";
 import { featuredProductIds } from "../settings/appearance.service.js";
@@ -6,6 +6,7 @@ import {
   brandSummarySelect,
   categorySummarySelect,
   customerVisibleProduct,
+  customerVisibleVariant,
   imageOrder,
   imageSelect,
   inCategory,
@@ -14,50 +15,74 @@ import {
 } from "./catalog.js";
 import {
   MAX_IMAGES,
+  compareAtPriceProblem,
   type AddImageInput,
   type CreateProductInput,
   type ListProductsQuery,
   type UpdateImageInput,
   type UpdateProductInput,
+  type UpdateVariantInput,
   type VariantsInput,
 } from "./products.schemas.js";
-import { customerVisible } from "./store-products.service.js";
 import { deleteVariants, saveVariants } from "./variants.js";
 
-function detailInclude(includeInactive: boolean) {
-  return {
-    category: { select: categorySummarySelect },
-    brand: { select: brandSummarySelect },
-    options: {
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, values: { orderBy: { sortOrder: "asc" }, select: { id: true, value: true } } },
-    },
-    variants: {
-      where: includeInactive ? {} : { isActive: true },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      include: { optionValues: { select: { optionValueId: true } } },
-    },
-    images: { orderBy: imageOrder, select: imageSelect },
-  } satisfies Prisma.ProductInclude;
-}
+const detailInclude = {
+  category: { select: categorySummarySelect },
+  brand: { select: brandSummarySelect },
+  options: {
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true, values: { orderBy: { sortOrder: "asc" }, select: { id: true, value: true } } },
+  },
+  variants: {
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    include: { optionValues: { select: { optionValueId: true } }, inventory: { select: { quantity: true } } },
+  },
+  images: { orderBy: imageOrder, select: imageSelect },
+} satisfies Prisma.ProductInclude;
 
-type ProductDetail = Prisma.ProductGetPayload<{ include: ReturnType<typeof detailInclude> }>;
+type ProductDetail = Prisma.ProductGetPayload<{ include: typeof detailInclude }>;
 
-/** The catalog definition of a product, without store prices. Variant option values follow the order of `options`. */
+const decimalText = (value: Prisma.Decimal | null) => value?.toString() ?? null;
+
+/** A product as the dashboard edits it, with every variant's price and stock. Variant option values follow the order of `options`. */
 export function toProductDetail({ options, variants, gstRate, ...product }: ProductDetail) {
   return {
     ...product,
     gstRate: gstRate?.toFixed(2) ?? null,
     options,
-    variants: variants.map(({ optionValues, quantity, ...variant }) => {
+    variants: variants.map(({ optionValues, inventory, quantity, price, compareAtPrice, lengthCm, breadthCm, heightCm, ...variant }) => {
       const valueIds = new Set(optionValues.map((link) => link.optionValueId));
       return {
         ...variant,
-        quantity: quantity?.toString() ?? null,
+        quantity: decimalText(quantity),
         label: variantLabel({ ...variant, quantity }),
+        price: price.toFixed(2),
+        compareAtPrice: compareAtPrice?.toFixed(2) ?? null,
+        lengthCm: decimalText(lengthCm),
+        breadthCm: decimalText(breadthCm),
+        heightCm: decimalText(heightCm),
+        stockQuantity: inventory?.quantity ?? 0,
         optionValues: options.map((option) => option.values.find((value) => valueIds.has(value.id))?.value ?? null),
       };
     }),
+  };
+}
+
+const variantSelect = {
+  id: true,
+  price: true,
+  compareAtPrice: true,
+  isActive: true,
+  inventory: { select: { quantity: true } },
+} satisfies Prisma.ProductVariantSelect;
+
+function toVariantSummary({ id, price, compareAtPrice, isActive, inventory }: Prisma.ProductVariantGetPayload<{ select: typeof variantSelect }>) {
+  return {
+    variantId: id,
+    price: price.toFixed(2),
+    compareAtPrice: compareAtPrice?.toFixed(2) ?? null,
+    isActive,
+    stockQuantity: inventory?.quantity ?? 0,
   };
 }
 
@@ -85,31 +110,22 @@ export function createProductsService(prisma: PrismaClient) {
     }
   }
 
+  /** Dashboard list. Without includeInactive, hidden products are left out. */
   async function listProducts(query: ListProductsQuery) {
     const { limit, offset, categoryId, brandId, search, includeInactive } = query;
-    const listed: Prisma.ProductVariantWhereInput = { stores: { some: {} } };
-    // Status, selling and stock filters are admin information, so they need includeInactive.
-    const adminFilters: Prisma.ProductWhereInput[] = includeInactive
-      ? [
-          query.status ? { isActive: query.status === "active" } : {},
-          query.selling === "yes" ? { variants: { some: listed } } : query.selling === "no" ? { variants: { none: listed } } : {},
-          query.outOfStock
-            ? {
-                variants: {
-                  some: {
-                    isActive: true,
-                    stores: { some: { OR: [{ inventory: { is: null } }, { inventory: { is: { quantity: { lte: 0 } } } }] } },
-                  },
-                },
-              }
-            : {},
-          query.missingTax ? { OR: [{ gstRate: null }, { hsnCode: null }] } : {},
-        ]
-      : [];
+    const outOfStock: Prisma.ProductVariantWhereInput = {
+      isActive: true,
+      OR: [{ inventory: { is: null } }, { inventory: { is: { quantity: { lte: 0 } } } }],
+    };
+    const filters: Prisma.ProductWhereInput[] = [
+      includeInactive && query.status ? { isActive: query.status === "active" } : {},
+      query.outOfStock ? { variants: { some: outOfStock } } : {},
+      query.missingTax ? { OR: [{ gstRate: null }, { hsnCode: null }] } : {},
+    ];
     const where: Prisma.ProductWhereInput = {
-      ...(includeInactive ? {} : customerVisibleProduct),
+      ...(!includeInactive && { isActive: true }),
       ...(brandId && { brandId }),
-      AND: [categoryId ? inCategory(categoryId) : {}, search ? productSearch(search, { matchCodes: includeInactive }) : {}, ...adminFilters],
+      AND: [categoryId ? inCategory(categoryId) : {}, search ? productSearch(search, { matchCodes: true }) : {}, ...filters],
     };
 
     const [rows, total] = await prisma.$transaction([
@@ -119,7 +135,7 @@ export function createProductsService(prisma: PrismaClient) {
           category: { select: categorySummarySelect },
           brand: { select: brandSummarySelect },
           images: { where: { variantId: null }, orderBy: imageOrder, take: 1, select: { url: true } },
-          _count: { select: { variants: includeInactive ? true : { where: { isActive: true } } } },
+          variants: { select: { price: true, isActive: true, inventory: { select: { quantity: true } } } },
         },
         orderBy: { name: "asc" },
         take: limit,
@@ -128,38 +144,28 @@ export function createProductsService(prisma: PrismaClient) {
       prisma.product.count({ where }),
     ]);
 
-    // How many stores list the product is admin information.
-    const storeCounts = new Map<string, number>();
-    if (includeInactive && rows.length > 0) {
-      const listings = await prisma.storeProduct.findMany({
-        where: { variant: { productId: { in: rows.map((row) => row.id) } } },
-        select: { storeId: true, variant: { select: { productId: true } } },
-      });
-      const stores = new Map<string, Set<string>>();
-      for (const listing of listings) {
-        const set = stores.get(listing.variant.productId) ?? new Set();
-        set.add(listing.storeId);
-        stores.set(listing.variant.productId, set);
-      }
-      for (const [productId, set] of stores) storeCounts.set(productId, set.size);
-    }
-
-    const items = rows.map(({ _count, images, gstRate, ...product }) => ({
-      ...product,
-      gstRate: gstRate?.toFixed(2) ?? null,
-      imageUrl: images[0]?.url ?? null,
-      variantCount: _count.variants,
-      ...(includeInactive && { storeCount: storeCounts.get(product.id) ?? 0 }),
-    }));
+    const items = rows.map(({ variants, images, gstRate, ...product }) => {
+      const active = variants.filter((variant) => variant.isActive);
+      const prices = active.map((variant) => variant.price);
+      return {
+        ...product,
+        gstRate: gstRate?.toFixed(2) ?? null,
+        imageUrl: images[0]?.url ?? null,
+        variantCount: variants.length,
+        /** Lowest and highest price of the active variants; null when none is active. */
+        priceRange: prices.length
+          ? { min: Prisma.Decimal.min(...prices).toFixed(2), max: Prisma.Decimal.max(...prices).toFixed(2) }
+          : null,
+        /** Units in stock over the active variants. */
+        stockQuantity: active.reduce((sum, variant) => sum + (variant.inventory?.quantity ?? 0), 0),
+      };
+    });
 
     return { items, total, limit, offset };
   }
 
-  async function getProduct(id: string, options: { includeInactive: boolean }) {
-    const product = await prisma.product.findFirst({
-      where: options.includeInactive ? { id } : { id, ...customerVisibleProduct },
-      include: detailInclude(options.includeInactive),
-    });
+  async function getProduct(id: string) {
+    const product = await prisma.product.findUnique({ where: { id }, include: detailInclude });
 
     if (!product) {
       throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
@@ -168,7 +174,7 @@ export function createProductsService(prisma: PrismaClient) {
     return toProductDetail(product);
   }
 
-  /** What a shared product link shows: the product and its lowest price at an active store that has it in stock. */
+  /** What a shared product link shows: the product and its lowest price among the variants in stock. */
   async function getPreview(id: string) {
     const product = await prisma.product.findFirst({
       where: { id, ...customerVisibleProduct },
@@ -186,18 +192,17 @@ export function createProductsService(prisma: PrismaClient) {
     }
 
     const buyable = {
-      ...customerVisible,
-      variant: { ...customerVisible.variant, productId: id },
-      store: { status: StoreStatus.ACTIVE },
-      inventory: { quantity: { gt: 0 } },
-    } satisfies Prisma.StoreProductWhereInput;
+      ...customerVisibleVariant,
+      productId: id,
+      inventory: { is: { quantity: { gt: 0 } } },
+    } satisfies Prisma.ProductVariantWhereInput;
     const [cheapest, highest] = await Promise.all([
-      prisma.storeProduct.findFirst({
+      prisma.productVariant.findFirst({
         where: buyable,
-        orderBy: { sellingPrice: "asc" },
-        select: { sellingPrice: true, mrp: true, variant: { select: { name: true, quantity: true, unit: true } } },
+        orderBy: { price: "asc" },
+        select: { price: true, compareAtPrice: true, name: true, quantity: true, unit: true },
       }),
-      prisma.storeProduct.aggregate({ where: buyable, _max: { sellingPrice: true } }),
+      prisma.productVariant.aggregate({ where: buyable, _max: { price: true } }),
     ]);
 
     return {
@@ -206,14 +211,30 @@ export function createProductsService(prisma: PrismaClient) {
       description: product.description,
       brand: product.brand?.name ?? null,
       imageUrl: product.images[0]?.url ?? null,
-      /** Null while no store has it in stock. `varies` when other variants or stores charge more. */
+      /** Null while nothing is in stock. `varies` when other variants cost more. */
       price: cheapest && {
-        sellingPrice: cheapest.sellingPrice.toFixed(2),
-        mrp: cheapest.mrp?.toFixed(2) ?? null,
-        label: variantLabel(cheapest.variant),
-        varies: !cheapest.sellingPrice.equals(highest._max.sellingPrice ?? cheapest.sellingPrice),
+        price: cheapest.price.toFixed(2),
+        compareAtPrice: cheapest.compareAtPrice?.toFixed(2) ?? null,
+        label: variantLabel(cheapest),
+        varies: !cheapest.price.equals(highest._max.price ?? cheapest.price),
       },
     };
+  }
+
+  /** Price, compare-at price or on/off of one variant, without resending the whole product. */
+  async function updateVariant(variantId: string, data: UpdateVariantInput) {
+    const existing = await prisma.productVariant.findUnique({ where: { id: variantId }, select: { price: true, compareAtPrice: true } });
+
+    if (!existing) {
+      throw new AppError(404, "VARIANT_NOT_FOUND", "Variant not found");
+    }
+
+    const problem = compareAtPriceProblem(data.price ?? existing.price, data.compareAtPrice === undefined ? existing.compareAtPrice : data.compareAtPrice);
+    if (problem) {
+      throw new AppError(400, "INVALID_PRICE", problem, { field: "compareAtPrice" });
+    }
+
+    return toVariantSummary(await prisma.productVariant.update({ where: { id: variantId }, data, select: variantSelect }));
   }
 
   async function createProduct({ slug, options, variants, ...data }: CreateProductInput) {
@@ -231,7 +252,7 @@ export function createProductsService(prisma: PrismaClient) {
       return product.id;
     });
 
-    return getProduct(id, { includeInactive: true });
+    return getProduct(id);
   }
 
   async function updateProduct(id: string, data: UpdateProductInput) {
@@ -240,7 +261,7 @@ export function createProductsService(prisma: PrismaClient) {
 
     await prisma.product.update({ where: { id }, data });
 
-    return getProduct(id, { includeInactive: true });
+    return getProduct(id);
   }
 
   async function setVariants(id: string, input: VariantsInput) {
@@ -252,7 +273,7 @@ export function createProductsService(prisma: PrismaClient) {
       await saveVariants(tx, id, input);
     });
 
-    return getProduct(id, { includeInactive: true });
+    return getProduct(id);
   }
 
   async function assertVariantOfProduct(productId: string, variantId: string | null | undefined) {
@@ -333,7 +354,7 @@ export function createProductsService(prisma: PrismaClient) {
   }
 
   /**
-   * Deletes products that were never ordered, with their variants, store listings, stock, cart
+   * Deletes products that were never ordered, with their variants, stock, cart
    * items, images and options. Ordered products are hidden instead, so past orders keep them.
    * Products picked on the home screen are left until they are removed there.
    */
@@ -385,5 +406,6 @@ export function createProductsService(prisma: PrismaClient) {
     deleteImage,
     reorderImages,
     deleteProducts,
+    updateVariant,
   };
 }

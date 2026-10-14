@@ -1,7 +1,6 @@
 "use server";
 
 import { ApiError, apiFetch } from "@/lib/api";
-import { idSchema } from "@/lib/form-schemas";
 import type { ImportJob, ImportPreview, ImportRowError } from "@/lib/types";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -13,12 +12,10 @@ export type StartImportResult =
 export type ImportStatusResult = { ok: true; job: ImportJob } | { ok: false; error: string };
 
 async function readUpload(formData: FormData) {
-  const storeId = formData.get("storeId");
   const file = formData.get("file");
-  if (!idSchema.safeParse(storeId).success) return { error: "Choose a store" };
   if (!(file instanceof File) || file.size === 0) return { error: "Choose a CSV file" };
   if (file.size > MAX_FILE_BYTES) return { error: "The file can be at most 5 MB" };
-  return { body: { storeId: storeId as string, csv: await file.text() } };
+  return { body: { csv: await file.text() } };
 }
 
 /** Checks the file without saving anything. */

@@ -4,7 +4,7 @@ import { Pressable, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { addressCoordinates, addressLabel, addressSummary } from "@/lib/addresses";
+import { addressLabel, addressSummary } from "@/lib/addresses";
 import { useCardSurface } from "@/lib/app-theme";
 import { formatPhone } from "@/lib/phone";
 import type { Address } from "@/lib/types";
@@ -17,7 +17,6 @@ type AddressCardProps = { address: Address; selected?: boolean; onPress?: () => 
 export function AddressCard({ address, selected = false, onPress, actions }: AddressCardProps) {
   const surface = useCardSurface();
   const icon = LABEL_ICONS[address.label?.toLowerCase() ?? ""] ?? MapPin;
-  const missingLocation = addressCoordinates(address) === null;
 
   return (
     <Pressable onPress={onPress} disabled={!onPress} className={cn("flex-row gap-3 rounded-lg p-4 active:opacity-80", surface, selected && "border-2 border-primary")}>
@@ -40,7 +39,6 @@ export function AddressCard({ address, selected = false, onPress, actions }: Add
         <Text className="text-xs text-muted-foreground">
           {address.name} · {formatPhone(address.phone)}
         </Text>
-        {missingLocation && <Text className="text-xs font-semibold text-destructive">Location missing. Edit this address to add it.</Text>}
       </View>
       {actions}
     </Pressable>

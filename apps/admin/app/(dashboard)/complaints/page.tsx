@@ -111,7 +111,7 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
                           {complaint.order.orderNumber}
                         </Link>
                         <div className="text-xs text-muted-foreground">
-                          {complaint.order.store.name} · {complaint.order.paymentMethod === "COD" ? "Cash" : "Online"} {money(complaint.order.total)}
+                          {complaint.order.paymentMethod === "COD" ? "Cash" : "Online"} {money(complaint.order.total)}
                         </div>
                       </TableCell>
                       <TableCell>

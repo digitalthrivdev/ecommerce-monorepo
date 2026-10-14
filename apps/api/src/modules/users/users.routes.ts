@@ -15,7 +15,6 @@ const meSelect = {
   email: true,
   role: true,
   isTestAccount: true,
-  store: { select: { id: true, name: true, code: true } },
 } satisfies Prisma.UserSelect;
 
 const usersRoutes: FastifyPluginAsync = async (app) => {

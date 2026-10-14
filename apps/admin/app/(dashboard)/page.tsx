@@ -4,13 +4,11 @@ import { Boxes, IndianRupee, PackageCheck, ShoppingBag, type LucideIcon } from "
 
 import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
-import { StoreFilter } from "@/components/store-filter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
-import { getCurrentUser } from "@/lib/dal";
 import { formatDateTime, formatMoney, formatNumber, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS } from "@/lib/format";
-import type { DashboardStats, Paginated, Store } from "@/lib/types";
+import type { DashboardStats } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -36,26 +34,14 @@ function StatCard({ title, value, hint, icon: Icon, href }: {
   return href ? <Link href={href}>{card}</Link> : card;
 }
 
-export default async function DashboardPage({ searchParams }: PageProps<"/">) {
-  const user = await getCurrentUser();
-  const isAdmin = user.role === "ADMIN";
-  const { storeId: requestedStoreId } = await searchParams;
-  const storeId = isAdmin && typeof requestedStoreId === "string" ? requestedStoreId : undefined;
-
-  const [stats, stores] = await Promise.all([
-    apiFetch<DashboardStats>("/dashboard", { query: { storeId } }),
-    isAdmin ? apiFetch<Paginated<Store>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
-  ]);
+export default async function DashboardPage() {
+  const stats = await apiFetch<DashboardStats>("/dashboard");
 
   const money = (amount: string) => formatMoney(amount, stats.currency);
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description={isAdmin ? "Today across your stores" : `Today at ${user.store?.name}`}
-        actions={stores && stores.items.length > 1 && <StoreFilter stores={stores.items} />}
-      />
+      <PageHeader title="Dashboard" description="Today at a glance" />
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -76,14 +62,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
             value={formatNumber(stats.activeOrders)}
             hint={`${stats.awaitingDispatch} ready to send`}
             icon={PackageCheck}
-            href={storeId ? `/orders?storeId=${storeId}` : "/orders"}
+            href="/orders"
           />
           <StatCard
             title="Low stock"
             value={formatNumber(stats.lowStock.count)}
-            hint={`Available products with ${stats.lowStock.threshold} or fewer in stock`}
+            hint={`Sizes on sale with ${stats.lowStock.threshold} or fewer in stock`}
             icon={Boxes}
-            href={storeId ? `/inventory?tab=low&storeId=${storeId}` : "/inventory?tab=low"}
+            href="/inventory?tab=low"
           />
         </div>
 
@@ -102,7 +88,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                     <TableRow>
                       <TableHead>Order</TableHead>
                       <TableHead>Customer</TableHead>
-                      {isAdmin && !storeId && <TableHead>Store</TableHead>}
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>
@@ -117,7 +102,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
                           <div className="text-xs text-muted-foreground">{formatDateTime(order.createdAt, stats.timezone)}</div>
                         </TableCell>
                         <TableCell>{order.customerName}</TableCell>
-                        {isAdmin && !storeId && <TableCell>{order.store.name}</TableCell>}
                         <TableCell>
                           <OrderStatusPill status={order.status} />
                         </TableCell>

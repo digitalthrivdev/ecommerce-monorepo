@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api";
-import { requireAdmin } from "@/lib/dal";
+import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import type { Brand, Category, Paginated, ProductListItem } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Products" };
@@ -24,7 +24,6 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 const oneOf = <T extends string>(value: string | undefined, allowed: readonly T[]) => (allowed as readonly string[]).includes(value ?? "") ? (value as T) : undefined;
 
 const STATUSES = ["active", "hidden"] as const;
-const SELLING = ["yes", "no"] as const;
 
 export default async function ProductsPage({ searchParams }: PageProps<"/products">) {
   await requireAdmin();
@@ -33,12 +32,11 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
   const categoryId = first(params.categoryId) || undefined;
   const brandId = first(params.brandId) || undefined;
   const status = oneOf(first(params.status), STATUSES);
-  const selling = oneOf(first(params.selling), SELLING);
   const outOfStock = first(params.stock) === "out";
   const missingTax = first(params.tax) === "missing";
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const [products, categories, brands, untaxed] = await Promise.all([
+  const [products, categories, brands, untaxed, settings] = await Promise.all([
     apiFetch<Paginated<ProductListItem>>("/products", {
       query: {
         includeInactive: true,
@@ -46,7 +44,6 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
         categoryId,
         brandId,
         status,
-        selling,
         outOfStock: outOfStock || undefined,
         missingTax: missingTax || undefined,
         limit: PAGE_SIZE,
@@ -56,9 +53,10 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
     apiFetch<Paginated<Category>>("/categories", { query: { includeInactive: true, limit: 200 } }),
     apiFetch<Paginated<Brand>>("/brands", { query: { includeInactive: true, limit: 200 } }),
     missingTax ? null : apiFetch<Paginated<ProductListItem>>("/products", { query: { includeInactive: true, missingTax: true, limit: 1 } }),
+    getPublicSettings(),
   ]);
 
-  const current = { q, categoryId, brandId, status, selling, stock: outOfStock ? "out" : undefined, tax: missingTax ? "missing" : undefined };
+  const current = { q, categoryId, brandId, status, stock: outOfStock ? "out" : undefined, tax: missingTax ? "missing" : undefined };
   const href = (changes: Partial<typeof current> & { page?: number }) => {
     const next = new URLSearchParams();
     for (const [key, value] of Object.entries({ ...current, ...changes, page: undefined })) if (value) next.set(key, String(value));
@@ -67,13 +65,13 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
     return query ? `/products?${query}` : "/products";
   };
   const lastPage = Math.max(1, Math.ceil(products.total / PAGE_SIZE));
-  const filtered = Boolean(q || categoryId || brandId || selling || outOfStock || missingTax);
+  const filtered = Boolean(q || categoryId || brandId || outOfStock || missingTax);
 
   return (
     <>
       <PageHeader
         title="Products"
-        description="The shared catalog. Prices and stock are set per store."
+        description="Everything the shop sells, with prices and stock"
         actions={
           <>
             <Button asChild variant="outline">
@@ -123,16 +121,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
             allLabel="All brands"
             options={brands.items.map((brand) => ({ value: brand.id, label: brand.name }))}
           />
-          <ParamSelect
-            param="selling"
-            label="Filter by selling"
-            allLabel="Selling or not"
-            options={[
-              { value: "yes", label: "Selling at a store" },
-              { value: "no", label: "Not selling anywhere" },
-            ]}
-          />
-          <ParamSelect param="stock" label="Filter by stock" allLabel="Any stock" options={[{ value: "out", label: "Out of stock somewhere" }]} />
+          <ParamSelect param="stock" label="Filter by stock" allLabel="Any stock" options={[{ value: "out", label: "A size out of stock" }]} />
           <ParamSelect param="tax" label="Filter by GST details" allLabel="Any GST details" options={[{ value: "missing", label: "Missing GST rate or HSN" }]} />
           {filtered && (
             <Button asChild variant="ghost" size="sm">
@@ -151,7 +140,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                 {filtered || status ? "No products match these filters." : "No products yet."}
               </p>
             ) : (
-              <ProductsTable products={products.items} />
+              <ProductsTable products={products.items} currency={settings.currency} />
             )}
           </CardContent>
         </Card>

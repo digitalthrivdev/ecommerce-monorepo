@@ -12,8 +12,8 @@ type Bill = { subtotal: string; deliveryFee: string; discount: string; total: st
 
 type BillDetailsProps = {
   bill: Bill;
-  /** What the items would cost at MRP; see `mrpTotal`. */
-  itemsMrp?: string;
+  /** What the items would cost at their compare-at prices; see `compareAtTotal`. */
+  itemsCompareAt?: string;
   /** The usual delivery fee, shown struck through when this bill's delivery is free. */
   regularDeliveryFee?: string;
   totalLabel?: string;
@@ -28,9 +28,9 @@ type BillDetailsProps = {
 const toPaise = (amount: string) => Math.round(Number(amount) * 100);
 const fromPaise = (paise: number) => (paise / 100).toFixed(2);
 
-/** MRP of the lines, using the selling price where a line has no MRP. Display only. */
-export function mrpTotal(lines: { mrp: string | null; unitPrice: string | null; quantity: number }[]) {
-  return fromPaise(lines.reduce((sum, line) => sum + toPaise(line.mrp ?? line.unitPrice ?? "0") * line.quantity, 0));
+/** Compare-at total of the lines, using the price where a line has no compare-at price. Display only. */
+export function compareAtTotal(lines: { compareAtPrice: string | null; unitPrice: string | null; quantity: number }[]) {
+  return fromPaise(lines.reduce((sum, line) => sum + toPaise(line.compareAtPrice ?? line.unitPrice ?? "0") * line.quantity, 0));
 }
 
 function BillRow({ label, value, strong = false, badge }: { label: string; value: ReactNode; strong?: boolean; badge?: ReactNode }) {
@@ -54,11 +54,11 @@ function Struck({ was, now, highlight = false }: { was: string; now: string; hig
   );
 }
 
-export function BillDetails({ bill, itemsMrp, regularDeliveryFee, totalLabel = "To pay", couponCode, stale = false, footer }: BillDetailsProps) {
+export function BillDetails({ bill, itemsCompareAt, regularDeliveryFee, totalLabel = "To pay", couponCode, stale = false, footer }: BillDetailsProps) {
   const { currency } = useSettings();
   const surface = useCardSurface();
   const free = toPaise(bill.deliveryFee) === 0;
-  const itemSavings = itemsMrp ? Math.max(0, toPaise(itemsMrp) - toPaise(bill.subtotal)) : 0;
+  const itemSavings = itemsCompareAt ? Math.max(0, toPaise(itemsCompareAt) - toPaise(bill.subtotal)) : 0;
   const deliverySavings = free && regularDeliveryFee ? toPaise(regularDeliveryFee) : 0;
   const totalSavings = itemSavings + deliverySavings + toPaise(bill.discount);
 
@@ -76,7 +76,7 @@ export function BillDetails({ bill, itemsMrp, regularDeliveryFee, totalLabel = "
             ) : null
           }
           value={
-            itemSavings > 0 ? <Struck was={formatMoney(itemsMrp!, currency)} now={formatMoney(bill.subtotal, currency)} /> : formatMoney(bill.subtotal, currency)
+            itemSavings > 0 ? <Struck was={formatMoney(itemsCompareAt!, currency)} now={formatMoney(bill.subtotal, currency)} /> : formatMoney(bill.subtotal, currency)
           }
         />
         <BillRow

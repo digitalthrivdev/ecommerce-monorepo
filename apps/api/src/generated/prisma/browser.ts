@@ -28,15 +28,10 @@ export type User = Prisma.UserModel
  */
 export type Address = Prisma.AddressModel
 /**
- * Model Store
+ * Model PickupLocation
  * 
  */
-export type Store = Prisma.StoreModel
-/**
- * Model StoreHours
- * 
- */
-export type StoreHours = Prisma.StoreHoursModel
+export type PickupLocation = Prisma.PickupLocationModel
 /**
  * Model Category
  * 
@@ -77,11 +72,6 @@ export type ProductVariantOptionValue = Prisma.ProductVariantOptionValueModel
  * 
  */
 export type ProductImage = Prisma.ProductImageModel
-/**
- * Model StoreProduct
- * 
- */
-export type StoreProduct = Prisma.StoreProductModel
 /**
  * Model Inventory
  * 

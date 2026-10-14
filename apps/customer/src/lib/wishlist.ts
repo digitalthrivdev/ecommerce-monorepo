@@ -18,11 +18,11 @@ export function useWishlistIds() {
   return query.data;
 }
 
-/** Saved products, newest first, with the store's price and stock when there is a store. */
-export function useWishlist(storeId: string | undefined) {
+/** Saved products, newest first, with their price and stock. */
+export function useWishlist() {
   return useInfiniteQuery({
-    queryKey: ["wishlist", "items", storeId ?? null],
-    queryFn: ({ pageParam }) => apiFetch<Paginated<WishlistItem>>("/wishlist", { query: { storeId, limit: PAGE_SIZE, offset: pageParam } }),
+    queryKey: ["wishlist", "items"],
+    queryFn: ({ pageParam }) => apiFetch<Paginated<WishlistItem>>("/wishlist", { query: { limit: PAGE_SIZE, offset: pageParam } }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
   });

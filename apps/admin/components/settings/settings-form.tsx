@@ -139,7 +139,7 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
         </Panel>
       </Section>
 
-      <Section title="Delivery time" hint="Shown at the top of the customer app's home page and at checkout while the store is open.">
+      <Section title="Delivery time" hint="Shown at the top of the customer app's home page and at checkout.">
         <Panel className="p-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <TextField

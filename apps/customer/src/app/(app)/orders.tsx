@@ -36,7 +36,7 @@ function OrderRow({ order, currency }: { order: OrderSummary; currency: string }
       <View className="flex-1 gap-1.5">
         <View className="flex-row items-center justify-between gap-2">
           <Text className="flex-1 text-[15px] font-bold" numberOfLines={1}>
-            {order.store.name}
+            Order {order.orderNumber}
           </Text>
           <View className={cn("rounded-full px-2 py-0.5", tone.box)}>
             <Text className={cn("text-[11px] font-bold", tone.text)}>{ORDER_STATUS_TEXT[order.status].title}</Text>

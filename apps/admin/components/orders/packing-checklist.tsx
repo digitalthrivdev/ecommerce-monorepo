@@ -12,7 +12,7 @@ import type { OrderDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type ChecklistProps = {
-  order: Pick<OrderDetail, "id" | "status" | "items" | "allowedActions"> & { store: { id: string } };
+  order: Pick<OrderDetail, "id" | "status" | "items" | "allowedActions">;
   currency: string;
 };
 
@@ -108,7 +108,6 @@ export function PackingChecklist({ order, currency }: ChecklistProps) {
               </Main>
               {canMarkUnavailable && !gone && (
                 <MarkUnavailableDialog
-                  storeId={order.store.id}
                   orderId={order.id}
                   item={item}
                   className={cn("ml-11 sm:ml-0", !packing && "ml-0")}
@@ -121,7 +120,6 @@ export function PackingChecklist({ order, currency }: ChecklistProps) {
 
       {packing && (
         <NextStepButton
-          storeId={order.store.id}
           orderId={order.id}
           status={order.status}
           allowedActions={order.allowedActions}

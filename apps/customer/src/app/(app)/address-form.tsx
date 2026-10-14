@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Check, LocateFixed, MapPin } from "lucide-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,11 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
-import { addressCoordinates, useAddresses, useSaveAddress } from "@/lib/addresses";
+import { addressCoordinates, useAddresses, useDeliveryAddress, useSaveAddress } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { PHONE_COUNTRY_CODE, PHONE_NATIONAL_LENGTH } from "@/lib/config";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { matchState } from "@/lib/indian-states";
 import { describePlace, getCurrentCoordinates, type PlaceDetails } from "@/lib/location";
 import { mapsAvailable } from "@/lib/maps";
@@ -40,7 +39,7 @@ type Fields = {
   name: string;
   phone: string;
 };
-type FieldErrors = Partial<Record<keyof Fields | "location", string>>;
+type FieldErrors = Partial<Record<keyof Fields, string>>;
 
 const nationalPart = (e164: string) => (e164.startsWith(PHONE_COUNTRY_CODE) ? e164.slice(PHONE_COUNTRY_CODE.length) : "");
 
@@ -59,9 +58,8 @@ function initialFields(address: Address | undefined, user: { name: string | null
   };
 }
 
-function validate(fields: Fields, coordinates: Coordinates | null): FieldErrors {
+function validate(fields: Fields): FieldErrors {
   const errors: FieldErrors = {};
-  if (!coordinates) errors.location = "We need your location to check that we deliver there.";
   if (!fields.addressLine1.trim()) errors.addressLine1 = "Enter your house or flat number";
   if (!fields.city.trim()) errors.city = "Enter the city";
   if (!fields.state) errors.state = "Choose your state";
@@ -75,12 +73,12 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { user } = useSession();
-  const { location, selectAddress } = useDeliveryLocation();
+  const { select } = useDeliveryAddress();
   const save = useSaveAddress();
   const [fields, setFields] = useState(() => initialFields(address, user));
   const [coordinates, setCoordinates] = useState<Coordinates | null>(() => (address ? addressCoordinates(address) : null));
   const [pinnedPlace, setPinnedPlace] = useState<string | null>(null);
-  const [mapOpen, setMapOpen] = useState(!address && mapsAvailable);
+  const [mapOpen, setMapOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -96,7 +94,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
   const pin = useCallback((found: Coordinates, place: PlaceDetails | null) => {
     setCoordinates(found);
     setPinnedPlace(place?.summary || null);
-    setErrors((current) => ({ ...current, location: undefined }));
     if (place) {
       setFields((current) => ({
         ...current,
@@ -124,18 +121,11 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
 
   const setLocation = mapsAvailable ? () => setMapOpen(true) : detect;
 
-  const detectedOnOpen = useRef(false);
-  useEffect(() => {
-    if (address || mapsAvailable || detectedOnOpen.current) return;
-    detectedOnOpen.current = true;
-    detect();
-  }, [address, detect]);
-
   async function submit() {
     setFormError(null);
-    const found = validate(fields, coordinates);
+    const found = validate(fields);
     setErrors(found);
-    if (Object.values(found).some(Boolean) || !coordinates) return;
+    if (Object.values(found).some(Boolean)) return;
 
     try {
       const saved = await save.mutateAsync({
@@ -155,8 +145,8 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
         },
       });
       if (selectAfterSave) {
-        selectAddress(saved);
-        // Close this form and the location picker under it, returning to wherever the picker was opened.
+        select(saved);
+        // Close this form and the address picker under it, returning to wherever the picker was opened.
         router.dismiss(2);
       } else {
         router.back();
@@ -179,7 +169,7 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
         <Pressable
           onPress={setLocation}
           disabled={locating}
-          className={cn("gap-2 rounded-lg border bg-card px-4 py-3.5 active:bg-accent", errors.location ? "border-destructive" : "border-border")}
+          className="gap-2 rounded-lg border border-border bg-card px-4 py-3.5 active:bg-accent"
         >
           <View className="flex-row items-center gap-3">
             {locating ? (
@@ -195,7 +185,7 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
                     ? mapsAvailable
                       ? "Pinned on the map"
                       : "Pinned to your location"
-                    : "Location not set"}
+                    : "Map pin (optional)"}
               </Text>
               {pinnedPlace && !locating ? (
                 <Text className="text-xs text-muted-foreground" numberOfLines={1}>
@@ -207,10 +197,10 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
           </View>
           <Text className="text-xs text-muted-foreground">
             {mapsAvailable
-              ? "Place the pin on your building's entrance, so we find you easily."
-              : "Stand at the delivery address when you set this, so we find you easily."}
+              ? "Place the pin on your building's entrance, so the courier finds you easily."
+              : "Stand at the delivery address when you set this, so the courier finds you easily."}
           </Text>
-          {(locationError || errors.location) && <Text className="text-xs text-destructive">{locationError ?? errors.location}</Text>}
+          {locationError && <Text className="text-xs text-destructive">{locationError}</Text>}
         </Pressable>
 
         <View className="gap-1.5">
@@ -278,7 +268,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
         <MapPinPicker
           visible={mapOpen}
           initial={coordinates}
-          fallback={location}
           onClose={() => setMapOpen(false)}
           onConfirm={(found, place) => {
             pin(found, place);

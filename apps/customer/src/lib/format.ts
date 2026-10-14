@@ -38,7 +38,6 @@ export function shortfall(target: string, amount: string) {
   return (Math.max(0, Math.round(Number(target) * 100) - Math.round(Number(amount) * 100)) / 100).toFixed(2);
 }
 
-/** Whole-percent discount from MRP, or null when there is none. */
 const BASE_UNITS: Record<string, { per: string; size: number }> = {
   g: { per: "kg", size: 1000 },
   gm: { per: "kg", size: 1000 },
@@ -50,16 +49,17 @@ const BASE_UNITS: Record<string, { per: string; size: number }> = {
 };
 
 /** "₹43.80/kg" for packs measured by weight or volume, unless the pack is exactly 1 kg or 1 L. Display only. */
-export function unitPrice(sellingPrice: string, quantity: string | null, unit: string | null, currency: string) {
+export function unitPrice(price: string, quantity: string | null, unit: string | null, currency: string) {
   const base = unit ? BASE_UNITS[unit.trim().toLowerCase()] : undefined;
   const packs = Number(quantity) / (base?.size ?? 1);
   if (!base || !(packs > 0) || packs === 1) return null;
-  return `${formatMoney((Number(sellingPrice) / packs).toFixed(2), currency)}/${base.per}`;
+  return `${formatMoney((Number(price) / packs).toFixed(2), currency)}/${base.per}`;
 }
 
-export function discountPercent(sellingPrice: string, mrp: string | null) {
-  if (!mrp) return null;
-  const [price, max] = [Math.round(Number(sellingPrice) * 100), Math.round(Number(mrp) * 100)];
-  if (!(max > price)) return null;
-  return Math.floor(((max - price) * 100) / max) || null;
+/** Whole-percent discount from the compare-at price, or null when there is none. */
+export function discountPercent(price: string, compareAtPrice: string | null) {
+  if (!compareAtPrice) return null;
+  const [paise, max] = [Math.round(Number(price) * 100), Math.round(Number(compareAtPrice) * 100)];
+  if (!(max > paise)) return null;
+  return Math.floor(((max - paise) * 100) / max) || null;
 }

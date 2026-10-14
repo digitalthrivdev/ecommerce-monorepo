@@ -23,7 +23,6 @@ const IMAGE_WORKERS = 4;
 
 export type ImportJob = {
   id: string;
-  store: { id: string; name: string };
   status: "running" | "done" | "failed" | "interrupted";
   phase: "catalog" | "images" | "finished";
   progress: { done: number; total: number };
@@ -183,7 +182,6 @@ export function createImportJobs(deps: {
     const now = new Date().toISOString();
     const job: ImportJob = {
       id,
-      store: plan.store,
       status: "running",
       phase: "catalog",
       progress: { done: 0, total: plan.groups.length },

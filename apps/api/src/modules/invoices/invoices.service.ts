@@ -1,4 +1,4 @@
-import { OrderStatus, UserRole, type Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { OrderStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { buildInvoice, invoiceFileName, invoiceSelect } from "./invoice.js";
 import { INVOICE_LINK_TTL_MS, createInvoiceToken, readInvoiceToken } from "./invoice-link.js";
@@ -28,16 +28,9 @@ export function createInvoicesService(prisma: PrismaClient) {
     return invoicePdf({ id: orderId, userId });
   }
 
-  /** Admins: any order. Store staff: orders of their store only; others are not found. */
-  async function forDashboard(user: { sub: string; role: UserRole }, orderId: string) {
-    if (user.role === UserRole.ADMIN) {
-      return invoicePdf({ id: orderId });
-    }
-    const staff = await prisma.user.findUnique({ where: { id: user.sub }, select: { role: true, storeId: true } });
-    if (staff?.role !== UserRole.STORE_STAFF || !staff.storeId) {
-      throw new AppError(403, "FORBIDDEN", "You do not have access to this resource");
-    }
-    return invoicePdf({ id: orderId, storeId: staff.storeId });
+  /** Admins and staff: any order. */
+  function forDashboard(orderId: string) {
+    return invoicePdf({ id: orderId });
   }
 
   /** A short-lived link to the customer's invoice that works without the app's access token. */

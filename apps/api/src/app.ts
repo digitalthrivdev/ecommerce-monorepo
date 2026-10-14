@@ -25,17 +25,21 @@ import adminOrdersRoutes from "./modules/orders/admin-orders.routes.js";
 import dashboardRoutes from "./modules/orders/dashboard.routes.js";
 import ordersRoutes from "./modules/orders/orders.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
-import storeOrdersRoutes from "./modules/orders/store-orders.routes.js";
-import { productsRoutes, storeBrandsRoutes, storeProductsRoutes, storeVariantsRoutes } from "./modules/products/products.routes.js";
-import { adminRatingsRoutes, customerRatingsRoutes, storeRatingsRoutes } from "./modules/ratings/ratings.routes.js";
+import {
+  catalogBrandsRoutes,
+  catalogProductsRoutes,
+  productsRoutes,
+  variantsRoutes,
+} from "./modules/products/products.routes.js";
+import { adminRatingsRoutes, customerRatingsRoutes } from "./modules/ratings/ratings.routes.js";
 import { adminReviewsRoutes, orderReviewsRoutes, productReviewsRoutes } from "./modules/reviews/reviews.routes.js";
 import reportsRoutes from "./modules/reports/reports.routes.js";
 import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
-import staffRoutes from "./modules/stores/staff.routes.js";
-import storesRoutes from "./modules/stores/stores.routes.js";
+import pickupLocationsRoutes from "./modules/shipping/pickup-locations.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import customersRoutes from "./modules/users/customers.routes.js";
+import staffRoutes from "./modules/users/staff.routes.js";
 import usersRoutes from "./modules/users/users.routes.js";
 import wishlistRoutes from "./modules/wishlist/wishlist.routes.js";
 
@@ -82,16 +86,15 @@ export async function buildApp() {
 
   await app.register(authRoutes, { prefix: "/auth" });
   await app.register(usersRoutes, { prefix: "/users" });
-  await app.register(storesRoutes, { prefix: "/stores" });
   await app.register(categoriesRoutes, { prefix: "/categories" });
   await app.register(brandsRoutes, { prefix: "/brands" });
   await app.register(productsRoutes, { prefix: "/products" });
   await app.register(productReviewsRoutes, { prefix: "/products" });
   await app.register(catalogImportRoutes, { prefix: "/catalog-imports" });
-  await app.register(storeProductsRoutes, { prefix: "/stores/:storeId/products" });
-  await app.register(storeBrandsRoutes, { prefix: "/stores/:storeId/brands" });
-  await app.register(storeVariantsRoutes, { prefix: "/stores/:storeId/variants" });
-  await app.register(inventoryRoutes, { prefix: "/stores/:storeId/inventory" });
+  await app.register(catalogProductsRoutes, { prefix: "/catalog/products" });
+  await app.register(catalogBrandsRoutes, { prefix: "/catalog/brands" });
+  await app.register(variantsRoutes, { prefix: "/variants" });
+  await app.register(inventoryRoutes, { prefix: "/inventory" });
   await app.register(cartRoutes, { prefix: "/cart" });
   await app.register(wishlistRoutes, { prefix: "/wishlist" });
   await app.register(ordersRoutes, { prefix: "/orders" });
@@ -99,9 +102,8 @@ export async function buildApp() {
   await app.register(customerRatingsRoutes, { prefix: "/orders/:id/rating" });
   await app.register(orderReviewsRoutes, { prefix: "/orders/:id/reviews" });
   await app.register(paymentsRoutes, { prefix: "/payments" });
-  await app.register(staffRoutes, { prefix: "/stores/:storeId/staff" });
-  await app.register(storeOrdersRoutes, { prefix: "/stores/:storeId/orders" });
-  await app.register(storeRatingsRoutes, { prefix: "/stores/:storeId/ratings" });
+  await app.register(staffRoutes, { prefix: "/staff" });
+  await app.register(pickupLocationsRoutes, { prefix: "/pickup-locations" });
   await app.register(adminOrdersRoutes, { prefix: "/admin/orders" });
   await app.register(dashboardInvoiceRoutes, { prefix: "/admin/orders" });
   await app.register(invoiceLinkRoutes, { prefix: "/invoices" });

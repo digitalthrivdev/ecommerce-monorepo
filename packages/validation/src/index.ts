@@ -20,24 +20,18 @@ export const GST_RATE_PATTERN = /^\d{1,2}(\.\d{1,2})?$/;
 
 export const HSN_PATTERN = /^\d{4,8}$/;
 
-/** FSSAI licence number. */
-export const FSSAI_PATTERN = /^\d{14}$/;
-
-/** Upper case, e.g. AMUL-MILK-1L. */
+/** Upper case, e.g. TSHIRT-M-BLUE. */
 export const SKU_PATTERN = /^[A-Z0-9][A-Z0-9._-]{0,63}$/;
 
 export const BARCODE_PATTERN = /^[0-9A-Za-z-]{4,32}$/;
 
-/** Upper case, e.g. BLR-KRM-01. */
-export const STORE_CODE_PATTERN = /^[A-Z0-9-]{2,32}$/;
+/** Indian postal code (PIN): 6 digits, not starting with 0. */
+export const PINCODE_PATTERN = /^[1-9]\d{5}$/;
 
 /** Upper case, e.g. WELCOME50. */
 export const COUPON_CODE_PATTERN = /^[A-Z0-9]{3,20}$/;
 
 export const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
-
-/** 24-hour time, e.g. 07:00. */
-export const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /**
  * States and union territories with their GST codes. Older codes still on some registrations come

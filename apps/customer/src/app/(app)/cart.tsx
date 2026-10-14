@@ -12,16 +12,15 @@ import {
   ShoppingBag,
   TicketPercent,
   Trash2,
-  TriangleAlert,
   X,
   type LucideIcon,
 } from "lucide-react-native";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { QuantityStepper } from "@/components/add-to-cart";
-import { BillDetails, mrpTotal } from "@/components/bill-details";
+import { BillDetails, compareAtTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -29,19 +28,17 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { addressSummary, useAddresses } from "@/lib/addresses";
+import { addressLabel, addressSummary, useDeliveryAddress } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { ProductRow } from "@/components/product-row";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { CART_KEY, checkoutBlocker, codUnavailableText, useCart, useCartActions, useCartUpdating, useCouponActions, visibleItems } from "@/lib/cart";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { formatMoney } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { usePlaceOrder } from "@/lib/orders";
 import { useAlsoBought } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
-import { closedText } from "@/lib/store-hours";
 import type { Cart, CartCoupon, CartItem, OrderDetail, PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -64,10 +61,6 @@ function showOrderError(error: unknown) {
     Alert.alert("Your cart has changed", cartChangeMessage(error));
     return;
   }
-  if (error instanceof ApiError && error.code === "STORE_CLOSED") {
-    Alert.alert("Store closed", error.message);
-    return;
-  }
   if (error instanceof ApiError && error.code.startsWith("COUPON_")) {
     Alert.alert("Coupon can't be used", `${error.message}. Remove it to order without the discount.`);
     return;
@@ -83,7 +76,7 @@ const PAYMENT_TEXT: Record<PaymentMethod, { icon: LucideIcon; title: string }> =
 function CartLine({ item, currency }: { item: CartItem; currency: string }) {
   const { setQuantity } = useCartActions();
   const [failed, setFailed] = useState(false);
-  const blockedText = item.issue === "UNAVAILABLE" ? "No longer sold at this store" : item.issue === "OUT_OF_STOCK" ? "Out of stock" : null;
+  const blockedText = item.issue === "UNAVAILABLE" ? "No longer available" : item.issue === "OUT_OF_STOCK" ? "Out of stock" : null;
   const blocked = blockedText !== null;
   const fix =
     item.issue === "INSUFFICIENT_STOCK"
@@ -91,7 +84,7 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
       : item.issue === "QUANTITY_LIMIT"
         ? { text: `Max ${item.maxQuantity} per order`, quantity: item.maxQuantity }
         : null;
-  const lineMrp = item.mrp && item.mrp !== item.unitPrice ? mrpTotal([item]) : null;
+  const lineCompareAt = item.compareAtPrice && item.compareAtPrice !== item.unitPrice ? compareAtTotal([item]) : null;
 
   return (
     <View className="flex-row gap-3 py-3">
@@ -134,23 +127,11 @@ function CartLine({ item, currency }: { item: CartItem; currency: string }) {
         )}
         {item.lineTotal && !blocked && (
           <View className="flex-row items-baseline gap-1.5">
-            {lineMrp && <Text className="text-xs text-muted-foreground line-through">{formatMoney(lineMrp, currency)}</Text>}
+            {lineCompareAt && <Text className="text-xs text-muted-foreground line-through">{formatMoney(lineCompareAt, currency)}</Text>}
             <Text className="text-sm font-extrabold">{formatMoney(item.lineTotal, currency)}</Text>
           </View>
         )}
       </View>
-    </View>
-  );
-}
-
-function Notice({ children, action }: { children: ReactNode; action?: ReactNode }) {
-  return (
-    <View className="mx-4 gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-      <View className="flex-row gap-2">
-        <Icon as={TriangleAlert} size={18} className="text-destructive" />
-        <Text className="flex-1 text-sm text-foreground">{children}</Text>
-      </View>
-      {action}
     </View>
   );
 }
@@ -162,7 +143,7 @@ function EmptyCart() {
         <Icon as={ShoppingBag} size={34} className="text-muted-foreground" />
       </View>
       <Text className="text-center text-lg font-extrabold">Your cart is empty</Text>
-      <Text className="text-center text-sm text-muted-foreground">Add items from your nearest store to get started.</Text>
+      <Text className="text-center text-sm text-muted-foreground">Add some items to get started.</Text>
       <Button onPress={() => router.navigate("/")} className="mt-1 h-11 rounded-lg px-6">
         <Text className="font-semibold">Start shopping</Text>
       </Button>
@@ -289,8 +270,8 @@ function CouponCard({ coupon, discount, currency }: { coupon: CartCoupon | null;
   );
 }
 
-function CartSuggestions({ storeId, items }: { storeId: string | undefined; items: CartItem[] }) {
-  const query = useAlsoBought(storeId, [...new Set(items.map((item) => item.productId))]);
+function CartSuggestions({ items }: { items: CartItem[] }) {
+  const query = useAlsoBought([...new Set(items.map((item) => item.productId))]);
   return <ProductRow title="You might also like" products={query.data?.items ?? []} />;
 }
 
@@ -300,9 +281,7 @@ function CartContent({ cart }: { cart: Cart }) {
   const { colors } = useAppTheme();
   const settings = useSettings();
   const { currency, payments, pricing } = settings;
-  const { location, store } = useDeliveryLocation();
-  const addresses = useAddresses();
-  const { clear } = useCartActions();
+  const { address } = useDeliveryAddress();
   const queryClient = useQueryClient();
   const updating = useCartUpdating();
   const placeOrder = usePlaceOrder();
@@ -311,15 +290,12 @@ function CartContent({ cart }: { cart: Cart }) {
 
   const items = visibleItems(cart);
   const orderable = items.filter((item) => item.issue === null);
-  const address = location?.kind === "address" ? addresses.data?.find((saved) => saved.id === location.addressId) : undefined;
-  const blocker = checkoutBlocker(cart, store, settings);
+  const blocker = checkoutBlocker(cart, settings);
   const methods = cart.checkout?.paymentMethods ?? payments.methods;
   const payWith = methods.includes(method) ? method : (methods[0] ?? method);
   const codNote = codUnavailableText(cart, currency);
-  const otherStore = store && cart.store && cart.store.id !== store.id ? cart.store : null;
-  const closed = store && !otherStore && !cart.storeIsOpen ? closedText(store, settings.timezone) : null;
-  const promise = store && cart.store && !otherStore && cart.storeIsOpen ? (settings.deliveryPromiseMinutes ?? null) : null;
-  const changeAddress = () => router.push("/location");
+  const promise = settings.deliveryPromiseMinutes ?? null;
+  const changeAddress = () => router.push("/select-address");
 
   // mutateAsync, not mutate callbacks: those are dropped if this screen unmounts first.
   async function submit() {
@@ -343,36 +319,14 @@ function CartContent({ cart }: { cart: Cart }) {
   return (
     <>
       <ScrollView contentContainerClassName="gap-4 pb-6 pt-1">
-        {otherStore ? (
-          <Notice
-            action={
-              <View className="flex-row gap-2">
-                <Button variant="outline" onPress={clear} className="h-9 flex-1 rounded-md">
-                  <Text className="text-sm font-semibold">Clear cart</Text>
-                </Button>
-                <Button variant="outline" onPress={changeAddress} className="h-9 flex-1 rounded-md">
-                  <Text className="text-sm font-semibold">Change location</Text>
-                </Button>
-              </View>
-            }
-          >
-            These items are from {otherStore.name}, which doesn&apos;t deliver to {location?.label ?? "your location"}. Clear the cart to shop from your nearest store.
-          </Notice>
-        ) : closed ? (
-          <Notice>{closed} You can keep adding items and check out once it opens.</Notice>
-        ) : null}
-
         <View className={cn("mx-4 rounded-lg px-3", surface)}>
           <View className="flex-row items-center gap-3 pt-3">
             <View className="size-9 items-center justify-center rounded-full bg-primary/10">
               <Icon as={promise ? Clock : ShoppingBag} size={18} className="text-primary" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-extrabold">
-                {promise ? `Delivery in about ${promise} minutes` : cart.store ? `From ${cart.store.name}` : "Your items"}
-              </Text>
+              <Text className="text-base font-extrabold">{promise ? `Delivery in about ${promise} minutes` : "Your items"}</Text>
               <Text className="text-xs text-muted-foreground">
-                {promise && cart.store ? `From ${cart.store.name} · ` : ""}
                 {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"}
               </Text>
             </View>
@@ -384,14 +338,14 @@ function CartContent({ cart }: { cart: Cart }) {
           ))}
         </View>
 
-        {!otherStore && <CartSuggestions storeId={store?.id} items={items} />}
+        <CartSuggestions items={items} />
 
-        {!otherStore && <CouponCard coupon={cart.coupon} discount={cart.bill?.discount ?? null} currency={currency} />}
+        <CouponCard coupon={cart.coupon} discount={cart.bill?.discount ?? null} currency={currency} />
 
         {cart.bill && (
           <BillDetails
             bill={cart.bill}
-            itemsMrp={mrpTotal(orderable)}
+            itemsCompareAt={compareAtTotal(orderable)}
             regularDeliveryFee={pricing.deliveryFee}
             couponCode={cart.coupon?.applied ? cart.coupon.code : null}
             stale={updating}
@@ -403,7 +357,7 @@ function CartContent({ cart }: { cart: Cart }) {
           <View className="flex-1 gap-0.5">
             <Text className="text-sm font-bold">Cancellation policy</Text>
             <Text className="text-xs leading-4 text-muted-foreground">
-              You can cancel your order until the store accepts it. If you paid online, the full amount is refunded.
+              You can cancel your order until it is accepted. If you paid online, the full amount is refunded.
             </Text>
           </View>
         </View>
@@ -416,14 +370,10 @@ function CartContent({ cart }: { cart: Cart }) {
           </View>
           <View className="flex-1">
             <Text className="text-sm font-bold" numberOfLines={1}>
-              {address ? `Delivering to ${location?.label ?? "your address"}` : "Where should we deliver?"}
+              {address ? `Delivering to ${addressLabel(address)}` : "Where should we deliver?"}
             </Text>
             <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-              {address
-                ? addressSummary(address)
-                : location?.kind === "current"
-                  ? "Orders go to a saved address. Choose or add one."
-                  : "Choose a saved address for delivery."}
+              {address ? addressSummary(address) : "Choose a saved address for delivery."}
             </Text>
           </View>
           <Text className="text-sm font-bold text-primary">{address ? "Change" : "Choose"}</Text>

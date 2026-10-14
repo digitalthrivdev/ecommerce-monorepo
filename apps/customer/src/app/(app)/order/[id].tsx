@@ -10,10 +10,8 @@ import {
   Headset,
   MapPin,
   MessageSquareWarning,
-  Phone,
   ShoppingBag,
   Star,
-  Store,
   Wallet,
   type LucideIcon,
 } from "lucide-react-native";
@@ -21,7 +19,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ActivityIndicator, Alert, Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BillDetails, mrpTotal } from "@/components/bill-details";
+import { BillDetails, compareAtTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { FormField } from "@/components/form-field";
 import { QueryError } from "@/components/query-error";
@@ -352,8 +350,8 @@ function NotificationsCard() {
 
 function HelpCard({ order }: { order: OrderDetail }) {
   const { support } = useSettings();
-  const phone = support.phone ?? (isLive(order) ? null : order.store.phone);
-  if (phone) {
+  if (support.phone) {
+    const phone = support.phone;
     return <InfoCard icon={Headset} title="Need help?" detail="Call us about any issue with your order." action={{ label: "Call support", onPress: () => Linking.openURL(`tel:${phone}`) }} />;
   }
   if (support.email) {
@@ -406,7 +404,7 @@ function OrderBody({ order }: { order: OrderDetail }) {
   const invoice = useOpenInvoice(order.id);
   const address = order.deliveryAddress;
   const live = isLive(order);
-  const chargedLines = order.items.map((item) => ({ mrp: item.mrp, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
+  const chargedLines = order.items.map((item) => ({ compareAtPrice: item.compareAtPrice, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
 
   const confirmCancel = () =>
     Alert.alert("Cancel order?", order.payment?.status === "PAID" ? "Your payment will be refunded." : "This can't be undone.", [
@@ -426,20 +424,6 @@ function OrderBody({ order }: { order: OrderDetail }) {
 
       <ComplaintCard order={order} />
 
-      {live && order.store.phone && (
-        <InfoCard
-          icon={Store}
-          title={order.store.name}
-          detail="Call the store about the items in your order"
-          right={
-            <Button variant="outline" size="sm" onPress={() => Linking.openURL(`tel:${order.store.phone}`)} className="h-9 rounded-md">
-              <Icon as={Phone} size={16} />
-              <Text className="font-semibold">Call</Text>
-            </Button>
-          }
-        />
-      )}
-
       {!isOrderFinished(order.status) && <NotificationsCard />}
 
       <InfoCard icon={MapPin} title="Your delivery details">
@@ -454,7 +438,7 @@ function OrderBody({ order }: { order: OrderDetail }) {
 
       <HelpCard order={order} />
 
-      <InfoCard icon={ShoppingBag} title="Order summary" detail={`Order ${order.orderNumber} · ${order.store.name}`}>
+      <InfoCard icon={ShoppingBag} title="Order summary" detail={`Order ${order.orderNumber}`}>
         {order.items.map((item) => (
           <OrderItemRow key={item.id} item={item} currency={currency} />
         ))}
@@ -462,7 +446,7 @@ function OrderBody({ order }: { order: OrderDetail }) {
 
       <BillDetails
         bill={order}
-        itemsMrp={mrpTotal(chargedLines)}
+        itemsCompareAt={compareAtTotal(chargedLines)}
         totalLabel="Total"
         couponCode={order.couponCode}
         footer={

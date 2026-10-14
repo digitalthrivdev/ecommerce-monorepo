@@ -49,6 +49,12 @@ export const customerVisibleProduct = {
   category: { isActive: true, OR: [{ parentId: null }, { parent: { isActive: true } }] },
 } satisfies Prisma.ProductWhereInput;
 
+/** A variant customers can buy, stock permitting: active, of a visible product. */
+export const customerVisibleVariant = {
+  isActive: true,
+  product: customerVisibleProduct,
+} satisfies Prisma.ProductVariantWhereInput;
+
 /** A category also matches the products of its sub-categories. */
 export function inCategory(categoryId: string): Prisma.ProductWhereInput {
   return { OR: [{ categoryId }, { category: { parentId: categoryId } }] };

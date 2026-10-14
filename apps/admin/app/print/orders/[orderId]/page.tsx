@@ -4,21 +4,20 @@ import { ChevronLeft } from "lucide-react";
 
 import { PrintOnLoad } from "@/components/orders/print-on-load";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, getPublicSettings } from "@/lib/dal";
+import { getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { getOrder } from "@/lib/orders";
 
 export async function generateMetadata({ params }: PageProps<"/print/orders/[orderId]">): Promise<Metadata> {
   const { orderId } = await params;
-  const order = await getOrder(await getCurrentUser(), orderId);
+  const order = await getOrder(orderId);
   return { title: `Packing slip ${order.orderNumber}` };
 }
 
 /** A plain packing slip to print and put in the bag. Not a tax invoice: the shop's GSTIN isn't stored. */
 export default async function PackingSlipPage({ params }: PageProps<"/print/orders/[orderId]">) {
   const { orderId } = await params;
-  const user = await getCurrentUser();
-  const [order, settings] = await Promise.all([getOrder(user, orderId), getPublicSettings()]);
+  const [order, settings] = await Promise.all([getOrder(orderId), getPublicSettings()]);
 
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const address = order.deliveryAddress;
@@ -43,13 +42,7 @@ export default async function PackingSlipPage({ params }: PageProps<"/print/orde
               // eslint-disable-next-line @next/next/no-img-element -- uploaded or admin-entered URLs from any host
               <img src={settings.branding.logoUrl} alt="" className="size-12 object-contain" />
             )}
-            <div>
-              <p className="text-lg font-bold">{settings.appName}</p>
-              <p className="text-black/70">
-                {order.store.name}
-                {order.store.phone && ` · ${order.store.phone}`}
-              </p>
-            </div>
+            <p className="text-lg font-bold">{settings.appName}</p>
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold tracking-wider text-black/60 uppercase">Packing slip</p>

@@ -13,7 +13,7 @@ import { isDashboardRole, type CurrentUser, type DashboardUser, type PublicSetti
 export const getCurrentUser = cache(async (): Promise<DashboardUser> => {
   const user = await apiFetch<CurrentUser>("/users/me");
 
-  if (!isDashboardRole(user.role) || (user.role === "STORE_STAFF" && !user.store)) {
+  if (!isDashboardRole(user.role)) {
     redirect("/auth/signout?error=no-access");
   }
 

@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
-import { ChevronDown, Clock, LocateFixed, MapPinOff, Search, UserRound } from "lucide-react-native";
+import { Search, UserRound } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { BackHandler, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,45 +17,29 @@ import { CategoryTabs, opensPage } from "@/components/home/category-tabs";
 import { HeaderFade, HeaderLookProvider, HeaderRegion } from "@/components/home/header-backdrop";
 import { HomeSections } from "@/components/home/home-sections";
 import { QueryError } from "@/components/query-error";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
-import { errorMessage } from "@/lib/api";
-import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { useDeliveryLocation, useLocateMe } from "@/lib/delivery-location";
+import { useAppTheme } from "@/lib/app-theme";
 import { useHomeFeed, useHomeTabPage } from "@/lib/queries";
 import { useRotatingSearchHint } from "@/lib/search-hints";
 import { useSettings } from "@/lib/settings";
-import { closedText } from "@/lib/store-hours";
-import type { CategoryTab, Store, TabHeader } from "@/lib/types";
+import type { CategoryTab, TabHeader } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const openLocationPicker = () => router.push("/location");
-
 function HomeHeader() {
-  const { location, store } = useDeliveryLocation();
   const { deliveryPromiseMinutes } = useSettings();
-  const promise = store?.isOpen && deliveryPromiseMinutes ? deliveryPromiseMinutes : null;
 
   return (
-    <View className="flex-row items-start justify-between gap-3 px-4 pb-3 pt-2">
-      <Pressable onPress={openLocationPicker} className="flex-1 gap-0.5 active:opacity-80" accessibilityLabel="Change delivery location">
-        <BrandMark textClassName="text-highlight-foreground text-sm" />
-        <Text
-          className="text-2xl font-extrabold text-highlight-foreground"
-          numberOfLines={1}
-          accessibilityLabel={promise && location ? `Delivery in about ${promise} minutes` : undefined}
-        >
-          {promise && location ? `${promise} minutes` : location ? location.label : "Deliver to"}
-        </Text>
-        <View className="flex-row items-center gap-1">
-          <Text className="shrink text-sm font-semibold text-highlight-foreground" numberOfLines={1}>
-            {location ? location.summary : "Set your delivery location"}
+    <View className="flex-row items-center justify-between gap-3 px-4 pb-3 pt-2">
+      <View className="flex-1 gap-0.5">
+        <BrandMark textClassName="text-highlight-foreground text-2xl" />
+        {deliveryPromiseMinutes ? (
+          <Text className="text-sm font-semibold text-highlight-foreground" numberOfLines={1}>
+            Delivery in about {deliveryPromiseMinutes} minutes
           </Text>
-          <Icon as={ChevronDown} size={16} className="text-highlight-foreground" />
-        </View>
-      </Pressable>
+        ) : null}
+      </View>
       <Pressable
         onPress={() => router.navigate("/account")}
         className="size-10 items-center justify-center rounded-full bg-card active:opacity-80"
@@ -115,97 +99,21 @@ function HomeSkeleton() {
   );
 }
 
-function LocationPrompt() {
-  const { colors } = useAppTheme();
-  const surface = useCardSurface();
-  const { locate, locating, error } = useLocateMe();
-
-  return (
-    <View className={cn("mx-4 gap-3 rounded-lg p-4", surface)}>
-      <View className="gap-1">
-        <Text className="text-base font-extrabold">Where should we deliver?</Text>
-        <Text className="text-sm text-muted-foreground">Set your location to see prices and products from your nearest store.</Text>
-      </View>
-      <View className="flex-row gap-2">
-        <Button onPress={locate} disabled={locating} className="h-11 flex-1 rounded-lg">
-          {locating ? <ActivityIndicator color={colors.onPrimary} /> : <Icon as={LocateFixed} size={17} className="text-primary-foreground" />}
-          <Text className="font-semibold">{locating ? "Locating…" : "Use my location"}</Text>
-        </Button>
-        <Button variant="outline" onPress={openLocationPicker} className="h-11 flex-1 rounded-lg">
-          <Text className="font-semibold">Choose address</Text>
-        </Button>
-      </View>
-      {error ? <Text className="text-xs text-destructive">{errorMessage(error)}</Text> : null}
-    </View>
-  );
-}
-
-function NotServiceable({ summary }: { summary: string }) {
-  return (
-    <View className="items-center gap-3 px-8 py-10">
-      <View className="size-16 items-center justify-center rounded-full bg-muted">
-        <Icon as={MapPinOff} size={28} className="text-muted-foreground" />
-      </View>
-      <Text className="text-center text-lg font-extrabold">We don&apos;t deliver here yet</Text>
-      <Text className="text-center text-sm text-muted-foreground">
-        There&apos;s no store near {summary}. Try another address.
-      </Text>
-      <Button onPress={openLocationPicker} className="mt-1 h-11 rounded-lg px-6">
-        <Text className="font-semibold">Change location</Text>
-      </Button>
-    </View>
-  );
-}
-
-function StoreClosed({ store }: { store: Store }) {
-  const { timezone } = useSettings();
-  return (
-    <View className="mx-4 flex-row items-center gap-3 rounded-lg border border-border bg-muted p-3">
-      <Icon as={Clock} size={20} className="text-muted-foreground" />
-      <View className="flex-1">
-        <Text className="text-sm font-bold">{closedText(store, timezone)}</Text>
-        <Text className="text-xs text-muted-foreground">You can browse and fill your cart now, and check out once it opens.</Text>
-      </View>
-    </View>
-  );
-}
-
 /** The "All" home sections, or the sections of the tab whose page is open. */
 function HomeContent({ tab }: { tab: CategoryTab | null }) {
-  const { location, ready, serviceability, store } = useDeliveryLocation();
-  const checkingStore = location !== null && serviceability.isPending;
-  const canLoad = ready && !checkingStore && (location === null || store !== null);
-  const home = useHomeFeed(store?.id, { enabled: canLoad });
-  const tabPage = useHomeTabPage(store?.id, tab?.id ?? null, { enabled: canLoad });
+  const home = useHomeFeed();
+  const tabPage = useHomeTabPage(tab?.id ?? null);
   const feed = tab ? tabPage : home;
 
-  if (!ready || checkingStore) return <HomeSkeleton />;
-
-  if (location && serviceability.isError) {
-    return <QueryError error={serviceability.error} onRetry={() => serviceability.refetch()} />;
-  }
-  if (location && !store) return <NotServiceable summary={location.summary} />;
-
-  return (
-    <View className="gap-6">
-      {!location && <LocationPrompt />}
-      {store && !store.isOpen && <StoreClosed store={store} />}
-      {feed.isPending ? (
-        <HomeSkeleton />
-      ) : feed.isError ? (
-        <QueryError error={feed.error} onRetry={() => feed.refetch()} />
-      ) : (
-        <HomeSections sections={feed.data.sections} />
-      )}
-    </View>
-  );
+  if (feed.isPending) return <HomeSkeleton />;
+  if (feed.isError) return <QueryError error={feed.error} onRetry={() => feed.refetch()} />;
+  return <HomeSections sections={feed.data.sections} />;
 }
 
 export default function HomeScreen() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const { location, store } = useDeliveryLocation();
   const { announcement } = useSettings();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -214,16 +122,16 @@ export default function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const scrollY = useRef(0);
 
-  const feed = useHomeFeed(store?.id, { enabled: false });
+  const feed = useHomeFeed({ enabled: false });
   const tabs = useMemo(() => feed.data?.categoryTabs ?? [], [feed.data]);
   const selectedTab = tabs.find((tab) => tab.id === selectedId && opensPage(tab)) ?? null;
   const look: TabHeader = selectedTab?.header ?? { color: colors.accent, gradientColor: null, textColor: colors.onAccent, imageUrl: null };
 
-  const tabPage = useHomeTabPage(store?.id, selectedTab?.id ?? null, { enabled: false });
+  const tabPage = useHomeTabPage(selectedTab?.id ?? null, { enabled: false });
   const sections = selectedTab ? tabPage.data?.sections : feed.data?.sections;
   const showAnnouncement = !selectedTab && announcement.enabled && Boolean(announcement.text);
   // A band on the first section continues straight from the header, unless a notice sits between them.
-  const topBand = !showAnnouncement && location !== null && store?.isOpen === true ? (sections?.[0]?.background ?? null) : null;
+  const topBand = !showAnnouncement ? (sections?.[0]?.background ?? null) : null;
 
   useEffect(() => {
     const urls = tabs.flatMap((tab) => (opensPage(tab) && tab.header?.imageUrl ? [tab.header.imageUrl] : []));
@@ -252,7 +160,7 @@ export default function HomeScreen() {
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all(["settings", "addresses", "serviceability", "home"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
+    await Promise.all(["settings", "home"].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
     setRefreshing(false);
   }
 

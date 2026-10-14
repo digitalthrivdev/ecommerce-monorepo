@@ -11,18 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
-import { addressLabel, useAddresses, useDeleteAddress } from "@/lib/addresses";
+import { addressLabel, useDeleteAddress, useDeliveryAddress } from "@/lib/addresses";
 import { errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import type { Address } from "@/lib/types";
 
 export default function AddressesScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
-  const addresses = useAddresses();
+  const { address: selected, addresses } = useDeliveryAddress();
   const remove = useDeleteAddress();
-  const { location } = useDeliveryLocation();
 
   function confirmDelete(address: Address) {
     Alert.alert(`Delete "${addressLabel(address)}"?`, "This address will be removed from your account.", [
@@ -58,14 +56,14 @@ export default function AddressesScreen() {
               <Icon as={MapPin} size={28} className="text-muted-foreground" />
             </View>
             <Text className="text-lg font-bold">No saved addresses</Text>
-            <Text className="text-center text-sm text-muted-foreground">Add an address to get groceries delivered to your door.</Text>
+            <Text className="text-center text-sm text-muted-foreground">Add an address to get your orders delivered to your door.</Text>
           </View>
         ) : (
           addresses.data.map((address) => (
             <AddressCard
               key={address.id}
               address={address}
-              selected={location?.kind === "address" && location.addressId === address.id}
+              selected={address.id === selected?.id}
               actions={
                 <View className="gap-1">
                   <Pressable

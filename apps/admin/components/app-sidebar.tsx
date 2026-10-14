@@ -21,11 +21,12 @@ import {
   Settings,
   ShoppingBag,
   Star,
-  Store,
   Sun,
   Tags,
   TicketPercent,
+  UserCog,
   Users,
+  Warehouse,
   type LucideIcon,
 } from "lucide-react";
 
@@ -65,7 +66,7 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { title: string; href: string; icon: LucideIcon; roles: readonly DashboardRole[] };
 
-const BOTH: readonly DashboardRole[] = ["ADMIN", "STORE_STAFF"];
+const BOTH: readonly DashboardRole[] = ["ADMIN", "STAFF"];
 const ADMIN: readonly DashboardRole[] = ["ADMIN"];
 
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
@@ -91,9 +92,10 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Shop setup",
     items: [
-      { title: "Stores", href: "/stores", icon: Store, roles: ADMIN },
       { title: "Customers", href: "/customers", icon: Users, roles: ADMIN },
       { title: "Coupons", href: "/coupons", icon: TicketPercent, roles: ADMIN },
+      { title: "Staff", href: "/staff", icon: UserCog, roles: ADMIN },
+      { title: "Pickup locations", href: "/pickup-locations", icon: Warehouse, roles: ADMIN },
       { title: "Reports", href: "/reports", icon: FileSpreadsheet, roles: ADMIN },
       { title: "Appearance", href: "/appearance", icon: Palette, roles: ADMIN },
       { title: "Settings", href: "/settings", icon: Settings, roles: ADMIN },
@@ -161,7 +163,7 @@ export function AppSidebar({ user, brand, newOrders, openComplaints }: AppSideba
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/" onClick={closeOnMobile}>
-                <BrandMark brand={brand} subtitle={user.role === "STORE_STAFF" ? (user.store?.name ?? "") : "Owner dashboard"} />
+                <BrandMark brand={brand} subtitle={user.role === "STAFF" ? "Staff dashboard" : "Owner dashboard"} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

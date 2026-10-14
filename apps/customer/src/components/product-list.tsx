@@ -6,14 +6,14 @@ import { QueryError } from "@/components/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
-import type { useStoreProducts } from "@/lib/queries";
+import type { useProducts } from "@/lib/queries";
 import { useSettings } from "@/lib/settings";
 
 const GAP = 12;
 const COLUMNS = 2;
 
 type ProductListProps = {
-  query: ReturnType<typeof useStoreProducts>;
+  query: ReturnType<typeof useProducts>;
   emptyText: string;
   header?: ReactElement;
   /** Screen width minus whatever sits beside the grid, e.g. a sidebar. */

@@ -3,22 +3,20 @@ import "server-only";
 import { notFound } from "next/navigation";
 
 import { ApiError, apiFetch } from "@/lib/api";
-import type { ProductDetail, ProductListings } from "@/lib/types";
+import type { ProductDetail } from "@/lib/types";
 
 /**
  * Key for the product and size editors, so they start over with fresh data after a save. Photos
  * are left out: they save on their own and must not wipe unsaved typing.
  */
-export function editorRevision(product: ProductDetail, listings: ProductListings) {
-  return JSON.stringify([{ ...product, images: null }, listings]);
+export function editorRevision(product: ProductDetail) {
+  return JSON.stringify({ ...product, images: null });
 }
 
-/** A product and its prices and stock at every store; a missing product shows the not-found page. */
-export async function getProductWithListings(id: string) {
-  const path = `/products/${encodeURIComponent(id)}`;
+/** A product with every size's price and stock; a missing product shows the not-found page. */
+export async function getProduct(id: string) {
   try {
-    const [product, listings] = await Promise.all([apiFetch<ProductDetail>(path), apiFetch<ProductListings>(`${path}/listings`)]);
-    return { product, listings };
+    return await apiFetch<ProductDetail>(`/products/${encodeURIComponent(id)}`);
   } catch (error) {
     if (error instanceof ApiError && (error.status === 404 || error.status === 400)) notFound();
     throw error;

@@ -6,7 +6,7 @@ import { UserRole } from "../../generated/prisma/client";
 import { reportParamsSchema, reportQuerySchema } from "./reports.schemas.js";
 import { createReportsService } from "./reports.service.js";
 
-/** `GET /admin/reports/:report?from=YYYY-MM-DD&to=YYYY-MM-DD&storeId=…` as a CSV file. Admins only. */
+/** `GET /admin/reports/:report?from=YYYY-MM-DD&to=YYYY-MM-DD` as a CSV file. Admins only. */
 const reportsRoutes: FastifyPluginAsync = async (app) => {
   const reports = createReportsService(app.prisma);
 

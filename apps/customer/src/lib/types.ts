@@ -31,7 +31,7 @@ export type PublicSettings = {
 
 export type DemoPhoneLogin = { phone: string; code: string };
 
-export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF";
+export type UserRole = "CUSTOMER" | "ADMIN" | "STAFF";
 
 export type User = { id: string; phone: string; name: string | null; email: string | null; role: UserRole };
 
@@ -40,18 +40,18 @@ export type Category = { id: string; name: string; slug: string; imageUrl: strin
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 
-/** A saved product; `product` is null when the current store doesn't sell it. */
+/** A saved product; `product` is null when none of its variants is on sale. */
 export type WishlistItem = {
   productId: string;
   name: string;
   imageUrl: string | null;
   addedAt: string;
-  product: StoreProduct | null;
+  product: Product | null;
 };
 
 export type Coordinates = { latitude: number; longitude: number };
 
-/** Coordinates are decimal strings; they are null only for addresses saved without a location. */
+/** Coordinates are decimal strings; the map pin is optional, so they may be null. */
 export type Address = {
   id: string;
   label: string | null;
@@ -68,61 +68,38 @@ export type Address = {
   isDefault: boolean;
 };
 
-export type AddressInput = Omit<Address, "id" | "latitude" | "longitude" | "isDefault"> & Coordinates & { isDefault?: boolean };
+export type AddressInput = Omit<Address, "id" | "latitude" | "longitude" | "isDefault"> & Partial<Coordinates> & { isDefault?: boolean };
 
-export type Store = {
-  id: string;
-  name: string;
-  code: string;
-  phone: string | null;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  latitude: string;
-  longitude: string;
-  serviceRadiusKm: string;
-  /** Weekly hours in the deployment's time zone; days 0–6 start on Sunday. Empty means always open. */
-  hours: OpeningHours[];
-  isOpen: boolean;
-};
-
-/** Times are "HH:MM"; a close time earlier than the open time runs past midnight. */
-export type OpeningHours = { dayOfWeek: number; opensAt: string; closesAt: string };
-
-/** `GET /stores/serviceability`: the nearest active store whose radius covers the point. */
-export type Serviceability = { serviceable: boolean; distanceKm: number | null; store: Store | null };
-
-/** One pack or option of a product, as sold by one store. Money values are decimal strings. */
-export type StoreVariant = {
+/** One pack or option of a product. Money values are decimal strings. */
+export type ProductVariant = {
   variantId: string;
-  storeProductId: string;
   /** "Red / Large", or the pack size ("500 g") when the variant has no name. */
   label: string;
   name: string;
   unit: string | null;
   quantity: string | null;
   imageUrl: string | null;
-  sellingPrice: string;
-  mrp: string | null;
+  price: string;
+  /** The higher "was" price shown struck through; null when there is none. */
+  compareAtPrice: string | null;
   inStock: boolean;
   maxOrderQuantity: number;
 };
 
 export type BrandSummary = { id: string; name: string; slug: string; logoUrl: string | null };
 
-/** `GET /stores/:storeId/brands`: brands with something in stock at the store. */
-export type StoreBrand = BrandSummary & { productCount: number };
+/** `GET /catalog/brands`: brands with something in stock. */
+export type CatalogBrand = BrandSummary & { productCount: number };
 
-/** A product as sold by one store, with the variants it lists. */
-export type StoreProduct = {
+/** A product card, with the variants on sale. */
+export type Product = {
   productId: string;
   name: string;
   slug: string;
   category: { id: string; name: string; slug: string; parentId: string | null };
   brand: BrandSummary | null;
-  isVeg: boolean | null;
   imageUrl: string | null;
-  variants: StoreVariant[];
+  variants: ProductVariant[];
   /** Null until the product has a rating. */
   rating: { average: string; count: number } | null;
 };
@@ -131,24 +108,24 @@ export type ProductImage = { id: string; url: string; altText: string | null; va
 
 export type ProductOption = { id: string; name: string; values: { id: string; value: string }[] };
 
-/** `GET /stores/:storeId/products/:productId`. */
-export type StoreProductDetail = Omit<StoreProduct, "variants"> & {
+export type ProductSpecification = { name: string; value: string };
+
+/** `GET /catalog/products/:productId`. */
+export type ProductDetail = Omit<Product, "variants"> & {
   description: string | null;
   manufacturerName: string | null;
   manufacturerAddress: string | null;
   countryOfOrigin: string | null;
-  fssaiLicense: string | null;
-  shelfLife: string | null;
-  ingredients: string | null;
+  specifications: ProductSpecification[];
   images: ProductImage[];
   options: ProductOption[];
-  variants: (StoreVariant & { optionValueIds: string[] })[];
+  variants: (ProductVariant & { optionValueIds: string[] })[];
 };
 
 /** Why a cart line can't be ordered as it is. */
 export type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK" | "QUANTITY_LIMIT";
 
-/** Prices are null when the store no longer sells the variant. */
+/** Prices are null when the variant is no longer on sale. */
 export type CartItem = {
   id: string;
   productId: string;
@@ -163,7 +140,7 @@ export type CartItem = {
   /** Most of this variant one order can have. */
   maxQuantity: number;
   unitPrice: string | null;
-  mrp: string | null;
+  compareAtPrice: string | null;
   lineTotal: string | null;
   issue: CartItemIssue | null;
   availableQuantity?: number;
@@ -180,12 +157,9 @@ export type CartBill = {
   amountToFreeDelivery: string | null;
 };
 
-/** `GET /cart`: one store's items. `store` and `bill` are null while the cart is empty. */
+/** `GET /cart`. `bill` is null while the cart is empty. */
 export type Cart = {
   id: string | null;
-  store: { id: string; name: string; code: string; status: string } | null;
-  /** False while the store is outside its opening hours; checkout waits until it opens. */
-  storeIsOpen: boolean;
   items: CartItem[];
   itemCount: number;
   subtotal: string;
@@ -230,7 +204,6 @@ export type OrderSummary = {
   paymentMethod: PaymentMethod;
   total: string;
   createdAt: string;
-  store: { id: string; name: string };
   itemCount: number;
   canCancel: boolean;
   /** Delivered in the last 7 days and not rated yet. */
@@ -246,7 +219,7 @@ export type ProductReviews = Paginated<{
   rating: number;
   comment: string;
   name: string;
-  /** From a customer's delivered order; false for reviews the store added. */
+  /** From a customer's delivered order; false for reviews an admin added. */
   verified: boolean;
   updatedAt: string;
 }> & {
@@ -271,8 +244,7 @@ export type OrderDetail = {
   /** Set while an online payment is awaited; the order is cancelled after it. */
   paymentExpiresAt: string | null;
   deliveredAt: string | null;
-  store: { id: string; name: string; phone: string | null };
-  /** quantity and totalPrice are as ordered; the store could not supply unavailableQuantity units, which are not charged. */
+  /** quantity and totalPrice are as ordered; unavailableQuantity units could not be supplied and are not charged. */
   items: {
     id: string;
     productId: string;
@@ -284,7 +256,7 @@ export type OrderDetail = {
     quantity: number;
     unavailableQuantity: number;
     unitPrice: string;
-    mrp: string | null;
+    compareAtPrice: string | null;
     totalPrice: string;
     chargedTotal: string;
   }[];
@@ -346,7 +318,7 @@ export type BannerCarouselSection = {
 
 export type CategoryGridSection = { id: string; type: "category_grid"; title: string | null; description: string | null; columns: 3 | 4; categories: Category[] };
 
-export type ProductRailSection = { id: string; type: "product_rail"; title: string; description: string | null; category: Category; products: StoreProduct[] };
+export type ProductRailSection = { id: string; type: "product_rail"; title: string; description: string | null; category: Category; products: Product[] };
 
 export type OfferStripSection = {
   id: string;
@@ -360,12 +332,12 @@ export type OfferStripSection = {
 };
 
 /** `category` is null when deals come from every category. */
-export type DealsRailSection = { id: string; type: "deals_rail"; title: string; description: string | null; category: Category | null; products: StoreProduct[] };
+export type DealsRailSection = { id: string; type: "deals_rail"; title: string; description: string | null; category: Category | null; products: Product[] };
 
 /** The app loads the signed-in customer's products itself. */
 export type BuyAgainSection = { id: string; type: "buy_again"; title: string; description: string | null };
 
-export type BrandRailSection = { id: string; type: "brand_rail"; title: string; description: string | null; brands: StoreBrand[] };
+export type BrandRailSection = { id: string; type: "brand_rail"; title: string; description: string | null; brands: CatalogBrand[] };
 
 export type CategoryDealsSection = { id: string; type: "category_deals"; title: string; description: string | null; categories: (Category & { maxDiscountPercent: number })[] };
 
@@ -409,7 +381,7 @@ export type SaleHeroSection = {
   animateTitle: boolean;
   effect: SaleHeroEffect;
   icon: string | null;
-  deals: { label: string; category: Category | null; products: StoreProduct[] } | null;
+  deals: { label: string; category: Category | null; products: Product[] } | null;
   categories: (Category & { maxDiscountPercent: number; imageUrls: string[] })[];
 };
 
@@ -449,7 +421,7 @@ export type HomeSection = (
 ) & { background?: SectionBackground | null };
 
 /** `GET /home`: the admin's category tabs and home sections, ready to render in order. */
-export type HomeFeed = { storeId: string | null; categoryTabs?: CategoryTab[]; sections: HomeSection[] };
+export type HomeFeed = { categoryTabs?: CategoryTab[]; sections: HomeSection[] };
 
 /** `GET /home?tabId=`: the sections of a tab's own page. */
-export type HomeTabPage = { storeId: string | null; tabId: string; sections: HomeSection[] };
+export type HomeTabPage = { tabId: string; sections: HomeSection[] };

@@ -13,22 +13,20 @@ import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
 import { PageBody, Panel } from "@/components/section";
 import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
-import { StoreFilter } from "@/components/store-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { apiFetch } from "@/lib/api";
 import { getCurrentUser, getPublicSettings } from "@/lib/dal";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { BOARD_STATUSES } from "@/lib/order-flow";
 import { listOrders } from "@/lib/orders";
-import type { OrderListItem, OrderStatus, Paginated, StoreDetails } from "@/lib/types";
+import type { OrderListItem, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Orders" };
 
 const PAGE_SIZE = 25;
-/** The API's largest page; a store with more open orders than this is very unusual. */
+/** The API's largest page; a shop with more open orders than this is very unusual. */
 const BOARD_LIMIT = 100;
 
 type Tab = { id: string; label: string; statuses?: OrderStatus[]; adminOnly?: boolean; oldestFirst?: boolean };
@@ -56,27 +54,24 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
   const view = first(params.view) === "list" || q ? "list" : "board";
   const tabs = TABS.filter((tab) => isAdmin || !tab.adminOnly);
   const tab = tabs.find((candidate) => candidate.id === first(params.tab)) ?? (q ? tabs.at(-1)! : tabs[0]!);
-  const storeId = isAdmin ? first(params.storeId) || undefined : undefined;
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
-  const [orders, stores, settings] = await Promise.all([
+  const [orders, settings] = await Promise.all([
     view === "board"
-      ? listOrders(user, { status: BOARD_STATUSES, storeId, sort: "oldest", limit: BOARD_LIMIT, offset: 0 })
-      : listOrders(user, {
+      ? listOrders({ status: BOARD_STATUSES, sort: "oldest", limit: BOARD_LIMIT, offset: 0 })
+      : listOrders({
           status: tab.statuses,
           q,
-          storeId,
           sort: tab.oldestFirst ? "oldest" : "newest",
           limit: PAGE_SIZE,
           offset: (page - 1) * PAGE_SIZE,
         }),
-    isAdmin ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
     getPublicSettings(),
   ]);
 
   const href = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    const merged = { view: view === "list" ? "list" : undefined, tab: view === "list" ? tab.id : undefined, q, storeId, ...changes };
+    const merged = { view: view === "list" ? "list" : undefined, tab: view === "list" ? tab.id : undefined, q, ...changes };
     for (const [key, value] of Object.entries(merged)) {
       if (value) next.set(key, value);
     }
@@ -89,7 +84,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
       ? candidate.statuses.reduce((sum, status) => sum + (orders.statusCounts[status] ?? 0), 0)
       : Object.values(orders.statusCounts).reduce((sum, count) => sum + (count ?? 0), 0);
 
-  const showStore = isAdmin && !storeId;
   const lastPage = Math.max(1, Math.ceil(orders.total / PAGE_SIZE));
   const currency = settings.currency;
 
@@ -98,7 +92,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
       <AutoRefresh seconds={30} />
       <PageHeader
         title="Orders"
-        description={isAdmin ? (storeId ? undefined : "Orders across all stores") : user.store?.name}
         actions={
           <>
             <nav aria-label="View" className="flex rounded-lg border bg-card p-0.5 shadow-xs">
@@ -123,7 +116,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
               ))}
             </nav>
             <OrderSoundToggle />
-            {stores && stores.items.length > 1 && <StoreFilter stores={stores.items} />}
           </>
         }
       />
@@ -131,11 +123,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
       <PageBody className="gap-4">
         {view === "board" ? (
           <>
-            <OrderBoard
-              orders={orders.items}
-              currency={currency}
-              showStore={showStore}
-            />
+            <OrderBoard orders={orders.items} currency={currency} />
             {orders.total > BOARD_LIMIT && (
               <p className="text-sm text-muted-foreground">
                 Showing the {BOARD_LIMIT} oldest of {orders.total} open orders.{" "}
@@ -166,7 +154,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
               <Form action="/orders" className="flex max-w-md gap-2">
                 <input type="hidden" name="view" value="list" />
                 <input type="hidden" name="tab" value={tab.id} />
-                {storeId && <input type="hidden" name="storeId" value={storeId} />}
                 <Input
                   name="q"
                   type="search"
@@ -209,7 +196,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {payment(order, currency)} · {formatDateTime(order.createdAt, settings.timezone)}
-                          {showStore && ` · ${order.store.name}`}
                         </p>
                       </li>
                     ))}
@@ -219,7 +205,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                       <TableRow>
                         <TableHead className="pl-4">Order</TableHead>
                         <TableHead>Customer</TableHead>
-                        {showStore && <TableHead>Store</TableHead>}
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="pr-4 text-right">
@@ -244,7 +229,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                             <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
                             {order.reviewAccount && <ReviewAccountPill />}
                           </TableCell>
-                          {showStore && <TableCell>{order.store.name}</TableCell>}
                           <TableCell>
                             <OrderStatusPill status={order.status} />
                           </TableCell>
@@ -256,7 +240,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
                           </TableCell>
                           <TableCell className="pr-4 text-right">
                             <NextStepButton
-                              storeId={order.store.id}
                               orderId={order.id}
                               status={order.status}
                               allowedActions={order.allowedActions}

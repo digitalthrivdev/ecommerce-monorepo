@@ -15,8 +15,8 @@ export type ProductPreview = {
   description: string | null;
   brand: string | null;
   imageUrl: string | null;
-  /** The lowest price at a store that has it in stock; `varies` when other variants or stores charge more. */
-  price: { sellingPrice: string; mrp: string | null; label: string; varies: boolean } | null;
+  /** The cheapest variant in stock, null while nothing is; `varies` when other variants cost more. */
+  price: { price: string; compareAtPrice: string | null; label: string; varies: boolean } | null;
 };
 
 /** Business details on the website; `name` falls back to the app name. */
@@ -42,8 +42,6 @@ export type Website = {
   tagline: string | null;
   /** Null for an app with no links. */
   apps: { customer: AppLinks | null };
-  /** Cities with an active store. */
-  cities: string[];
   pages: { slug: string; title: string; updatedAt: string | null }[];
 };
 
@@ -66,10 +64,7 @@ export type SectionBackground = { color: string; textColor: string; edge: "strai
 type SectionBase = { id: string; background: SectionBackground };
 type Titled = { title: string | null; description: string | null };
 
-/**
- * The home sections the website can show without a store. Sections that need a store's prices and stock
- * (product rails, deals, brands, buy again) are not returned by GET /home without a store id.
- */
+/** The home sections the website shows. Product, deal, brand and buy-again sections are skipped. */
 export type HomeSection = SectionBase &
   (
     | { type: "banner_carousel"; autoplay: boolean; banners: { id: string; imageUrl: string; title: string | null; subtitle: string | null; link: HomeLink }[] }
@@ -84,5 +79,5 @@ export type HomeSection = SectionBase &
     | { type: "offer_strip"; title: string; subtitle: string | null; imageUrl: string | null; backgroundColor: string; textColor: string; link: HomeLink }
   );
 
-/** GET /home without a store id. Other section types may appear and are skipped. */
+/** GET /home. Other section types may appear and are skipped. */
 export type HomeFeed = { sections: (HomeSection | (SectionBase & { type: string }))[] };

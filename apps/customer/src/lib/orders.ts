@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 
 import { apiFetch } from "./api";
 import { CART_KEY } from "./cart";
-import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, Paginated, PaymentMethod, StoreProduct } from "./types";
+import type { ComplaintReason, OrderDetail, OrderRating, OrderStatus, OrderSummary, Paginated, PaymentMethod, Product } from "./types";
 
 const ORDERS_KEY = ["orders"] as const;
 const ORDERS_PAGE_SIZE = 20;
@@ -35,15 +35,14 @@ export function useActiveOrders() {
   });
 }
 
-export const buyAgainKey = (storeId: string | null) => [...ORDERS_KEY, "buy-again", storeId] as const;
+export const buyAgainKey = [...ORDERS_KEY, "buy-again"] as const;
 
-/** Products from the customer's past orders that are in stock at the store, most often ordered first. */
-export function useBuyAgain(storeId: string | undefined, { limit = 12 }: { limit?: number } = {}) {
+/** Products from the customer's past orders that are in stock, most often ordered first. */
+export function useBuyAgain({ limit = 12 }: { limit?: number } = {}) {
   return useQuery({
-    queryKey: [...buyAgainKey(storeId ?? null), limit],
-    queryFn: () => apiFetch<{ items: StoreProduct[] }>("/orders/buy-again", { query: { storeId, limit } }),
+    queryKey: [...buyAgainKey, limit],
+    queryFn: () => apiFetch<{ items: Product[] }>("/orders/buy-again", { query: { limit } }),
     staleTime: 5 * 60_000,
-    enabled: Boolean(storeId),
   });
 }
 
@@ -169,9 +168,9 @@ export function usePayOnline(id: string) {
 
 export const ORDER_STATUS_TEXT: Record<OrderStatus, { title: string; detail: string }> = {
   PENDING_PAYMENT: { title: "Waiting for payment", detail: "Complete the payment to confirm your order." },
-  CONFIRMED: { title: "Order confirmed", detail: "The store will start packing your order soon." },
-  STORE_ACCEPTED: { title: "Accepted by the store", detail: "Your order is next in line for packing." },
-  PICKING: { title: "Packing your order", detail: "The store is picking your items." },
+  CONFIRMED: { title: "Order confirmed", detail: "We'll start packing your order soon." },
+  STORE_ACCEPTED: { title: "Order accepted", detail: "Your order is next in line for packing." },
+  PICKING: { title: "Packing your order", detail: "We're picking your items." },
   PACKED: { title: "Order packed", detail: "Your items are packed and ready to go." },
   READY_FOR_PICKUP: { title: "Ready to send", detail: "Your order will be on its way soon." },
   OUT_FOR_DELIVERY: { title: "On the way", detail: "Your order is on its way to you." },

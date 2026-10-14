@@ -14,7 +14,7 @@ out on every device so the change applies at its next sign-in.
   Undo:         docker compose run --rm api node dist/scripts/test-account.js --phone +919000000010 --off
 
 Options:
-  --email  Email of an admin or store staff account.
+  --email  Email of an admin or staff account.
   --phone  Phone number (E.164) of a customer account.
   --off    Make it a normal account again.
 

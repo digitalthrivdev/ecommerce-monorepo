@@ -53,8 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Address: 'Address',
-  Store: 'Store',
-  StoreHours: 'StoreHours',
+  PickupLocation: 'PickupLocation',
   Category: 'Category',
   Brand: 'Brand',
   Product: 'Product',
@@ -63,7 +62,6 @@ export const ModelName = {
   ProductVariant: 'ProductVariant',
   ProductVariantOptionValue: 'ProductVariantOptionValue',
   ProductImage: 'ProductImage',
-  StoreProduct: 'StoreProduct',
   Inventory: 'Inventory',
   InventoryAdjustment: 'InventoryAdjustment',
   Cart: 'Cart',
@@ -111,7 +109,6 @@ export const UserScalarFieldEnum = {
   email: 'email',
   role: 'role',
   passwordHash: 'passwordHash',
-  storeId: 'storeId',
   deletedAt: 'deletedAt',
   orderBlock: 'orderBlock',
   orderBlockReason: 'orderBlockReason',
@@ -147,36 +144,24 @@ export const AddressScalarFieldEnum = {
 export type AddressScalarFieldEnum = (typeof AddressScalarFieldEnum)[keyof typeof AddressScalarFieldEnum]
 
 
-export const StoreScalarFieldEnum = {
+export const PickupLocationScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  code: 'code',
+  contactName: 'contactName',
   phone: 'phone',
-  status: 'status',
+  email: 'email',
   addressLine1: 'addressLine1',
   addressLine2: 'addressLine2',
+  landmark: 'landmark',
   city: 'city',
   state: 'state',
   postalCode: 'postalCode',
-  latitude: 'latitude',
-  longitude: 'longitude',
-  serviceRadiusKm: 'serviceRadiusKm',
-  gstin: 'gstin',
+  isDefault: 'isDefault',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
-
-
-export const StoreHoursScalarFieldEnum = {
-  storeId: 'storeId',
-  dayOfWeek: 'dayOfWeek',
-  opensAt: 'opensAt',
-  closesAt: 'closesAt'
-} as const
-
-export type StoreHoursScalarFieldEnum = (typeof StoreHoursScalarFieldEnum)[keyof typeof StoreHoursScalarFieldEnum]
+export type PickupLocationScalarFieldEnum = (typeof PickupLocationScalarFieldEnum)[keyof typeof PickupLocationScalarFieldEnum]
 
 
 export const CategoryScalarFieldEnum = {
@@ -217,13 +202,10 @@ export const ProductScalarFieldEnum = {
   tags: 'tags',
   hsnCode: 'hsnCode',
   gstRate: 'gstRate',
-  isVeg: 'isVeg',
   manufacturerName: 'manufacturerName',
   manufacturerAddress: 'manufacturerAddress',
   countryOfOrigin: 'countryOfOrigin',
-  fssaiLicense: 'fssaiLicense',
-  shelfLife: 'shelfLife',
-  ingredients: 'ingredients',
+  specifications: 'specifications',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -260,6 +242,12 @@ export const ProductVariantScalarFieldEnum = {
   name: 'name',
   unit: 'unit',
   quantity: 'quantity',
+  price: 'price',
+  compareAtPrice: 'compareAtPrice',
+  weightGrams: 'weightGrams',
+  lengthCm: 'lengthCm',
+  breadthCm: 'breadthCm',
+  heightCm: 'heightCm',
   maxOrderQuantity: 'maxOrderQuantity',
   isActive: 'isActive',
   sortOrder: 'sortOrder',
@@ -291,23 +279,9 @@ export const ProductImageScalarFieldEnum = {
 export type ProductImageScalarFieldEnum = (typeof ProductImageScalarFieldEnum)[keyof typeof ProductImageScalarFieldEnum]
 
 
-export const StoreProductScalarFieldEnum = {
-  id: 'id',
-  storeId: 'storeId',
-  variantId: 'variantId',
-  sellingPrice: 'sellingPrice',
-  mrp: 'mrp',
-  isAvailable: 'isAvailable',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type StoreProductScalarFieldEnum = (typeof StoreProductScalarFieldEnum)[keyof typeof StoreProductScalarFieldEnum]
-
-
 export const InventoryScalarFieldEnum = {
   id: 'id',
-  storeProductId: 'storeProductId',
+  variantId: 'variantId',
   quantity: 'quantity',
   updatedAt: 'updatedAt'
 } as const
@@ -317,7 +291,7 @@ export type InventoryScalarFieldEnum = (typeof InventoryScalarFieldEnum)[keyof t
 
 export const InventoryAdjustmentScalarFieldEnum = {
   id: 'id',
-  storeProductId: 'storeProductId',
+  variantId: 'variantId',
   delta: 'delta',
   quantityAfter: 'quantityAfter',
   reason: 'reason',
@@ -332,7 +306,6 @@ export type InventoryAdjustmentScalarFieldEnum = (typeof InventoryAdjustmentScal
 export const CartScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  storeId: 'storeId',
   couponCode: 'couponCode',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -357,7 +330,6 @@ export const OrderScalarFieldEnum = {
   id: 'id',
   orderNumber: 'orderNumber',
   userId: 'userId',
-  storeId: 'storeId',
   addressId: 'addressId',
   status: 'status',
   subtotal: 'subtotal',
@@ -401,7 +373,7 @@ export const OrderItemScalarFieldEnum = {
   variantName: 'variantName',
   sku: 'sku',
   imageUrl: 'imageUrl',
-  mrp: 'mrp',
+  compareAtPrice: 'compareAtPrice',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   totalPrice: 'totalPrice',

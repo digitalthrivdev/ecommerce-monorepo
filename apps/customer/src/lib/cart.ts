@@ -3,11 +3,9 @@ import { useCallback } from "react";
 import { Alert } from "react-native";
 
 import { ApiError, apiFetch, errorMessage } from "./api";
-import { useDeliveryLocation } from "./delivery-location";
 import { formatMoney, shortfall } from "./format";
 import { formatPhone } from "./phone";
-import { closedText } from "./store-hours";
-import type { Cart, CartItem, Store, StoreProduct, StoreVariant } from "./types";
+import type { Cart, CartItem, Product, ProductVariant } from "./types";
 
 /** The API's cap per cart line; a variant can have a lower one. */
 export const MAX_QUANTITY_PER_ITEM = 50;
@@ -17,10 +15,9 @@ export const CART_KEY = ["cart"] as const;
 const PENDING_ID = "pending:";
 
 /** What the cart needs to show a line before the server has created it. */
-export type Sellable = { product: Pick<StoreProduct, "productId" | "name" | "slug" | "imageUrl">; variant: StoreVariant };
+export type Sellable = { product: Pick<Product, "productId" | "name" | "slug" | "imageUrl">; variant: ProductVariant };
 
-type CartStore = Pick<Store, "id" | "name" | "code" | "isOpen">;
-type QuantityChange = { variantId: string; quantity: number; item?: Sellable; store: CartStore | null };
+type QuantityChange = { variantId: string; quantity: number; item?: Sellable };
 
 export function useCart<T = Cart>({ select, refetchOnMount }: { select?: (cart: Cart) => T; refetchOnMount?: "always" } = {}) {
   return useQuery({ queryKey: CART_KEY, queryFn: () => apiFetch<Cart>("/cart"), staleTime: 30_000, select, refetchOnMount });
@@ -31,29 +28,23 @@ export function useCartUpdating() {
   return useIsMutating({ mutationKey: CART_KEY }) > 0;
 }
 
-function useCurrentStoreCart<T>(pick: (items: CartItem[]) => T, fallback: T) {
-  const storeId = useDeliveryLocation().store?.id;
-  const select = useCallback((cart: Cart) => (cart.store?.id === storeId ? pick(cart.items) : fallback), [pick, fallback, storeId]);
-  return useCart({ select }).data ?? fallback;
-}
-
-/** How many of the variant are in the cart for the current store. */
+/** How many of the variant are in the cart. */
 export function useCartQuantity(variantId: string) {
-  const pick = useCallback((items: CartItem[]) => items.find((item) => item.variantId === variantId)?.quantity ?? 0, [variantId]);
-  return useCurrentStoreCart(pick, 0);
+  const select = useCallback((cart: Cart) => cart.items.find((item) => item.variantId === variantId)?.quantity ?? 0, [variantId]);
+  return useCart({ select }).data ?? 0;
 }
 
-/** How many of any of the product's variants are in the cart for the current store. */
+/** How many of any of the product's variants are in the cart. */
 export function useProductCartQuantity(productId: string) {
-  const pick = useCallback((items: CartItem[]) => items.reduce((sum, item) => (item.productId === productId ? sum + item.quantity : sum), 0), [productId]);
-  return useCurrentStoreCart(pick, 0);
+  const select = useCallback((cart: Cart) => cart.items.reduce((sum, item) => (item.productId === productId ? sum + item.quantity : sum), 0), [productId]);
+  return useCart({ select }).data ?? 0;
 }
 
 /** Lines the customer sees; a line set to 0 stays cached until the server confirms the removal. */
 export const visibleItems = (cart: Cart) => cart.items.filter((item) => item.quantity > 0);
 
 /** Why the cart can't be ordered yet, or null when checkout can go ahead. */
-type BlockerSettings = { currency: string; timezone: string; support: { phone: string | null; email: string | null } };
+type BlockerSettings = { currency: string; support: { phone: string | null; email: string | null } };
 
 function contactText({ phone, email }: BlockerSettings["support"]) {
   if (phone) return ` Call us on ${formatPhone(phone)}.`;
@@ -61,11 +52,8 @@ function contactText({ phone, email }: BlockerSettings["support"]) {
   return "";
 }
 
-export function checkoutBlocker(cart: Cart, store: Store | null, { currency, timezone, support }: BlockerSettings) {
+export function checkoutBlocker(cart: Cart, { currency, support }: BlockerSettings) {
   if (cart.checkout?.blocked) return `Your account can't place orders right now.${contactText(support)}`;
-  if (!store) return "Choose a delivery location to check out.";
-  if (cart.store?.id !== store.id) return "Your cart is from a store that doesn't deliver to this location.";
-  if (!cart.storeIsOpen) return closedText(store, timezone);
   if (!cart.isValid) return "Remove or update the items marked in your cart.";
   if (cart.bill && !cart.bill.meetsMinimum) {
     return `Add ${formatMoney(shortfall(cart.bill.minOrderValue, cart.bill.subtotal), currency)} more to reach the ${formatMoney(cart.bill.minOrderValue, currency)} minimum order.`;
@@ -116,28 +104,24 @@ function pendingItem({ product, variant }: Sellable): CartItem {
     packQuantity: variant.quantity,
     quantity: 0,
     maxQuantity: variant.maxOrderQuantity,
-    unitPrice: variant.sellingPrice,
-    mrp: variant.mrp,
+    unitPrice: variant.price,
+    compareAtPrice: variant.compareAtPrice,
     lineTotal: null,
     issue: null,
   };
 }
 
-function previewQuantity(cart: Cart, { variantId, quantity, item, store }: QuantityChange): Cart {
+function previewQuantity(cart: Cart, { variantId, quantity, item }: QuantityChange): Cart {
   const exists = cart.items.some((line) => line.variantId === variantId);
   const items = exists
     ? cart.items.map((line) => (line.variantId === variantId ? withQuantity(line, quantity) : line))
     : item && quantity > 0
       ? [...cart.items, withQuantity(pendingItem(item), quantity)]
       : cart.items;
-  const hadItems = cart.items.some((line) => line.quantity > 0);
   const subtotal = items.reduce((sum, line) => (line.issue === null && line.lineTotal ? sum + toPaise(line.lineTotal) : sum), 0);
-  const newStore = !hadItems && store;
 
   return {
     ...cart,
-    store: newStore ? { id: store.id, name: store.name, code: store.code, status: "ACTIVE" } : cart.store,
-    storeIsOpen: newStore ? store.isOpen : cart.storeIsOpen,
     items,
     itemCount: items.reduce((sum, line) => sum + line.quantity, 0),
     subtotal: fromPaise(subtotal),
@@ -146,8 +130,6 @@ function previewQuantity(cart: Cart, { variantId, quantity, item, store }: Quant
 
 const emptyCart = (cart: Cart): Cart => ({
   ...cart,
-  store: null,
-  storeIsOpen: false,
   items: [],
   itemCount: 0,
   subtotal: "0.00",
@@ -164,13 +146,13 @@ function syncItemIds(cart: Cart, server: Cart): Cart {
 }
 
 /** Runs after earlier cart changes have been saved, so cached line ids match the server. */
-function sendQuantity(queryClient: QueryClient, { variantId, quantity, store }: QuantityChange) {
+function sendQuantity(queryClient: QueryClient, { variantId, quantity }: QuantityChange) {
   const id = queryClient.getQueryData<Cart>(CART_KEY)?.items.find((item) => item.variantId === variantId)?.id;
   if (id && !id.startsWith(PENDING_ID)) {
     const path = `/cart/items/${encodeURIComponent(id)}`;
     return quantity > 0 ? apiFetch<Cart>(path, { method: "PATCH", body: { quantity } }) : apiFetch<Cart>(path, { method: "DELETE" });
   }
-  if (quantity > 0 && store) return apiFetch<Cart>("/cart/items", { method: "POST", body: { storeId: store.id, variantId, quantity } });
+  if (quantity > 0) return apiFetch<Cart>("/cart/items", { method: "POST", body: { variantId, quantity } });
   return apiFetch<Cart>("/cart");
 }
 
@@ -188,7 +170,7 @@ function notify(title: string, message: string) {
 function showCartError(error: unknown) {
   if (error instanceof ApiError && error.code === "INSUFFICIENT_STOCK") {
     const available = (error.details as { available?: number } | undefined)?.available ?? 0;
-    notify("Limited stock", available > 0 ? `Only ${available} left at this store.` : "This item just went out of stock.");
+    notify("Limited stock", available > 0 ? `Only ${available} left.` : "This item just went out of stock.");
     return;
   }
   if (error instanceof ApiError && error.code === "QUANTITY_LIMIT") {
@@ -238,7 +220,6 @@ export function useCouponActions() {
 
 export function useCartActions() {
   const queryClient = useQueryClient();
-  const { store } = useDeliveryLocation();
   const { mutate: update } = useCartMutation((change: QuantityChange) => sendQuantity(queryClient, change), previewQuantity);
   const { mutate: clear } = useCartMutation(() => apiFetch<Cart>("/cart", { method: "DELETE" }), emptyCart);
 
@@ -247,35 +228,12 @@ export function useCartActions() {
     (variantId: string, quantity: number, item?: Sellable) => {
       const line = queryClient.getQueryData<Cart>(CART_KEY)?.items.find((candidate) => candidate.variantId === variantId);
       const max = item?.variant.maxOrderQuantity ?? line?.maxQuantity ?? MAX_QUANTITY_PER_ITEM;
-      update({ variantId, quantity: Math.min(Math.max(quantity, 0), max), item, store });
+      update({ variantId, quantity: Math.min(Math.max(quantity, 0), max), item });
     },
-    [queryClient, update, store],
+    [queryClient, update],
   );
 
-  /** Adds one, first offering to clear a cart that holds another store's items. */
-  const add = useCallback(
-    (item: Sellable) => {
-      if (!store) return;
-      const cart = queryClient.getQueryData<Cart>(CART_KEY);
-      const otherStore = cart?.store && cart.store.id !== store.id && visibleItems(cart).length > 0 ? cart.store : null;
-      if (!otherStore) {
-        setQuantity(item.variant.variantId, 1, item);
-        return;
-      }
-      Alert.alert("Replace cart items?", `Your cart has items from ${otherStore.name}. Clear it to shop from ${store.name}?`, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear cart",
-          style: "destructive",
-          onPress: () => {
-            clear(undefined);
-            setQuantity(item.variant.variantId, 1, item);
-          },
-        },
-      ]);
-    },
-    [queryClient, store, setQuantity, clear],
-  );
+  const add = useCallback((item: Sellable) => setQuantity(item.variant.variantId, 1, item), [setQuantity]);
 
   return { add, setQuantity, clear: useCallback(() => clear(undefined), [clear]) };
 }

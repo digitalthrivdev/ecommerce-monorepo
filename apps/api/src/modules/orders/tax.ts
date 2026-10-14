@@ -1,8 +1,9 @@
 import { env } from "../../config/env.js";
 import { Prisma } from "../../generated/prisma/client";
-import { isSameState, storeInvoiceGstin } from "../../shared/gst.js";
+import { invoiceGstin, isSameState } from "../../shared/gst.js";
 import { getAppearance } from "../settings/appearance.service.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
+import { defaultPickupLocation } from "../shipping/pickup-locations.service.js";
 
 type Tx = Prisma.TransactionClient;
 
@@ -38,8 +39,8 @@ export function financialYear(date: Date, timeZone = env.TIMEZONE) {
 
 /**
  * Gives the order the next invoice number of the current financial year, e.g. INV/2026-27/000123,
- * and copies the seller onto it: legal name, GSTIN (see storeInvoiceGstin), the store's address, and
- * whether the supply is inter-state. Invoices only ever read this snapshot.
+ * and copies the seller onto it: legal name, GSTIN (see invoiceGstin), the default pickup
+ * location's address, and whether the supply is inter-state. Invoices only ever read this snapshot.
  */
 export async function assignInvoiceNumber(tx: Tx, orderId: string) {
   const year = financialYear(new Date());
@@ -50,23 +51,19 @@ export async function assignInvoiceNumber(tx: Tx, orderId: string) {
   `;
   const invoiceNumber = `INV/${year}/${String(row!.lastNumber).padStart(6, "0")}`;
 
-  const order = await tx.order.findUniqueOrThrow({
-    where: { id: orderId },
-    select: {
-      state: true,
-      store: { select: { gstin: true, addressLine1: true, addressLine2: true, city: true, state: true, postalCode: true } },
-    },
-  });
+  const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { state: true } });
   const settings = await getPlatformSettings(tx);
-  const { store } = order;
+  const origin = await defaultPickupLocation(tx);
   await tx.order.update({
     where: { id: orderId },
     data: {
       invoiceNumber,
       sellerName: settings.businessName ?? (await getAppearance(tx)).appearance.appName,
-      sellerGstin: storeInvoiceGstin(store, settings.gstin),
-      sellerAddress: [store.addressLine1, store.addressLine2, store.city, `${store.state} ${store.postalCode}`].filter(Boolean).join(", "),
-      interStateSupply: !isSameState(store.state, order.state),
+      ...(origin && {
+        sellerGstin: invoiceGstin(origin.state, settings.gstin),
+        sellerAddress: [origin.addressLine1, origin.addressLine2, origin.city, `${origin.state} ${origin.postalCode}`].filter(Boolean).join(", "),
+        interStateSupply: !isSameState(origin.state, order.state),
+      }),
     },
   });
   return invoiceNumber;

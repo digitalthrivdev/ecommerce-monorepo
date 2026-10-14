@@ -84,9 +84,9 @@ function stateWithCode(state: string) {
 }
 
 /**
- * Everything printed on the invoice, from the order's own snapshots only. Units the store could not
- * supply are left out; each line's coupon share lowers its taxable value. `seller` is null for
- * orders delivered before seller details were recorded: their GST is shown without the split.
+ * Everything printed on the invoice, from the order's own snapshots only. Units that could not be
+ * supplied are left out; each line's coupon share lowers its taxable value. `seller` is null for
+ * orders invoiced without a pickup location: their GST is shown without the split.
  */
 export function buildInvoice(order: InvoiceOrder) {
   const interState = order.interStateSupply;

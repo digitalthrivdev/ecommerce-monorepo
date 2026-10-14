@@ -38,7 +38,7 @@ export type InventoryAdjustmentSumAggregateOutputType = {
 
 export type InventoryAdjustmentMinAggregateOutputType = {
   id: string | null
-  storeProductId: string | null
+  variantId: string | null
   delta: number | null
   quantityAfter: number | null
   reason: $Enums.InventoryAdjustmentReason | null
@@ -49,7 +49,7 @@ export type InventoryAdjustmentMinAggregateOutputType = {
 
 export type InventoryAdjustmentMaxAggregateOutputType = {
   id: string | null
-  storeProductId: string | null
+  variantId: string | null
   delta: number | null
   quantityAfter: number | null
   reason: $Enums.InventoryAdjustmentReason | null
@@ -60,7 +60,7 @@ export type InventoryAdjustmentMaxAggregateOutputType = {
 
 export type InventoryAdjustmentCountAggregateOutputType = {
   id: number
-  storeProductId: number
+  variantId: number
   delta: number
   quantityAfter: number
   reason: number
@@ -83,7 +83,7 @@ export type InventoryAdjustmentSumAggregateInputType = {
 
 export type InventoryAdjustmentMinAggregateInputType = {
   id?: true
-  storeProductId?: true
+  variantId?: true
   delta?: true
   quantityAfter?: true
   reason?: true
@@ -94,7 +94,7 @@ export type InventoryAdjustmentMinAggregateInputType = {
 
 export type InventoryAdjustmentMaxAggregateInputType = {
   id?: true
-  storeProductId?: true
+  variantId?: true
   delta?: true
   quantityAfter?: true
   reason?: true
@@ -105,7 +105,7 @@ export type InventoryAdjustmentMaxAggregateInputType = {
 
 export type InventoryAdjustmentCountAggregateInputType = {
   id?: true
-  storeProductId?: true
+  variantId?: true
   delta?: true
   quantityAfter?: true
   reason?: true
@@ -203,7 +203,7 @@ export type InventoryAdjustmentGroupByArgs<ExtArgs extends runtime.Types.Extensi
 
 export type InventoryAdjustmentGroupByOutputType = {
   id: string
-  storeProductId: string
+  variantId: string
   delta: number
   quantityAfter: number
   reason: $Enums.InventoryAdjustmentReason
@@ -237,26 +237,26 @@ export type InventoryAdjustmentWhereInput = {
   OR?: Prisma.InventoryAdjustmentWhereInput[]
   NOT?: Prisma.InventoryAdjustmentWhereInput | Prisma.InventoryAdjustmentWhereInput[]
   id?: Prisma.StringFilter<"InventoryAdjustment"> | string
-  storeProductId?: Prisma.StringFilter<"InventoryAdjustment"> | string
+  variantId?: Prisma.StringFilter<"InventoryAdjustment"> | string
   delta?: Prisma.IntFilter<"InventoryAdjustment"> | number
   quantityAfter?: Prisma.IntFilter<"InventoryAdjustment"> | number
   reason?: Prisma.EnumInventoryAdjustmentReasonFilter<"InventoryAdjustment"> | $Enums.InventoryAdjustmentReason
   note?: Prisma.StringNullableFilter<"InventoryAdjustment"> | string | null
   changedById?: Prisma.StringNullableFilter<"InventoryAdjustment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InventoryAdjustment"> | Date | string
-  storeProduct?: Prisma.XOR<Prisma.StoreProductScalarRelationFilter, Prisma.StoreProductWhereInput>
+  variant?: Prisma.XOR<Prisma.ProductVariantScalarRelationFilter, Prisma.ProductVariantWhereInput>
 }
 
 export type InventoryAdjustmentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  storeProductId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   delta?: Prisma.SortOrder
   quantityAfter?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   changedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  storeProduct?: Prisma.StoreProductOrderByWithRelationInput
+  variant?: Prisma.ProductVariantOrderByWithRelationInput
 }
 
 export type InventoryAdjustmentWhereUniqueInput = Prisma.AtLeast<{
@@ -264,19 +264,19 @@ export type InventoryAdjustmentWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.InventoryAdjustmentWhereInput | Prisma.InventoryAdjustmentWhereInput[]
   OR?: Prisma.InventoryAdjustmentWhereInput[]
   NOT?: Prisma.InventoryAdjustmentWhereInput | Prisma.InventoryAdjustmentWhereInput[]
-  storeProductId?: Prisma.StringFilter<"InventoryAdjustment"> | string
+  variantId?: Prisma.StringFilter<"InventoryAdjustment"> | string
   delta?: Prisma.IntFilter<"InventoryAdjustment"> | number
   quantityAfter?: Prisma.IntFilter<"InventoryAdjustment"> | number
   reason?: Prisma.EnumInventoryAdjustmentReasonFilter<"InventoryAdjustment"> | $Enums.InventoryAdjustmentReason
   note?: Prisma.StringNullableFilter<"InventoryAdjustment"> | string | null
   changedById?: Prisma.StringNullableFilter<"InventoryAdjustment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InventoryAdjustment"> | Date | string
-  storeProduct?: Prisma.XOR<Prisma.StoreProductScalarRelationFilter, Prisma.StoreProductWhereInput>
+  variant?: Prisma.XOR<Prisma.ProductVariantScalarRelationFilter, Prisma.ProductVariantWhereInput>
 }, "id">
 
 export type InventoryAdjustmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  storeProductId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   delta?: Prisma.SortOrder
   quantityAfter?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -295,7 +295,7 @@ export type InventoryAdjustmentScalarWhereWithAggregatesInput = {
   OR?: Prisma.InventoryAdjustmentScalarWhereWithAggregatesInput[]
   NOT?: Prisma.InventoryAdjustmentScalarWhereWithAggregatesInput | Prisma.InventoryAdjustmentScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"InventoryAdjustment"> | string
-  storeProductId?: Prisma.StringWithAggregatesFilter<"InventoryAdjustment"> | string
+  variantId?: Prisma.StringWithAggregatesFilter<"InventoryAdjustment"> | string
   delta?: Prisma.IntWithAggregatesFilter<"InventoryAdjustment"> | number
   quantityAfter?: Prisma.IntWithAggregatesFilter<"InventoryAdjustment"> | number
   reason?: Prisma.EnumInventoryAdjustmentReasonWithAggregatesFilter<"InventoryAdjustment"> | $Enums.InventoryAdjustmentReason
@@ -312,12 +312,12 @@ export type InventoryAdjustmentCreateInput = {
   note?: string | null
   changedById?: string | null
   createdAt?: Date | string
-  storeProduct: Prisma.StoreProductCreateNestedOneWithoutAdjustmentsInput
+  variant: Prisma.ProductVariantCreateNestedOneWithoutAdjustmentsInput
 }
 
 export type InventoryAdjustmentUncheckedCreateInput = {
   id?: string
-  storeProductId: string
+  variantId: string
   delta: number
   quantityAfter: number
   reason: $Enums.InventoryAdjustmentReason
@@ -334,12 +334,12 @@ export type InventoryAdjustmentUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   changedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  storeProduct?: Prisma.StoreProductUpdateOneRequiredWithoutAdjustmentsNestedInput
+  variant?: Prisma.ProductVariantUpdateOneRequiredWithoutAdjustmentsNestedInput
 }
 
 export type InventoryAdjustmentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  storeProductId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.StringFieldUpdateOperationsInput | string
   delta?: Prisma.IntFieldUpdateOperationsInput | number
   quantityAfter?: Prisma.IntFieldUpdateOperationsInput | number
   reason?: Prisma.EnumInventoryAdjustmentReasonFieldUpdateOperationsInput | $Enums.InventoryAdjustmentReason
@@ -350,7 +350,7 @@ export type InventoryAdjustmentUncheckedUpdateInput = {
 
 export type InventoryAdjustmentCreateManyInput = {
   id?: string
-  storeProductId: string
+  variantId: string
   delta: number
   quantityAfter: number
   reason: $Enums.InventoryAdjustmentReason
@@ -371,7 +371,7 @@ export type InventoryAdjustmentUpdateManyMutationInput = {
 
 export type InventoryAdjustmentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  storeProductId?: Prisma.StringFieldUpdateOperationsInput | string
+  variantId?: Prisma.StringFieldUpdateOperationsInput | string
   delta?: Prisma.IntFieldUpdateOperationsInput | number
   quantityAfter?: Prisma.IntFieldUpdateOperationsInput | number
   reason?: Prisma.EnumInventoryAdjustmentReasonFieldUpdateOperationsInput | $Enums.InventoryAdjustmentReason
@@ -392,7 +392,7 @@ export type InventoryAdjustmentOrderByRelationAggregateInput = {
 
 export type InventoryAdjustmentCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  storeProductId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   delta?: Prisma.SortOrder
   quantityAfter?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -408,7 +408,7 @@ export type InventoryAdjustmentAvgOrderByAggregateInput = {
 
 export type InventoryAdjustmentMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  storeProductId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   delta?: Prisma.SortOrder
   quantityAfter?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -419,7 +419,7 @@ export type InventoryAdjustmentMaxOrderByAggregateInput = {
 
 export type InventoryAdjustmentMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  storeProductId?: Prisma.SortOrder
+  variantId?: Prisma.SortOrder
   delta?: Prisma.SortOrder
   quantityAfter?: Prisma.SortOrder
   reason?: Prisma.SortOrder
@@ -433,45 +433,45 @@ export type InventoryAdjustmentSumOrderByAggregateInput = {
   quantityAfter?: Prisma.SortOrder
 }
 
-export type InventoryAdjustmentCreateNestedManyWithoutStoreProductInput = {
-  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput> | Prisma.InventoryAdjustmentCreateWithoutStoreProductInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput[]
-  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput[]
-  createMany?: Prisma.InventoryAdjustmentCreateManyStoreProductInputEnvelope
+export type InventoryAdjustmentCreateNestedManyWithoutVariantInput = {
+  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput> | Prisma.InventoryAdjustmentCreateWithoutVariantInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput[]
+  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput[]
+  createMany?: Prisma.InventoryAdjustmentCreateManyVariantInputEnvelope
   connect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
 }
 
-export type InventoryAdjustmentUncheckedCreateNestedManyWithoutStoreProductInput = {
-  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput> | Prisma.InventoryAdjustmentCreateWithoutStoreProductInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput[]
-  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput[]
-  createMany?: Prisma.InventoryAdjustmentCreateManyStoreProductInputEnvelope
+export type InventoryAdjustmentUncheckedCreateNestedManyWithoutVariantInput = {
+  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput> | Prisma.InventoryAdjustmentCreateWithoutVariantInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput[]
+  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput[]
+  createMany?: Prisma.InventoryAdjustmentCreateManyVariantInputEnvelope
   connect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
 }
 
-export type InventoryAdjustmentUpdateManyWithoutStoreProductNestedInput = {
-  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput> | Prisma.InventoryAdjustmentCreateWithoutStoreProductInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput[]
-  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput[]
-  upsert?: Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutStoreProductInput | Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutStoreProductInput[]
-  createMany?: Prisma.InventoryAdjustmentCreateManyStoreProductInputEnvelope
+export type InventoryAdjustmentUpdateManyWithoutVariantNestedInput = {
+  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput> | Prisma.InventoryAdjustmentCreateWithoutVariantInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput[]
+  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput[]
+  upsert?: Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutVariantInput | Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutVariantInput[]
+  createMany?: Prisma.InventoryAdjustmentCreateManyVariantInputEnvelope
   set?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   disconnect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   delete?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   connect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
-  update?: Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutStoreProductInput | Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutStoreProductInput[]
-  updateMany?: Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutStoreProductInput | Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutStoreProductInput[]
+  update?: Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutVariantInput | Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutVariantInput[]
+  updateMany?: Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutVariantInput | Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutVariantInput[]
   deleteMany?: Prisma.InventoryAdjustmentScalarWhereInput | Prisma.InventoryAdjustmentScalarWhereInput[]
 }
 
-export type InventoryAdjustmentUncheckedUpdateManyWithoutStoreProductNestedInput = {
-  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput> | Prisma.InventoryAdjustmentCreateWithoutStoreProductInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput[]
-  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutStoreProductInput[]
-  upsert?: Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutStoreProductInput | Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutStoreProductInput[]
-  createMany?: Prisma.InventoryAdjustmentCreateManyStoreProductInputEnvelope
+export type InventoryAdjustmentUncheckedUpdateManyWithoutVariantNestedInput = {
+  create?: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput> | Prisma.InventoryAdjustmentCreateWithoutVariantInput[] | Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput[]
+  connectOrCreate?: Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput | Prisma.InventoryAdjustmentCreateOrConnectWithoutVariantInput[]
+  upsert?: Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutVariantInput | Prisma.InventoryAdjustmentUpsertWithWhereUniqueWithoutVariantInput[]
+  createMany?: Prisma.InventoryAdjustmentCreateManyVariantInputEnvelope
   set?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   disconnect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   delete?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
   connect?: Prisma.InventoryAdjustmentWhereUniqueInput | Prisma.InventoryAdjustmentWhereUniqueInput[]
-  update?: Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutStoreProductInput | Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutStoreProductInput[]
-  updateMany?: Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutStoreProductInput | Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutStoreProductInput[]
+  update?: Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutVariantInput | Prisma.InventoryAdjustmentUpdateWithWhereUniqueWithoutVariantInput[]
+  updateMany?: Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutVariantInput | Prisma.InventoryAdjustmentUpdateManyWithWhereWithoutVariantInput[]
   deleteMany?: Prisma.InventoryAdjustmentScalarWhereInput | Prisma.InventoryAdjustmentScalarWhereInput[]
 }
 
@@ -479,7 +479,7 @@ export type EnumInventoryAdjustmentReasonFieldUpdateOperationsInput = {
   set?: $Enums.InventoryAdjustmentReason
 }
 
-export type InventoryAdjustmentCreateWithoutStoreProductInput = {
+export type InventoryAdjustmentCreateWithoutVariantInput = {
   id?: string
   delta: number
   quantityAfter: number
@@ -489,7 +489,7 @@ export type InventoryAdjustmentCreateWithoutStoreProductInput = {
   createdAt?: Date | string
 }
 
-export type InventoryAdjustmentUncheckedCreateWithoutStoreProductInput = {
+export type InventoryAdjustmentUncheckedCreateWithoutVariantInput = {
   id?: string
   delta: number
   quantityAfter: number
@@ -499,30 +499,30 @@ export type InventoryAdjustmentUncheckedCreateWithoutStoreProductInput = {
   createdAt?: Date | string
 }
 
-export type InventoryAdjustmentCreateOrConnectWithoutStoreProductInput = {
+export type InventoryAdjustmentCreateOrConnectWithoutVariantInput = {
   where: Prisma.InventoryAdjustmentWhereUniqueInput
-  create: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput>
+  create: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput>
 }
 
-export type InventoryAdjustmentCreateManyStoreProductInputEnvelope = {
-  data: Prisma.InventoryAdjustmentCreateManyStoreProductInput | Prisma.InventoryAdjustmentCreateManyStoreProductInput[]
+export type InventoryAdjustmentCreateManyVariantInputEnvelope = {
+  data: Prisma.InventoryAdjustmentCreateManyVariantInput | Prisma.InventoryAdjustmentCreateManyVariantInput[]
   skipDuplicates?: boolean
 }
 
-export type InventoryAdjustmentUpsertWithWhereUniqueWithoutStoreProductInput = {
+export type InventoryAdjustmentUpsertWithWhereUniqueWithoutVariantInput = {
   where: Prisma.InventoryAdjustmentWhereUniqueInput
-  update: Prisma.XOR<Prisma.InventoryAdjustmentUpdateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedUpdateWithoutStoreProductInput>
-  create: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutStoreProductInput>
+  update: Prisma.XOR<Prisma.InventoryAdjustmentUpdateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedUpdateWithoutVariantInput>
+  create: Prisma.XOR<Prisma.InventoryAdjustmentCreateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedCreateWithoutVariantInput>
 }
 
-export type InventoryAdjustmentUpdateWithWhereUniqueWithoutStoreProductInput = {
+export type InventoryAdjustmentUpdateWithWhereUniqueWithoutVariantInput = {
   where: Prisma.InventoryAdjustmentWhereUniqueInput
-  data: Prisma.XOR<Prisma.InventoryAdjustmentUpdateWithoutStoreProductInput, Prisma.InventoryAdjustmentUncheckedUpdateWithoutStoreProductInput>
+  data: Prisma.XOR<Prisma.InventoryAdjustmentUpdateWithoutVariantInput, Prisma.InventoryAdjustmentUncheckedUpdateWithoutVariantInput>
 }
 
-export type InventoryAdjustmentUpdateManyWithWhereWithoutStoreProductInput = {
+export type InventoryAdjustmentUpdateManyWithWhereWithoutVariantInput = {
   where: Prisma.InventoryAdjustmentScalarWhereInput
-  data: Prisma.XOR<Prisma.InventoryAdjustmentUpdateManyMutationInput, Prisma.InventoryAdjustmentUncheckedUpdateManyWithoutStoreProductInput>
+  data: Prisma.XOR<Prisma.InventoryAdjustmentUpdateManyMutationInput, Prisma.InventoryAdjustmentUncheckedUpdateManyWithoutVariantInput>
 }
 
 export type InventoryAdjustmentScalarWhereInput = {
@@ -530,7 +530,7 @@ export type InventoryAdjustmentScalarWhereInput = {
   OR?: Prisma.InventoryAdjustmentScalarWhereInput[]
   NOT?: Prisma.InventoryAdjustmentScalarWhereInput | Prisma.InventoryAdjustmentScalarWhereInput[]
   id?: Prisma.StringFilter<"InventoryAdjustment"> | string
-  storeProductId?: Prisma.StringFilter<"InventoryAdjustment"> | string
+  variantId?: Prisma.StringFilter<"InventoryAdjustment"> | string
   delta?: Prisma.IntFilter<"InventoryAdjustment"> | number
   quantityAfter?: Prisma.IntFilter<"InventoryAdjustment"> | number
   reason?: Prisma.EnumInventoryAdjustmentReasonFilter<"InventoryAdjustment"> | $Enums.InventoryAdjustmentReason
@@ -539,7 +539,7 @@ export type InventoryAdjustmentScalarWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"InventoryAdjustment"> | Date | string
 }
 
-export type InventoryAdjustmentCreateManyStoreProductInput = {
+export type InventoryAdjustmentCreateManyVariantInput = {
   id?: string
   delta: number
   quantityAfter: number
@@ -549,7 +549,7 @@ export type InventoryAdjustmentCreateManyStoreProductInput = {
   createdAt?: Date | string
 }
 
-export type InventoryAdjustmentUpdateWithoutStoreProductInput = {
+export type InventoryAdjustmentUpdateWithoutVariantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   delta?: Prisma.IntFieldUpdateOperationsInput | number
   quantityAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -559,7 +559,7 @@ export type InventoryAdjustmentUpdateWithoutStoreProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type InventoryAdjustmentUncheckedUpdateWithoutStoreProductInput = {
+export type InventoryAdjustmentUncheckedUpdateWithoutVariantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   delta?: Prisma.IntFieldUpdateOperationsInput | number
   quantityAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -569,7 +569,7 @@ export type InventoryAdjustmentUncheckedUpdateWithoutStoreProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type InventoryAdjustmentUncheckedUpdateManyWithoutStoreProductInput = {
+export type InventoryAdjustmentUncheckedUpdateManyWithoutVariantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   delta?: Prisma.IntFieldUpdateOperationsInput | number
   quantityAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -583,43 +583,43 @@ export type InventoryAdjustmentUncheckedUpdateManyWithoutStoreProductInput = {
 
 export type InventoryAdjustmentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  storeProductId?: boolean
+  variantId?: boolean
   delta?: boolean
   quantityAfter?: boolean
   reason?: boolean
   note?: boolean
   changedById?: boolean
   createdAt?: boolean
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryAdjustment"]>
 
 export type InventoryAdjustmentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  storeProductId?: boolean
+  variantId?: boolean
   delta?: boolean
   quantityAfter?: boolean
   reason?: boolean
   note?: boolean
   changedById?: boolean
   createdAt?: boolean
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryAdjustment"]>
 
 export type InventoryAdjustmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  storeProductId?: boolean
+  variantId?: boolean
   delta?: boolean
   quantityAfter?: boolean
   reason?: boolean
   note?: boolean
   changedById?: boolean
   createdAt?: boolean
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryAdjustment"]>
 
 export type InventoryAdjustmentSelectScalar = {
   id?: boolean
-  storeProductId?: boolean
+  variantId?: boolean
   delta?: boolean
   quantityAfter?: boolean
   reason?: boolean
@@ -628,25 +628,25 @@ export type InventoryAdjustmentSelectScalar = {
   createdAt?: boolean
 }
 
-export type InventoryAdjustmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeProductId" | "delta" | "quantityAfter" | "reason" | "note" | "changedById" | "createdAt", ExtArgs["result"]["inventoryAdjustment"]>
+export type InventoryAdjustmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "variantId" | "delta" | "quantityAfter" | "reason" | "note" | "changedById" | "createdAt", ExtArgs["result"]["inventoryAdjustment"]>
 export type InventoryAdjustmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }
 export type InventoryAdjustmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }
 export type InventoryAdjustmentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  storeProduct?: boolean | Prisma.StoreProductDefaultArgs<ExtArgs>
+  variant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
 }
 
 export type $InventoryAdjustmentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "InventoryAdjustment"
   objects: {
-    storeProduct: Prisma.$StoreProductPayload<ExtArgs>
+    variant: Prisma.$ProductVariantPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    storeProductId: string
+    variantId: string
     delta: number
     quantityAfter: number
     reason: $Enums.InventoryAdjustmentReason
@@ -1047,7 +1047,7 @@ readonly fields: InventoryAdjustmentFieldRefs;
  */
 export interface Prisma__InventoryAdjustmentClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  storeProduct<T extends Prisma.StoreProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StoreProductDefaultArgs<ExtArgs>>): Prisma.Prisma__StoreProductClient<runtime.Types.Result.GetResult<Prisma.$StoreProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  variant<T extends Prisma.ProductVariantDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductVariantDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductVariantClient<runtime.Types.Result.GetResult<Prisma.$ProductVariantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1078,7 +1078,7 @@ export interface Prisma__InventoryAdjustmentClient<T, Null = never, ExtArgs exte
  */
 export interface InventoryAdjustmentFieldRefs {
   readonly id: Prisma.FieldRef<"InventoryAdjustment", 'String'>
-  readonly storeProductId: Prisma.FieldRef<"InventoryAdjustment", 'String'>
+  readonly variantId: Prisma.FieldRef<"InventoryAdjustment", 'String'>
   readonly delta: Prisma.FieldRef<"InventoryAdjustment", 'Int'>
   readonly quantityAfter: Prisma.FieldRef<"InventoryAdjustment", 'Int'>
   readonly reason: Prisma.FieldRef<"InventoryAdjustment", 'InventoryAdjustmentReason'>

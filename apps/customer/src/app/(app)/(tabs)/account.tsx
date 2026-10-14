@@ -95,7 +95,7 @@ export default function AccountScreen() {
 
   function shareApp() {
     if (!appLink) return;
-    Share.share({ message: `I order my groceries on ${appName}. Get the app: ${appLink}` }).catch(() => {});
+    Share.share({ message: `I shop on ${appName}. Get the app: ${appLink}` }).catch(() => {});
   }
 
   return (

@@ -44,11 +44,10 @@ export function createRatingsService(prisma: PrismaClient) {
     }
   }
 
-  /** Low ratings, newest first. Routes pass the staff member's own store; admins may filter by any. */
-  async function listLowRatings({ storeId, from, to, limit, offset }: LowRatingsQuery) {
+  /** Low ratings, newest first. */
+  async function listLowRatings({ from, to, limit, offset }: LowRatingsQuery) {
     const where: Prisma.OrderRatingWhereInput = {
       OR: [{ deliveryRating: { lte: LOW_RATING } }, { itemsRating: { lte: LOW_RATING } }],
-      ...(storeId && { order: { storeId } }),
       ...((from || to) && { createdAt: { ...(from && { gte: startOfDay(from) }), ...(to && { lt: endOfDay(to) }) } }),
     };
 
@@ -70,7 +69,6 @@ export function createRatingsService(prisma: PrismaClient) {
               orderNumber: true,
               customerName: true,
               customerPhone: true,
-              store: { select: { id: true, name: true } },
               statusHistory: deliveredEntry,
             },
           },

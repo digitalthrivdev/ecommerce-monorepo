@@ -15,7 +15,7 @@ export const listOrdersQuerySchema = paginationQuerySchema.extend({
   active: booleanQuery,
 });
 
-/** Store staff and admin order lists. */
+/** Staff and admin order lists. */
 export const manageOrdersQuerySchema = paginationQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   /** One status or a comma-separated list, e.g. `PICKING,PACKED`. */

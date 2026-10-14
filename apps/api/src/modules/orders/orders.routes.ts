@@ -30,8 +30,8 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/buy-again", async (request) => {
-    const { storeId, limit } = buyAgainQuerySchema.parse(request.query);
-    return discovery.buyAgain(request.user.sub, storeId, limit);
+    const { limit } = buyAgainQuerySchema.parse(request.query);
+    return discovery.buyAgain(request.user.sub, limit);
   });
 
   app.get("/:id", async (request) => {

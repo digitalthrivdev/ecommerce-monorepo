@@ -1,8 +1,8 @@
-import { StoreStatus, type Prisma, type PrismaClient } from "../../generated/prisma/client";
+import type { Prisma, PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { inCategory } from "../products/catalog.js";
 import { createDiscoveryService } from "../products/discovery.service.js";
-import { storeProductInclude, storeProductWhere, toStoreProductViews } from "../products/store-products.service.js";
+import { catalogProductInclude, catalogProductWhere, toProductCards } from "../products/catalog.service.js";
 import type { HomeSection } from "./appearance.schemas.js";
 import { getAppearance } from "./appearance.service.js";
 
@@ -57,44 +57,34 @@ const needsAllCategories = (section: HomeSection) =>
 export function createHomeService(prisma: PrismaClient) {
   const discovery = createDiscoveryService(prisma);
 
-  async function assertActiveStore(storeId: string) {
-    const store = await prisma.store.findFirst({ where: { id: storeId, status: StoreStatus.ACTIVE }, select: { id: true } });
-    if (!store) {
-      throw new AppError(404, "STORE_NOT_FOUND", "Store not found");
-    }
-  }
-
-  /** Products of the category (and its sub-categories) with at least one variant in stock at the store. */
-  async function railProducts(storeId: string, categoryId: string, limit: number) {
+  /** Products of the category (and its sub-categories) with at least one variant in stock. */
+  async function railProducts(categoryId: string, limit: number) {
     const rows = await prisma.product.findMany({
       where: {
-        ...storeProductWhere(storeId, false),
+        ...catalogProductWhere,
         ...inCategory(categoryId),
-        variants: {
-          some: { isActive: true, stores: { some: { storeId, isAvailable: true, inventory: { quantity: { gt: 0 } } } } },
-        },
+        variants: { some: { isActive: true, inventory: { is: { quantity: { gt: 0 } } } } },
       },
-      include: storeProductInclude(storeId),
+      include: catalogProductInclude,
       orderBy: { name: "asc" },
       take: limit,
     });
-    return toStoreProductViews(prisma, rows, { includeStock: false });
+    return toProductCards(prisma, rows);
   }
 
-  /** The chosen brands (or the store's top brands) that are active and have something in stock at the store. */
-  function railBrands(storeId: string, brandIds: string[]) {
+  /** The chosen brands (or the top brands) that are active and have something in stock. */
+  function railBrands(brandIds: string[]) {
     return brandIds.length === 0
-      ? discovery.storeBrands(storeId, { limit: TOP_BRANDS_LIMIT })
-      : discovery.storeBrands(storeId, { brandIds, limit: brandIds.length });
+      ? discovery.inStockBrands({ limit: TOP_BRANDS_LIMIT })
+      : discovery.inStockBrands({ brandIds, limit: brandIds.length });
   }
 
   /**
    * The enabled sections with their data filled in. Inactive or deleted categories are dropped (links to
-   * them become plain), and sections left with nothing to show are omitted. Sections that depend on the
-   * store's stock are only included when a store is given. `extraCategoryIds` are looked up along with the
-   * sections' categories and returned in `categories` when active.
+   * them become plain), and sections left with nothing to show are omitted. `extraCategoryIds` are looked
+   * up along with the sections' categories and returned in `categories` when active.
    */
-  async function resolveSections(storeId: string | undefined, allSections: HomeSection[], extraCategoryIds: string[]) {
+  async function resolveSections(allSections: HomeSection[], extraCategoryIds: string[]) {
     const sections = allSections.filter((section) => section.enabled);
     const ids = [...new Set([...referencedCategoryIds(sections), ...extraCategoryIds])];
 
@@ -136,39 +126,34 @@ export function createHomeService(prisma: PrismaClient) {
 
         case "product_rail": {
           const category = categories.get(section.categoryId);
-          if (!storeId || !category) return null;
-          const products = await railProducts(storeId, category.id, section.limit);
+          if (!category) return null;
+          const products = await railProducts(category.id, section.limit);
           if (products.length === 0) return null;
           return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
         }
 
         case "deals_rail": {
           const category = section.categoryId ? categories.get(section.categoryId) : null;
-          if (!storeId || category === undefined) return null;
-          const products = await discovery.dealProducts(storeId, category?.id ?? null, section.limit);
+          if (category === undefined) return null;
+          const products = await discovery.dealProducts(category?.id ?? null, section.limit);
           if (products.length === 0) return null;
           return { id: section.id, type: section.type, title: section.title, description: section.description, category, products };
         }
 
         case "buy_again":
-          return storeId ? { id: section.id, type: section.type, title: section.title, description: section.description } : null;
+          return { id: section.id, type: section.type, title: section.title, description: section.description };
 
         case "brand_rail": {
-          if (!storeId) return null;
-          const brands = await railBrands(storeId, section.brandIds);
+          const brands = await railBrands(section.brandIds);
           if (brands.length === 0) return null;
           return { id: section.id, type: section.type, title: section.title, description: section.description, brands };
         }
 
         case "category_deals": {
-          if (!storeId) return null;
           const candidates = section.categoryIds.length
             ? section.categoryIds.flatMap((id) => categories.get(id) ?? [])
             : allActive.slice(0, TOP_CATEGORY_DEALS_LIMIT);
-          const discounts = await discovery.categoryDiscounts(
-            storeId,
-            candidates.map((category) => category.id),
-          );
+          const discounts = await discovery.categoryDiscounts(candidates.map((category) => category.id));
           const shown = candidates.flatMap((category) => {
             const maxDiscountPercent = discounts.get(category.id) ?? 0;
             return maxDiscountPercent > 0 ? [{ ...category, maxDiscountPercent }] : [];
@@ -178,16 +163,11 @@ export function createHomeService(prisma: PrismaClient) {
         }
 
         case "sale_hero": {
-          if (!storeId) return null;
           const tiles = section.categoryIds.flatMap((id) => categories.get(id) ?? []);
           const [products, discounts, images] = await Promise.all([
-            section.productIds.length > 0 ? discovery.productsByIds(storeId, section.productIds) : [],
-            discovery.categoryDiscounts(
-              storeId,
-              tiles.map((category) => category.id),
-            ),
+            section.productIds.length > 0 ? discovery.productsByIds(section.productIds) : [],
+            discovery.categoryDiscounts(tiles.map((category) => category.id)),
             discovery.categoryDealImages(
-              storeId,
               tiles.map((category) => category.id),
               SALE_HERO_TILE_IMAGES,
             ),
@@ -280,8 +260,8 @@ export function createHomeService(prisma: PrismaClient) {
     return { categories, sections: resolved.filter((section) => section !== null) };
   }
 
-  async function loadAppearance(storeId: string | undefined) {
-    const [{ appearance }] = await Promise.all([getAppearance(prisma), storeId ? assertActiveStore(storeId) : undefined]);
+  async function loadAppearance() {
+    const { appearance } = await getAppearance(prisma);
     return { appearance, tabs: appearance.categoryTabs.enabled ? appearance.categoryTabs.tabs : [] };
   }
 
@@ -290,10 +270,9 @@ export function createHomeService(prisma: PrismaClient) {
    * or deleted are dropped. A tab icon of null means the category has no image; the app shows its first
    * letter. `header` is set for tabs that open their own page, so the app can recolour before it loads.
    */
-  async function getHomeFeed(storeId: string | undefined) {
-    const { appearance, tabs } = await loadAppearance(storeId);
+  async function getHomeFeed() {
+    const { appearance, tabs } = await loadAppearance();
     const { categories, sections } = await resolveSections(
-      storeId,
       appearance.homeSections,
       tabs.map((tab) => tab.categoryId),
     );
@@ -313,21 +292,21 @@ export function createHomeService(prisma: PrismaClient) {
       return [{ id: tab.id, label: tab.label ?? category.name, icon, badge: tab.badge, category, opens: header ? ("page" as const) : ("category" as const), header }];
     });
 
-    return { storeId: storeId ?? null, categoryTabs, sections };
+    return { categoryTabs, sections };
   }
 
   /** The sections of a tab that opens its own page; missing like the tab itself when its category is hidden. */
-  async function getTabPage(storeId: string | undefined, tabId: string) {
-    const { tabs } = await loadAppearance(storeId);
+  async function getTabPage(tabId: string) {
+    const { tabs } = await loadAppearance();
     const tab = tabs.find((candidate) => candidate.id === tabId);
     if (!tab || tab.opens !== "page" || !tab.page) {
       throw new AppError(404, "TAB_NOT_FOUND", "Tab not found");
     }
-    const { categories, sections } = await resolveSections(storeId, tab.page.sections, [tab.categoryId]);
+    const { categories, sections } = await resolveSections(tab.page.sections, [tab.categoryId]);
     if (!categories.has(tab.categoryId)) {
       throw new AppError(404, "TAB_NOT_FOUND", "Tab not found");
     }
-    return { storeId: storeId ?? null, tabId: tab.id, sections };
+    return { tabId: tab.id, sections };
   }
 
   return { getHomeFeed, getTabPage };

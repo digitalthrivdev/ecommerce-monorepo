@@ -2,7 +2,7 @@ import { InventoryAdjustmentReason, Prisma, type PrismaClient } from "../../gene
 import { AppError } from "../../shared/errors.js";
 import { slugify } from "../../shared/schemas.js";
 import { setStock } from "../inventory/inventory.service.js";
-import { MAX_OPTION_VALUES, MAX_OPTIONS, MAX_VARIANTS, type VariantsInput } from "../products/products.schemas.js";
+import { MAX_OPTION_VALUES, MAX_OPTIONS, MAX_VARIANTS, compareAtPriceProblem, type VariantsInput } from "../products/products.schemas.js";
 import { saveVariants, validateVariants } from "../products/variants.js";
 import {
   COLUMNS,
@@ -37,7 +37,6 @@ export type ProductGroup = {
 };
 
 export type ImportPlan = {
-  store: { id: string; name: string };
   columns: Set<Column>;
   groups: ProductGroup[];
   rowCount: number;
@@ -84,60 +83,63 @@ const has = (columns: Set<Column>, column: Column) => columns.has(column);
 
 const TEMPLATE_ROWS: Partial<Record<Column, string>>[] = [
   {
-    product_handle: "parle-g-original-biscuits",
-    name: "Parle-G Original Glucose Biscuits",
-    brand: "Parle",
-    category: "Snacks & Biscuits",
-    subcategory: "Biscuits",
-    description: "Classic glucose biscuits",
-    tags: "biscuit, glucose",
-    hsn_code: "1905",
-    gst_rate: "18",
-    is_veg: "yes",
+    product_handle: "classic-cotton-t-shirt",
+    name: "Classic Cotton T-Shirt",
+    brand: "Everyday Basics",
+    category: "Clothing",
+    subcategory: "T-Shirts",
+    description: "Soft crew-neck T-shirt in 100% cotton",
+    tags: "t-shirt, cotton",
+    hsn_code: "6109",
+    gst_rate: "5",
     option1_name: "Size",
-    option1_value: "250 g",
-    sku: "PARLEG-250G",
-    pack_quantity: "250",
-    unit: "g",
-    max_order_quantity: "10",
-    price: "25.00",
-    mrp: "25.00",
+    option1_value: "M",
+    option2_name: "Colour",
+    option2_value: "Black",
+    sku: "TSHIRT-M-BLK",
+    max_order_quantity: "5",
+    price: "499.00",
+    compare_at_price: "699.00",
     available: "yes",
-    stock: "120",
+    stock: "40",
+    weight_grams: "200",
+    length_cm: "30",
+    breadth_cm: "25",
+    height_cm: "3",
     image_url: "",
   },
   {
-    product_handle: "parle-g-original-biscuits",
-    name: "Parle-G Original Glucose Biscuits",
+    product_handle: "classic-cotton-t-shirt",
+    name: "Classic Cotton T-Shirt",
     option1_name: "Size",
-    option1_value: "800 g",
-    sku: "PARLEG-800G",
-    pack_quantity: "800",
-    unit: "g",
+    option1_value: "L",
+    option2_name: "Colour",
+    option2_value: "Black",
+    sku: "TSHIRT-L-BLK",
     max_order_quantity: "5",
-    price: "76.00",
-    mrp: "80.00",
+    price: "499.00",
+    compare_at_price: "699.00",
     available: "yes",
     stock: "",
+    weight_grams: "220",
   },
   {
-    product_handle: "tata-salt",
-    name: "Tata Salt",
-    brand: "Tata",
-    category: "Staples",
-    subcategory: "Salt & Sugar",
-    description: "Iodised salt",
-    tags: "salt, namak",
-    hsn_code: "2501",
-    gst_rate: "5",
-    is_veg: "yes",
-    sku: "TATA-SALT-1KG",
-    pack_quantity: "1",
-    unit: "kg",
-    price: "28.00",
-    mrp: "30.00",
+    product_handle: "ceramic-coffee-mug",
+    name: "Ceramic Coffee Mug",
+    brand: "Homeware Co",
+    category: "Home & Kitchen",
+    subcategory: "Mugs",
+    description: "350 ml stoneware mug, dishwasher safe",
+    tags: "mug, coffee",
+    hsn_code: "6912",
+    gst_rate: "12",
+    sku: "MUG-350",
+    pack_quantity: "350",
+    unit: "ml",
+    price: "299.00",
     available: "yes",
-    stock: "60",
+    stock: "25",
+    weight_grams: "400",
   },
 ];
 
@@ -311,7 +313,14 @@ type ExistingProduct = {
     barcode: string | null;
     unit: string | null;
     quantity: string | null;
+    price: string;
+    compareAtPrice: string | null;
+    weightGrams: number | null;
+    lengthCm: string | null;
+    breadthCm: string | null;
+    heightCm: string | null;
     maxOrderQuantity: number | null;
+    isActive: boolean;
     /** Option name in lower case → value. */
     values: Map<string, string>;
   }[];
@@ -334,7 +343,14 @@ async function loadExisting(db: Db, productIds: string[]) {
           barcode: true,
           unit: true,
           quantity: true,
+          price: true,
+          compareAtPrice: true,
+          weightGrams: true,
+          lengthCm: true,
+          breadthCm: true,
+          heightCm: true,
           maxOrderQuantity: true,
+          isActive: true,
           optionValues: { select: { optionValue: { select: { value: true, option: { select: { name: true } } } } } },
         },
       },
@@ -346,9 +362,14 @@ async function loadExisting(db: Db, productIds: string[]) {
       product.id,
       {
         options: product.options.map((option) => ({ name: option.name, values: option.values.map((value) => value.value) })),
-        variants: product.variants.map(({ optionValues, quantity, ...variant }) => ({
+        variants: product.variants.map(({ optionValues, quantity, price, compareAtPrice, lengthCm, breadthCm, heightCm, ...variant }) => ({
           ...variant,
           quantity: quantity?.toString() ?? null,
+          price: price.toString(),
+          compareAtPrice: compareAtPrice?.toString() ?? null,
+          lengthCm: lengthCm?.toString() ?? null,
+          breadthCm: breadthCm?.toString() ?? null,
+          heightCm: heightCm?.toString() ?? null,
           values: new Map(optionValues.map(({ optionValue }) => [key(optionValue.option.name), optionValue.value])),
         })),
       },
@@ -393,7 +414,14 @@ function mergeVariants(existing: ExistingProduct | undefined, group: ProductGrou
         barcode: column(row, "barcode", row?.data.barcode, variant.barcode),
         unit: column(row, "unit", row?.data.unit, variant.unit),
         quantity: column(row, "pack_quantity", row?.data.pack_quantity, variant.quantity),
+        price: row?.data.price ?? variant.price,
+        compareAtPrice: column(row, "compare_at_price", row?.data.compare_at_price, variant.compareAtPrice),
+        weightGrams: column(row, "weight_grams", row?.data.weight_grams, variant.weightGrams),
+        lengthCm: column(row, "length_cm", row?.data.length_cm, variant.lengthCm),
+        breadthCm: column(row, "breadth_cm", row?.data.breadth_cm, variant.breadthCm),
+        heightCm: column(row, "height_cm", row?.data.height_cm, variant.heightCm),
         maxOrderQuantity: column(row, "max_order_quantity", row?.data.max_order_quantity, variant.maxOrderQuantity),
+        isActive: row?.data.available ?? variant.isActive,
       },
     };
   });
@@ -409,9 +437,25 @@ function mergeVariants(existing: ExistingProduct | undefined, group: ProductGrou
         barcode: row.data.barcode ?? null,
         unit: row.data.unit ?? null,
         quantity: row.data.pack_quantity ?? null,
+        price: row.data.price,
+        compareAtPrice: row.data.compare_at_price ?? null,
+        weightGrams: row.data.weight_grams ?? null,
+        lengthCm: row.data.length_cm ?? null,
+        breadthCm: row.data.breadth_cm ?? null,
+        heightCm: row.data.height_cm ?? null,
         maxOrderQuantity: row.data.max_order_quantity ?? null,
+        isActive: row.data.available ?? true,
       },
     });
+  }
+
+  // Without a compare_at_price column, the saved one stays, so the new price must not exceed it.
+  for (const draft of drafts.filter((candidate) => candidate.inFile)) {
+    const problem = compareAtPriceProblem(draft.variant.price, draft.variant.compareAtPrice);
+    if (problem) {
+      const saved = has(columns, "compare_at_price") ? "" : ` (${draft.variant.compareAtPrice} saved); add a compare_at_price column`;
+      errors.push({ row: draft.row, column: has(columns, "compare_at_price") ? "compare_at_price" : "price", message: `${problem}${saved}` });
+    }
   }
 
   const axisNames = axes.map((axis) => axis.name).join(", ");
@@ -483,19 +527,10 @@ function uniqueSlug(candidates: string[], taken: Set<string>, fallback: string) 
 const categoryLabel = (data: ProductRow["data"]) => (data.subcategory ? `${data.category} › ${data.subcategory}` : data.category);
 
 export function createCatalogImportService(prisma: PrismaClient) {
-  async function findStore(storeId: string) {
-    const store = await prisma.store.findUnique({ where: { id: storeId }, select: { id: true, name: true } });
-    if (!store) {
-      throw new AppError(404, "STORE_NOT_FOUND", "Store not found");
-    }
-    return store;
-  }
-
   /** Validates the whole file against the catalog without saving anything. */
-  async function plan(storeId: string, csv: string): Promise<ImportPlan> {
-    const store = await findStore(storeId);
+  async function plan(csv: string): Promise<ImportPlan> {
     const { columns, rows, rowCount, errors } = readRows(csv);
-    const result: ImportPlan = { store, columns, groups: [], rowCount, categoriesToCreate: [], brandsToCreate: [], errors };
+    const result: ImportPlan = { columns, groups: [], rowCount, categoriesToCreate: [], brandsToCreate: [], errors };
     if (rows.length === 0) return result;
 
     const groups = groupRows(rows, errors);
@@ -565,21 +600,6 @@ export function createCatalogImportService(prisma: PrismaClient) {
       valid.push(group);
     }
 
-    // Without an mrp column, the saved MRP stays, so the new price must not exceed it.
-    if (!has(columns, "mrp")) {
-      const priceRow = new Map(valid.flatMap((group) => group.rows.map((row) => [row.data.sku, row] as const)));
-      const listings = await prisma.storeProduct.findMany({
-        where: { storeId, mrp: { not: null }, variant: { sku: { in: [...priceRow.keys()] } } },
-        select: { mrp: true, variant: { select: { sku: true } } },
-      });
-      for (const listing of listings) {
-        const row = priceRow.get(listing.variant.sku)!;
-        if (listing.mrp!.lt(row.data.price)) {
-          errors.push({ row: row.row, column: "price", message: `Above the MRP saved at this store (${listing.mrp!.toFixed(2)}); add an mrp column` });
-        }
-      }
-    }
-
     // Categories: at most two levels, so a "category" must be top-level.
     const topByName = new Map<string, (typeof categories)[number]>();
     const subByName = new Map<string, (typeof categories)[number]>();
@@ -646,7 +666,6 @@ export function createCatalogImportService(prisma: PrismaClient) {
     const variantRows = plan.groups.flatMap((group) => group.rows);
     const created = plan.groups.reduce((sum, group) => sum + group.createsVariants, 0);
     return {
-      store: plan.store,
       rows: plan.rowCount,
       products: { create: plan.groups.length - updates.length, update: updates.length },
       variants: { create: created, update: variantRows.length - created },
@@ -719,17 +738,13 @@ export function createCatalogImportService(prisma: PrismaClient) {
       tags: set("tags", data.tags ?? []),
       hsnCode: set("hsn_code", data.hsn_code ?? null),
       gstRate: set("gst_rate", data.gst_rate ?? null),
-      isVeg: set("is_veg", data.is_veg ?? null),
       manufacturerName: set("manufacturer_name", data.manufacturer_name ?? null),
       manufacturerAddress: set("manufacturer_address", data.manufacturer_address ?? null),
       countryOfOrigin: set("country_of_origin", data.country_of_origin ?? null),
-      fssaiLicense: set("fssai_license", data.fssai_license ?? null),
-      shelfLife: set("shelf_life", data.shelf_life ?? null),
-      ingredients: set("ingredients", data.ingredients ?? null),
     };
   }
 
-  /** Writes one product, its variants, store listings and stock. Must run inside a transaction. */
+  /** Writes one product, its variants (with prices) and stock. Must run inside a transaction. */
   async function writeProduct(tx: Db, group: ProductGroup, context: WriteContext): Promise<WrittenProduct> {
     const { plan, changedById } = context;
     const data = productData(group, context);
@@ -758,23 +773,9 @@ export function createCatalogImportService(prisma: PrismaClient) {
     const variantIdBySku = new Map(variants.map((variant) => [variant.sku, variant.id]));
 
     let stockChanged = 0;
-    for (const { row, data: rowData } of group.rows) {
-      const variantId = variantIdBySku.get(rowData.sku)!;
-      const listing = await tx.storeProduct.findUnique({
-        where: { storeId_variantId: { storeId: plan.store.id, variantId } },
-        select: { id: true, mrp: true },
-      });
-      const mrp = has(plan.columns, "mrp") ? (rowData.mrp ?? null) : (listing?.mrp ?? null);
-      if (mrp !== null && new Prisma.Decimal(mrp).lt(rowData.price)) {
-        throw new AppError(409, "MRP_BELOW_PRICE", `Row ${row}: the price is above the MRP`);
-      }
-      const listingData = { sellingPrice: rowData.price, mrp, ...(rowData.available != null && { isAvailable: rowData.available }) };
-      const storeProductId = listing
-        ? (await tx.storeProduct.update({ where: { id: listing.id }, data: listingData, select: { id: true } })).id
-        : (await tx.storeProduct.create({ data: { storeId: plan.store.id, variantId, ...listingData }, select: { id: true } })).id;
-
+    for (const { data: rowData } of group.rows) {
       if (rowData.stock != null) {
-        const before = await setStock(tx, storeProductId, rowData.stock, {
+        const before = await setStock(tx, variantIdBySku.get(rowData.sku)!, rowData.stock, {
           reason: InventoryAdjustmentReason.CORRECTION,
           note: "CSV import",
           changedById,

@@ -1,35 +1,34 @@
 import type { FastifyPluginAsync } from "fastify";
 
+import { UserRole } from "../../generated/prisma/client";
 import {
   adjustInventoryBodySchema,
   inventoryItemParamsSchema,
   listAdjustmentsQuerySchema,
   listInventoryQuerySchema,
-  storeParamsSchema,
 } from "./inventory.schemas.js";
 import { createInventoryService } from "./inventory.service.js";
 
 const inventoryRoutes: FastifyPluginAsync = async (app) => {
   const inventoryService = createInventoryService(app.prisma);
 
-  app.addHook("preHandler", app.requireStoreAccess);
+  app.addHook("preHandler", app.requireRole(UserRole.ADMIN, UserRole.STAFF));
 
   app.get("/", async (request) => {
-    const { storeId } = storeParamsSchema.parse(request.params);
     const query = listInventoryQuerySchema.parse(request.query);
-    return inventoryService.listInventory(storeId, query);
+    return inventoryService.listInventory(query);
   });
 
   app.patch("/:variantId", { preHandler: app.forbidTestAccount }, async (request) => {
-    const { storeId, variantId } = inventoryItemParamsSchema.parse(request.params);
+    const { variantId } = inventoryItemParamsSchema.parse(request.params);
     const body = adjustInventoryBodySchema.parse(request.body);
-    return inventoryService.adjustInventory(storeId, variantId, body, request.user.sub);
+    return inventoryService.adjustInventory(variantId, body, request.user.sub);
   });
 
   app.get("/:variantId/adjustments", async (request) => {
-    const { storeId, variantId } = inventoryItemParamsSchema.parse(request.params);
+    const { variantId } = inventoryItemParamsSchema.parse(request.params);
     const query = listAdjustmentsQuerySchema.parse(request.query);
-    return inventoryService.listAdjustments(storeId, variantId, query);
+    return inventoryService.listAdjustments(variantId, query);
   });
 };
 

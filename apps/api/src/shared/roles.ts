@@ -3,7 +3,7 @@ import { AppError } from "./errors.js";
 
 const ROLE_WITH_ARTICLE: Record<UserRole, string> = {
   CUSTOMER: "a customer",
-  STORE_STAFF: "store staff",
+  STAFF: "staff",
   ADMIN: "an admin",
 };
 
@@ -14,5 +14,5 @@ export function roleConflictError(role: UserRole) {
 
 /** Dashboard users sign in with email and password; customers with an OTP. */
 export function signsInWithPassword(role: UserRole) {
-  return role === UserRole.ADMIN || role === UserRole.STORE_STAFF;
+  return role === UserRole.ADMIN || role === UserRole.STAFF;
 }

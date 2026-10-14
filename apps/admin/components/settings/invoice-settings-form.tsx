@@ -40,7 +40,7 @@ export function InvoiceSettingsForm({ settings }: { settings: PlatformSettings }
               className="uppercase"
               aria-invalid={Boolean(fieldErrors.gstin)}
             />
-            <FieldDescription>A store registered in another state can have its own, on its store page.</FieldDescription>
+            <FieldDescription>Used when it is registered in the state of the default pickup location.</FieldDescription>
             <FieldError>{fieldErrors.gstin}</FieldError>
           </Field>
           <Field data-invalid={Boolean(fieldErrors.deliveryFeeGstRate)}>

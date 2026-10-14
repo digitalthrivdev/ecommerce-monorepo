@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell, MapPin, ReceiptText, ShoppingBasket, PackageCheck, Store, Truck, Wallet } from "lucide-react";
+import { Bell, ReceiptText, ShieldCheck, ShoppingBasket, PackageCheck, Truck, Wallet } from "lucide-react";
 
 import { AppBadges } from "@/components/app-badges";
 import { HomeSections, shownSections } from "@/components/home-sections";
@@ -15,18 +15,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const STEPS = [
   { icon: ShoppingBasket, title: "Order in the app", text: "Browse fruits, vegetables, dairy, snacks and household essentials, and check out in a few taps." },
-  { icon: PackageCheck, title: "Packed at a store near you", text: "Your order goes to the nearest store that has everything in stock, where it is picked and packed." },
+  { icon: PackageCheck, title: "Packed with care", text: "We pick and pack your order as soon as it comes in, checking every item." },
   { icon: Truck, title: "Delivered to your door", text: "Follow every step in the app, from packing to your doorstep." },
 ];
 
 export default async function HomePage() {
   const [website, settings, feed, siteUrl] = await Promise.all([getWebsite(), getSettings(), getHomeFeed().catch(() => null), getSiteUrl()]);
-  const { business, tagline, apps, cities } = website;
+  const { business, tagline, apps } = website;
   const sections = feed ? shownSections(feed) : [];
   const payOnline = settings.payments.methods.includes("ONLINE");
 
   const features = [
-    { icon: Store, title: "From a store near you", text: "Stocked and packed close to home" },
+    { icon: ShieldCheck, title: "Quality checked", text: "Every order checked before it leaves" },
     { icon: Wallet, title: payOnline ? "Pay online or cash" : "Cash on delivery", text: payOnline ? "UPI, cards, or cash at the door" : "Pay when your order arrives" },
     { icon: Bell, title: "Order updates", text: "Know when it's packed and on its way" },
     { icon: ReceiptText, title: "GST invoice", text: "Download it from the app after delivery" },
@@ -41,17 +41,11 @@ export default async function HomePage() {
         />
         <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-14 pb-28 lg:grid-cols-[1.15fr_0.85fr] lg:pt-20 lg:pb-32">
           <div className="flex flex-col items-start gap-6">
-            {cities.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-medium ring-1 ring-white/25 backdrop-blur">
-                <MapPin className="size-4" aria-hidden />
-                Now delivering in {cities.join(", ")}
-              </span>
-            )}
             <h1 className="max-w-xl text-4xl leading-[1.08] font-extrabold sm:text-5xl lg:text-6xl">
               {tagline ?? "Groceries and daily essentials, delivered to your door"}
             </h1>
             <p className="max-w-lg text-lg opacity-90">
-              Fresh fruits, vegetables, dairy and household needs from {business.appName}, packed at a store near you and brought to your door.
+              Fresh fruits, vegetables, dairy and household needs from {business.appName}, packed with care and brought to your door.
             </p>
 
             {apps.customer ? (
@@ -103,7 +97,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-5 py-20">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold tracking-wider text-primary-ink uppercase">How it works</p>
-            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">From the store shelf to your door</h2>
+            <h2 className="mt-2 text-3xl font-bold sm:text-4xl">From our shelves to your door</h2>
           </div>
           <ol className="mt-10 grid gap-5 md:grid-cols-3">
             {STEPS.map(({ icon: Icon, title, text }, index) => (

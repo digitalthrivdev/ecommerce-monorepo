@@ -15,7 +15,7 @@ import { AppLinksForm, PolicyEditors, PolicyLinks, WebsiteDetailsForm } from "@/
 import { apiFetch } from "@/lib/api";
 import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { formatDateTime } from "@/lib/format";
-import type { EditablePolicyPage, Paginated, PlatformSettings, StoreDetails } from "@/lib/types";
+import type { EditablePolicyPage, PickupLocation, PlatformSettings } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/website";
 
@@ -88,13 +88,13 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   await requireAdmin();
   const { tab: tabParam } = await searchParams;
   const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "rules";
-  const [settings, deployment, policyPages, stores] = await Promise.all([
+  const [settings, deployment, policyPages, pickupLocations] = await Promise.all([
     apiFetch<PlatformSettings>("/settings/platform"),
     getPublicSettings(),
     tab === "website" ? apiFetch<EditablePolicyPage[]>("/settings/policy-pages") : null,
-    tab === "invoices" ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
+    tab === "invoices" ? apiFetch<{ items: PickupLocation[] }>("/pickup-locations") : null,
   ]);
-  const storesWithoutGstin = (stores?.items ?? []).filter((store) => !store.invoiceGstin);
+  const defaultLocation = pickupLocations?.items.find((location) => location.isDefault);
   const siteUrl = getSiteUrl();
   const siteLinks = [
     { title: "Website", url: siteUrl },
@@ -185,18 +185,21 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                 Delivered orders get an invoice the customer can download. Add your GSTIN so it can be used as a tax invoice.
               </Notice>
             )}
-            {settings.gstin && storesWithoutGstin.length > 0 && (
-              <Notice tone="warning" title="Some stores are in another state than this GSTIN">
-                Their invoices have no GSTIN until you add each store&apos;s own GSTIN on its page:{" "}
-                {storesWithoutGstin.map((store, index) => (
-                  <span key={store.id}>
-                    {index > 0 && ", "}
-                    <Link href={`/stores/${store.id}`} className="font-medium underline underline-offset-4">
-                      {store.name}
-                    </Link>{" "}
-                    ({store.state})
-                  </span>
-                ))}
+            {pickupLocations && !defaultLocation && (
+              <Notice tone="warning" title="No pickup location yet">
+                Invoices show the seller&apos;s address from the default pickup location.{" "}
+                <Link href="/pickup-locations" className="font-medium underline underline-offset-4">
+                  Add one
+                </Link>
+                .
+              </Notice>
+            )}
+            {settings.gstin && defaultLocation && !defaultLocation.invoiceGstin && (
+              <Notice tone="warning" title="The default pickup location is in another state than this GSTIN">
+                Invoices have no GSTIN while parcels ship from {defaultLocation.state}. Use the GSTIN registered there, or{" "}
+                <Link href="/pickup-locations" className="font-medium underline underline-offset-4">
+                  change the default pickup location
+                </Link>
                 .
               </Notice>
             )}

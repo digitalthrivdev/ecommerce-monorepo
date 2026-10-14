@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft, LocateFixed, MapPin, Search } from "lucide-react-native";
@@ -10,10 +9,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { apiFetch, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { describePlace, getCurrentCoordinates, type PlaceDetails } from "@/lib/location";
-import type { Coordinates, Serviceability } from "@/lib/types";
+import type { Coordinates } from "@/lib/types";
 
 const STREET_DELTA = 0.004;
 /** Zoomed out further than this (about 5 km across), the pin is too rough to deliver to. */
@@ -27,8 +26,6 @@ type MapPinPickerProps = {
   visible: boolean;
   /** The pin to start from; without it the picker finds the phone's position. */
   initial: Coordinates | null;
-  /** Where to look while the phone's position is unknown. */
-  fallback?: Coordinates | null;
   onClose: () => void;
   onConfirm: (coordinates: Coordinates, place: PlaceDetails | null) => void;
 };
@@ -42,11 +39,11 @@ export function MapPinPicker({ visible, onClose, ...props }: MapPinPickerProps) 
   );
 }
 
-function PickerContent({ initial, fallback, onClose, onConfirm }: Omit<MapPinPickerProps, "visible">) {
+function PickerContent({ initial, onClose, onConfirm }: Omit<MapPinPickerProps, "visible">) {
   const insets = useSafeAreaInsets();
   const { colors, neutral } = useAppTheme();
   const mapRef = useRef<MapView>(null);
-  const [startRegion] = useState(() => (initial ? streetRegion(initial) : fallback ? streetRegion(fallback) : WORLD));
+  const [startRegion] = useState(() => (initial ? streetRegion(initial) : WORLD));
   const [region, setRegion] = useState<Region>(startRegion);
   const [settled, setSettled] = useState<Region>(startRegion);
   const [place, setPlace] = useState<{ key: string; details: PlaceDetails | null } | null>(null);
@@ -75,13 +72,6 @@ function PickerContent({ initial, fallback, onClose, onConfirm }: Omit<MapPinPic
       cancelled = true;
     };
   }, [settled, pinnable]);
-
-  const serviceability = useQuery({
-    queryKey: ["serviceability", point.latitude.toFixed(5), point.longitude.toFixed(5)],
-    queryFn: () => apiFetch<Serviceability>("/stores/serviceability", { query: point }),
-    enabled: pinnable,
-    staleTime: 5 * 60_000,
-  });
 
   function moveTo(target: Coordinates) {
     mapRef.current?.animateToRegion(streetRegion(target), 500);
@@ -128,7 +118,6 @@ function PickerContent({ initial, fallback, onClose, onConfirm }: Omit<MapPinPic
   const resolving = pinnable && (moving || place?.key !== key);
   const title = details?.area || details?.summary || (resolving ? "Finding the address…" : pinnable ? "Pinned location" : "Zoom in to your building");
   const subtitle = details ? [details.city, details.state, details.postalCode].filter(Boolean).join(", ") : null;
-  const notServiceable = pinnable && !moving && serviceability.data?.serviceable === false;
 
   return (
     <View className="flex-1 bg-background">
@@ -189,11 +178,7 @@ function PickerContent({ initial, fallback, onClose, onConfirm }: Omit<MapPinPic
           {subtitle ? <Text className="text-sm text-muted-foreground">{subtitle}</Text> : null}
         </View>
         {message ? <Text className="text-sm text-destructive">{message}</Text> : null}
-        {notServiceable ? (
-          <Text className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">We don&apos;t deliver here yet. Move the pin, or try another area.</Text>
-        ) : (
-          <Text className="text-xs text-muted-foreground">Move the map so the pin sits on your building&apos;s entrance.</Text>
-        )}
+        <Text className="text-xs text-muted-foreground">Move the map so the pin sits on your building&apos;s entrance.</Text>
         <Button onPress={() => onConfirm(point, details)} disabled={!pinnable || moving} className="h-12 rounded-lg">
           <Text className="text-base font-bold">Confirm location</Text>
         </Button>

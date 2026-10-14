@@ -1,17 +1,14 @@
-import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { checkCoupon, COUPON_ERROR_CODES } from "../coupons/coupons.service.js";
 import { checkoutOptions, customerOrderBlock } from "../orders/checkout-rules.js";
-import { imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
-import { customerVisible } from "../products/store-products.service.js";
+import { customerVisibleVariant, imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
-import { hoursOrder, hoursSelect, isStoreOpen } from "../stores/store-hours.js";
 import type { AddCartItemInput } from "./cart.schemas.js";
 
 type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK" | "QUANTITY_LIMIT";
 
 const cartInclude = {
-  store: { select: { id: true, name: true, code: true, status: true, hours: { select: hoursSelect, orderBy: hoursOrder } } },
   items: {
     include: {
       variant: {
@@ -42,18 +39,18 @@ export async function lockCart(tx: Tx, cartId: string) {
   await tx.$queryRaw`SELECT id FROM "Cart" WHERE id = ${cartId} FOR UPDATE`;
 }
 
-/** Stock and per-order limit of a variant customers can buy at the store. */
-async function getSellableStock(tx: Tx, storeId: string, variantId: string) {
-  const storeProduct = await tx.storeProduct.findFirst({
-    where: { storeId, variantId, ...customerVisible, store: { status: StoreStatus.ACTIVE } },
-    select: { inventory: { select: { quantity: true } }, variant: { select: { maxOrderQuantity: true } } },
+/** Stock and per-order limit of a variant customers can buy. */
+async function getSellableStock(tx: Tx, variantId: string) {
+  const variant = await tx.productVariant.findFirst({
+    where: { id: variantId, ...customerVisibleVariant },
+    select: { maxOrderQuantity: true, inventory: { select: { quantity: true } } },
   });
 
-  if (!storeProduct) {
-    throw new AppError(404, "PRODUCT_NOT_AVAILABLE", "Product is not available at this store");
+  if (!variant) {
+    throw new AppError(404, "PRODUCT_NOT_AVAILABLE", "Product is not available");
   }
 
-  return { available: storeProduct.inventory?.quantity ?? 0, limit: maxOrderQuantity(storeProduct.variant) };
+  return { available: variant.inventory?.quantity ?? 0, limit: maxOrderQuantity(variant) };
 }
 
 function assertEnoughStock(requested: number, { available, limit }: { available: number; limit: number }) {
@@ -84,11 +81,9 @@ export function createCartService(prisma: PrismaClient) {
   async function getCart(userId: string) {
     const cart = await prisma.cart.findUnique({ where: { userId }, include: cartInclude });
 
-    if (!cart || !cart.storeId || cart.items.length === 0) {
+    if (!cart || cart.items.length === 0) {
       return {
         id: cart?.id ?? null,
-        store: null,
-        storeIsOpen: false,
         items: [],
         itemCount: 0,
         subtotal: "0.00",
@@ -99,33 +94,27 @@ export function createCartService(prisma: PrismaClient) {
       };
     }
 
-    const storeIsActive = cart.store?.status === StoreStatus.ACTIVE;
-
-    const storeProducts = await prisma.storeProduct.findMany({
-      where: {
-        storeId: cart.storeId,
-        variantId: { in: cart.items.map((item) => item.variantId) },
-        ...customerVisible,
-      },
-      select: { variantId: true, sellingPrice: true, mrp: true, inventory: { select: { quantity: true } } },
+    const sellable = await prisma.productVariant.findMany({
+      where: { id: { in: cart.items.map((item) => item.variantId) }, ...customerVisibleVariant },
+      select: { id: true, price: true, compareAtPrice: true, inventory: { select: { quantity: true } } },
     });
-    const byVariantId = new Map(storeProducts.map((sp) => [sp.variantId, sp]));
+    const byVariantId = new Map(sellable.map((row) => [row.id, row]));
 
     let subtotal = new Prisma.Decimal(0);
 
     const items = cart.items.map((item) => {
       const { variant } = item;
-      const storeProduct = storeIsActive ? byVariantId.get(item.variantId) : undefined;
-      const available = storeProduct?.inventory?.quantity ?? 0;
+      const listing = byVariantId.get(item.variantId);
+      const available = listing?.inventory?.quantity ?? 0;
       const limit = maxOrderQuantity(variant);
 
       let issue: CartItemIssue | null = null;
-      if (!storeProduct) issue = "UNAVAILABLE";
+      if (!listing) issue = "UNAVAILABLE";
       else if (available === 0) issue = "OUT_OF_STOCK";
       else if (item.quantity > available) issue = "INSUFFICIENT_STOCK";
       else if (item.quantity > limit) issue = "QUANTITY_LIMIT";
 
-      const lineTotal = storeProduct ? storeProduct.sellingPrice.mul(item.quantity) : null;
+      const lineTotal = listing ? listing.price.mul(item.quantity) : null;
       if (lineTotal && !issue) {
         subtotal = subtotal.add(lineTotal);
       }
@@ -142,15 +131,13 @@ export function createCartService(prisma: PrismaClient) {
         packQuantity: variant.quantity?.toString() ?? null,
         quantity: item.quantity,
         maxQuantity: limit,
-        unitPrice: storeProduct?.sellingPrice.toFixed(2) ?? null,
-        mrp: storeProduct?.mrp?.toFixed(2) ?? null,
+        unitPrice: listing?.price.toFixed(2) ?? null,
+        compareAtPrice: listing?.compareAtPrice?.toFixed(2) ?? null,
         lineTotal: lineTotal?.toFixed(2) ?? null,
         issue,
         ...(issue === "INSUFFICIENT_STOCK" && { availableQuantity: available }),
       };
     });
-
-    const storeIsOpen = storeIsActive && isStoreOpen(cart.store?.hours ?? []);
 
     const [settings, block, coupon] = await Promise.all([
       getPlatformSettings(prisma),
@@ -161,8 +148,6 @@ export function createCartService(prisma: PrismaClient) {
 
     return {
       id: cart.id,
-      store: cart.store && { id: cart.store.id, name: cart.store.name, code: cart.store.code, status: cart.store.status },
-      storeIsOpen,
       items,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       subtotal: subtotal.toFixed(2),
@@ -179,7 +164,7 @@ export function createCartService(prisma: PrismaClient) {
         amountToFreeDelivery: charges.amountToFreeDelivery?.toFixed(2) ?? null,
       },
       checkout: await checkoutOptions(prisma, settings, charges.total, block),
-      isValid: storeIsOpen && items.every((item) => item.issue === null),
+      isValid: items.every((item) => item.issue === null),
     };
   }
 
@@ -200,27 +185,13 @@ export function createCartService(prisma: PrismaClient) {
     }
   }
 
-  async function addItem(userId: string, { storeId, variantId, quantity }: AddCartItemInput) {
+  async function addItem(userId: string, { variantId, quantity }: AddCartItemInput) {
     const cart = await ensureCart(userId);
 
     await prisma.$transaction(async (tx) => {
       await lockCart(tx, cart.id);
 
-      const current = await tx.cart.findUniqueOrThrow({
-        where: { id: cart.id },
-        select: { storeId: true, _count: { select: { items: true } } },
-      });
-
-      if (current._count.items > 0 && current.storeId !== storeId) {
-        throw new AppError(
-          409,
-          "STORE_MISMATCH",
-          "Your cart has items from another store. Clear the cart to shop from this store.",
-          { cartStoreId: current.storeId },
-        );
-      }
-
-      const stock = await getSellableStock(tx, storeId, variantId);
+      const stock = await getSellableStock(tx, variantId);
 
       const existing = await tx.cartItem.findUnique({
         where: { cartId_variantId: { cartId: cart.id, variantId } },
@@ -228,10 +199,6 @@ export function createCartService(prisma: PrismaClient) {
       });
       const newQuantity = (existing?.quantity ?? 0) + quantity;
       assertEnoughStock(newQuantity, stock);
-
-      if (current.storeId !== storeId) {
-        await tx.cart.update({ where: { id: cart.id }, data: { storeId } });
-      }
 
       await tx.cartItem.upsert({
         where: { cartId_variantId: { cartId: cart.id, variantId } },
@@ -246,7 +213,7 @@ export function createCartService(prisma: PrismaClient) {
   async function findOwnItem(tx: Tx, userId: string, itemId: string) {
     const item = await tx.cartItem.findFirst({
       where: { id: itemId, cart: { userId } },
-      select: { id: true, cartId: true, variantId: true, cart: { select: { storeId: true } } },
+      select: { id: true, cartId: true, variantId: true },
     });
 
     if (!item) {
@@ -261,7 +228,7 @@ export function createCartService(prisma: PrismaClient) {
       const item = await findOwnItem(tx, userId, itemId);
       await lockCart(tx, item.cartId);
 
-      const stock = await getSellableStock(tx, item.cart.storeId!, item.variantId);
+      const stock = await getSellableStock(tx, item.variantId);
       assertEnoughStock(quantity, stock);
 
       await tx.cartItem.update({ where: { id: item.id }, data: { quantity } });
@@ -279,7 +246,7 @@ export function createCartService(prisma: PrismaClient) {
 
       const remaining = await tx.cartItem.count({ where: { cartId: item.cartId } });
       if (remaining === 0) {
-        await tx.cart.update({ where: { id: item.cartId }, data: { storeId: null, couponCode: null } });
+        await tx.cart.update({ where: { id: item.cartId }, data: { couponCode: null } });
       }
     });
 
@@ -293,7 +260,7 @@ export function createCartService(prisma: PrismaClient) {
 
       await lockCart(tx, cart.id);
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
-      await tx.cart.update({ where: { id: cart.id }, data: { storeId: null, couponCode: null } });
+      await tx.cart.update({ where: { id: cart.id }, data: { couponCode: null } });
     });
 
     return getCart(userId);

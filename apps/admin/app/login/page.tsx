@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const demo = settings?.demoLogins;
   const demoLogins = [
     demo?.admin && { label: "Demo admin", ...demo.admin },
-    demo?.staff && { label: "Demo store staff", ...demo.staff },
+    demo?.staff && { label: "Demo staff", ...demo.staff },
   ].filter((login) => !!login);
 
   return (

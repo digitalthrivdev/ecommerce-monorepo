@@ -8,15 +8,14 @@ import { PageHeader } from "@/components/page-header";
 import { PaginationLinks } from "@/components/pagination-links";
 import { PageBody, Panel } from "@/components/section";
 import { Stars } from "@/components/stars";
-import { StoreFilter } from "@/components/store-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiFetch } from "@/lib/api";
-import { getCurrentUser, getPublicSettings } from "@/lib/dal";
+import { getPublicSettings } from "@/lib/dal";
 import { formatDate, formatDateTime, todayIn } from "@/lib/format";
-import type { LowRating, Paginated, StoreDetails } from "@/lib/types";
+import type { LowRating, Paginated } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Low ratings" };
 
@@ -26,28 +25,19 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 const day = (value: string | undefined) => (value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) ? value : undefined);
 
 export default async function RatingsPage({ searchParams }: PageProps<"/ratings">) {
-  const user = await getCurrentUser();
-  const isAdmin = user.role === "ADMIN";
   const params = await searchParams;
 
-  const storeId = isAdmin ? first(params.storeId) || undefined : undefined;
   let from = day(first(params.from));
   let to = day(first(params.to));
   if (from && to && from > to) [from, to] = [to, from];
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
   const query = { from, to, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE };
-  const [ratings, stores, settings] = await Promise.all([
-    isAdmin
-      ? apiFetch<Paginated<LowRating>>("/admin/ratings", { query: { ...query, storeId } })
-      : apiFetch<Paginated<LowRating>>(`/stores/${encodeURIComponent(user.store!.id)}/ratings`, { query }),
-    isAdmin ? apiFetch<Paginated<StoreDetails>>("/stores", { query: { includeInactive: true, limit: 100 } }) : null,
-    getPublicSettings(),
-  ]);
+  const [ratings, settings] = await Promise.all([apiFetch<Paginated<LowRating>>("/admin/ratings", { query }), getPublicSettings()]);
 
   const href = (changes: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
-    for (const [key, value] of Object.entries({ storeId, from, to, ...changes })) {
+    for (const [key, value] of Object.entries({ from, to, ...changes })) {
       if (value) next.set(key, value);
     }
     const search = next.toString();
@@ -56,19 +46,13 @@ export default async function RatingsPage({ searchParams }: PageProps<"/ratings"
   const lastPage = Math.max(1, Math.ceil(ratings.total / PAGE_SIZE));
   const today = todayIn(settings.timezone);
   const filtered = Boolean(from || to);
-  const showStore = isAdmin && !storeId;
 
   return (
     <>
-      <PageHeader
-        title="Low ratings"
-        description={`Orders customers rated 1 or 2 stars for the delivery or the items${isAdmin ? "" : ` at ${user.store?.name ?? "your store"}`}. Newest first.`}
-        actions={stores && stores.items.length > 1 && <StoreFilter stores={stores.items} />}
-      />
+      <PageHeader title="Low ratings" description="Orders customers rated 1 or 2 stars for the delivery or the items. Newest first." />
       <PageBody>
         <div className="flex flex-col gap-4">
           <Form action="/ratings" className="flex flex-wrap items-end gap-3">
-            {storeId && <input type="hidden" name="storeId" value={storeId} />}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ratings-from">Rated from</Label>
               <Input id="ratings-from" name="from" type="date" defaultValue={from} max={today} className="w-40" />
@@ -112,9 +96,7 @@ export default async function RatingsPage({ searchParams }: PageProps<"/ratings"
                         <Link href={`/orders/${rating.order.id}`} className="font-medium underline-offset-4 hover:underline">
                           {rating.order.orderNumber}
                         </Link>
-                        <div className="text-xs text-muted-foreground">
-                          {[showStore && rating.order.store.name, rating.order.customerName].filter(Boolean).join(" · ")}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{rating.order.customerName}</div>
                       </TableCell>
                       <TableCell>
                         <Stars value={rating.deliveryRating} />

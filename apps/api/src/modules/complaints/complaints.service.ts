@@ -156,7 +156,6 @@ export function createComplaintsService(
               total: true,
               customerName: true,
               customerPhone: true,
-              store: { select: { id: true, name: true } },
             },
           },
           _count: { select: { items: true } },
@@ -217,7 +216,6 @@ export function createComplaintsService(
             customerName: true,
             customerPhone: true,
             createdAt: true,
-            store: { select: { id: true, name: true } },
             statusHistory: deliveredEntry,
             payment: { select: { status: true, amount: true, refundedAmount: true } },
           },
@@ -253,7 +251,6 @@ export function createComplaintsService(
         customerPhone: order.customerPhone,
         createdAt: order.createdAt,
         deliveredAt: deliveredAt(order.statusHistory),
-        store: order.store,
       },
       items: items.map(({ quantity, orderItem }) => ({
         orderItemId: orderItem.id,

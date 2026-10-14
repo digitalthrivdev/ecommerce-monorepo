@@ -7,13 +7,11 @@ import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductCard } from "@/components/product-card";
 import { QueryError } from "@/components/query-error";
-import { StoreRequired } from "@/components/store-required";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { useAppTheme } from "@/lib/app-theme";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { useBuyAgain } from "@/lib/orders";
 import { useSettings } from "@/lib/settings";
 
@@ -38,50 +36,45 @@ function NothingYet() {
   );
 }
 
-/** What the customer has ordered before that their store has in stock, most often ordered first. */
+/** What the customer has ordered before that is in stock, most often ordered first. */
 export default function OrderAgainScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { currency } = useSettings();
-  const { store } = useDeliveryLocation();
   const { width } = useWindowDimensions();
-  const query = useBuyAgain(store?.id, { limit: LIMIT });
+  const query = useBuyAgain({ limit: LIMIT });
   const itemWidth = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <Text className="px-4 pb-4 pt-3 text-2xl font-extrabold">Order again</Text>
-      {!store ? (
-        <StoreRequired />
-      ) : (
-        <FlatList
-          data={query.data?.items ?? []}
-          keyExtractor={(product) => product.productId}
-          numColumns={COLUMNS}
-          columnWrapperStyle={{ gap: GAP, paddingHorizontal: SIDE_PADDING }}
-          contentContainerStyle={{ gap: GAP, paddingBottom: 32 }}
-          renderItem={({ item }) => (
-            <View style={{ width: itemWidth }}>
-              <ProductCard product={item} currency={currency} />
+      <FlatList
+        data={query.data?.items ?? []}
+        keyExtractor={(product) => product.productId}
+        numColumns={COLUMNS}
+        columnWrapperStyle={{ gap: GAP, paddingHorizontal: SIDE_PADDING }}
+        contentContainerStyle={{ gap: GAP, paddingBottom: 32 }}
+        renderItem={({ item }) => (
+          <View style={{ width: itemWidth }}>
+            <ProductCard product={item} currency={currency} />
+          </View>
+        )}
+        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={colors.primary} />}
+        ListEmptyComponent={
+          query.isPending ? (
+            <View className="flex-row flex-wrap px-4" style={{ gap: GAP }}>
+              {Array.from({ length: 4 }, (_, index) => (
+                <Skeleton key={index} className="rounded-lg" style={{ width: itemWidth, height: itemWidth * 1.55 }} />
+              ))}
             </View>
-          )}
-          refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={colors.primary} />}
-          ListEmptyComponent={
-            query.isPending ? (
-              <View className="flex-row flex-wrap px-4" style={{ gap: GAP }}>
-                {Array.from({ length: 4 }, (_, index) => (
-                  <Skeleton key={index} className="rounded-lg" style={{ width: itemWidth, height: itemWidth * 1.55 }} />
-                ))}
-              </View>
-            ) : query.isError ? (
-              <QueryError error={query.error} onRetry={() => query.refetch()} />
-            ) : (
-              <NothingYet />
-            )
-          }
-        />
-      )}
+          ) : query.isError ? (
+            <QueryError error={query.error} onRetry={() => query.refetch()} />
+          ) : (
+            <NothingYet />
+          )
+        }
+      />
       <CartBar inset={false} />
     </View>
   );

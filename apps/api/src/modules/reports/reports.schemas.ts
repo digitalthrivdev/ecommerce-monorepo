@@ -21,7 +21,6 @@ export const reportQuerySchema = z
   .object({
     from: daySchema,
     to: daySchema,
-    storeId: z.string().trim().min(1).max(64).optional(),
   })
   .refine((query) => query.to >= query.from, { path: ["to"], message: "The end date must be on or after the start date" })
   .refine((query) => (dayMs(query.to) - dayMs(query.from)) / 86_400_000 < MAX_REPORT_DAYS, {

@@ -19,16 +19,16 @@ export default fp(async (app) => {
   const revokedTokenKey = (tokenId: string) => `auth:revoked-token:${tokenId}`;
 
   const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
-  // The demo's order flow: the store's fulfilment steps (as test staff) and the delivery steps (admin only).
+  // The demo's order flow: the fulfilment steps (as test staff) and the delivery steps (admin only).
   const TEST_ADMIN_WRITES = new Set([
     "/auth/logout",
-    "/stores/:storeId/orders/:orderId/accept",
-    "/stores/:storeId/orders/:orderId/start-picking",
-    "/stores/:storeId/orders/:orderId/items/:itemId/unavailable",
-    "/stores/:storeId/orders/:orderId/pack",
-    "/stores/:storeId/orders/:orderId/ready",
-    "/stores/:storeId/orders/:orderId/out-for-delivery",
-    "/stores/:storeId/orders/:orderId/mark-delivered",
+    "/admin/orders/:orderId/accept",
+    "/admin/orders/:orderId/start-picking",
+    "/admin/orders/:orderId/items/:itemId/unavailable",
+    "/admin/orders/:orderId/pack",
+    "/admin/orders/:orderId/ready",
+    "/admin/orders/:orderId/out-for-delivery",
+    "/admin/orders/:orderId/mark-delivered",
   ]);
   const testAccountError = () => new AppError(403, "TEST_ACCOUNT_READ_ONLY", "Demo account: changes are disabled");
 
@@ -100,32 +100,5 @@ export default fp(async (app) => {
         throw new AppError(403, "FORBIDDEN", "You do not have access to this resource");
       }
     };
-  });
-
-  // Staff membership is read from the database so removing someone from a store takes effect immediately.
-  app.decorate("canManageStore", async (request: FastifyRequest, storeId: string) => {
-    if (request.user.role === UserRole.ADMIN) {
-      return true;
-    }
-    if (request.user.role !== UserRole.STORE_STAFF) {
-      return false;
-    }
-
-    const user = await app.prisma.user.findUnique({
-      where: { id: request.user.sub },
-      select: { role: true, storeId: true },
-    });
-
-    return user?.role === UserRole.STORE_STAFF && user.storeId === storeId;
-  });
-
-  app.decorate("requireStoreAccess", async (request: FastifyRequest) => {
-    await app.authenticate(request);
-
-    const { storeId } = request.params as { storeId?: string };
-
-    if (!storeId || !(await app.canManageStore(request, storeId))) {
-      throw new AppError(403, "FORBIDDEN", "You do not have access to this store");
-    }
   });
 });

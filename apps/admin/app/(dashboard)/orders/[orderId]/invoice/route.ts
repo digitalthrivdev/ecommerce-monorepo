@@ -1,7 +1,7 @@
 import { ApiError } from "@/lib/api";
 import { proxyDownload } from "@/lib/downloads";
 
-/** The order's GST invoice PDF. Store staff can only download their own store's. */
+/** The order's GST invoice PDF, for admins and staff. */
 export async function GET(_request: Request, ctx: RouteContext<"/orders/[orderId]/invoice">) {
   const { orderId } = await ctx.params;
   try {

@@ -1,4 +1,4 @@
-import { StoreStatus, type PrismaClient } from "../../generated/prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { getAppearance } from "./appearance.service.js";
 import { POLICY_SLUGS, POLICY_TEMPLATES, POLICY_TITLES, type PolicySlug } from "./policy-templates.js";
@@ -54,13 +54,12 @@ export function createWebsiteService(prisma: PrismaClient) {
       .replaceAll("{{contact}}", contact);
   }
 
-  /** Public: home page details, the cities served, and the title of every policy page. */
+  /** Public: home page details and the title of every policy page. */
   async function getWebsite() {
-    const [business, settings, saved, cities] = await Promise.all([
+    const [business, settings, saved] = await Promise.all([
       getBusiness(),
       getPlatformSettings(prisma),
       prisma.policyPage.findMany({ select: { slug: true, updatedAt: true } }),
-      prisma.store.findMany({ where: { status: StoreStatus.ACTIVE }, distinct: ["city"], select: { city: true }, orderBy: { city: "asc" } }),
     ]);
     const updatedAt = new Map(saved.map((page) => [page.slug, page.updatedAt]));
 
@@ -70,7 +69,6 @@ export function createWebsiteService(prisma: PrismaClient) {
       apps: {
         customer: appLinks(settings.playStoreUrl, settings.appStoreUrl, settings.appDownloadUrl),
       },
-      cities: cities.map((store) => store.city),
       pages: POLICY_SLUGS.map((slug) => ({ slug, title: POLICY_TITLES[slug], updatedAt: updatedAt.get(slug) ?? null })),
     };
   }

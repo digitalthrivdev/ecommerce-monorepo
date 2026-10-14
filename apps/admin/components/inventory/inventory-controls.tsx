@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { History, Loader2 } from "lucide-react";
 
-import { adjustStock, getStockHistory, setAvailability, type StockHistoryResult } from "@/app/(dashboard)/inventory/actions";
+import { adjustStock, getStockHistory, setVariantActive, type StockHistoryResult } from "@/app/(dashboard)/inventory/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,7 +26,7 @@ import { formatDateTime, STOCK_REASON_LABELS } from "@/lib/format";
 import type { StockChangeReason } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Target = { storeId: string; variantId: string };
+type Target = { variantId: string };
 type Mode = "add" | "remove" | "set";
 type ManualReason = Exclude<StockChangeReason, "ORDER_UNAVAILABLE">;
 
@@ -41,7 +41,7 @@ const MODE_COPY: Record<Mode, { label: string; field: string; hint: string; reas
   },
 };
 
-export function StockAdjustDialog({ storeId, variantId, title, currentStock }: Target & {
+export function StockAdjustDialog({ variantId, title, currentStock }: Target & {
   /** Product name with the variant label. */
   title: string;
   currentStock: number;
@@ -74,7 +74,7 @@ export function StockAdjustDialog({ storeId, variantId, title, currentStock }: T
   function submit(event: React.FormEvent) {
     event.preventDefault();
     startTransition(async () => {
-      if (toastResult(await adjustStock({ storeId, variantId, mode, amount, reason, note }))) {
+      if (toastResult(await adjustStock({ variantId, mode, amount, reason, note }))) {
         onOpenChange(false);
       }
     });
@@ -167,14 +167,14 @@ export function StockAdjustDialog({ storeId, variantId, title, currentStock }: T
 }
 
 /** Who changed the stock, when and why. */
-export function StockHistoryDialog({ storeId, variantId, title, timezone }: Target & { title: string; timezone: string }) {
+export function StockHistoryDialog({ variantId, title, timezone }: Target & { title: string; timezone: string }) {
   const [result, setResult] = useState<StockHistoryResult | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onOpenChange(open: boolean) {
     if (!open) return;
     setResult(null);
-    startTransition(async () => setResult(await getStockHistory({ storeId, variantId })));
+    startTransition(async () => setResult(await getStockHistory({ variantId })));
   }
 
   return (
@@ -233,13 +233,13 @@ export function StockHistoryDialog({ storeId, variantId, title, timezone }: Targ
   );
 }
 
-export function AvailabilitySwitch({ storeId, variantId, isAvailable, title }: Target & {
-  isAvailable: boolean;
+export function VariantActiveSwitch({ variantId, isActive, title }: Target & {
+  isActive: boolean;
   title: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
-  const checked = optimistic ?? isAvailable;
+  const checked = optimistic ?? isActive;
 
   return (
     <Switch
@@ -249,7 +249,7 @@ export function AvailabilitySwitch({ storeId, variantId, isAvailable, title }: T
       onCheckedChange={(next) => {
         setOptimistic(next);
         startTransition(async () => {
-          toastResult(await setAvailability({ storeId, variantId, isAvailable: next }));
+          toastResult(await setVariantActive({ variantId, isActive: next }));
           setOptimistic(null);
         });
       }}

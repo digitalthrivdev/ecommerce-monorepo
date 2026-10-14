@@ -1,0 +1,211 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Loader2, UserPlus } from "lucide-react";
+
+import { addStaff, removeStaff, setStaffPassword } from "@/app/(dashboard)/staff/actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { useFormAction } from "@/hooks/use-form-action";
+import { toastResult } from "@/lib/action-toast";
+import type { StaffMember } from "@/lib/types";
+
+export function AddStaffDialog() {
+  const [open, setOpen] = useState(false);
+  const { pending, fieldErrors, onSubmit, reset } = useFormAction(addStaff, () => setOpen(false));
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus />
+          Add staff
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>Add staff</DialogTitle>
+            <DialogDescription>They sign in to this dashboard with the email and password you set here.</DialogDescription>
+          </DialogHeader>
+          <FieldGroup>
+            <Field data-invalid={Boolean(fieldErrors.email)}>
+              <FieldLabel htmlFor="staff-email">Email</FieldLabel>
+              <Input id="staff-email" name="email" type="email" autoComplete="off" required aria-invalid={Boolean(fieldErrors.email)} />
+              <FieldError>{fieldErrors.email}</FieldError>
+            </Field>
+            <Field data-invalid={Boolean(fieldErrors.password)}>
+              <FieldLabel htmlFor="staff-password">Password</FieldLabel>
+              <Input
+                id="staff-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+                aria-invalid={Boolean(fieldErrors.password)}
+              />
+              <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
+              <FieldError>{fieldErrors.password}</FieldError>
+            </Field>
+            <Field data-invalid={Boolean(fieldErrors.phone)}>
+              <FieldLabel htmlFor="staff-phone">Phone</FieldLabel>
+              <Input id="staff-phone" name="phone" type="tel" placeholder="+919876543210" required aria-invalid={Boolean(fieldErrors.phone)} />
+              <FieldDescription>For contacting them. Not used to sign in.</FieldDescription>
+              <FieldError>{fieldErrors.phone}</FieldError>
+            </Field>
+            <Field data-invalid={Boolean(fieldErrors.name)}>
+              <FieldLabel htmlFor="staff-name">Name</FieldLabel>
+              <Input id="staff-name" name="name" maxLength={100} aria-invalid={Boolean(fieldErrors.name)} />
+              <FieldDescription>Optional. Shown in order history next to the actions they take.</FieldDescription>
+              <FieldError>{fieldErrors.name}</FieldError>
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              Add staff
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function SetStaffPasswordDialog({ member }: { member: StaffMember & { email: string } }) {
+  const [open, setOpen] = useState(false);
+  const { pending, fieldErrors, onSubmit, reset } = useFormAction(setStaffPassword, () => setOpen(false));
+  const label = member.name ?? member.email;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          Reset password
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>Set a password for {label}</DialogTitle>
+            <DialogDescription>They sign in with {member.email}. Their current password stops working.</DialogDescription>
+          </DialogHeader>
+          <input type="hidden" name="userId" value={member.id} />
+          <Field data-invalid={Boolean(fieldErrors.password)}>
+            <FieldLabel htmlFor={`password-${member.id}`}>New password</FieldLabel>
+            <Input
+              id={`password-${member.id}`}
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
+              aria-invalid={Boolean(fieldErrors.password)}
+            />
+            <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
+            <FieldError>{fieldErrors.password}</FieldError>
+          </Field>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              Set password
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RemoveStaffButton({ member }: { member: StaffMember }) {
+  const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const label = member.name ?? member.email ?? member.phone;
+
+  function confirm() {
+    startTransition(async () => {
+      const result = await removeStaff({ userId: member.id });
+      toastResult(result);
+      if (result.ok) setOpen(false);
+    });
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          Remove
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove {label}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            They are signed out and lose access to orders and stock immediately. You can add them back later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={pending}
+            onClick={(event) => {
+              event.preventDefault();
+              confirm();
+            }}
+          >
+            {pending && <Loader2 className="animate-spin" />}
+            Remove
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

@@ -4,7 +4,7 @@ A white-label single-vendor e-commerce platform, like a Shopify store: one selle
 
 `README.md` covers setup and commands. `docs/deployment.md` is the deployment runbook (servers and per-client app builds); follow it for any deploy or build. `TODO.md` lists deferred work.
 
-**Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Until a phase lands, the code still contains stores, store pricing and the grocery order statuses (with admin-driven "out for delivery" and "delivered" steps until shipping lands). This file describes the target. Don't extend grocery-only features; remove or convert them only in the phase that covers them.
+**Conversion in progress.** This codebase started as a quick-commerce grocery platform and is being converted in phases. Stores and store pricing are gone (one catalog with per-variant price and stock), but until a phase lands the code still contains the grocery order statuses (with admin-driven "out for delivery" and "delivered" steps until shipping lands). This file describes the target. Don't extend grocery-only features; remove or convert them only in the phase that covers them.
 
 ## Repository
 
@@ -44,7 +44,7 @@ Order lifecycle: `PENDING_PAYMENT → CONFIRMED → PACKED → SHIPPED → IN_TR
   - Categories are at most two levels deep; filtering by a category includes its sub-categories.
 - **Pickup locations:** `PickupLocation` is an address and phone number carriers collect parcels from. Exactly one is the default.
 - **Cart:** one per customer, holding variants. Quantity per item is capped by the variant's limit, `MAX_QUANTITY_PER_ITEM` and the stock.
-- **Order snapshots:** order items store the product and variant name, SKU, image, unit price, MRP, HSN, GST rate and included tax. Orders store the tax total, shipping fee, COD fee and their tax, and the delivery address (name, phone, address lines, landmark, city, state, pincode, optional latitude and longitude). Never read current product or address data to show an old order.
+- **Order snapshots:** order items store the product and variant name, SKU, image, unit price, compare-at price, HSN, GST rate and included tax. Orders store the tax total, shipping fee, COD fee and their tax, and the delivery address (name, phone, address lines, landmark, city, state, pincode, optional latitude and longitude). Never read current product or address data to show an old order.
 - **Tax:** prices include GST; the included tax is `amount × rate / (100 + rate)`. An invoice number (`INV/<financial year>/000001`) is assigned when the order is packed.
 - **Shipping fee:** from settings (flat rate, free-shipping threshold, COD fee, optional weight slabs), calculated on the server with Decimal and snapshotted on the order. Minimum order amount and per-item limits apply.
 - **Serviceability:** whether a pincode is served, and whether COD is available there, comes from the active carrier (pickup pincode, delivery pincode, weight, COD), cached in Redis. The manual carrier accepts every pincode. Order creation refuses unserviceable pincodes and COD where it isn't available.

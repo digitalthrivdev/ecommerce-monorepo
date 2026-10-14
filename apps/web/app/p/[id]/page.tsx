@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/utils";
 import { getProductPreview, getSettings, getWebsite } from "@/lib/website";
 
 function priceText(price: NonNullable<ProductPreview["price"]>, currency: string) {
-  const amount = formatMoney(price.sellingPrice, currency);
+  const amount = formatMoney(price.price, currency);
   return price.varies ? `From ${amount}` : amount;
 }
 
@@ -33,7 +33,7 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
   if (!product) notFound();
 
   const { price } = product;
-  const showMrp = price?.mrp && Number(price.mrp) > Number(price.sellingPrice);
+  const compareAtPrice = price?.compareAtPrice && Number(price.compareAtPrice) > Number(price.price) ? price.compareAtPrice : null;
 
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-8 px-5 py-10 sm:py-14 md:grid-cols-2 md:gap-12">
@@ -56,10 +56,10 @@ export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
           <div className="flex flex-col gap-1">
             <p className="flex flex-wrap items-baseline gap-x-3">
               <span className="text-3xl font-bold">{priceText(price, settings.currency)}</span>
-              {showMrp && <span className="text-lg text-muted-foreground line-through">{formatMoney(price.mrp!, settings.currency)}</span>}
+              {compareAtPrice && <span className="text-lg text-muted-foreground line-through">{formatMoney(compareAtPrice, settings.currency)}</span>}
             </p>
             {price.label && <p className="text-sm text-muted-foreground">{price.label}</p>}
-            {price.varies && <p className="text-sm text-muted-foreground">Prices depend on the pack and your nearest store.</p>}
+            {price.varies && <p className="text-sm text-muted-foreground">Prices depend on the option you choose.</p>}
           </div>
         ) : (
           <p className="text-lg font-semibold text-muted-foreground">Currently unavailable</p>

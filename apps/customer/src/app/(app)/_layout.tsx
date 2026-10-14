@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 
-import { DeliveryLocationProvider } from "@/lib/delivery-location";
 import { usePushNotifications } from "@/lib/push";
 
 /** A screen opened from a link or notification still has the tabs under it to go back to. */
@@ -10,27 +9,25 @@ export default function AppLayout() {
   usePushNotifications();
 
   return (
-    <DeliveryLocationProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="location" options={{ presentation: "modal" }} />
-        <Stack.Screen name="addresses" />
-        <Stack.Screen name="address-form" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="delete-account" />
-        <Stack.Screen name="category/[id]" />
-        <Stack.Screen name="brand/[id]" />
-        <Stack.Screen name="product/[id]" />
-        <Stack.Screen name="search" options={{ animation: "fade" }} />
-        <Stack.Screen name="cart" />
-        <Stack.Screen name="orders" />
-        <Stack.Screen name="wishlist" />
-        <Stack.Screen name="order/[id]" />
-        <Stack.Screen name="report-issue/[id]" />
-        <Stack.Screen name="review/[productId]" />
-        <Stack.Screen name="pay/[id]" options={{ presentation: "modal" }} />
-        <Stack.Screen name="payment-return" options={{ animation: "none" }} />
-      </Stack>
-    </DeliveryLocationProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="select-address" options={{ presentation: "modal" }} />
+      <Stack.Screen name="addresses" />
+      <Stack.Screen name="address-form" />
+      <Stack.Screen name="profile" />
+      <Stack.Screen name="delete-account" />
+      <Stack.Screen name="category/[id]" />
+      <Stack.Screen name="brand/[id]" />
+      <Stack.Screen name="product/[id]" />
+      <Stack.Screen name="search" options={{ animation: "fade" }} />
+      <Stack.Screen name="cart" />
+      <Stack.Screen name="orders" />
+      <Stack.Screen name="wishlist" />
+      <Stack.Screen name="order/[id]" />
+      <Stack.Screen name="report-issue/[id]" />
+      <Stack.Screen name="review/[productId]" />
+      <Stack.Screen name="pay/[id]" options={{ presentation: "modal" }} />
+      <Stack.Screen name="payment-return" options={{ animation: "none" }} />
+    </Stack>
   );
 }

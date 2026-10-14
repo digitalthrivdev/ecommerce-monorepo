@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { useSettings } from "@/lib/settings";
-import type { StoreProduct } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
 type SectionTitleProps = { title: string | null; description?: string | null; onSeeAll?: () => void };
 
@@ -41,7 +41,7 @@ export function SectionTitle({ title, description, onSeeAll }: SectionTitleProps
 }
 
 /** A titled, horizontally scrolling row of product cards. */
-export function ProductRow({ title, description, products, onSeeAll }: SectionTitleProps & { products: StoreProduct[] }) {
+export function ProductRow({ title, description, products, onSeeAll }: SectionTitleProps & { products: Product[] }) {
   const { currency } = useSettings();
   if (products.length === 0) return null;
 

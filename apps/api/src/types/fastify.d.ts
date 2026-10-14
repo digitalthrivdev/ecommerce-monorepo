@@ -15,8 +15,6 @@ declare module "fastify" {
     authenticate: (request: FastifyRequest) => Promise<void>;
     tryAuthenticate: (request: FastifyRequest) => Promise<boolean>;
     requireRole: (...roles: UserRole[]) => (request: FastifyRequest) => Promise<void>;
-    canManageStore: (request: FastifyRequest, storeId: string) => Promise<boolean>;
-    requireStoreAccess: (request: FastifyRequest) => Promise<void>;
     /** Refuses test accounts (demo logins). Runs after the route's authentication, so list it after that guard. */
     forbidTestAccount: (request: FastifyRequest) => Promise<void>;
     /** Rejects every token issued to the user until now, e.g. after the account is deleted. */

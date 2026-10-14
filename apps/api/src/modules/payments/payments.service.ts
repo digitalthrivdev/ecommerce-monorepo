@@ -370,7 +370,7 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
 
   /**
    * Refunds whatever a paid online payment holds beyond what the order now costs: everything once
-   * the order is cancelled, or the price of items the store could not supply. Refunds go through the
+   * the order is cancelled, or the price of items that could not be supplied. Refunds go through the
    * gateway that took the payment. The payment row stays locked during the gateway call so
    * concurrent callers cannot refund twice.
    */

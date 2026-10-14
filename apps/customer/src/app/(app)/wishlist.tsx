@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { WishlistButton } from "@/components/wishlist-button";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
-import { useDeliveryLocation } from "@/lib/delivery-location";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { useSettings } from "@/lib/settings";
@@ -27,8 +26,8 @@ const GAP = 12;
 const COLUMNS = 2;
 const SIDE_PADDING = 16;
 
-/** A saved product the current store doesn't sell, or any product while no store is known. */
-function UnavailableCard({ item, note }: { item: WishlistItem; note: string }) {
+/** A saved product that is no longer on sale. */
+function UnavailableCard({ item }: { item: WishlistItem }) {
   const surface = useCardSurface();
   const [failed, setFailed] = useState(false);
 
@@ -45,7 +44,7 @@ function UnavailableCard({ item, note }: { item: WishlistItem; note: string }) {
         <WishlistButton productId={item.productId} size={16} onImage className="absolute right-1 top-1 size-7 bg-white/90" />
       </View>
       <View className="mt-2 gap-0.5 px-0.5">
-        <Text className="text-[11px] font-semibold text-muted-foreground">{note}</Text>
+        <Text className="text-[11px] font-semibold text-muted-foreground">Not available right now</Text>
         <Text className="text-[13px] font-semibold leading-tight" numberOfLines={3}>
           {item.name}
         </Text>
@@ -58,13 +57,11 @@ export default function WishlistScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
   const { currency } = useSettings();
-  const { store } = useDeliveryLocation();
   const screen = useWindowDimensions();
-  const wishlist = useWishlist(store?.id);
+  const wishlist = useWishlist();
   const [refreshing, setRefreshing] = useState(false);
   const items = wishlist.data?.pages.flatMap((page) => page.items) ?? [];
   const itemWidth = (screen.width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
-  const unavailableNote = store ? "Not sold at your store" : "Choose a delivery location to see the price";
 
   async function refresh() {
     setRefreshing(true);
@@ -84,7 +81,7 @@ export default function WishlistScreen() {
         contentContainerStyle={{ gap: GAP * 1.5, paddingTop: 8, paddingBottom: insets.bottom + 24, flexGrow: 1 }}
         renderItem={({ item }) => (
           <View style={{ width: itemWidth }}>
-            {item.product ? <ProductCard product={item.product} currency={currency} /> : <UnavailableCard item={item} note={unavailableNote} />}
+            {item.product ? <ProductCard product={item.product} currency={currency} /> : <UnavailableCard item={item} />}
           </View>
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}

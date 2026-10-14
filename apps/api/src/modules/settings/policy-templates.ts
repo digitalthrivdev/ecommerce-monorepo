@@ -16,7 +16,7 @@ export const POLICY_TITLES: Record<PolicySlug, string> = {
 };
 
 export const POLICY_TEMPLATES: Record<PolicySlug, string> = {
-  terms: `These terms apply when you use the {{appName}} app to buy groceries and household products from {{businessName}}. By creating an account or placing an order, you agree to them.
+  terms: `These terms apply when you use the {{appName}} app to buy products from {{businessName}}. By creating an account or placing an order, you agree to them.
 
 ## Your account
 - You sign in with your mobile number and a one-time code sent by SMS. Keep your phone secure: anyone who can read your messages can sign in as you.
@@ -25,7 +25,7 @@ export const POLICY_TEMPLATES: Record<PolicySlug, string> = {
 
 ## Orders and prices
 - Prices, offers and availability are shown in the app and can change at any time. The total shown at checkout, including any delivery charge, is the amount you pay.
-- Placing an order is an offer to buy. The order is confirmed when it is accepted, and the store may not be able to supply every item.
+- Placing an order is an offer to buy. The order is confirmed when it is accepted, and we may not be able to supply every item.
 - If an item turns out to be unavailable, it is removed from your order and you are not charged for it.
 
 ## Payment
@@ -33,7 +33,7 @@ export const POLICY_TEMPLATES: Record<PolicySlug, string> = {
 - Online payments are processed by our payment partner. We do not see or store your card or bank details.
 
 ## Delivery
-- We deliver only to addresses inside the area our stores serve. Delivery times shown in the app are estimates.
+- Delivery times shown in the app are estimates. Our Shipping and Delivery Policy explains how orders are delivered.
 
 ## Cancellations and refunds
 Cancellations and refunds are covered by our Cancellation and Refund Policy.
@@ -57,7 +57,7 @@ These terms are governed by the laws of India. Courts at the place of our regist
 
 ## What we collect
 - Your mobile number and name, to create your account and sign you in.
-- Delivery addresses, including the map location you pin, to deliver your orders and check that we serve your area.
+- Delivery addresses, to deliver your orders.
 - Your orders, payments and order history.
 - A notification token for your device, if you allow notifications, to tell you about your orders.
 
@@ -70,7 +70,7 @@ We do not collect your card or bank details: online payments are handled by our 
 - To meet our legal and tax obligations.
 
 ## Who we share it with
-- The store preparing your order and the courier delivering it, who see your name, phone number and delivery address.
+- The people preparing your order and the courier delivering it, who see your name, phone number and delivery address.
 - Our payment partner, to process online payments and refunds.
 - Our SMS and notification providers, to send codes and updates.
 - Authorities, when the law requires it.
@@ -97,12 +97,12 @@ For any question or complaint about your personal information, contact us:
   refunds: `This policy explains when you can cancel an order with {{appName}} and how refunds work.
 
 ## Cancelling an order
-- You can cancel an order in the app until the store accepts it. After that, the order is being packed and can no longer be cancelled from the app; contact us and we will help where we can.
+- You can cancel an order in the app until we accept it. After that, the order is being packed and can no longer be cancelled from the app; contact us and we will help where we can.
 - Orders paid online that are not paid within the time shown at checkout are cancelled automatically.
-- We may cancel an order if items are unavailable, the address is outside our delivery area, or the order cannot be delivered. You will be refunded in full for anything you paid.
+- We may cancel an order if items are unavailable, or the order cannot be delivered to the address. You will be refunded in full for anything you paid.
 
 ## Unavailable items
-If the store cannot supply an item, it is removed from your order. For online payments, the amount for that item is refunded automatically; for cash on delivery, you simply pay less.
+If we cannot supply an item, it is removed from your order. For online payments, the amount for that item is refunded automatically; for cash on delivery, you simply pay less.
 
 ## Damaged, wrong or missing items
 Check your order at delivery. If an item is damaged, wrong, missing or expired, contact us within 24 hours of delivery with your order number (and a photo, where possible). We will refund or replace the item.
@@ -118,10 +118,10 @@ Check your order at delivery. If an item is damaged, wrong, missing or expired, 
   shipping: `This policy explains how {{appName}} delivers your orders.
 
 ## Where we deliver
-We deliver only to addresses inside the area served by our stores. The app checks your address when you add it and tells you if we do not deliver there yet.
+We deliver to addresses in India. If we cannot deliver to your address, we will contact you and refund anything you paid.
 
 ## Delivery times
-Orders are delivered from the nearest store that has your items, usually the same day and often within the hour. Times shown in the app are estimates and can be longer at busy times or in bad weather. You can follow your order in the app.
+Orders are packed and sent after they are accepted. Times shown in the app are estimates and can be longer at busy times or in bad weather. You can follow your order in the app.
 
 ## Delivery charges
 Any delivery charge, minimum order value or free-delivery threshold is shown in your cart and at checkout before you pay.

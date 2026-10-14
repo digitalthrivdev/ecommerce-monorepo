@@ -9,7 +9,7 @@ import { getAttention, listOrders } from "@/lib/orders";
 import type { ActionResult, AttentionList, OrderAction } from "@/lib/types";
 
 const idSchema = z.string().trim().min(1).max(64);
-const targetSchema = z.object({ storeId: idSchema, orderId: idSchema });
+const targetSchema = z.object({ orderId: idSchema });
 
 const SUCCESS: Record<OrderAction, string> = {
   accept: "Order accepted",
@@ -40,25 +40,25 @@ async function run(path: string, body: unknown, action: OrderAction): Promise<Ac
   return { ok: true, message: SUCCESS[action] };
 }
 
-function orderPath(storeId: string, orderId: string, action: string) {
-  return `/stores/${encodeURIComponent(storeId)}/orders/${encodeURIComponent(orderId)}/${action}`;
+function orderPath(orderId: string, action: string) {
+  return `/admin/orders/${encodeURIComponent(orderId)}/${action}`;
 }
 
 const advanceSchema = targetSchema.extend({
   action: z.enum(["accept", "start-picking", "pack", "ready", "pack-ready", "out-for-delivery", "mark-delivered"]),
 });
 
-export async function advanceOrder(input: { storeId: string; orderId: string; action: string }): Promise<ActionResult> {
+export async function advanceOrder(input: { orderId: string; action: string }): Promise<ActionResult> {
   const parsed = advanceSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };
-  const { storeId, orderId, action } = parsed.data;
+  const { orderId, action } = parsed.data;
   if (action === "pack-ready") {
-    const packed = await run(orderPath(storeId, orderId, "pack"), {}, "pack");
+    const packed = await run(orderPath(orderId, "pack"), {}, "pack");
     if (!packed.ok) return packed;
-    const ready = await run(orderPath(storeId, orderId, "ready"), {}, "ready");
+    const ready = await run(orderPath(orderId, "ready"), {}, "ready");
     return ready.ok ? { ok: true, message: "Packed and ready to send" } : ready;
   }
-  return run(orderPath(storeId, orderId, action), {}, action);
+  return run(orderPath(orderId, action), {}, action);
 }
 
 export type NewOrdersSnapshot = {
@@ -68,8 +68,7 @@ export type NewOrdersSnapshot = {
 
 /** Polled by the new-order alert. */
 export async function getNewOrders(): Promise<NewOrdersSnapshot> {
-  const user = await getCurrentUser();
-  const orders = await listOrders(user, { status: ["CONFIRMED"], sort: "newest", limit: 1, offset: 0 });
+  const orders = await listOrders({ status: ["CONFIRMED"], sort: "newest", limit: 1, offset: 0 });
   const latest = orders.items[0];
   return {
     count: orders.total,
@@ -89,11 +88,11 @@ const cancelSchema = targetSchema.extend({
   reason: z.string().trim().min(1, "Enter a reason for cancelling").max(300, "Keep the reason under 300 characters"),
 });
 
-export async function cancelOrder(input: { storeId: string; orderId: string; reason: string }): Promise<ActionResult> {
+export async function cancelOrder(input: { orderId: string; reason: string }): Promise<ActionResult> {
   const parsed = cancelSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request" };
-  const { storeId, orderId, reason } = parsed.data;
-  return run(orderPath(storeId, orderId, "cancel"), { reason }, "cancel");
+  const { orderId, reason } = parsed.data;
+  return run(orderPath(orderId, "cancel"), { reason }, "cancel");
 }
 
 const unavailableSchema = targetSchema.extend({
@@ -102,16 +101,15 @@ const unavailableSchema = targetSchema.extend({
 });
 
 export async function markItemUnavailable(input: {
-  storeId: string;
   orderId: string;
   itemId: string;
   quantity: number;
 }): Promise<ActionResult> {
   const parsed = unavailableSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Choose how many are unavailable" };
-  const { storeId, orderId, itemId, quantity } = parsed.data;
+  const { orderId, itemId, quantity } = parsed.data;
   return run(
-    orderPath(storeId, orderId, `items/${encodeURIComponent(itemId)}/unavailable`),
+    orderPath(orderId, `items/${encodeURIComponent(itemId)}/unavailable`),
     { quantity },
     "mark-unavailable",
   );

@@ -42,14 +42,13 @@ import { nextStep } from "@/lib/order-flow";
 import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
 import type { OrderAction, OrderStatus } from "@/lib/types";
 
-type Target = { storeId: string; orderId: string };
+type Target = { orderId: string };
 
 /**
  * The one main button for the order's next step. With `packItemIds`, "Packed – ready" asks first
  * when some items on the checklist aren't ticked.
  */
 export function NextStepButton({
-  storeId,
   orderId,
   status,
   allowedActions,
@@ -74,7 +73,7 @@ export function NextStepButton({
   function go() {
     setConfirming(false);
     startTransition(async () => {
-      if (toastResult(await advanceOrder({ storeId, orderId, action: step!.action })) && step!.action === "pack-ready") {
+      if (toastResult(await advanceOrder({ orderId, action: step!.action })) && step!.action === "pack-ready") {
         clearPackingTicks(orderId);
       }
     });
@@ -107,7 +106,7 @@ export function NextStepButton({
   );
 }
 
-function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpenChange }: Target & {
+function CancelOrderDialog({ orderId, orderNumber, status, open, onOpenChange }: Target & {
   orderNumber: string;
   status: OrderStatus;
   open: boolean;
@@ -119,7 +118,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
 
   function submit() {
     startTransition(async () => {
-      if (toastResult(await cancelOrder({ storeId, orderId, reason }))) {
+      if (toastResult(await cancelOrder({ orderId, reason }))) {
         onOpenChange(false);
         setReason("");
       }
@@ -134,7 +133,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
           <DialogDescription>
             {failedDelivery
               ? "Use this when the delivery failed and the items are coming back. Their stock is returned and online payments are refunded automatically. This cannot be undone."
-              : "Stock is returned to the store and online payments are refunded automatically. This cannot be undone."}
+              : "Stock is returned and online payments are refunded automatically. This cannot be undone."}
           </DialogDescription>
         </DialogHeader>
         <Field>
@@ -163,7 +162,7 @@ function CancelOrderDialog({ storeId, orderId, orderNumber, status, open, onOpen
 }
 
 /** Less common actions, kept away from the main button so Cancel isn't tapped by mistake. */
-export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel }: Target & {
+export function OrderMoreMenu({ orderId, orderNumber, status, canCancel }: Target & {
   orderNumber: string;
   status: OrderStatus;
   canCancel: boolean;
@@ -199,7 +198,6 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel
       </DropdownMenu>
       {canCancel && (
         <CancelOrderDialog
-          storeId={storeId}
           orderId={orderId}
           orderNumber={orderNumber}
           status={status}
@@ -211,8 +209,8 @@ export function OrderMoreMenu({ storeId, orderId, orderNumber, status, canCancel
   );
 }
 
-/** Per-item action while packing: removes units the store cannot find from the order. */
-export function MarkUnavailableDialog({ storeId, orderId, item, className }: Target & {
+/** Per-item action while packing: removes units that cannot be found from the order. */
+export function MarkUnavailableDialog({ orderId, item, className }: Target & {
   item: { id: string; productName: string; variantName: string; quantity: number; unavailableQuantity: number };
   className?: string;
 }) {
@@ -223,7 +221,7 @@ export function MarkUnavailableDialog({ storeId, orderId, item, className }: Tar
 
   function submit() {
     startTransition(async () => {
-      if (toastResult(await markItemUnavailable({ storeId, orderId, itemId: item.id, quantity: Number(quantity) }))) {
+      if (toastResult(await markItemUnavailable({ orderId, itemId: item.id, quantity: Number(quantity) }))) {
         setOpen(false);
       }
     });
@@ -247,7 +245,7 @@ export function MarkUnavailableDialog({ storeId, orderId, item, className }: Tar
           <DialogTitle>{productTitle(item.productName, item.variantName)} not found?</DialogTitle>
           <DialogDescription>
             The units are removed from the bill. Online payments are refunded automatically and cash orders collect the
-            lower total. This size&apos;s stock at the store is set to 0. This cannot be undone.
+            lower total. This size&apos;s stock is set to 0. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
         {remaining > 1 && (

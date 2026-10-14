@@ -2,24 +2,18 @@
 
 import { randomBytes } from "node:crypto";
 import { refresh } from "next/cache";
-import { BARCODE_PATTERN, FSSAI_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@shop/validation";
+import { BARCODE_PATTERN, GST_RATE_PATTERN, HSN_PATTERN, SKU_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
 import { ApiError, apiFetch } from "@/lib/api";
-import {
-  idSchema,
-  optionalPositiveDecimal,
-  optionalText,
-  positiveDecimal,
-  slugInput,
-  text,
-} from "@/lib/form-schemas";
-import type { DetailsDraft, PriceRow, StockRow } from "@/lib/product-editor";
+import { idSchema, optionalPositiveDecimal, optionalText, positiveDecimal, slugInput, text } from "@/lib/form-schemas";
+import { MAX_SPECIFICATIONS, type DetailsDraft } from "@/lib/product-editor";
 import type { ActionResult, ProductDetail } from "@/lib/types";
-import { suggestSku, type VariantsPayload } from "@/lib/variant-drafts";
+import { suggestSku, type VariantDraft, type VariantsPayload } from "@/lib/variant-drafts";
 
 const MAX_QUANTITY_PER_ITEM = 50;
+const MAX_WEIGHT_GRAMS = 1_000_000;
 /** Select value for "no brand" and "not specified"; Radix Select cannot use an empty value. */
 const NONE = "none";
 
@@ -30,20 +24,33 @@ const optionalPattern = (pattern: RegExp, message: string) =>
     .refine((value) => value === "" || pattern.test(value), message)
     .transform((value) => value || null);
 
-const optionalMaxPerOrder = z
-  .string()
-  .trim()
-  .refine(
-    (value) => value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= MAX_QUANTITY_PER_ITEM),
-    `Enter a whole number from 1 to ${MAX_QUANTITY_PER_ITEM}, or leave it empty`,
-  )
-  .transform((value) => (value ? Number(value) : null));
+const optionalWholeNumber = (max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value === "" || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= max), message)
+    .transform((value) => (value ? Number(value) : null));
 
 const skuInput = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(SKU_PATTERN, "Use letters, digits, dots, dashes or underscores, e.g. AMUL-MILK-1L");
+  .regex(SKU_PATTERN, "Use letters, digits, dots, dashes or underscores, e.g. TSHIRT-M-BLK");
+
+/** Rows left completely empty are dropped. */
+const specificationsInput = z
+  .array(z.object({ name: z.string().trim(), value: z.string().trim() }))
+  .transform((rows) => rows.filter((row) => row.name || row.value))
+  .pipe(
+    z
+      .array(
+        z.object({
+          name: text(50).min(1, "Give every specification a name"),
+          value: text(500).min(1, "Give every specification a value"),
+        }),
+      )
+      .max(MAX_SPECIFICATIONS, `Use at most ${MAX_SPECIFICATIONS} specifications`),
+  );
 
 const productSchema = z.object({
   categoryId: z.string().trim().min(1, "Choose a category").max(64),
@@ -59,7 +66,6 @@ const productSchema = z.object({
     .string()
     .transform((value) => [...new Set(value.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean))])
     .pipe(z.array(z.string().max(50, "Keep each tag under 50 characters")).max(30, "Use at most 30 tags")),
-  isVeg: z.enum(["", NONE, "veg", "non-veg"]).transform((value) => (value === "veg" ? true : value === "non-veg" ? false : null)),
   hsnCode: optionalPattern(HSN_PATTERN, "Enter 4 to 8 digits"),
   gstRate: z
     .string()
@@ -68,47 +74,31 @@ const productSchema = z.object({
   manufacturerName: optionalText(200),
   manufacturerAddress: optionalText(500),
   countryOfOrigin: optionalText(100),
-  fssaiLicense: optionalPattern(FSSAI_PATTERN, "Enter the 14-digit licence number"),
-  shelfLife: optionalText(100),
-  ingredients: optionalText(2000),
+  specifications: specificationsInput,
   isActive: z.boolean(),
 });
 
-const barcodeInput = optionalPattern(BARCODE_PATTERN, "Use 4 to 32 letters or digits");
+const dimensionInput = optionalPositiveDecimal("Enter centimetres like 30 or 12.5, or leave it empty");
 
 /** A new product starts with one variant; more sizes are added on the product page. */
-const firstVariantSchema = z.object({
-  sku: z.union([z.literal(""), skuInput]),
-  barcode: barcodeInput,
-  quantity: optionalPositiveDecimal("Enter a pack size like 1, 500 or 0.5"),
-  unit: optionalText(20),
-  maxOrderQuantity: optionalMaxPerOrder,
-});
-
-const priceRowSchema = z
+const firstVariantSchema = z
   .object({
-    storeId: idSchema,
-    variantId: z.string().max(64),
-    sku: z.string().max(64).optional(),
-    sellingPrice: positiveDecimal("Enter a price like 68 or 68.50"),
-    mrp: optionalPositiveDecimal("Enter the MRP like 70, or leave it empty"),
-    isAvailable: z.boolean(),
+    sku: z.union([z.literal(""), skuInput]),
+    barcode: optionalPattern(BARCODE_PATTERN, "Use 4 to 32 letters or digits"),
+    quantity: optionalPositiveDecimal("Enter a pack size like 1, 500 or 0.5"),
+    unit: optionalText(20),
+    maxOrderQuantity: optionalWholeNumber(MAX_QUANTITY_PER_ITEM, `Enter a whole number from 1 to ${MAX_QUANTITY_PER_ITEM}, or leave it empty`),
+    price: positiveDecimal("Enter a price like 499 or 499.50"),
+    compareAtPrice: optionalPositiveDecimal("Enter a price like 699, or leave it empty"),
+    weightGrams: optionalWholeNumber(MAX_WEIGHT_GRAMS, "Enter the weight in whole grams, or leave it empty"),
+    lengthCm: dimensionInput,
+    breadthCm: dimensionInput,
+    heightCm: dimensionInput,
   })
-  .refine((row) => row.mrp === null || Number(row.mrp) >= Number(row.sellingPrice), {
-    path: ["mrp"],
-    message: "MRP can't be lower than your price",
+  .refine((variant) => variant.compareAtPrice === null || Number(variant.compareAtPrice) >= Number(variant.price), {
+    path: ["compareAtPrice"],
+    message: "The compare-at price can't be lower than the price",
   });
-
-const stockRowSchema = z.object({
-  storeId: idSchema,
-  variantId: z.string().max(64),
-  sku: z.string().max(64).optional(),
-  delta: z.number().int().min(-1_000_000).max(1_000_000),
-});
-
-const MAX_ROWS = 1000;
-const priceRowsSchema = z.array(priceRowSchema).max(MAX_ROWS);
-const stockRowsSchema = z.array(stockRowSchema).max(MAX_ROWS);
 
 type Failure = Extract<ActionResult, { ok: false }>;
 
@@ -116,18 +106,6 @@ type Failure = Extract<ActionResult, { ok: false }>;
 function partly(saved: string[], failure: Failure): Failure {
   if (saved.length === 0) return failure;
   return { ...failure, error: `${saved.join(" and ")} saved, but ${failure.error.charAt(0).toLowerCase()}${failure.error.slice(1)}` };
-}
-
-const stockPath = (row: { storeId: string; variantId: string }) =>
-  `/stores/${encodeURIComponent(row.storeId)}/inventory/${encodeURIComponent(row.variantId)}`;
-
-async function applyStock(rows: z.infer<typeof stockRowSchema>[], note: string) {
-  for (const row of rows.filter((candidate) => candidate.delta !== 0)) {
-    await apiFetch(stockPath(row), {
-      method: "PATCH",
-      body: { delta: row.delta, reason: row.delta > 0 ? "RESTOCK" : "CORRECTION", note },
-    });
-  }
 }
 
 function detailsBody(details: z.infer<typeof productSchema>) {
@@ -139,13 +117,11 @@ export type SaveProductInput = {
   productId: string;
   details?: DetailsDraft;
   variants?: VariantsPayload;
-  prices?: PriceRow[];
-  stock?: StockRow[];
 };
 
 /**
  * Saves everything changed on the product or size page in one go: sizes first (the step most
- * likely to be refused, e.g. a code already in use), then details, prices and stock.
+ * likely to be refused, e.g. a code already in use), then details.
  */
 export async function saveProductChanges(input: SaveProductInput): Promise<ActionResult> {
   if (!idSchema.safeParse(input.productId).success) return { ok: false, error: "Invalid request" };
@@ -153,9 +129,6 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
 
   const details = input.details ? productSchema.safeParse(input.details) : null;
   if (details && !details.success) return validationFailure(details.error);
-  const prices = priceRowsSchema.safeParse(input.prices ?? []);
-  const stock = stockRowsSchema.safeParse(input.stock ?? []);
-  if (!prices.success || !stock.success) return { ok: false, error: "Check the prices and stock" };
 
   const saved: string[] = [];
   const finish = (failure: Failure) => {
@@ -163,11 +136,9 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
     return partly(saved, failure);
   };
 
-  let idBySku = new Map<string, string>();
   if (input.variants) {
     try {
-      const product = await apiFetch<ProductDetail>(`${productPath}/variants`, { method: "PUT", body: input.variants });
-      idBySku = new Map(product.variants.map((variant) => [variant.sku, variant.id]));
+      await apiFetch<ProductDetail>(`${productPath}/variants`, { method: "PUT", body: input.variants });
       saved.push("Sizes");
     } catch (error) {
       if (error instanceof ApiError && error.code === "SKU_TAKEN") {
@@ -187,44 +158,13 @@ export async function saveProductChanges(input: SaveProductInput): Promise<Actio
     }
   }
 
-  // Rows of sizes added in this save get their new ids from the product code.
-  const resolve = <T extends { variantId: string; sku?: string }>(rows: T[]) =>
-    rows
-      .map(({ sku, ...row }) => ({ ...row, variantId: row.variantId || idBySku.get(sku?.trim().toUpperCase() ?? "") || "" }))
-      .filter((row) => row.variantId !== "");
-  const priceData = resolve(prices.data);
-  const stockData = resolve(stock.data);
-
-  if (priceData.length > 0) {
-    try {
-      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: priceData } });
-      saved.push("Prices");
-    } catch (error) {
-      const failure = apiFailure(error);
-      return finish({ ...failure, error: `Prices not saved: ${failure.error}` });
-    }
-  }
-
-  if (stockData.length > 0) {
-    try {
-      await applyStock(stockData, "Changed on the product page");
-      saved.push("Stock");
-    } catch (error) {
-      const failure = apiFailure(error);
-      return finish({ ...failure, error: `Stock not saved: ${failure.error}` });
-    }
-  }
-
   refresh();
   return { ok: true, message: saved.length ? "Saved" : "Nothing to save" };
 }
 
 export type CreateProductInput = {
   details: DetailsDraft;
-  variant: { sku: string; barcode: string; quantity: string; unit: string; maxOrderQuantity: string };
-  /** Rows with an empty variantId; the new size's id is filled in here. */
-  prices: PriceRow[];
-  stock: StockRow[];
+  variant: Omit<VariantDraft, "key" | "id" | "values" | "isActive">;
   images: string[];
 };
 
@@ -232,17 +172,15 @@ export type CreateProductResult =
   | { ok: true; href: string; warning?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
-/** Creates the product with its first size, then its prices, starting stock and photos. */
+/** Creates the product with its first size and price, then adds its photos. Stock starts at 0. */
 export async function createProduct(input: CreateProductInput): Promise<CreateProductResult> {
   const details = productSchema.safeParse(input.details);
   const variant = firstVariantSchema.safeParse(input.variant);
   if (!details.success || !variant.success) {
     return validationFailure(new z.ZodError([...(details.error?.issues ?? []), ...(variant.error?.issues ?? [])]));
   }
-  const prices = priceRowsSchema.safeParse(input.prices);
-  const stock = stockRowsSchema.safeParse(input.stock);
   const images = z.array(z.url().max(500)).max(20).safeParse(input.images);
-  if (!prices.success || !stock.success || !images.success) return { ok: false, error: "Check the price, stock and photos" };
+  if (!images.success) return { ok: false, error: "Check the photos" };
 
   const first = variant.data;
   const autoSku = first.sku === "";
@@ -269,34 +207,18 @@ export async function createProduct(input: CreateProductInput): Promise<CreatePr
   }
 
   const href = `/products/${product.id}`;
-  const variantId = product.variants[0]!.id;
   const productPath = `/products/${encodeURIComponent(product.id)}`;
-  const problems: string[] = [];
-
-  if (prices.data.length > 0) {
-    try {
-      await apiFetch(`${productPath}/prices`, { method: "PUT", body: { prices: prices.data.map((row) => ({ ...row, variantId })) } });
-      await applyStock(
-        stock.data.map((row) => ({ ...row, variantId })),
-        "Starting stock",
-      );
-    } catch (error) {
-      if (!(error instanceof ApiError)) throw error;
-      problems.push(`the price or stock (${error.message})`);
-    }
-  }
 
   for (const url of images.data) {
     try {
       await apiFetch(`${productPath}/images`, { method: "POST", body: { url, variantId: null } });
     } catch (error) {
       if (!(error instanceof ApiError)) throw error;
-      problems.push(`a photo (${error.message})`);
-      break;
+      return { ok: true, href, warning: `Product saved, but a photo could not be added (${error.message}). Add it below.` };
     }
   }
 
-  return { ok: true, href, ...(problems.length > 0 && { warning: `Product saved, but ${problems.join(" and ")} could not be added. Set it below.` }) };
+  return { ok: true, href };
 }
 
 const MAX_BULK_DELETE = 100;

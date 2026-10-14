@@ -24,7 +24,6 @@ export function RecentImports({ jobs, currentJobId, timezone }: { jobs: ImportJo
           <TableHeader>
             <TableRow>
               <TableHead>Started</TableHead>
-              <TableHead>Store</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Products</TableHead>
               <TableHead className="text-right">Not saved</TableHead>
@@ -39,7 +38,6 @@ export function RecentImports({ jobs, currentJobId, timezone }: { jobs: ImportJo
               return (
                 <TableRow key={job.id} data-state={job.id === currentJobId ? "selected" : undefined}>
                   <TableCell>{formatDateTime(job.startedAt, timezone)}</TableCell>
-                  <TableCell>{job.store.name}</TableCell>
                   <TableCell>
                     <Pill tone={tone}>{label}</Pill>
                   </TableCell>

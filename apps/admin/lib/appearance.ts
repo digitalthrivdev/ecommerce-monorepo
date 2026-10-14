@@ -23,7 +23,7 @@ export const SECTION_LABELS: Record<HomeSectionType, { name: string; description
   category_grid: { name: "Category grid", description: "Tiles that open a category" },
   product_rail: { name: "Product rail", description: "A horizontal row of products from a category" },
   offer_strip: { name: "Offer strip", description: "A coloured call-out, e.g. free delivery" },
-  deals_rail: { name: "Top deals", description: "Products with the biggest discount off MRP" },
+  deals_rail: { name: "Top deals", description: "Products with the biggest discount off the compare-at price" },
   buy_again: { name: "Buy again", description: "What each customer has ordered before" },
   brand_rail: { name: "Brands", description: "A row of brand logos that open the brand's products" },
   category_deals: { name: "Category deals", description: "Category tiles showing \"Up to X% OFF\"" },

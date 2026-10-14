@@ -42,7 +42,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export default async function OrderPage({ params }: PageProps<"/orders/[orderId]">) {
   const { orderId } = await params;
   const user = await getCurrentUser();
-  const [order, settings] = await Promise.all([getOrder(user, orderId), getPublicSettings()]);
+  const [order, settings] = await Promise.all([getOrder(orderId), getPublicSettings()]);
 
   const money = (amount: string) => formatMoney(amount, settings.currency);
   const date = (value: string) => formatDateTime(value, settings.timezone);
@@ -70,7 +70,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
           </>
         }
         description={[
-          user.role === "ADMIN" && order.store.name,
           `Placed ${date(order.createdAt)}`,
           order.invoiceNumber && `Invoice ${order.invoiceNumber}`,
           order.paymentExpiresAt && `Payment due by ${date(order.paymentExpiresAt)}`,
@@ -88,14 +87,12 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               </Button>
             )}
             <OrderMoreMenu
-              storeId={order.store.id}
               orderId={order.id}
               orderNumber={order.orderNumber}
               status={order.status}
               canCancel={order.allowedActions.includes("cancel")}
             />
             <NextStepButton
-              storeId={order.store.id}
               orderId={order.id}
               status={order.status}
               allowedActions={order.allowedActions}

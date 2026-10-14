@@ -8,8 +8,8 @@ const homeRoutes: FastifyPluginAsync = async (app) => {
 
   // Public, like GET /settings: the customer app renders the home screen from it.
   app.get("/", async (request) => {
-    const { storeId, tabId } = homeQuerySchema.parse(request.query);
-    return tabId ? home.getTabPage(storeId, tabId) : home.getHomeFeed(storeId);
+    const { tabId } = homeQuerySchema.parse(request.query);
+    return tabId ? home.getTabPage(tabId) : home.getHomeFeed();
   });
 };
 

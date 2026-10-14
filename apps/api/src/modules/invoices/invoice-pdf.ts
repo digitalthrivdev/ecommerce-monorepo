@@ -140,7 +140,7 @@ export function renderInvoicePdf(invoice: Invoice): Promise<Buffer> {
 
   if (!invoice.seller) {
     const notice =
-      "This order was delivered before seller details (legal name, GSTIN and store address) were recorded on orders, so they are not shown, and GST is not split into CGST, SGST or IGST.";
+      "No pickup location was set up when this order was invoiced, so the seller's address and GSTIN are not shown, and GST is not split into CGST, SGST or IGST.";
     doc.font("Helvetica").fontSize(8.5);
     const height = doc.heightOfString(notice, { width: width - 16 }) + 12;
     doc.rect(left, y, width, height).fillColor("#fff7e0").fill();

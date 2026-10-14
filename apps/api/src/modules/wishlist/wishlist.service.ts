@@ -1,22 +1,17 @@
-import { Prisma, StoreStatus, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import { customerVisibleProduct, imageOrder } from "../products/catalog.js";
-import { storeProductInclude, storeProductWhere, toStoreProductViews } from "../products/store-products.service.js";
+import { catalogProductInclude, catalogProductWhere, toProductCards } from "../products/catalog.service.js";
 import { MAX_WISHLIST_ITEMS, type WishlistQuery } from "./wishlist.schemas.js";
 
 export function createWishlistService(prisma: PrismaClient) {
   const visible = (userId: string) => ({ userId, product: customerVisibleProduct }) satisfies Prisma.WishlistItemWhereInput;
 
   /**
-   * Saved products, newest first. `product` is the store's listing (price, stock, variants), like a
-   * product card; null when there's no store or the store doesn't sell it.
+   * Saved products, newest first. `product` is the product card (price, stock, variants); null when
+   * none of its variants is on sale.
    */
-  async function list(userId: string, { storeId, limit, offset }: WishlistQuery) {
-    if (storeId) {
-      const store = await prisma.store.findFirst({ where: { id: storeId, status: StoreStatus.ACTIVE }, select: { id: true } });
-      if (!store) throw new AppError(404, "STORE_NOT_FOUND", "Store not found");
-    }
-
+  async function list(userId: string, { limit, offset }: WishlistQuery) {
     const [rows, total] = await prisma.$transaction([
       prisma.wishlistItem.findMany({
         where: visible(userId),
@@ -37,15 +32,15 @@ export function createWishlistService(prisma: PrismaClient) {
       prisma.wishlistItem.count({ where: visible(userId) }),
     ]);
 
-    const listings =
-      storeId && rows.length > 0
+    const products =
+      rows.length > 0
         ? await prisma.product.findMany({
-            where: { id: { in: rows.map((row) => row.productId) }, ...storeProductWhere(storeId, false) },
-            include: storeProductInclude(storeId),
+            where: { id: { in: rows.map((row) => row.productId) }, ...catalogProductWhere },
+            include: catalogProductInclude,
           })
         : [];
-    const views = await toStoreProductViews(prisma, listings, { includeStock: false });
-    const byId = new Map(views.map((view) => [view.productId, view]));
+    const cards = await toProductCards(prisma, products);
+    const byId = new Map(cards.map((card) => [card.productId, card]));
 
     return {
       items: rows.map((row) => ({

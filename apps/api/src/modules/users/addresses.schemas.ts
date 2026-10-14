@@ -13,8 +13,9 @@ const addressBodySchema = z.object({
   city: z.string().trim().min(1).max(100),
   state: stateSchema,
   postalCode: z.string().trim().min(3).max(12),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
+  /** Optional map pin, for the courier. */
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
   isDefault: z.boolean().optional(),
 });
 

@@ -3,7 +3,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient, type Infi
 import { apiFetch } from "./api";
 import { detailPlaceholder } from "./catalog";
 import { buyAgainKey } from "./orders";
-import type { Category, HomeFeed, HomeTabPage, Paginated, StoreBrand, StoreProduct, StoreProductDetail } from "./types";
+import type { CatalogBrand, Category, HomeFeed, HomeTabPage, Paginated, Product, ProductDetail } from "./types";
 
 const PRODUCTS_PAGE_SIZE = 30;
 
@@ -16,98 +16,90 @@ export function useCategories() {
   });
 }
 
-/** Product rails are only included once a store is known. */
-export function useHomeFeed(storeId: string | undefined, { enabled = true }: { enabled?: boolean } = {}) {
+export function useHomeFeed({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: ["home", storeId ?? null],
-    queryFn: () => apiFetch<HomeFeed>("/home", { query: { storeId } }),
+    queryKey: ["home"],
+    queryFn: () => apiFetch<HomeFeed>("/home"),
     staleTime: 5 * 60_000,
     enabled,
   });
 }
 
 /** A category tab's own page; fetched the first time it is opened, then cached like the home feed. */
-export function useHomeTabPage(storeId: string | undefined, tabId: string | null, { enabled = true }: { enabled?: boolean } = {}) {
+export function useHomeTabPage(tabId: string | null, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: ["home", storeId ?? null, "tab", tabId],
-    queryFn: () => apiFetch<HomeTabPage>("/home", { query: { storeId, tabId: tabId! } }),
+    queryKey: ["home", "tab", tabId],
+    queryFn: () => apiFetch<HomeTabPage>("/home", { query: { tabId: tabId! } }),
     staleTime: 5 * 60_000,
     enabled: tabId !== null && enabled,
   });
 }
 
 /**
- * A store's products, newest page last. Includes out-of-stock items so customers can see them.
+ * Catalog products, newest page last. Includes out-of-stock items so customers can see them.
  * A top-level category includes its sub-categories' products.
  */
-export function useStoreProducts(
-  storeId: string | undefined,
-  filter: { categoryId?: string; brandId?: string; search?: string },
-  { enabled = true }: { enabled?: boolean } = {},
-) {
+export function useProducts(filter: { categoryId?: string; brandId?: string; search?: string }, { enabled = true }: { enabled?: boolean } = {}) {
   return useInfiniteQuery({
-    queryKey: ["store-products", storeId ?? null, filter.categoryId ?? null, filter.search ?? null, filter.brandId ?? null],
+    queryKey: ["products", filter.categoryId ?? null, filter.search ?? null, filter.brandId ?? null],
     queryFn: ({ pageParam }) =>
-      apiFetch<Paginated<StoreProduct>>(`/stores/${encodeURIComponent(storeId!)}/products`, {
+      apiFetch<Paginated<Product>>("/catalog/products", {
         query: { limit: PRODUCTS_PAGE_SIZE, offset: pageParam, categoryId: filter.categoryId, brandId: filter.brandId, search: filter.search },
       }),
     initialPageParam: 0,
     getNextPageParam: (last) => (last.offset + last.items.length < last.total ? last.offset + last.items.length : undefined),
-    enabled: Boolean(storeId) && enabled,
+    enabled,
   });
 }
 
 /** The product as already shown in a list or rail, so details open without a blank screen. */
-function cachedProduct(queryClient: QueryClient, storeId: string, productId: string) {
-  for (const [, data] of queryClient.getQueriesData<InfiniteData<Paginated<StoreProduct>>>({ queryKey: ["store-products", storeId] })) {
+function cachedProduct(queryClient: QueryClient, productId: string) {
+  for (const [, data] of queryClient.getQueriesData<InfiniteData<Paginated<Product>>>({ queryKey: ["products"] })) {
     const found = data?.pages.flatMap((page) => page.items).find((product) => product.productId === productId);
     if (found) return found;
   }
   const lists = [
-    ...queryClient.getQueriesData<{ items: StoreProduct[] }>({ queryKey: ["store-product-list", storeId] }),
-    ...queryClient.getQueriesData<{ items: StoreProduct[] }>({ queryKey: buyAgainKey(storeId) }),
+    ...queryClient.getQueriesData<{ items: Product[] }>({ queryKey: ["product-list"] }),
+    ...queryClient.getQueriesData<{ items: Product[] }>({ queryKey: buyAgainKey }),
   ];
   const listed = lists.flatMap(([, data]) => data?.items ?? []).find((product) => product.productId === productId);
   if (listed) return listed;
   return queryClient
-    .getQueriesData<HomeFeed | HomeTabPage>({ queryKey: ["home", storeId] })
+    .getQueriesData<HomeFeed | HomeTabPage>({ queryKey: ["home"] })
     .flatMap(([, data]) => data?.sections ?? [])
     .flatMap((section) => (section.type === "product_rail" || section.type === "deals_rail" ? section.products : []))
     .find((product) => product.productId === productId);
 }
 
 /** In-stock products often ordered together with the given ones, most frequent first. */
-export function useAlsoBought(storeId: string | undefined, productIds: string[], { limit = 10 }: { limit?: number } = {}) {
+export function useAlsoBought(productIds: string[], { limit = 10 }: { limit?: number } = {}) {
   const ids = [...productIds].sort().slice(0, 30).join(",");
   return useQuery({
-    queryKey: ["store-product-list", storeId ?? null, "also-bought", ids, limit],
-    queryFn: () =>
-      apiFetch<{ items: StoreProduct[] }>(`/stores/${encodeURIComponent(storeId!)}/products/also-bought`, { query: { productIds: ids, limit } }),
+    queryKey: ["product-list", "also-bought", ids, limit],
+    queryFn: () => apiFetch<{ items: Product[] }>("/catalog/products/also-bought", { query: { productIds: ids, limit } }),
     staleTime: 10 * 60_000,
     placeholderData: keepPreviousData,
-    enabled: Boolean(storeId) && ids.length > 0,
+    enabled: ids.length > 0,
   });
 }
 
-/** Brands with something in stock at the store, most products first; optionally within one category. */
-export function useStoreBrands(storeId: string | undefined, { categoryId, limit = 20 }: { categoryId?: string; limit?: number } = {}) {
+/** Brands with something in stock, most products first; optionally within one category. */
+export function useBrands({ categoryId, limit = 20 }: { categoryId?: string; limit?: number } = {}) {
   return useQuery({
-    queryKey: ["store-brands", storeId ?? null, categoryId ?? null, limit],
-    queryFn: () => apiFetch<{ items: StoreBrand[] }>(`/stores/${encodeURIComponent(storeId!)}/brands`, { query: { categoryId, limit } }),
+    queryKey: ["brands", categoryId ?? null, limit],
+    queryFn: () => apiFetch<{ items: CatalogBrand[] }>("/catalog/brands", { query: { categoryId, limit } }),
     staleTime: 10 * 60_000,
-    enabled: Boolean(storeId),
   });
 }
 
-export function useStoreProduct(storeId: string | undefined, productId: string) {
+export function useProduct(productId: string) {
   const queryClient = useQueryClient();
   return useQuery({
-    queryKey: ["store-product", storeId ?? null, productId],
-    queryFn: () => apiFetch<StoreProductDetail>(`/stores/${encodeURIComponent(storeId!)}/products/${encodeURIComponent(productId)}`),
+    queryKey: ["product", productId],
+    queryFn: () => apiFetch<ProductDetail>(`/catalog/products/${encodeURIComponent(productId)}`),
     placeholderData: () => {
-      const cached = storeId ? cachedProduct(queryClient, storeId, productId) : undefined;
+      const cached = cachedProduct(queryClient, productId);
       return cached && detailPlaceholder(cached);
     },
-    enabled: Boolean(storeId),
   });
 }

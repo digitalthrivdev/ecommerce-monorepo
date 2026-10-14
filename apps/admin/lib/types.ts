@@ -1,13 +1,11 @@
-export type UserRole = "CUSTOMER" | "ADMIN" | "STORE_STAFF";
-export type DashboardRole = Extract<UserRole, "ADMIN" | "STORE_STAFF">;
+export type UserRole = "CUSTOMER" | "ADMIN" | "STAFF";
+export type DashboardRole = Extract<UserRole, "ADMIN" | "STAFF">;
 
-export const DASHBOARD_ROLES: readonly DashboardRole[] = ["ADMIN", "STORE_STAFF"];
+export const DASHBOARD_ROLES: readonly DashboardRole[] = ["ADMIN", "STAFF"];
 
 export function isDashboardRole(role: string): role is DashboardRole {
   return (DASHBOARD_ROLES as readonly string[]).includes(role);
 }
-
-export type StoreSummary = { id: string; name: string; code: string };
 
 export type CurrentUser = {
   id: string;
@@ -17,7 +15,6 @@ export type CurrentUser = {
   role: UserRole;
   /** A demo login. A test admin can only look and run the order flow; the API refuses other changes. */
   isTestAccount: boolean;
-  store: StoreSummary | null;
 };
 
 export type DashboardUser = CurrentUser & { role: DashboardRole };
@@ -36,9 +33,9 @@ export type OrderStatus =
 export type PaymentMethod = "COD" | "ONLINE";
 export type PaymentStatus = "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED";
 
-export type StoreOrderAction = "accept" | "start-picking" | "pack" | "ready";
+export type FulfilmentAction = "accept" | "start-picking" | "pack" | "ready";
 export type AdminOrderAction = "out-for-delivery" | "mark-delivered";
-export type OrderAction = StoreOrderAction | AdminOrderAction | "cancel" | "mark-unavailable" | "refund";
+export type OrderAction = FulfilmentAction | AdminOrderAction | "cancel" | "mark-unavailable" | "refund";
 
 export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
 export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
@@ -71,7 +68,6 @@ export type ComplaintListItem = {
     total: string;
     customerName: string;
     customerPhone: string;
-    store: { id: string; name: string };
   };
 };
 
@@ -98,7 +94,6 @@ export type ComplaintDetail = {
     customerPhone: string;
     createdAt: string;
     deliveredAt: string | null;
-    store: { id: string; name: string };
   };
   items: Array<{
     orderItemId: string;
@@ -128,7 +123,6 @@ export type OrderListItem = {
   customerName: string;
   customerPhone: string;
   createdAt: string;
-  store: { id: string; name: string };
   itemCount: number;
   /** When the order reached its current status. */
   statusChangedAt: string;
@@ -141,13 +135,12 @@ export type OrderList = Paginated<OrderListItem> & {
   statusCounts: Partial<Record<OrderStatus, number>>;
 };
 
-export type AttentionReason = "STORE_NOT_ACCEPTED" | "NOT_DISPATCHED";
+export type AttentionReason = "NOT_ACCEPTED" | "NOT_DISPATCHED";
 
 export type AttentionList = {
   items: Array<{
     orderId: string;
     orderNumber: string;
-    store: { id: string; name: string };
     reason: AttentionReason;
     /** When the order started waiting. */
     since: string;
@@ -172,7 +165,6 @@ export type OrderDetail = {
   } | null;
   paymentExpiresAt: string | null;
   deliveredAt: string | null;
-  store: { id: string; name: string; phone: string | null };
   /** quantity and totalPrice are as ordered; unavailableQuantity units are not charged. */
   items: Array<{
     id: string;
@@ -186,7 +178,7 @@ export type OrderDetail = {
     quantity: number;
     unavailableQuantity: number;
     unitPrice: string;
-    mrp: string | null;
+    compareAtPrice: string | null;
     totalPrice: string;
     chargedTotal: string;
     hsnCode: string | null;
@@ -295,6 +287,9 @@ export type Coupon = {
 type CategorySummary = { id: string; name: string; slug: string; parentId: string | null };
 type BrandSummary = { id: string; name: string; slug: string };
 
+/** Shown on the product page in this order, e.g. Material: Cotton. */
+export type ProductSpecification = { name: string; value: string };
+
 type ProductFields = {
   id: string;
   categoryId: string;
@@ -305,13 +300,10 @@ type ProductFields = {
   tags: string[];
   hsnCode: string | null;
   gstRate: string | null;
-  isVeg: boolean | null;
   manufacturerName: string | null;
   manufacturerAddress: string | null;
   countryOfOrigin: string | null;
-  fssaiLicense: string | null;
-  shelfLife: string | null;
-  ingredients: string | null;
+  specifications: ProductSpecification[];
   isActive: boolean;
   category: CategorySummary;
   brand: BrandSummary | null;
@@ -321,8 +313,10 @@ export type ProductListItem = ProductFields & {
   /** First image shared by all variants. */
   imageUrl: string | null;
   variantCount: number;
-  /** Admin listings only. */
-  storeCount?: number;
+  /** Lowest and highest price of the active variants; null when none is active. */
+  priceRange: { min: string; max: string } | null;
+  /** Units in stock over the active variants. */
+  stockQuantity: number;
 };
 
 export type ProductOption = { id: string; name: string; values: Array<{ id: string; value: string }> };
@@ -336,6 +330,17 @@ export type ProductVariant = {
   unit: string | null;
   quantity: string | null;
   maxOrderQuantity: number | null;
+  /** GST included. */
+  price: string;
+  /** The higher price shown struck through, at least the price. */
+  compareAtPrice: string | null;
+  /** Packed weight and size, for carriers. */
+  weightGrams: number | null;
+  lengthCm: string | null;
+  breadthCm: string | null;
+  heightCm: string | null;
+  /** Changed on the stock page. */
+  stockQuantity: number;
   isActive: boolean;
   sortOrder: number;
   /** Name, or pack size when there is no name. */
@@ -352,31 +357,15 @@ export type ProductDetail = ProductFields & {
   images: ProductImage[];
 };
 
-export type Listing = {
-  storeProductId: string;
-  sellingPrice: string;
-  mrp: string | null;
-  isAvailable: boolean;
-  stockQuantity: number;
-};
-
-export type ProductListings = {
-  variants: Array<{ id: string; sku: string; name: string; label: string; isActive: boolean }>;
-  /** Every store, with the listing of each variant there (null where it is not listed). */
-  items: Array<{ store: Store; listings: Array<{ variantId: string; listing: Listing | null }> }>;
-};
-
 export type InventoryItem = {
   productId: string;
   variantId: string;
-  storeProductId: string;
   name: string;
   variantLabel: string;
   sku: string;
   barcode: string | null;
   slug: string;
   category: { id: string; name: string };
-  isAvailable: boolean;
   productIsActive: boolean;
   variantIsActive: boolean;
   stockQuantity: number;
@@ -400,7 +389,7 @@ export type StockChange = {
 /** 1 to 5 stars; the items rating and comment are optional. */
 export type OrderRating = { deliveryRating: number; itemsRating: number | null; comment: string | null; createdAt: string };
 
-/** `GET /admin/ratings` and `/stores/:storeId/ratings` row: a rating with 1 or 2 stars for the delivery or the items. */
+/** `GET /admin/ratings` row: a rating with 1 or 2 stars for the delivery or the items. */
 export type ProductReview = {
   id: string;
   /** CUSTOMER: from a delivered order. ADMIN: added in the dashboard under `authorName`. */
@@ -421,7 +410,7 @@ export type ProductReview = {
 
 export type LowRating = OrderRating & {
   id: string;
-  order: { id: string; orderNumber: string; customerName: string; customerPhone: string; store: { id: string; name: string }; deliveredAt: string | null };
+  order: { id: string; orderNumber: string; customerName: string; customerPhone: string; deliveredAt: string | null };
 };
 
 export type Customer = {
@@ -473,7 +462,6 @@ export type CustomerOrder = {
   paymentMethod: PaymentMethod;
   total: string;
   createdAt: string;
-  store: { id: string; name: string };
   itemCount: number;
 };
 
@@ -559,7 +547,7 @@ export type PlatformSettings = {
   /** Legal name and registered address, shown on the policy and contact pages. The legal name is also the seller on invoices. */
   businessName: string | null;
   businessAddress: string | null;
-  /** GSTIN on invoices, unless the store has its own. */
+  /** GSTIN on invoices, when registered in the default pickup location's state. */
   gstin: string | null;
   /** GST rate included in the delivery fee, e.g. "18.00". */
   deliveryFeeGstRate: string;
@@ -700,47 +688,36 @@ export type ActionResult =
 
 export type Paginated<T> = { items: T[]; total: number; limit: number; offset: number };
 
-export type Store = StoreSummary & { status: "ACTIVE" | "INACTIVE" };
-
-/** A store as admins see it, with operational counts. */
-export type StoreDetails = Store & {
-  phone: string | null;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  postalCode: string;
-  latitude: string;
-  longitude: string;
-  serviceRadiusKm: string;
-  /** Only for a store registered in another state than the GSTIN in settings. */
-  gstin: string | null;
-  /** The GSTIN its invoices carry: its own, else the one in settings if registered in its state. */
-  invoiceGstin: string | null;
-  /** Weekly hours in the deployment time zone; empty means always open. */
-  hours: StoreHours[];
-  isOpen: boolean;
-  createdAt: string;
-  staffCount: number;
-  productCount: number;
-  activeOrderCount: number;
-};
-
-/** dayOfWeek 0 is Sunday. Times are "HH:mm"; a closing time earlier than the opening time runs past midnight. */
-export type StoreHours = { dayOfWeek: number; opensAt: string; closesAt: string };
-
 export type StaffMember = {
   id: string;
   phone: string;
   email: string | null;
   name: string | null;
-  /** Staff added before password sign-in existed have none and cannot sign in until one is set. */
-  hasPassword: boolean;
+  isTestAccount: boolean;
   createdAt: string;
 };
 
+/** An address carriers collect parcels from. Exactly one is the default. */
+export type PickupLocation = {
+  id: string;
+  name: string;
+  contactName: string;
+  phone: string;
+  email: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  isDefault: boolean;
+  /** The GSTIN invoices carry when this is the default location; null when Settings has none for its state. */
+  invoiceGstin: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type DashboardStats = {
-  storeId: string | null;
   timezone: string;
   currency: string;
   today: { orders: number; revenue: string; delivered: number; cancelled: number };
@@ -758,7 +735,6 @@ export type DashboardStats = {
     paymentMethod: PaymentMethod;
     customerName: string;
     createdAt: string;
-    store: { id: string; name: string };
   }>;
 };
 
@@ -767,7 +743,6 @@ export type ImportRowError = { row: number | null; column: string | null; messag
 
 /** What importing a CSV file would do; nothing is saved by the check. */
 export type ImportPreview = {
-  store: { id: string; name: string };
   rows: number;
   products: { create: number; update: number };
   variants: { create: number; update: number };
@@ -781,7 +756,6 @@ export type ImportPreview = {
 
 export type ImportJob = {
   id: string;
-  store: { id: string; name: string };
   status: "running" | "done" | "failed" | "interrupted";
   phase: "catalog" | "images" | "finished";
   progress: { done: number; total: number };

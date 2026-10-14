@@ -8,11 +8,9 @@ import { proxyDownload } from "@/lib/downloads";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const report = params.get("report") ?? "";
-  const storeId = params.get("storeId");
   const query = {
     from: params.get("from") ?? undefined,
     to: params.get("to") ?? undefined,
-    storeId: storeId && storeId !== "all" ? storeId : undefined,
   };
 
   let message: string;

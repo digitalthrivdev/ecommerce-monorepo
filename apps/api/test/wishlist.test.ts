@@ -7,21 +7,20 @@ import { call, dashboardLogin, otpLogin, SEED, startApp } from "./helpers";
 let app: FastifyInstance;
 let admin: string;
 let customer: string;
-let storeId: string;
 let categoryId: string;
 
 const unique = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
 const newCustomerPhone = () => `+9198${String(Math.floor(Math.random() * 1e8)).padStart(8, "0")}`;
 
-/** A product with one variant; priced and stocked at the seed store when `price` is given. */
+/** A product with one variant; on sale at `price` and in stock when given, otherwise switched off. */
 async function createProduct(price?: string) {
   const sku = `WISH-${unique()}`;
-  const created = await call(app, "POST", "/products", { token: admin, body: { name: `Wishlist Test ${sku}`, categoryId, gstRate: "5", variants: [{ sku }] } });
+  const variant = price ? { sku, price } : { sku, price: "99", isActive: false };
+  const created = await call(app, "POST", "/products", { token: admin, body: { name: `Wishlist Test ${sku}`, categoryId, gstRate: "5", variants: [variant] } });
   expect(created.status).toBe(201);
   const variantId: string = created.body.variants[0].id;
   if (price) {
-    expect((await call(app, "PUT", `/products/${created.body.id}/prices`, { token: admin, body: { prices: [{ storeId, variantId, sellingPrice: price }] } })).status).toBeLessThan(300);
-    expect((await call(app, "PATCH", `/stores/${storeId}/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } })).status).toBeLessThan(300);
+    expect((await call(app, "PATCH", `/inventory/${variantId}`, { token: admin, body: { delta: 10, reason: "RESTOCK" } })).status).toBeLessThan(300);
   }
   return created.body.id as string;
 }
@@ -34,7 +33,6 @@ beforeAll(async () => {
   app = await startApp();
   admin = await dashboardLogin(app, SEED.adminEmail);
   customer = await otpLogin(app, newCustomerPhone());
-  storeId = (await app.prisma.store.findUniqueOrThrow({ where: { code: SEED.storeCode } })).id;
   categoryId = (await app.prisma.category.findFirstOrThrow({ where: { parentId: { not: null } } })).id;
 });
 
@@ -43,7 +41,7 @@ afterAll(async () => {
 });
 
 describe("wishlist", () => {
-  it("saves products once each and lists them with the store's price and stock", async () => {
+  it("saves products once each and lists them with their price and stock", async () => {
     const stocked = await createProduct("120");
     const notSold = await createProduct();
 
@@ -52,16 +50,16 @@ describe("wishlist", () => {
     expect((await save(notSold)).status).toBe(200);
     expect(await ids()).toEqual([notSold, stocked]);
 
-    const listed = await call(app, "GET", "/wishlist", { token: customer, query: { storeId } });
+    const listed = await call(app, "GET", "/wishlist", { token: customer });
     expect(listed.status).toBe(200);
     expect(listed.body).toMatchObject({ total: 2, limit: 50, offset: 0 });
     const [first, second] = listed.body.items;
     expect(first).toMatchObject({ productId: notSold, name: expect.stringContaining("Wishlist Test"), product: null });
     expect(second.productId).toBe(stocked);
-    expect(second.product).toMatchObject({ productId: stocked, variants: [expect.objectContaining({ sellingPrice: "120.00", inStock: true })] });
+    expect(second.product).toMatchObject({ productId: stocked, variants: [expect.objectContaining({ price: "120.00", inStock: true })] });
 
-    const withoutStore = await call(app, "GET", "/wishlist", { token: customer, query: { limit: "1", offset: "1" } });
-    expect(withoutStore.body).toMatchObject({ total: 2, limit: 1, offset: 1, items: [{ productId: stocked, product: null }] });
+    const paged = await call(app, "GET", "/wishlist", { token: customer, query: { limit: "1", offset: "1" } });
+    expect(paged.body).toMatchObject({ total: 2, limit: 1, offset: 1, items: [{ productId: stocked, product: { productId: stocked } }] });
 
     // Another customer's wishlist is separate.
     const other = await otpLogin(app, SEED.customerPhone);
@@ -86,16 +84,13 @@ describe("wishlist", () => {
     expect(await app.prisma.wishlistItem.count({ where: { productId: deleted } })).toBe(0);
   });
 
-  it("rejects unknown products and stores and invalid input", async () => {
+  it("rejects unknown products and invalid input", async () => {
     const missing = await save("missing-product");
     expect(missing.status).toBe(404);
     expect(missing.body.error).toBe("PRODUCT_NOT_FOUND");
     expect((await save("x".repeat(65))).status).toBe(400);
     expect((await unsave("x".repeat(65))).status).toBe(400);
 
-    const store = await call(app, "GET", "/wishlist", { token: customer, query: { storeId: "missing-store" } });
-    expect(store.status).toBe(404);
-    expect(store.body.error).toBe("STORE_NOT_FOUND");
     expect((await call(app, "GET", "/wishlist", { token: customer, query: { limit: "0" } })).status).toBe(400);
     expect((await call(app, "GET", "/wishlist", { token: customer, query: { limit: "101" } })).status).toBe(400);
   });

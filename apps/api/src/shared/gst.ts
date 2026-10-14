@@ -20,11 +20,11 @@ export const stateSchema = z
   });
 
 /**
- * The GSTIN on invoices from a store: its own, else the one in settings when that is registered in
- * the store's state. A store in another state without its own GSTIN has none.
+ * The GSTIN on invoices for goods shipped from a state: the one in settings when it is registered
+ * there, else none.
  */
-export function storeInvoiceGstin(store: { gstin: string | null; state: string }, settingsGstin: string | null) {
-  return store.gstin ?? (settingsGstin && gstinMatchesState(settingsGstin, store.state) ? settingsGstin : null);
+export function invoiceGstin(state: string, settingsGstin: string | null) {
+  return settingsGstin && gstinMatchesState(settingsGstin, state) ? settingsGstin : null;
 }
 
 const GSTIN_MESSAGES = {
