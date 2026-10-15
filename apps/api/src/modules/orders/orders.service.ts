@@ -65,6 +65,9 @@ export const orderDetailInclude = {
       photoUrls: true,
       status: true,
       resolutionNote: true,
+      reverseCourierName: true,
+      reverseAwb: true,
+      reverseTrackingUrl: true,
       createdAt: true,
       resolvedAt: true,
       items: { select: { orderItemId: true, quantity: true } },
@@ -76,15 +79,13 @@ export const orderDetailInclude = {
 
 export type OrderDetail = Prisma.OrderGetPayload<{ include: typeof orderDetailInclude }>;
 
-/** How long after delivery a customer can report a problem (the refund policy page says 24 hours). */
-export const COMPLAINT_WINDOW_MS = 24 * 60 * 60 * 1000;
-
-export function complaintDeadline(deliveredAt: Date | null | undefined) {
-  return deliveredAt ? new Date(deliveredAt.getTime() + COMPLAINT_WINDOW_MS) : null;
+/** How long after delivery a customer can request a return. */
+export function complaintDeadline(deliveredAt: Date | null | undefined, returnWindowDays = 7) {
+  return deliveredAt ? new Date(deliveredAt.getTime() + returnWindowDays * 24 * 60 * 60 * 1000) : null;
 }
 
-function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "statusHistory">) {
-  const deadline = complaintDeadline(deliveredAt(order.statusHistory));
+function canReportIssue(order: Pick<OrderDetail, "status" | "complaint" | "statusHistory">, returnWindowDays: number) {
+  const deadline = complaintDeadline(deliveredAt(order.statusHistory), returnWindowDays);
   return order.status === OrderStatus.DELIVERED && !order.complaint && deadline !== null && deadline > new Date();
 }
 
@@ -100,11 +101,12 @@ function canRate(order: { status: OrderStatus; rating: unknown; statusHistory: {
   return order.status === OrderStatus.DELIVERED && !order.rating && deadline !== null && deadline > new Date();
 }
 
-export function toDetailView(order: OrderDetail) {
+export function toDetailView(order: OrderDetail, returnWindowDays = 7) {
   return {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
+    rtoReceivedAt: order.rtoReceivedAt,
     canCancel: CUSTOMER_CANCELLABLE_STATUSES.includes(order.status),
     paymentMethod: order.paymentMethod,
     payment: order.payment && {
@@ -164,8 +166,8 @@ export function toDetailView(order: OrderDetail) {
     },
     statusHistory: order.statusHistory.map(({ changedById: _changedById, ...entry }) => entry),
     refunds: order.refunds.map(({ id, amount, method, reason, createdAt }) => ({ id, amount: amount.toFixed(2), method, reason, createdAt })),
-    complaint: order.complaint,
-    canReportIssue: canReportIssue(order),
+    returnRequest: order.complaint,
+    canRequestReturn: canReportIssue(order, returnWindowDays),
     rating: order.rating,
     canRate: canRate(order),
     createdAt: order.createdAt,
@@ -211,7 +213,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
 
-    return toDetailView(order);
+    return toDetailView(order, (await getPlatformSettings(prisma)).returnWindowDays);
   }
 
   async function listOrders(userId: string, { limit, offset, status, active }: ListOrdersQuery) {

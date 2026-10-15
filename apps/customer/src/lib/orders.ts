@@ -100,7 +100,7 @@ export type ComplaintInput = {
 export function useReportIssue(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: ComplaintInput) => apiFetch<{ ok: true }>(`${orderPath(id)}/complaint`, { method: "POST", body: input }),
+    mutationFn: (input: ComplaintInput) => apiFetch<{ ok: true }>(`${orderPath(id)}/returns`, { method: "POST", body: input }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: orderKey(id) }),
   });
 }
@@ -132,7 +132,7 @@ export function uploadComplaintPhoto(orderId: string, photo: { uri: string; mime
   const form = new FormData();
   // React Native's FormData takes a file as { uri, name, type }.
   form.append("file", { uri: photo.uri, name: photo.fileName ?? "photo.jpg", type: photo.mimeType ?? "image/jpeg" } as unknown as Blob);
-  return apiFetch<{ url: string; smallUrl: string }>(`${orderPath(orderId)}/complaint/photos`, { method: "POST", body: form, timeoutMs: PHOTO_UPLOAD_TIMEOUT_MS });
+  return apiFetch<{ url: string; smallUrl: string }>(`${orderPath(orderId)}/returns/photos`, { method: "POST", body: form, timeoutMs: PHOTO_UPLOAD_TIMEOUT_MS });
 }
 
 type PaymentSession = { provider: string; testMode: boolean; amount: string; expiresAt: string; checkoutUrl: string };

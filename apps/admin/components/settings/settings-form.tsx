@@ -215,6 +215,16 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
         <Panel className="p-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <TextField
+              name="returnWindowDays"
+              label="Return window"
+              defaultValue={settings.returnWindowDays.toString()}
+              error={fieldErrors.returnWindowDays}
+              description="Days after delivery when customers can request a return (1 to 90)."
+              inputMode="numeric"
+              maxLength={2}
+              required
+            />
+            <TextField
               name="deliveryPromiseMinutes"
               label="Delivery in about"
               defaultValue={settings.deliveryPromiseMinutes?.toString()}

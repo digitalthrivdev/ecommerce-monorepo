@@ -243,7 +243,7 @@ describe("test accounts", () => {
     expect(final.payment).toMatchObject({ status: "PAID", provider: "cash" });
     expect(final.statusHistory.map((entry) => entry.toStatus)).toEqual(["CONFIRMED", "CONFIRMED", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"]);
     const view = await call(app, "GET", `/orders/${orderId}`, { token: testCustomer });
-    expect(view.body).toMatchObject({ status: "DELIVERED", canRate: true, canReportIssue: true, shipment: { awb: expect.any(String), courierName: "Blue Dart" } });
+    expect(view.body).toMatchObject({ status: "DELIVERED", canRate: true, canRequestReturn: true, shipment: { awb: expect.any(String), courierName: "Blue Dart" } });
     expect(view.body.shipment).not.toHaveProperty("labelUrl");
     expect(view.body.shipment.events.map((event: { status: string }) => event.status)).toEqual(["PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED"]);
   });

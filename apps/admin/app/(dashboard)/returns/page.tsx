@@ -3,7 +3,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { MessageSquareWarning, Search } from "lucide-react";
 
-import { ComplaintStatusPill } from "@/components/complaints/complaint-status-pill";
+import { ComplaintStatusPill } from "@/components/returns/complaint-status-pill";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
@@ -17,12 +17,13 @@ import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { COMPLAINT_REASON_LABELS, formatMoney, formatTimeAgo } from "@/lib/format";
 import type { ComplaintList, ComplaintStatus } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Complaints" };
+export const metadata: Metadata = { title: "Returns" };
 
 const PAGE_SIZE = 25;
 
 const TABS: { id: string; label: string; status?: ComplaintStatus }[] = [
   { id: "open", label: "Open", status: "OPEN" },
+  { id: "approved", label: "Approved", status: "APPROVED" },
   { id: "resolved", label: "Resolved", status: "RESOLVED" },
   { id: "rejected", label: "Rejected", status: "REJECTED" },
   { id: "all", label: "All" },
@@ -30,7 +31,7 @@ const TABS: { id: string; label: string; status?: ComplaintStatus }[] = [
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
-export default async function ComplaintsPage({ searchParams }: PageProps<"/complaints">) {
+export default async function ComplaintsPage({ searchParams }: PageProps<"/returns">) {
   await requireAdmin();
   const params = await searchParams;
 
@@ -39,7 +40,7 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1);
 
   const [complaints, settings] = await Promise.all([
-    apiFetch<ComplaintList>("/admin/complaints", {
+    apiFetch<ComplaintList>("/admin/returns", {
       query: { status: tab.status, q, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE },
     }),
     getPublicSettings(),
@@ -51,19 +52,19 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
       if (value) next.set(key, value);
     }
     const query = next.toString();
-    return query ? `/complaints?${query}` : "/complaints";
+    return query ? `/returns?${query}` : "/returns";
   };
   const lastPage = Math.max(1, Math.ceil(complaints.total / PAGE_SIZE));
   const money = (amount: string) => formatMoney(amount, settings.currency);
 
   return (
     <>
-      <PageHeader title="Complaints" description="Problems customers reported with delivered orders. Open ones are oldest first." />
+      <PageHeader title="Returns" description="Return requests from customers. New requests are oldest first." />
       <PageBody>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <PageTabs
-              label="Complaint status"
+              label="Return status"
               active={tab.id}
               tabs={TABS.map((candidate) => ({
                 id: candidate.id,
@@ -75,9 +76,9 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
                   ) : undefined,
               }))}
             />
-            <Form action="/complaints" className="flex gap-2">
+            <Form action="/returns" className="flex gap-2">
               <input type="hidden" name="tab" value={tab.id} />
-              <Input name="q" type="search" defaultValue={q} maxLength={50} placeholder="Order number, name or phone" aria-label="Search complaints" className="w-64" />
+              <Input name="q" type="search" defaultValue={q} maxLength={50} placeholder="Order number, name or phone" aria-label="Search returns" className="w-64" />
               <Button type="submit" variant="outline" size="icon" aria-label="Search">
                 <Search />
               </Button>
@@ -87,8 +88,8 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
           {complaints.items.length === 0 ? (
             <EmptyState
               icon={MessageSquareWarning}
-              title={q ? `No complaints match “${q}”` : tab.status === "OPEN" ? "No open complaints" : "No complaints here"}
-              description={tab.status === "OPEN" && !q ? "Customers can report a problem from a delivered order in the app, for up to 24 hours." : undefined}
+              title={q ? `No returns match “${q}”` : tab.status === "OPEN" ? "No open return requests" : "No returns here"}
+              description={tab.status === "OPEN" && !q ? "Customers can request a return within the return window set in Settings." : undefined}
             />
           ) : (
             <Panel>
@@ -107,7 +108,7 @@ export default async function ComplaintsPage({ searchParams }: PageProps<"/compl
                   {complaints.items.map((complaint) => (
                     <TableRow key={complaint.id}>
                       <TableCell>
-                        <Link href={`/complaints/${complaint.id}`} className="font-medium underline-offset-4 hover:underline">
+                        <Link href={`/returns/${complaint.id}`} className="font-medium underline-offset-4 hover:underline">
                           {complaint.order.orderNumber}
                         </Link>
                         <div className="text-xs text-muted-foreground">

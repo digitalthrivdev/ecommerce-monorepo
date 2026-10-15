@@ -94,7 +94,7 @@ export type ActiveCarrier = { name: string; label: string };
 
 export type RefundMethod = "GATEWAY" | "UPI" | "BANK_TRANSFER";
 export type ComplaintReason = "DAMAGED" | "WRONG_ITEM" | "MISSING" | "EXPIRED" | "OTHER";
-export type ComplaintStatus = "OPEN" | "RESOLVED" | "REJECTED";
+export type ComplaintStatus = "OPEN" | "APPROVED" | "RECEIVED" | "RESOLVED" | "REJECTED";
 
 export type Refund = {
   id: string;
@@ -138,6 +138,10 @@ export type ComplaintDetail = {
   createdAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
+  reverseCourierName: string | null;
+  reverseAwb: string | null;
+  reverseTrackingUrl: string | null;
+  canBookReversePickup: boolean;
   customer: { id: string; name: string | null; phone: string; deletedAt: string | null; complaintCount: number } | null;
   order: {
     id: string;
@@ -210,6 +214,7 @@ export type OrderDetail = {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  rtoReceivedAt: string | null;
   /** Placed through the review login, by an app store or payment gateway reviewer. */
   reviewAccount: boolean;
   paymentMethod: PaymentMethod;
@@ -282,7 +287,7 @@ export type OrderDetail = {
     changedBy: { name: string | null; role: UserRole } | null;
   }>;
   refunds: Array<Refund & { complaintId: string | null }>;
-  complaint: { id: string; reason: ComplaintReason; status: ComplaintStatus; createdAt: string } | null;
+  returnRequest: { id: string; reason: ComplaintReason; status: ComplaintStatus; createdAt: string } | null;
   /** The customer's rating after delivery, at most one per order. */
   rating: OrderRating | null;
   /** What an admin can still refund (delivered orders only). */
@@ -631,6 +636,7 @@ export type PlatformSettings = {
   shippingFeeGstRate: string;
   /** "Delivery in about N minutes" in the customer app; null hides it. */
   deliveryPromiseMinutes: number | null;
+  returnWindowDays: number;
   websiteTagline: string | null;
   playStoreUrl: string | null;
   appStoreUrl: string | null;

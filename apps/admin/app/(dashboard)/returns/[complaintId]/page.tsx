@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Phone } from "lucide-react";
 
-import { ComplaintStatusPill } from "@/components/complaints/complaint-status-pill";
-import { RefundDialog } from "@/components/complaints/refund-dialog";
-import { ResolveComplaintDialog } from "@/components/complaints/resolve-complaint-dialog";
+import { ComplaintStatusPill } from "@/components/returns/complaint-status-pill";
+import { BookReversePickupButton } from "@/components/returns/book-reverse-pickup-button";
+import { RefundDialog } from "@/components/returns/refund-dialog";
+import { ResolveComplaintDialog } from "@/components/returns/resolve-complaint-dialog";
+import { ReversePickupForm } from "@/components/returns/reverse-pickup-form";
 import { Notice } from "@/components/notice";
 import { PageHeader } from "@/components/page-header";
 import { Block, PageBody, Panel, Section } from "@/components/section";
@@ -15,7 +17,7 @@ import { getPublicSettings, requireAdmin } from "@/lib/dal";
 import { COMPLAINT_REASON_LABELS, formatDateTime, formatMoney, personName, productTitle, REFUND_METHOD_LABELS } from "@/lib/format";
 import type { ComplaintDetail } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Complaint" };
+export const metadata: Metadata = { title: "Return" };
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -28,14 +30,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 async function getComplaint(id: string) {
   try {
-    return await apiFetch<ComplaintDetail>(`/admin/complaints/${encodeURIComponent(id)}`);
+    return await apiFetch<ComplaintDetail>(`/admin/returns/${encodeURIComponent(id)}`);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   }
 }
 
-export default async function ComplaintPage({ params }: PageProps<"/complaints/[complaintId]">) {
+export default async function ComplaintPage({ params }: PageProps<"/returns/[complaintId]">) {
   await requireAdmin();
   const { complaintId } = await params;
   const [complaint, settings] = await Promise.all([getComplaint(complaintId), getPublicSettings()]);
@@ -44,27 +46,20 @@ export default async function ComplaintPage({ params }: PageProps<"/complaints/[
   const date = (value: string) => formatDateTime(value, settings.timezone);
   const { order, customer } = complaint;
   const isOpen = complaint.status === "OPEN";
+  const isApproved = complaint.status === "APPROVED";
 
   return (
     <>
       <PageHeader
-        back={{ href: "/complaints", label: "Complaints" }}
+        back={{ href: "/returns", label: "Returns" }}
         title={COMPLAINT_REASON_LABELS[complaint.reason]}
         status={<ComplaintStatusPill status={complaint.status} size="md" />}
-        description={`Order ${order.orderNumber} · reported ${date(complaint.createdAt)}`}
+        description={`Order ${order.orderNumber} · requested ${date(complaint.createdAt)}`}
         actions={
           isOpen && (
             <>
               <ResolveComplaintDialog complaintId={complaint.id} status="REJECTED" />
-              <ResolveComplaintDialog complaintId={complaint.id} status="RESOLVED" />
-              <RefundDialog
-                target={{ complaintId: complaint.id }}
-                paymentMethod={order.paymentMethod}
-                defaultAmount={complaint.suggestedRefund}
-                refundable={complaint.refundable}
-                currency={settings.currency}
-                label="Refund"
-              />
+              <ResolveComplaintDialog complaintId={complaint.id} status="APPROVED" />
             </>
           )
         }
@@ -73,16 +68,33 @@ export default async function ComplaintPage({ params }: PageProps<"/complaints/[
       <PageBody className="max-w-6xl gap-6">
         {!isOpen && (
           <Notice
-            tone={complaint.status === "RESOLVED" ? "success" : "info"}
-            title={`${complaint.status === "RESOLVED" ? "Resolved" : "Rejected"}${complaint.resolvedAt ? ` ${date(complaint.resolvedAt)}` : ""}${complaint.resolvedBy ? ` by ${complaint.resolvedBy}` : ""}`}
+            tone={complaint.status === "RESOLVED" ? "success" : complaint.status === "APPROVED" ? "info" : "danger"}
+            title={`${complaint.status === "RESOLVED" ? "Return received and refunded" : complaint.status === "APPROVED" ? "Return approved" : "Return rejected"}${complaint.resolvedAt ? ` ${date(complaint.resolvedAt)}` : ""}${complaint.resolvedBy ? ` by ${complaint.resolvedBy}` : ""}`}
           >
             {complaint.resolutionNote}
           </Notice>
         )}
         {isOpen && Number(complaint.refundable) <= 0 && (
           <Notice tone="info" title="Nothing left to refund on this order">
-            Resolve or reject the complaint with a message to the customer.
+            Reject the return request with a message to the customer.
           </Notice>
+        )}
+        {isApproved && (
+          <Section title="Reverse pickup and receipt" hint="Use the carrier’s reverse pickup service, or record a self arranged return here.">
+            <Panel className="flex flex-col gap-3 p-5">
+              <ReversePickupForm complaintId={complaint.id} courierName={complaint.reverseCourierName} awb={complaint.reverseAwb} trackingUrl={complaint.reverseTrackingUrl} />
+              {complaint.canBookReversePickup && !complaint.reverseAwb && <BookReversePickupButton complaintId={complaint.id} />}
+              {complaint.reverseTrackingUrl && <a className="text-sm underline" href={complaint.reverseTrackingUrl} target="_blank" rel="noreferrer">Track return pickup</a>}
+              <RefundDialog
+                target={{ complaintId: complaint.id }}
+                paymentMethod={order.paymentMethod}
+                defaultAmount={complaint.suggestedRefund}
+                refundable={complaint.refundable}
+                currency={settings.currency}
+                label="Receive return and refund"
+              />
+            </Panel>
+          </Section>
         )}
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -104,7 +116,7 @@ export default async function ComplaintPage({ params }: PageProps<"/complaints/[
               </Panel>
             </Section>
 
-            <Section title="Reported items" hint={`Worth ${money(complaint.items.reduce((sum, item) => sum + Number(item.value), 0).toFixed(2))} at the price paid`}>
+            <Section title="Requested items" hint={`Paid value ${money(complaint.items.reduce((sum, item) => sum + Number(item.value), 0).toFixed(2))}`}>
               <Panel className="divide-y">
                 {complaint.items.map((item) => (
                   <div key={item.orderItemId} className="flex items-center gap-3 p-4">
@@ -164,7 +176,7 @@ export default async function ComplaintPage({ params }: PageProps<"/complaints/[
                   </p>
                   <p className="text-muted-foreground tabular-nums">{order.customerPhone}</p>
                   {customer && customer.complaintCount > 1 && (
-                    <p className="mt-1 font-medium text-amber-700 dark:text-amber-400">{customer.complaintCount} complaints in total</p>
+                    <p className="mt-1 font-medium text-amber-700 dark:text-amber-400">{customer.complaintCount} return requests in total</p>
                   )}
                 </div>
                 <Button asChild variant="outline" className="w-full">

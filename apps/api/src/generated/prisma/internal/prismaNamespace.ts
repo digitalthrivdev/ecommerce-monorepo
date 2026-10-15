@@ -3385,6 +3385,7 @@ export const OrderScalarFieldEnum = {
   userId: 'userId',
   addressId: 'addressId',
   status: 'status',
+  rtoReceivedAt: 'rtoReceivedAt',
   subtotal: 'subtotal',
   shippingFee: 'shippingFee',
   codFee: 'codFee',
@@ -3553,6 +3554,12 @@ export const ComplaintScalarFieldEnum = {
   resolutionNote: 'resolutionNote',
   resolvedById: 'resolvedById',
   resolvedAt: 'resolvedAt',
+  reverseCourierName: 'reverseCourierName',
+  reverseAwb: 'reverseAwb',
+  reverseTrackingUrl: 'reverseTrackingUrl',
+  reverseProvider: 'reverseProvider',
+  reverseProviderOrderId: 'reverseProviderOrderId',
+  reverseProviderShipmentId: 'reverseProviderShipmentId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3635,6 +3642,7 @@ export const PlatformSettingsScalarFieldEnum = {
   shippingFee: 'shippingFee',
   freeShippingThreshold: 'freeShippingThreshold',
   minOrderValue: 'minOrderValue',
+  returnWindowDays: 'returnWindowDays',
   codFee: 'codFee',
   weightSlabs: 'weightSlabs',
   codMaxOrderValue: 'codMaxOrderValue',

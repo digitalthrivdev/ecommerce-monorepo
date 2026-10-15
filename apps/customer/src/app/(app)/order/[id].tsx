@@ -233,23 +233,25 @@ const REFUND_METHOD_TEXT: Record<OrderDetail["refunds"][number]["method"], strin
 };
 
 function ComplaintCard({ order }: { order: OrderDetail }) {
-  const complaint = order.complaint;
+  const complaint = order.returnRequest;
   if (complaint) {
-    const title = complaint.status === "OPEN" ? "Issue reported" : complaint.status === "RESOLVED" ? "Issue resolved" : "Report closed";
-    const detail = complaint.status === "OPEN" ? `${COMPLAINT_REASON_TEXT[complaint.reason]} · We're looking into it.` : COMPLAINT_REASON_TEXT[complaint.reason];
+    const title = complaint.status === "OPEN" ? "Return requested" : complaint.status === "APPROVED" ? "Return approved" : complaint.status === "RESOLVED" ? "Return complete" : "Return closed";
+    const detail = complaint.status === "OPEN" ? `${COMPLAINT_REASON_TEXT[complaint.reason]} · We're reviewing your request.` : COMPLAINT_REASON_TEXT[complaint.reason];
     return (
       <InfoCard icon={MessageSquareWarning} title={title} detail={detail}>
         {complaint.resolutionNote ? <Text className="text-sm text-muted-foreground">{complaint.resolutionNote}</Text> : null}
+        {complaint.reverseCourierName ? <Text className="text-sm text-muted-foreground">{complaint.reverseCourierName}{complaint.reverseAwb ? ` · AWB ${complaint.reverseAwb}` : ""}</Text> : null}
+        {complaint.reverseTrackingUrl ? <Pressable accessibilityRole="link" onPress={() => Linking.openURL(complaint.reverseTrackingUrl!)}><Text className="text-sm font-semibold text-primary underline">Track return pickup</Text></Pressable> : null}
       </InfoCard>
     );
   }
-  if (!order.canReportIssue) return null;
+  if (!order.canRequestReturn) return null;
   return (
     <InfoCard
       icon={MessageSquareWarning}
-      title="Something wrong with your order?"
-      detail="Tell us about damaged, wrong or missing items."
-      action={{ label: "Report an issue", onPress: () => router.push({ pathname: "/report-issue/[id]", params: { id: order.id } }) }}
+      title="Need to return an item?"
+      detail="Request a return for eligible items in this order."
+      action={{ label: "Request a return", onPress: () => router.push({ pathname: "/returns/[id]", params: { id: order.id } }) }}
     />
   );
 }

@@ -91,6 +91,8 @@ export type ComplaintReason = (typeof ComplaintReason)[keyof typeof ComplaintRea
 
 export const ComplaintStatus = {
   OPEN: 'OPEN',
+  APPROVED: 'APPROVED',
+  RECEIVED: 'RECEIVED',
   RESOLVED: 'RESOLVED',
   REJECTED: 'REJECTED'
 } as const

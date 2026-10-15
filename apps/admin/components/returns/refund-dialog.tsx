@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, Undo2 } from "lucide-react";
 
-import { refundComplaint, refundOrder } from "@/app/(dashboard)/complaints/actions";
+import { refundComplaint, refundOrder } from "@/app/(dashboard)/returns/actions";
 import { MoneyInput } from "@/components/money-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ import { formatMoney } from "@/lib/format";
 import type { PaymentMethod } from "@/lib/types";
 
 type RefundDialogProps = {
-  /** A complaint is resolved by the refund; an order refund needs its own reason. */
+  /** A return is completed by receipt and refund; an order refund needs its own reason. */
   target: { complaintId: string } | { orderId: string };
   paymentMethod: PaymentMethod;
   defaultAmount: string;
@@ -64,7 +64,7 @@ export function RefundDialog({ target, paymentMethod, defaultAmount, refundable,
             <input type="hidden" name="orderId" value={target.orderId} />
           )}
           <DialogHeader>
-            <DialogTitle>{forComplaint ? "Refund and resolve" : "Refund this order"}</DialogTitle>
+            <DialogTitle>{forComplaint ? "Receive return and refund" : "Refund this order"}</DialogTitle>
             <DialogDescription>
               {cash
                 ? "Cash orders are paid back by UPI or bank transfer. Send the money first, then record it here."

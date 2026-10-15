@@ -34,6 +34,12 @@ export type ComplaintMinAggregateOutputType = {
   resolutionNote: string | null
   resolvedById: string | null
   resolvedAt: Date | null
+  reverseCourierName: string | null
+  reverseAwb: string | null
+  reverseTrackingUrl: string | null
+  reverseProvider: string | null
+  reverseProviderOrderId: string | null
+  reverseProviderShipmentId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -48,6 +54,12 @@ export type ComplaintMaxAggregateOutputType = {
   resolutionNote: string | null
   resolvedById: string | null
   resolvedAt: Date | null
+  reverseCourierName: string | null
+  reverseAwb: string | null
+  reverseTrackingUrl: string | null
+  reverseProvider: string | null
+  reverseProviderOrderId: string | null
+  reverseProviderShipmentId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -63,6 +75,12 @@ export type ComplaintCountAggregateOutputType = {
   resolutionNote: number
   resolvedById: number
   resolvedAt: number
+  reverseCourierName: number
+  reverseAwb: number
+  reverseTrackingUrl: number
+  reverseProvider: number
+  reverseProviderOrderId: number
+  reverseProviderShipmentId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -79,6 +97,12 @@ export type ComplaintMinAggregateInputType = {
   resolutionNote?: true
   resolvedById?: true
   resolvedAt?: true
+  reverseCourierName?: true
+  reverseAwb?: true
+  reverseTrackingUrl?: true
+  reverseProvider?: true
+  reverseProviderOrderId?: true
+  reverseProviderShipmentId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -93,6 +117,12 @@ export type ComplaintMaxAggregateInputType = {
   resolutionNote?: true
   resolvedById?: true
   resolvedAt?: true
+  reverseCourierName?: true
+  reverseAwb?: true
+  reverseTrackingUrl?: true
+  reverseProvider?: true
+  reverseProviderOrderId?: true
+  reverseProviderShipmentId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -108,6 +138,12 @@ export type ComplaintCountAggregateInputType = {
   resolutionNote?: true
   resolvedById?: true
   resolvedAt?: true
+  reverseCourierName?: true
+  reverseAwb?: true
+  reverseTrackingUrl?: true
+  reverseProvider?: true
+  reverseProviderOrderId?: true
+  reverseProviderShipmentId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -196,6 +232,12 @@ export type ComplaintGroupByOutputType = {
   resolutionNote: string | null
   resolvedById: string | null
   resolvedAt: Date | null
+  reverseCourierName: string | null
+  reverseAwb: string | null
+  reverseTrackingUrl: string | null
+  reverseProvider: string | null
+  reverseProviderOrderId: string | null
+  reverseProviderShipmentId: string | null
   createdAt: Date
   updatedAt: Date
   _count: ComplaintCountAggregateOutputType | null
@@ -232,6 +274,12 @@ export type ComplaintWhereInput = {
   resolutionNote?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedById?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Complaint"> | Date | string | null
+  reverseCourierName?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseAwb?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseTrackingUrl?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProvider?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderOrderId?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderShipmentId?: Prisma.StringNullableFilter<"Complaint"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -252,6 +300,12 @@ export type ComplaintOrderByWithRelationInput = {
   resolutionNote?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedById?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseCourierName?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseAwb?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseTrackingUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProviderOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProviderShipmentId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   order?: Prisma.OrderOrderByWithRelationInput
@@ -275,6 +329,12 @@ export type ComplaintWhereUniqueInput = Prisma.AtLeast<{
   resolutionNote?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedById?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Complaint"> | Date | string | null
+  reverseCourierName?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseAwb?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseTrackingUrl?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProvider?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderOrderId?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderShipmentId?: Prisma.StringNullableFilter<"Complaint"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
@@ -295,6 +355,12 @@ export type ComplaintOrderByWithAggregationInput = {
   resolutionNote?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedById?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseCourierName?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseAwb?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseTrackingUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProviderOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  reverseProviderShipmentId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ComplaintCountOrderByAggregateInput
@@ -316,6 +382,12 @@ export type ComplaintScalarWhereWithAggregatesInput = {
   resolutionNote?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
   resolvedById?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
   resolvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Complaint"> | Date | string | null
+  reverseCourierName?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
+  reverseAwb?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
+  reverseTrackingUrl?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
+  reverseProvider?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
+  reverseProviderOrderId?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
+  reverseProviderShipmentId?: Prisma.StringNullableWithAggregatesFilter<"Complaint"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Complaint"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Complaint"> | Date | string
 }
@@ -328,6 +400,12 @@ export type ComplaintCreateInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutComplaintInput
@@ -348,6 +426,12 @@ export type ComplaintUncheckedCreateInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.ComplaintItemUncheckedCreateNestedManyWithoutComplaintInput
@@ -362,6 +446,12 @@ export type ComplaintUpdateInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutComplaintNestedInput
@@ -382,6 +472,12 @@ export type ComplaintUncheckedUpdateInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.ComplaintItemUncheckedUpdateManyWithoutComplaintNestedInput
@@ -399,6 +495,12 @@ export type ComplaintCreateManyInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -411,6 +513,12 @@ export type ComplaintUpdateManyMutationInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -426,6 +534,12 @@ export type ComplaintUncheckedUpdateManyInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -456,6 +570,12 @@ export type ComplaintCountOrderByAggregateInput = {
   resolutionNote?: Prisma.SortOrder
   resolvedById?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  reverseCourierName?: Prisma.SortOrder
+  reverseAwb?: Prisma.SortOrder
+  reverseTrackingUrl?: Prisma.SortOrder
+  reverseProvider?: Prisma.SortOrder
+  reverseProviderOrderId?: Prisma.SortOrder
+  reverseProviderShipmentId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -470,6 +590,12 @@ export type ComplaintMaxOrderByAggregateInput = {
   resolutionNote?: Prisma.SortOrder
   resolvedById?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  reverseCourierName?: Prisma.SortOrder
+  reverseAwb?: Prisma.SortOrder
+  reverseTrackingUrl?: Prisma.SortOrder
+  reverseProvider?: Prisma.SortOrder
+  reverseProviderOrderId?: Prisma.SortOrder
+  reverseProviderShipmentId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -484,6 +610,12 @@ export type ComplaintMinOrderByAggregateInput = {
   resolutionNote?: Prisma.SortOrder
   resolvedById?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  reverseCourierName?: Prisma.SortOrder
+  reverseAwb?: Prisma.SortOrder
+  reverseTrackingUrl?: Prisma.SortOrder
+  reverseProvider?: Prisma.SortOrder
+  reverseProviderOrderId?: Prisma.SortOrder
+  reverseProviderShipmentId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -664,6 +796,12 @@ export type ComplaintCreateWithoutUserInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutComplaintInput
@@ -682,6 +820,12 @@ export type ComplaintUncheckedCreateWithoutUserInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.ComplaintItemUncheckedCreateNestedManyWithoutComplaintInput
@@ -706,6 +850,12 @@ export type ComplaintCreateWithoutResolvedByInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutComplaintInput
@@ -724,6 +874,12 @@ export type ComplaintUncheckedCreateWithoutResolvedByInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.ComplaintItemUncheckedCreateNestedManyWithoutComplaintInput
@@ -770,6 +926,12 @@ export type ComplaintScalarWhereInput = {
   resolutionNote?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedById?: Prisma.StringNullableFilter<"Complaint"> | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Complaint"> | Date | string | null
+  reverseCourierName?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseAwb?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseTrackingUrl?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProvider?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderOrderId?: Prisma.StringNullableFilter<"Complaint"> | string | null
+  reverseProviderShipmentId?: Prisma.StringNullableFilter<"Complaint"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Complaint"> | Date | string
 }
@@ -798,6 +960,12 @@ export type ComplaintCreateWithoutOrderInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutComplaintsInput
@@ -816,6 +984,12 @@ export type ComplaintUncheckedCreateWithoutOrderInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.ComplaintItemUncheckedCreateNestedManyWithoutComplaintInput
@@ -846,6 +1020,12 @@ export type ComplaintUpdateWithoutOrderInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutComplaintsNestedInput
@@ -864,6 +1044,12 @@ export type ComplaintUncheckedUpdateWithoutOrderInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.ComplaintItemUncheckedUpdateManyWithoutComplaintNestedInput
@@ -878,6 +1064,12 @@ export type ComplaintCreateWithoutRefundsInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutComplaintInput
@@ -897,6 +1089,12 @@ export type ComplaintUncheckedCreateWithoutRefundsInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.ComplaintItemUncheckedCreateNestedManyWithoutComplaintInput
@@ -926,6 +1124,12 @@ export type ComplaintUpdateWithoutRefundsInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutComplaintNestedInput
@@ -945,6 +1149,12 @@ export type ComplaintUncheckedUpdateWithoutRefundsInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.ComplaintItemUncheckedUpdateManyWithoutComplaintNestedInput
@@ -958,6 +1168,12 @@ export type ComplaintCreateWithoutItemsInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   order: Prisma.OrderCreateNestedOneWithoutComplaintInput
@@ -977,6 +1193,12 @@ export type ComplaintUncheckedCreateWithoutItemsInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutComplaintInput
@@ -1006,6 +1228,12 @@ export type ComplaintUpdateWithoutItemsInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutComplaintNestedInput
@@ -1025,6 +1253,12 @@ export type ComplaintUncheckedUpdateWithoutItemsInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutComplaintNestedInput
@@ -1040,6 +1274,12 @@ export type ComplaintCreateManyUserInput = {
   resolutionNote?: string | null
   resolvedById?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1054,6 +1294,12 @@ export type ComplaintCreateManyResolvedByInput = {
   status?: $Enums.ComplaintStatus
   resolutionNote?: string | null
   resolvedAt?: Date | string | null
+  reverseCourierName?: string | null
+  reverseAwb?: string | null
+  reverseTrackingUrl?: string | null
+  reverseProvider?: string | null
+  reverseProviderOrderId?: string | null
+  reverseProviderShipmentId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1066,6 +1312,12 @@ export type ComplaintUpdateWithoutUserInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutComplaintNestedInput
@@ -1084,6 +1336,12 @@ export type ComplaintUncheckedUpdateWithoutUserInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.ComplaintItemUncheckedUpdateManyWithoutComplaintNestedInput
@@ -1100,6 +1358,12 @@ export type ComplaintUncheckedUpdateManyWithoutUserInput = {
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1112,6 +1376,12 @@ export type ComplaintUpdateWithoutResolvedByInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   order?: Prisma.OrderUpdateOneRequiredWithoutComplaintNestedInput
@@ -1130,6 +1400,12 @@ export type ComplaintUncheckedUpdateWithoutResolvedByInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.ComplaintItemUncheckedUpdateManyWithoutComplaintNestedInput
@@ -1146,6 +1422,12 @@ export type ComplaintUncheckedUpdateManyWithoutResolvedByInput = {
   status?: Prisma.EnumComplaintStatusFieldUpdateOperationsInput | $Enums.ComplaintStatus
   resolutionNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reverseCourierName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseAwb?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseTrackingUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reverseProviderShipmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1201,6 +1483,12 @@ export type ComplaintSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   resolutionNote?: boolean
   resolvedById?: boolean
   resolvedAt?: boolean
+  reverseCourierName?: boolean
+  reverseAwb?: boolean
+  reverseTrackingUrl?: boolean
+  reverseProvider?: boolean
+  reverseProviderOrderId?: boolean
+  reverseProviderShipmentId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -1222,6 +1510,12 @@ export type ComplaintSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   resolutionNote?: boolean
   resolvedById?: boolean
   resolvedAt?: boolean
+  reverseCourierName?: boolean
+  reverseAwb?: boolean
+  reverseTrackingUrl?: boolean
+  reverseProvider?: boolean
+  reverseProviderOrderId?: boolean
+  reverseProviderShipmentId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -1240,6 +1534,12 @@ export type ComplaintSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   resolutionNote?: boolean
   resolvedById?: boolean
   resolvedAt?: boolean
+  reverseCourierName?: boolean
+  reverseAwb?: boolean
+  reverseTrackingUrl?: boolean
+  reverseProvider?: boolean
+  reverseProviderOrderId?: boolean
+  reverseProviderShipmentId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
@@ -1258,11 +1558,17 @@ export type ComplaintSelectScalar = {
   resolutionNote?: boolean
   resolvedById?: boolean
   resolvedAt?: boolean
+  reverseCourierName?: boolean
+  reverseAwb?: boolean
+  reverseTrackingUrl?: boolean
+  reverseProvider?: boolean
+  reverseProviderOrderId?: boolean
+  reverseProviderShipmentId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ComplaintOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "userId" | "reason" | "note" | "photoUrls" | "status" | "resolutionNote" | "resolvedById" | "resolvedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["complaint"]>
+export type ComplaintOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "userId" | "reason" | "note" | "photoUrls" | "status" | "resolutionNote" | "resolvedById" | "resolvedAt" | "reverseCourierName" | "reverseAwb" | "reverseTrackingUrl" | "reverseProvider" | "reverseProviderOrderId" | "reverseProviderShipmentId" | "createdAt" | "updatedAt", ExtArgs["result"]["complaint"]>
 export type ComplaintInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1302,6 +1608,12 @@ export type $ComplaintPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     resolutionNote: string | null
     resolvedById: string | null
     resolvedAt: Date | null
+    reverseCourierName: string | null
+    reverseAwb: string | null
+    reverseTrackingUrl: string | null
+    reverseProvider: string | null
+    reverseProviderOrderId: string | null
+    reverseProviderShipmentId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["complaint"]>
@@ -1742,6 +2054,12 @@ export interface ComplaintFieldRefs {
   readonly resolutionNote: Prisma.FieldRef<"Complaint", 'String'>
   readonly resolvedById: Prisma.FieldRef<"Complaint", 'String'>
   readonly resolvedAt: Prisma.FieldRef<"Complaint", 'DateTime'>
+  readonly reverseCourierName: Prisma.FieldRef<"Complaint", 'String'>
+  readonly reverseAwb: Prisma.FieldRef<"Complaint", 'String'>
+  readonly reverseTrackingUrl: Prisma.FieldRef<"Complaint", 'String'>
+  readonly reverseProvider: Prisma.FieldRef<"Complaint", 'String'>
+  readonly reverseProviderOrderId: Prisma.FieldRef<"Complaint", 'String'>
+  readonly reverseProviderShipmentId: Prisma.FieldRef<"Complaint", 'String'>
   readonly createdAt: Prisma.FieldRef<"Complaint", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Complaint", 'DateTime'>
 }

@@ -461,7 +461,7 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
    * back. Nothing while an automatic refund (unavailable items) is still pending, so the two can't mix.
    */
   function refundableAmount(order: { status: OrderStatus; total: Prisma.Decimal }, payment: Pick<RefundablePayment, "status" | "amount" | "refundedAmount"> | null) {
-    if (!payment || order.status !== OrderStatus.DELIVERED || payment.status !== PaymentStatus.PAID) {
+    if (!payment || (order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.RTO) || payment.status !== PaymentStatus.PAID) {
       return new Prisma.Decimal(0);
     }
     const remaining = payment.amount.minus(payment.refundedAmount);
@@ -469,7 +469,7 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
   }
 
   /**
-   * Pays back part or all of a delivered order. Online payments are refunded through the gateway
+   * Pays back part or all of a delivered or RTO order. Online payments are refunded through the gateway
    * that took them; cash-on-delivery refunds are paid by the business by UPI or bank transfer and
    * only recorded here. Runs inside the caller's transaction (so a complaint can be resolved with it)
    * and locks the order, then the payment.
@@ -496,8 +496,8 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
     if (!payment) {
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
-    if (payment.order.status !== OrderStatus.DELIVERED) {
-      throw new AppError(409, "REFUND_NOT_ALLOWED", "Only delivered orders can be refunded here. Cancel the order or mark items unavailable instead.", {
+    if (payment.order.status !== OrderStatus.DELIVERED && payment.order.status !== OrderStatus.RTO) {
+      throw new AppError(409, "REFUND_NOT_ALLOWED", "Only delivered or RTO orders can be refunded here.", {
         status: payment.order.status,
       });
     }

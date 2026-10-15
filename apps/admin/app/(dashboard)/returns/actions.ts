@@ -61,18 +61,18 @@ export async function refundComplaint(formData: FormData): Promise<ActionResult>
   if (missing) return missing;
 
   try {
-    await apiFetch(`/admin/complaints/${encodeURIComponent(complaintId)}/refund`, { method: "POST", body });
+  await apiFetch(`/admin/returns/${encodeURIComponent(complaintId)}/receive`, { method: "POST", body });
   } catch (error) {
     return refundFailure(error);
   }
 
   refresh();
-  return { ok: true, message: "Refund issued and complaint resolved" };
+  return { ok: true, message: "Return received and refund issued" };
 }
 
 const resolveSchema = z.object({
   complaintId: idSchema,
-  status: z.enum(["RESOLVED", "REJECTED"]),
+  status: z.enum(["APPROVED", "REJECTED"]),
   note: text(500).min(1, "Write a short message for the customer"),
 });
 
@@ -86,13 +86,52 @@ export async function resolveComplaint(formData: FormData): Promise<ActionResult
   const { complaintId, ...body } = parsed.data;
 
   try {
-    await apiFetch(`/admin/complaints/${encodeURIComponent(complaintId)}/resolve`, { method: "POST", body });
+    await apiFetch(`/admin/returns/${encodeURIComponent(complaintId)}/resolve`, { method: "POST", body });
   } catch (error) {
     return apiFailure(error);
   }
 
   refresh();
-  return { ok: true, message: body.status === "REJECTED" ? "Complaint rejected" : "Complaint resolved" };
+  return { ok: true, message: body.status === "REJECTED" ? "Return rejected" : "Return approved" };
+}
+
+const reversePickupSchema = z.object({
+  complaintId: idSchema,
+  courierName: text(100).min(1),
+  awb: text(100).min(1),
+  trackingUrl: text(500).transform((value) => value || undefined).pipe(z.union([z.url(), z.undefined()])),
+});
+
+export async function saveReversePickup(formData: FormData): Promise<ActionResult> {
+  const parsed = reversePickupSchema.safeParse({
+    complaintId: formText(formData, "complaintId"),
+    courierName: formText(formData, "courierName"),
+    awb: formText(formData, "awb"),
+    trackingUrl: formText(formData, "trackingUrl"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+  const { complaintId, ...body } = parsed.data;
+  try {
+    await apiFetch(`/admin/returns/${encodeURIComponent(complaintId)}/reverse-pickup`, { method: "POST", body });
+  } catch (error) {
+    return apiFailure(error);
+  }
+  refresh();
+  return { ok: true, message: "Reverse pickup details saved" };
+}
+
+export async function bookReversePickup(formData: FormData): Promise<ActionResult> {
+  const parsed = z.object({ complaintId: idSchema, email: z.email().max(200) }).safeParse({
+    complaintId: formText(formData, "complaintId"), email: formText(formData, "email"),
+  });
+  if (!parsed.success) return validationFailure(parsed.error);
+  try {
+    await apiFetch(`/admin/returns/${encodeURIComponent(parsed.data.complaintId)}/reverse-pickup/book`, { method: "POST", body: { email: parsed.data.email } });
+  } catch (error) {
+    return apiFailure(error);
+  }
+  refresh();
+  return { ok: true, message: "Reverse pickup booked with Shiprocket" };
 }
 
 const orderRefundSchema = z.object({

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   // Dependencies are hoisted to the monorepo root, so trace files from there.
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),
   poweredByHeader: false,
+  experimental: { serverActions: { bodySizeLimit: "32mb" } },
 };
 
 export default nextConfig;

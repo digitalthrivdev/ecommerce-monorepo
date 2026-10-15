@@ -58,6 +58,12 @@ function orderPath(orderId: string, action: string) {
   return `/admin/orders/${encodeURIComponent(orderId)}/${action}`;
 }
 
+export async function confirmRtoReceipt({ orderId }: { orderId: string }): Promise<ActionResult> {
+  const parsed = targetSchema.safeParse({ orderId });
+  if (!parsed.success) return validationFailure(parsed.error);
+  return run(orderPath(orderId, "rto/receive"), {}, "RTO received; inventory restored and any online payment refunded");
+}
+
 export async function packOrder(input: { orderId: string }): Promise<ActionResult> {
   const parsed = targetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };

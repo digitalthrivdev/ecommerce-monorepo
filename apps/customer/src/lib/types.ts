@@ -312,9 +312,9 @@ export type OrderDetail = {
   statusHistory: { fromStatus: OrderStatus | null; toStatus: OrderStatus; note: string | null; createdAt: string }[];
   /** Money paid back: automatically for cancelled or unavailable items, or by an admin after delivery. */
   refunds: { id: string; amount: string; method: RefundMethod; reason: string; createdAt: string }[];
-  complaint: OrderComplaint | null;
+  returnRequest: OrderComplaint | null;
   /** Delivered recently enough to report a problem, and not reported yet. */
-  canReportIssue: boolean;
+  canRequestReturn: boolean;
   rating: OrderRating | null;
   /** Delivered in the last 7 days and not rated yet. */
   canRate: boolean;
@@ -329,8 +329,11 @@ export type OrderComplaint = {
   reason: ComplaintReason;
   note: string | null;
   photoUrls: string[];
-  status: "OPEN" | "RESOLVED" | "REJECTED";
+  status: "OPEN" | "APPROVED" | "RECEIVED" | "RESOLVED" | "REJECTED";
   resolutionNote: string | null;
+  reverseCourierName: string | null;
+  reverseAwb: string | null;
+  reverseTrackingUrl: string | null;
   createdAt: string;
   resolvedAt: string | null;
   items: { orderItemId: string; quantity: number }[];

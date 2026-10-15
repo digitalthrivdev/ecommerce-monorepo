@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
       .catch(() => 0),
     isAdmin ? getAttention().catch(() => null) : null,
     isAdmin
-      ? apiFetch<ComplaintList>("/admin/complaints", { query: { status: "OPEN", limit: 1 } })
+      ? apiFetch<ComplaintList>("/admin/returns", { query: { status: "OPEN", limit: 1 } })
           .then((complaints) => complaints.total)
           .catch(() => 0)
       : 0,

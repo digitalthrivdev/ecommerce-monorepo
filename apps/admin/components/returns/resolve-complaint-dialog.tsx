@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-import { resolveComplaint } from "@/app/(dashboard)/complaints/actions";
+import { resolveComplaint } from "@/app/(dashboard)/returns/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,15 +20,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFormAction } from "@/hooks/use-form-action";
 
 const COPY = {
-  RESOLVED: {
-    button: "Resolve without refund",
-    title: "Resolve without a refund",
-    description: "For example, the item was replaced. The customer sees your message.",
-    placeholder: "We've sent a replacement with your next order.",
+  APPROVED: {
+    button: "Approve return",
+    title: "Approve this return",
+    description: "The customer can then arrange the reverse pickup and receive a refund when the item arrives.",
+    placeholder: "Return approved. Please send the item back to us.",
   },
   REJECTED: {
     button: "Reject",
-    title: "Reject this complaint",
+    title: "Reject this return",
     description: "Explain why, politely. The customer sees your message.",
     placeholder: "The photo shows the item as ordered, so we can't refund it.",
   },

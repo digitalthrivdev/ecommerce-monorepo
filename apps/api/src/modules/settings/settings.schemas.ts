@@ -35,6 +35,7 @@ export const updateSettingsBodySchema = z
     codFee: decimalSchema,
     weightSlabs: z.array(weightSlabSchema).max(20).nullable(),
     minOrderValue: decimalSchema,
+    returnWindowDays: z.number().int().min(1).max(90),
     codMaxOrderValue: positiveDecimalSchema.nullable(),
     deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
     supportPhone: phoneSchema.nullable(),

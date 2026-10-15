@@ -3,13 +3,14 @@ import Link from "next/link";
 import { ChevronDown, FileText, MapPin, Phone } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
-import { RefundDialog } from "@/components/complaints/refund-dialog";
+import { RefundDialog } from "@/components/returns/refund-dialog";
 import { Notice } from "@/components/notice";
 import { Elapsed } from "@/components/orders/elapsed";
 import { NextStepButton, OrderMoreMenu } from "@/components/orders/order-actions";
 import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
 import { ShipmentCard } from "@/components/orders/shipment-card";
+import { RtoReceiptButton } from "@/components/orders/rto-receipt-button";
 import { PageHeader } from "@/components/page-header";
 import { Block, PageBody, Panel, Section } from "@/components/section";
 import { Stars } from "@/components/stars";
@@ -101,22 +102,23 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
       />
 
       <PageBody className="max-w-6xl gap-6">
-        {order.complaint && user.role === "ADMIN" && (
+        {order.returnRequest && user.role === "ADMIN" && (
           <Notice
-            tone={order.complaint.status === "OPEN" ? "warning" : "info"}
+            tone={order.returnRequest.status === "OPEN" ? "warning" : "info"}
             title={
-              <Link href={`/complaints/${order.complaint.id}`} className="underline-offset-4 hover:underline">
-                {order.complaint.status === "OPEN" ? "Open complaint" : `Complaint ${COMPLAINT_STATUS_LABELS[order.complaint.status].toLowerCase()}`}:{" "}
-                {COMPLAINT_REASON_LABELS[order.complaint.reason].toLowerCase()}
+              <Link href={`/returns/${order.returnRequest.id}`} className="underline-offset-4 hover:underline">
+                {order.returnRequest.status === "OPEN" ? "Open return" : `Return ${COMPLAINT_STATUS_LABELS[order.returnRequest.status].toLowerCase()}`}:{" "}
+                {COMPLAINT_REASON_LABELS[order.returnRequest.reason].toLowerCase()}
               </Link>
             }
           >
-            Reported {date(order.complaint.createdAt)}
+            Requested {date(order.returnRequest.createdAt)}
           </Notice>
         )}
         {order.status === "RTO" && (
           <Notice tone="danger" title="Not delivered">
             The courier couldn&apos;t deliver the parcel and is returning it to the pickup location (RTO).
+            <div className="mt-3"><RtoReceiptButton orderId={order.id} alreadyReceived={Boolean(order.rtoReceivedAt)} /></div>
           </Notice>
         )}
         {cancelEntry ? (

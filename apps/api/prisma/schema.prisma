@@ -408,7 +408,8 @@ model Order {
   userId    String
   addressId String?
 
-  status OrderStatus @default(PENDING_PAYMENT)
+  status        OrderStatus @default(PENDING_PAYMENT)
+  rtoReceivedAt DateTime?
 
   subtotal    Decimal @db.Decimal(10, 2)
   shippingFee Decimal @db.Decimal(10, 2)
@@ -724,11 +725,17 @@ model Complaint {
   // Photos uploaded by the customer (URLs under /uploads/images), at most 3.
   photoUrls String[]        @default([])
 
-  status         ComplaintStatus @default(OPEN)
+  status                    ComplaintStatus @default(OPEN)
   // The admin's answer, shown to the customer.
-  resolutionNote String?
-  resolvedById   String?
-  resolvedAt     DateTime?
+  resolutionNote            String?
+  resolvedById              String?
+  resolvedAt                DateTime?
+  reverseCourierName        String?
+  reverseAwb                String?
+  reverseTrackingUrl        String?
+  reverseProvider           String?
+  reverseProviderOrderId    String?
+  reverseProviderShipmentId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -766,6 +773,8 @@ enum ComplaintReason {
 
 enum ComplaintStatus {
   OPEN
+  APPROVED
+  RECEIVED
   RESOLVED
   REJECTED
 }
@@ -919,6 +928,7 @@ model PlatformSettings {
   // Null means shipping is never free.
   freeShippingThreshold Decimal? @db.Decimal(10, 2)
   minOrderValue         Decimal  @db.Decimal(10, 2)
+  returnWindowDays      Int      @default(7)
 
   // Flat cash-on-delivery charge, added to the total of COD orders only.
   codFee Decimal @default(0) @db.Decimal(10, 2)

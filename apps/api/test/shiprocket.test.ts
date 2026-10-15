@@ -286,6 +286,46 @@ describe("booking a shipment", () => {
       code: "SHIPPING_AWB_FAILED",
     });
   });
+
+  it("creates a reverse pickup with AWB and tracking details", async () => {
+    stubFetch(withLogin((url) => url.includes("shipments/create/return-shipment") ? json({
+      status: 1,
+      payload: { order_id: 777, shipment_id: 888, awb_code: "RET123", courier_name: "Reverse Courier", pickup_generated: 1 },
+    }) : undefined));
+    const booked = await provider().createReturnPickup!({
+      orderNumber: "ORD-2026-0001",
+      orderDate: SHIPMENT_INPUT.orderDate,
+      pickup: { ...SHIPMENT_INPUT.delivery, email: "customer@example.test" },
+      delivery: {
+        name: SHIPMENT_INPUT.pickup.name,
+        phone: SHIPMENT_INPUT.pickup.phone,
+        addressLine1: SHIPMENT_INPUT.pickup.addressLine1,
+        addressLine2: SHIPMENT_INPUT.pickup.addressLine2,
+        landmark: SHIPMENT_INPUT.pickup.landmark,
+        city: SHIPMENT_INPUT.pickup.city,
+        state: SHIPMENT_INPUT.pickup.state,
+        postalCode: SHIPMENT_INPUT.pickup.postalCode,
+      },
+      items: SHIPMENT_INPUT.items.map(({ name, sku, quantity, unitPrice }) => ({ name, sku, quantity, unitPrice })),
+      parcel: SHIPMENT_INPUT.parcel,
+    });
+    expect(booked).toEqual({
+      providerOrderId: "777",
+      providerShipmentId: "888",
+      awb: "RET123",
+      courierName: "Reverse Courier",
+      trackingUrl: "https://shiprocket.co/tracking/RET123",
+    });
+    const request = callLog.find((call) => call.url.includes("shipments/create/return-shipment"))!;
+    expect(request.url).toContain("/v1/external/shipments/create/return-shipment");
+    expect(JSON.parse(String(request.init?.body))).toMatchObject({
+      order_id: "RET-ORD-2026-0001",
+      pickup_pincode: 400020,
+      shipping_pincode: 201301,
+      request_pickup: true,
+      pickup_email: "customer@example.test",
+    });
+  });
 });
 
 describe("tracking and cancellation", () => {

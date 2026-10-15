@@ -100,7 +100,7 @@ export async function buildApp() {
   await app.register(cartRoutes, { prefix: "/cart" });
   await app.register(wishlistRoutes, { prefix: "/wishlist" });
   await app.register(ordersRoutes, { prefix: "/orders" });
-  await app.register(customerComplaintsRoutes, { prefix: "/orders/:id/complaint" });
+  await app.register(customerComplaintsRoutes, { prefix: "/orders/:id/returns" });
   await app.register(customerRatingsRoutes, { prefix: "/orders/:id/rating" });
   await app.register(orderReviewsRoutes, { prefix: "/orders/:id/reviews" });
   await app.register(paymentsRoutes, { prefix: "/payments" });
@@ -113,7 +113,7 @@ export async function buildApp() {
   await app.register(invoiceLinkRoutes, { prefix: "/invoices" });
   await app.register(reportsRoutes, { prefix: "/admin/reports" });
   await app.register(customersRoutes, { prefix: "/admin/customers" });
-  await app.register(adminComplaintsRoutes, { prefix: "/admin/complaints" });
+  await app.register(adminComplaintsRoutes, { prefix: "/admin/returns" });
   await app.register(adminRatingsRoutes, { prefix: "/admin/ratings" });
   await app.register(adminReviewsRoutes, { prefix: "/admin/reviews" });
   await app.register(adminCouponsRoutes, { prefix: "/admin/coupons" });

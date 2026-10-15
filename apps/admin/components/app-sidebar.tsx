@@ -75,7 +75,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Home", href: "/", icon: House, roles: BOTH },
       { title: "Orders", href: "/orders", icon: ShoppingBag, roles: BOTH },
-      { title: "Complaints", href: "/complaints", icon: MessageSquareWarning, roles: ADMIN },
+      { title: "Returns", href: "/returns", icon: MessageSquareWarning, roles: ADMIN },
       { title: "Low ratings", href: "/ratings", icon: Star, roles: BOTH },
       { title: "Product reviews", href: "/reviews", icon: MessageSquareText, roles: ADMIN },
       { title: "Stock", href: "/inventory", icon: Boxes, roles: BOTH },
@@ -148,7 +148,7 @@ type AppSidebarProps = { user: DashboardUser; brand: Brand; newOrders: number; o
 export function AppSidebar({ user, brand, newOrders, openComplaints }: AppSidebarProps) {
   const badges: Record<string, { count: number; label: string }> = {
     "/orders": { count: newOrders, label: "new" },
-    "/complaints": { count: openComplaints, label: "open" },
+    "/returns": { count: openComplaints, label: "open" },
   };
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();

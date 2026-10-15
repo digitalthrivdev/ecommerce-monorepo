@@ -61,6 +61,17 @@ export type BookedShipment = {
 
 export type ShipmentRef = { providerOrderId: string | null; providerShipmentId: string | null; awb: string | null };
 
+export type ReturnPickupInput = {
+  orderNumber: string;
+  orderDate: Date;
+  pickup: ShipmentAddress & { email: string };
+  delivery: ShipmentAddress;
+  items: { name: string; sku: string; quantity: number; unitPrice: Prisma.Decimal }[];
+  parcel: { weightGrams: number; lengthCm: Prisma.Decimal; breadthCm: Prisma.Decimal; heightCm: Prisma.Decimal };
+};
+
+export type ReturnPickup = { providerOrderId: string; providerShipmentId: string; awb: string; courierName: string; trackingUrl: string };
+
 /**
  * A shipping carrier or aggregator. The API books a shipment, gets an AWB, schedules the pickup and
  * fetches the label; afterwards the carrier reports progress by webhook (or `track`). Add a carrier
@@ -83,6 +94,9 @@ export interface ShippingProvider {
   }): Promise<{ serviceable: boolean; codAvailable: boolean; etaDays: number | null }>;
 
   createShipment(input: ShipmentInput): Promise<BookedShipment>;
+
+  /** Optional carrier generated reverse pickup. Unsupported carriers use manual details. */
+  createReturnPickup?(input: ReturnPickupInput): Promise<ReturnPickup>;
 
   /** For carriers that book first and assign the courier and AWB as a second step. */
   assignAwb(shipment: ShipmentRef): Promise<{ awb: string; courierName: string | null; trackingUrl: string | null }>;

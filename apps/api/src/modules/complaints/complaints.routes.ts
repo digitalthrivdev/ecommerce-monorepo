@@ -8,9 +8,11 @@ import { idParamsSchema } from "../../shared/schemas.js";
 import { publicBaseUrl } from "../payments/public-url.js";
 import { createImageStore, MAX_UPLOAD_BYTES, smallImagePath } from "../uploads/image-store.js";
 import {
-  complaintRefundBodySchema,
   createComplaintBodySchema,
+  bookReversePickupBodySchema,
   listComplaintsQuerySchema,
+  receiveReturnBodySchema,
+  reversePickupBodySchema,
   resolveComplaintBodySchema,
 } from "./complaints.schemas.js";
 import { createComplaintsService } from "./complaints.service.js";
@@ -80,9 +82,19 @@ export const adminComplaintsRoutes: FastifyPluginAsync = async (app) => {
     return service.getComplaint(id);
   });
 
-  app.post("/:id/refund", async (request) => {
+  app.post("/:id/receive", async (request) => {
     const { id } = idParamsSchema.parse(request.params);
-    return service.refundComplaint(id, complaintRefundBodySchema.parse(request.body), request.user.sub);
+    return service.receiveReturn(id, receiveReturnBodySchema.parse(request.body), request.user.sub);
+  });
+
+  app.post("/:id/reverse-pickup", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return service.setReversePickup(id, reversePickupBodySchema.parse(request.body));
+  });
+
+  app.post("/:id/reverse-pickup/book", async (request) => {
+    const { id } = idParamsSchema.parse(request.params);
+    return service.bookReversePickup(id, bookReversePickupBodySchema.parse(request.body).email);
   });
 
   app.post("/:id/resolve", async (request) => {

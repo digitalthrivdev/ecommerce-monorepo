@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 
-import { ApiError, apiAuth, apiRequest, clearToken, writeToken } from "./api";
+import { ApiError, apiAuth, apiAuthForm, apiRequest, clearToken, writeToken } from "./api";
 import { safeNext } from "./paths";
 import { getSiteUrl } from "./website";
 
-export type FormState = { error: string | null };
+export type FormState = { error: string | null; success?: string | null };
 
 function errorMessage(error: unknown) {
   if (error instanceof ApiError) return error.message;
@@ -215,6 +215,50 @@ export async function cancelOrder(_prev: FormState, formData: FormData): Promise
     revalidatePath(`/account/orders/${id}`);
     revalidatePath("/account/orders");
     return { error: null };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function requestReturn(_prev: FormState, formData: FormData): Promise<FormState> {
+  const orderId = String(formData.get("orderId") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+  const rawItems = String(formData.get("items") ?? "[]");
+  let items: { orderItemId: string; quantity: number }[];
+  try {
+    const parsed: unknown = JSON.parse(rawItems);
+    if (!Array.isArray(parsed)) throw new Error("bad items");
+    items = parsed.filter((item): item is { orderItemId: string; quantity: number } =>
+      typeof item?.orderItemId === "string" && Number.isInteger(item.quantity) && item.quantity > 0,
+    );
+  } catch {
+    return { error: "Choose at least one item to return." };
+  }
+  const photos = formData.getAll("photos").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  if (!orderId || items.length === 0) return { error: "Choose at least one item to return." };
+  if (!new Set(["DAMAGED", "WRONG_ITEM", "MISSING", "EXPIRED", "OTHER"]).has(reason)) return { error: "Choose a return reason." };
+  if (reason === "OTHER" && !note) return { error: "Describe the reason for this return." };
+  if (photos.length > 3) return { error: "Upload up to 3 photos." };
+  if (photos.some((photo) => !photo.type.startsWith("image/") || photo.size > 10 * 1024 * 1024)) {
+    return { error: "Each photo must be an image under 10 MB." };
+  }
+
+  try {
+    const photoUrls: string[] = [];
+    for (const photo of photos) {
+      const upload = new FormData();
+      upload.append("file", photo, photo.name);
+      const saved = await apiAuthForm<{ url: string }>(`/orders/${encodeURIComponent(orderId)}/returns/photos`, upload);
+      photoUrls.push(saved.url);
+    }
+    await apiAuth(`/orders/${encodeURIComponent(orderId)}/returns`, {
+      method: "POST",
+      body: { reason, note: note || undefined, items, photoUrls },
+    });
+    revalidatePath(`/account/orders/${orderId}`);
+    revalidatePath("/account/orders");
+    return { error: null, success: "Return request submitted." };
   } catch (error) {
     return fail(error);
   }

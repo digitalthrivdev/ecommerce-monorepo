@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ShipmentStatus } from "../../generated/prisma/client";
+import { Prisma, ShipmentStatus } from "../../generated/prisma/client";
 import { redis } from "../../infrastructure/redis/client.js";
 import { AppError } from "../../shared/errors.js";
 import { headerValue, safeEqual } from "../payments/gateway-helpers.js";
@@ -11,6 +11,7 @@ import type {
   ShipmentRef,
   ShipmentWebhook,
   ShippingProvider,
+  ReturnPickupInput,
 } from "./shipping-provider.js";
 
 /**
@@ -129,6 +130,17 @@ const createOrderSchema = z
     courier_name: z.string().nullish(),
   })
   .passthrough();
+
+const returnShipmentSchema = z.object({
+  status: z.coerce.number(),
+  payload: z.object({
+    order_id: z.union([z.number(), z.string()]),
+    shipment_id: z.union([z.number(), z.string()]),
+    awb_code: z.string().min(1),
+    courier_name: z.string().min(1),
+    pickup_generated: z.coerce.number().optional(),
+  }).passthrough(),
+}).passthrough();
 
 const assignAwbSchema = z.object({
   awb_assign_status: z.coerce.number(),
@@ -389,6 +401,63 @@ export function createShiprocketProvider(config: {
         courierName: order.courier_name ?? null,
         trackingUrl: order.awb_code ? trackingUrl(order.awb_code) : null,
         status: ShipmentStatus.PENDING,
+      };
+    },
+
+    async createReturnPickup(input: ReturnPickupInput) {
+      const result = await authorized("shipments/create/return-shipment", {
+        method: "POST",
+        json: {
+          order_id: `RET-${input.orderNumber}`.slice(0, 50),
+          order_date: orderDate(input.orderDate),
+          pickup_customer_name: input.pickup.name,
+          pickup_address: [input.pickup.addressLine1, input.pickup.addressLine2, input.pickup.landmark].filter(Boolean).join(", "),
+          pickup_address_2: "",
+          pickup_city: input.pickup.city,
+          pickup_state: input.pickup.state,
+          pickup_country: "India",
+          pickup_pincode: Number(input.pickup.postalCode),
+          pickup_email: input.pickup.email,
+          pickup_phone: tenDigitPhone(input.pickup.phone),
+          pickup_isd_code: "91",
+          shipping_customer_name: input.delivery.name,
+          shipping_address: [input.delivery.addressLine1, input.delivery.addressLine2, input.delivery.landmark].filter(Boolean).join(", "),
+          shipping_address_2: "",
+          shipping_city: input.delivery.city,
+          shipping_state: input.delivery.state,
+          shipping_country: "India",
+          shipping_pincode: Number(input.delivery.postalCode),
+          shipping_email: "",
+          shipping_isd_code: "91",
+          shipping_phone: tenDigitPhone(input.delivery.phone),
+          order_items: input.items.map((item) => ({
+            name: item.name,
+            sku: item.sku,
+            units: item.quantity,
+            selling_price: Number(item.unitPrice.toString()),
+            discount: 0,
+          })),
+          payment_method: "PREPAID",
+          total_discount: "0",
+          sub_total: Number(input.items.reduce((sum, item) => sum.plus(item.unitPrice.mul(item.quantity)), new Prisma.Decimal(0)).toString()),
+          length: Number(input.parcel.lengthCm.toString()),
+          breadth: Number(input.parcel.breadthCm.toString()),
+          height: Number(input.parcel.heightCm.toString()),
+          weight: Math.max(input.parcel.weightGrams, 1) / 1000,
+          request_pickup: true,
+        },
+      });
+      if (!result.ok) throw errorFor("shipments/create/return-shipment", result);
+      const parsed = returnShipmentSchema.parse(result.body);
+      if (parsed.status !== 1 || parsed.payload.pickup_generated === 0) {
+        throw new AppError(502, "RETURN_PICKUP_FAILED", "Shiprocket did not confirm a reverse pickup request.");
+      }
+      return {
+        providerOrderId: String(parsed.payload.order_id),
+        providerShipmentId: String(parsed.payload.shipment_id),
+        awb: parsed.payload.awb_code,
+        courierName: parsed.payload.courier_name,
+        trackingUrl: trackingUrl(parsed.payload.awb_code),
       };
     },
 

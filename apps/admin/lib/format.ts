@@ -128,6 +128,8 @@ export const COMPLAINT_REASON_LABELS: Record<ComplaintReason, string> = {
 
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
   OPEN: "Open",
+  APPROVED: "Approved",
+  RECEIVED: "Received",
   RESOLVED: "Resolved",
   REJECTED: "Rejected",
 };

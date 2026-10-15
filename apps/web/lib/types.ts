@@ -233,6 +233,21 @@ export type OrderDetail = {
   orderNumber: string;
   status: string;
   canCancel: boolean;
+  canRequestReturn: boolean;
+  returnRequest: {
+    id: string;
+    reason: string;
+    note: string | null;
+    photoUrls: string[];
+    status: "OPEN" | "APPROVED" | "RECEIVED" | "RESOLVED" | "REJECTED";
+    resolutionNote: string | null;
+    reverseCourierName: string | null;
+    reverseAwb: string | null;
+    reverseTrackingUrl: string | null;
+    createdAt: string;
+    resolvedAt: string | null;
+    items: { orderItemId: string; quantity: number }[];
+  } | null;
   paymentMethod: "COD" | "ONLINE";
   payment: { status: string; amount: string; refundedAmount: string; paidAt: string | null; refundedAt: string | null } | null;
   paymentExpiresAt: string | null;

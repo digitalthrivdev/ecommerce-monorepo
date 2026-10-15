@@ -86,3 +86,18 @@ export function apiGet<T>(path: string): Promise<T> {
 export function apiAuth<T>(path: string, options: Omit<RequestOptions, "auth" | "revalidate"> = {}): Promise<T> {
   return apiRequest<T>(path, { ...options, auth: true });
 }
+
+/** Authenticated multipart request for the upload routes. */
+export async function apiAuthForm<T>(path: string, body: FormData): Promise<T> {
+  const token = await readToken();
+  if (!token) throw new ApiError(401, "Please sign in", "UNAUTHORIZED");
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { method: "POST", headers: { accept: "application/json", authorization: `Bearer ${token}` }, body, cache: "no-store" });
+  } catch {
+    throw new ApiError(503, "The server could not be reached");
+  }
+  const payload = (await response.json().catch(() => null)) as { message?: string; error?: string } | null;
+  if (!response.ok) throw new ApiError(response.status, payload?.message ?? `Request failed with ${response.status}`, payload?.error);
+  return payload as T;
+}

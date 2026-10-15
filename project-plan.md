@@ -52,7 +52,7 @@
       ShipmentEvent, new OrderStatus, webhooks at /shipping/webhooks/:carrier,
       invoice numbered at PACKED. Left open: web tracking timeline (the
       website has no order pages until Phase 7); demo admins can't book
-      shipments; RTO restocking is Phase 9.
+      shipments.
   [x] Phase 4 – done (commit 3dd5ebe). Left open: confirm the cash amount
       Shiprocket collects on one real test booking before launch; a blank
       customer email may be rejected; a webhook and a tracking refresh can
@@ -67,7 +67,9 @@
   [x] Phase 7 – Website storefront. Customer website, storefront SEO, hosted
       checkout return, and mock payment/carrier purchase verified.
   [DONE] Phase 8 – Customer app
-  [ ] Phase 9 – Returns and RTO
+  [DONE] Phase 9 – Returns and RTO. Return requests, admin decisions,
+      Shiprocket/manual reverse pickup, receipt restocking/refunds, and
+      one-time RTO receipt restocking/online refunds implemented and verified.
   [ ] Phase 10 – Admin cleanup and deploy
 
   Phase 0: Detach from the grocery project and rewrite the docs [DONE]

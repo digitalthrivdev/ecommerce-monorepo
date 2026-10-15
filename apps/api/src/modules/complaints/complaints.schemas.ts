@@ -44,15 +44,24 @@ const refundFields = {
   reference: optionalText(100),
 };
 
-export const complaintRefundBodySchema = z.object({
-  ...refundFields,
+export const resolveComplaintBodySchema = z.object({
+  status: z.enum([ComplaintStatus.APPROVED, ComplaintStatus.REJECTED]),
   /** Shown to the customer. */
   note: z.string().trim().min(1).max(500),
 });
 
-export const resolveComplaintBodySchema = z.object({
-  status: z.enum([ComplaintStatus.RESOLVED, ComplaintStatus.REJECTED]),
-  /** Shown to the customer. */
+export const reversePickupBodySchema = z.object({
+  courierName: z.string().trim().min(1).max(100),
+  awb: z.string().trim().min(1).max(100),
+  trackingUrl: z.url().max(500).nullable().optional(),
+});
+
+export const bookReversePickupBodySchema = z.object({ email: z.email().max(200) });
+
+export const receiveReturnBodySchema = z.object({
+  amount: positiveDecimalSchema,
+  method: z.enum(RefundMethod).optional(),
+  reference: optionalText(100),
   note: z.string().trim().min(1).max(500),
 });
 
@@ -63,6 +72,5 @@ export const orderRefundBodySchema = z.object({
 
 export type CreateComplaintInput = z.infer<typeof createComplaintBodySchema>;
 export type ListComplaintsQuery = z.infer<typeof listComplaintsQuerySchema>;
-export type ComplaintRefundInput = z.infer<typeof complaintRefundBodySchema>;
 export type ResolveComplaintInput = z.infer<typeof resolveComplaintBodySchema>;
 export type OrderRefundInput = z.infer<typeof orderRefundBodySchema>;

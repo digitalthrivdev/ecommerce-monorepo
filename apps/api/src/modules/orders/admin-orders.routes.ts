@@ -119,6 +119,12 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
     await complaints.refundOrder(orderId, body, request.user.sub);
     return reply.status(201).send(await orders.getOrder(orderId, actor(request)));
   });
+
+  app.post("/:orderId/rto/receive", adminOnly, async (request, reply) => {
+    const { orderId } = orderParamsSchema.parse(request.params);
+    await complaints.confirmRtoReceived(orderId, request.user.sub);
+    return reply.status(200).send(await orders.getOrder(orderId, actor(request)));
+  });
 };
 
 export default adminOrdersRoutes;

@@ -149,6 +149,7 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     codFee: settings.codFee.toFixed(2),
     weightSlabs: weightSlabs(settings),
     minOrderValue: settings.minOrderValue.toFixed(2),
+    returnWindowDays: settings.returnWindowDays,
     codMaxOrderValue: settings.codMaxOrderValue?.toFixed(2) ?? null,
     deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
     supportPhone: settings.supportPhone,
@@ -199,6 +200,7 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
         minOrderValue: settings.minOrderValue.toFixed(2),
       },
       deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
+      returnWindowDays: settings.returnWindowDays,
       payments: {
         methods: (await activePaymentProvider(prisma, settings)) ? [PaymentMethod.COD, PaymentMethod.ONLINE] : [PaymentMethod.COD],
         onlinePaymentTimeoutMinutes: env.PAYMENT_TIMEOUT_MINUTES,

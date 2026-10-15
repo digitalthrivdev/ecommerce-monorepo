@@ -2,13 +2,16 @@ import { access } from "node:fs/promises";
 import path from "node:path";
 
 import { env } from "../../config/env.js";
-import { ComplaintReason, ComplaintStatus, OrderStatus, Prisma, RefundMethod, type PrismaClient } from "../../generated/prisma/client";
+import { ComplaintReason, ComplaintStatus, InventoryAdjustmentReason, OrderStatus, PaymentMethod, PaymentStatus, Prisma, RefundMethod, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
 import type { Notification } from "../notifications/order-notifications.js";
 import { deliveredAt, deliveredEntry, lockOrder } from "../orders/order-status.js";
+import { getPlatformSettings } from "../settings/settings.service.js";
+import { getShippingProvider } from "../shipping/carrier-registry.js";
+import { defaultPickupLocation } from "../shipping/pickup-locations.service.js";
 import { complaintDeadline } from "../orders/orders.service.js";
 import type { PaymentsService } from "../payments/payments.service.js";
-import type { ComplaintRefundInput, CreateComplaintInput, ListComplaintsQuery, OrderRefundInput, ResolveComplaintInput } from "./complaints.schemas.js";
+import type { CreateComplaintInput, ListComplaintsQuery, OrderRefundInput, ResolveComplaintInput } from "./complaints.schemas.js";
 
 type Tx = Prisma.TransactionClient;
 
@@ -55,11 +58,15 @@ export function createComplaintsService(
       throw new AppError(409, "ORDER_NOT_DELIVERED", "You can report a problem once the order is delivered");
     }
     if (order.complaint) {
-      throw new AppError(409, "COMPLAINT_EXISTS", "You've already reported a problem with this order");
+      throw new AppError(409, "RETURN_EXISTS", "A return request already exists for this order");
     }
     const deadline = complaintDeadline(deliveredAt(order.statusHistory));
-    if (!deadline || deadline <= new Date()) {
-      throw new AppError(409, "COMPLAINT_WINDOW_CLOSED", "Problems can be reported up to 24 hours after delivery. Contact support for help.");
+    const returnWindowDays = (await getPlatformSettings(db)).returnWindowDays;
+    const returnDeadline = deliveredAt(order.statusHistory)
+      ? new Date(deliveredAt(order.statusHistory)!.getTime() + returnWindowDays * 24 * 60 * 60 * 1000)
+      : deadline;
+    if (!returnDeadline || returnDeadline <= new Date()) {
+      throw new AppError(409, "RETURN_WINDOW_CLOSED", `Returns can be requested within ${returnWindowDays} days after delivery.`);
     }
     return order;
   }
@@ -193,12 +200,15 @@ export function createComplaintsService(
         resolutionNote: true,
         createdAt: true,
         resolvedAt: true,
+        reverseCourierName: true,
+        reverseAwb: true,
+        reverseTrackingUrl: true,
         resolvedBy: { select: { name: true } },
         items: {
           select: {
             quantity: true,
             orderItem: {
-              select: { id: true, productName: true, variantName: true, sku: true, imageUrl: true, unitPrice: true, quantity: true, unavailableQuantity: true },
+              select: { id: true, productName: true, variantName: true, sku: true, imageUrl: true, unitPrice: true, quantity: true, unavailableQuantity: true, discount: true },
             },
           },
         },
@@ -218,6 +228,7 @@ export function createComplaintsService(
             createdAt: true,
             statusHistory: deliveredEntry,
             payment: { select: { status: true, amount: true, refundedAmount: true } },
+            shipment: { select: { provider: true, weightGrams: true, lengthCm: true, breadthCm: true, heightCm: true } },
           },
         },
       },
@@ -234,10 +245,15 @@ export function createComplaintsService(
     ]);
 
     const refundable = payments.refundableAmount(order, order.payment);
-    const reportedValue = items.reduce((sum, item) => sum.plus(item.orderItem.unitPrice.mul(item.quantity)), new Prisma.Decimal(0));
+    const reportedValue = items.reduce((sum, item) => {
+      const charged = item.orderItem.quantity - item.orderItem.unavailableQuantity;
+      const discount = charged > 0 ? item.orderItem.discount.mul(item.quantity).div(charged) : new Prisma.Decimal(0);
+      return sum.plus(item.orderItem.unitPrice.mul(item.quantity).minus(discount));
+    }, new Prisma.Decimal(0));
 
     return {
       ...rest,
+      canBookReversePickup: order.shipment?.provider === "shiprocket",
       reasonLabel: REASON_LABELS[rest.reason],
       resolvedBy: resolvedBy?.name ?? null,
       customer: customer && { ...customer, complaintCount },
@@ -295,41 +311,6 @@ export function createComplaintsService(
       : `${money(amount)} has been sent to you by ${method === RefundMethod.UPI ? "UPI" : "bank transfer"}.`;
   }
 
-  async function refundComplaint(id: string, input: ComplaintRefundInput, adminId: string) {
-    const amount = new Prisma.Decimal(input.amount);
-    const { orderId, userId, refund } = await prisma.$transaction(
-      async (tx) => {
-        const { orderId, userId } = await lockOpenComplaint(tx, id);
-        const refund = await payments.refundDeliveredOrder(tx, {
-          orderId,
-          amount,
-          method: input.method,
-          reference: input.reference,
-          reason: input.note,
-          complaintId: id,
-          createdById: adminId,
-        });
-        await tx.complaint.update({
-          where: { id },
-          data: { status: ComplaintStatus.RESOLVED, resolutionNote: input.note, resolvedById: adminId, resolvedAt: new Date() },
-        });
-        return { orderId, userId, refund };
-      },
-      { timeout: 20_000 },
-    );
-
-    const orderNumber = await orderNumberOf(orderId);
-    await notify([
-      {
-        userId,
-        title: "Refund issued",
-        body: `Order ${orderNumber}: ${refundMessage(amount, refund.method)} ${input.note}`,
-        data: { type: "complaint", orderId },
-      },
-    ]);
-    return getComplaint(id);
-  }
-
   async function resolveComplaint(id: string, input: ResolveComplaintInput, adminId: string) {
     const { orderId, userId } = await prisma.$transaction(async (tx) => {
       const locked = await lockOpenComplaint(tx, id);
@@ -344,12 +325,169 @@ export function createComplaintsService(
     await notify([
       {
         userId,
-        title: "We've looked into your report",
+        title: input.status === ComplaintStatus.APPROVED ? "Return approved" : "Return request update",
         body: `Order ${orderNumber}: ${input.note}`,
         data: { type: "complaint", orderId },
       },
     ]);
     return getComplaint(id);
+  }
+
+  async function setReversePickup(id: string, input: { courierName: string; awb: string; trackingUrl?: string | null }) {
+    const current = await prisma.complaint.findUnique({ where: { id }, select: { status: true, reverseProviderOrderId: true } });
+    if (!current) throw notFound();
+    if (current.status !== ComplaintStatus.APPROVED) throw new AppError(409, "RETURN_NOT_APPROVED", "Approve the return before adding pickup details");
+    if (current.reverseProviderOrderId) throw new AppError(409, "RETURN_PICKUP_ALREADY_BOOKED", "A carrier reverse pickup has already been booked");
+    await prisma.complaint.update({ where: { id }, data: { reverseCourierName: input.courierName, reverseAwb: input.awb, reverseTrackingUrl: input.trackingUrl ?? null } });
+    return getComplaint(id);
+  }
+
+  async function bookReversePickup(id: string, customerEmail: string) {
+    const request = await prisma.complaint.findUnique({
+      where: { id },
+      include: {
+        order: { include: { shipment: true } },
+        items: { include: { orderItem: true } },
+      },
+    });
+    if (!request) throw notFound();
+    if (request.status !== ComplaintStatus.APPROVED) throw new AppError(409, "RETURN_NOT_APPROVED", "Approve the return before booking pickup");
+    if (request.reverseAwb || request.reverseProviderOrderId) throw new AppError(409, "RETURN_PICKUP_ALREADY_BOOKED", "A reverse pickup has already been recorded");
+    if (!request.order.shipment) throw new AppError(409, "SHIPMENT_NOT_FOUND", "This order has no original shipment. Enter manual pickup details instead.");
+    const provider = await getShippingProvider(prisma, request.order.shipment.provider);
+    if (!provider?.createReturnPickup) throw new AppError(409, "RETURN_PICKUP_UNSUPPORTED", "This carrier does not support API booked reverse pickups. Enter the courier and AWB after arranging pickup manually.");
+    const pickup = await defaultPickupLocation(prisma);
+    if (!pickup) throw new AppError(409, "PICKUP_LOCATION_REQUIRED", "Add a default pickup location before booking a reverse pickup");
+
+    await prisma.$transaction(async (tx) => {
+      await lockOrder(tx, request.orderId);
+      const [row] = await tx.$queryRaw<{ status: ComplaintStatus; reverseAwb: string | null; reverseProviderOrderId: string | null }[]>`SELECT status, "reverseAwb", "reverseProviderOrderId" FROM "Complaint" WHERE id = ${id} FOR UPDATE`;
+      if (row?.status !== ComplaintStatus.APPROVED) throw new AppError(409, "RETURN_NOT_APPROVED", "Approve the return before booking pickup");
+      if (row.reverseAwb || row.reverseProviderOrderId) throw new AppError(409, "RETURN_PICKUP_ALREADY_BOOKED", "A reverse pickup has already been recorded");
+      await tx.complaint.update({ where: { id }, data: { reverseProvider: provider.name, reverseProviderOrderId: "BOOKING" } });
+    });
+
+    let booked: Awaited<ReturnType<NonNullable<typeof provider.createReturnPickup>>>;
+    try {
+      booked = await provider.createReturnPickup({
+        orderNumber: request.order.orderNumber,
+        orderDate: request.order.createdAt,
+        pickup: {
+          name: request.order.customerName,
+          phone: request.order.customerPhone,
+          addressLine1: request.order.addressLine1,
+          addressLine2: request.order.addressLine2,
+          landmark: request.order.landmark,
+          city: request.order.city,
+          state: request.order.state,
+          postalCode: request.order.postalCode,
+          email: customerEmail,
+        },
+        delivery: {
+          name: pickup.contactName,
+          phone: pickup.phone,
+          addressLine1: pickup.addressLine1,
+          addressLine2: pickup.addressLine2,
+          landmark: pickup.landmark,
+          city: pickup.city,
+          state: pickup.state,
+          postalCode: pickup.postalCode,
+        },
+        items: request.items.map(({ quantity, orderItem }) => {
+          const delivered = orderItem.quantity - orderItem.unavailableQuantity;
+          const discountPerUnit = delivered > 0 ? orderItem.discount.div(delivered) : new Prisma.Decimal(0);
+          return {
+            name: orderItem.variantName ? `${orderItem.productName} (${orderItem.variantName})` : orderItem.productName,
+            sku: orderItem.sku,
+            quantity,
+            unitPrice: Prisma.Decimal.max(new Prisma.Decimal(0), orderItem.unitPrice.minus(discountPerUnit)),
+          };
+        }),
+        parcel: {
+          weightGrams: request.order.shipment.weightGrams,
+          lengthCm: request.order.shipment.lengthCm,
+          breadthCm: request.order.shipment.breadthCm,
+          heightCm: request.order.shipment.heightCm,
+        },
+      });
+    } catch (error) {
+      await prisma.complaint.updateMany({ where: { id, reverseProviderOrderId: "BOOKING" }, data: { reverseProvider: null, reverseProviderOrderId: null } });
+      throw error;
+    }
+
+    await prisma.complaint.update({
+      where: { id },
+      data: {
+        reverseProvider: provider.name,
+        reverseProviderOrderId: booked.providerOrderId,
+        reverseProviderShipmentId: booked.providerShipmentId,
+        reverseAwb: booked.awb,
+        reverseCourierName: booked.courierName,
+        reverseTrackingUrl: booked.trackingUrl,
+      },
+    });
+    return getComplaint(id);
+  }
+
+  async function receiveReturn(id: string, input: { amount: string; method?: RefundMethod; reference?: string; note: string }, adminId: string) {
+    const amount = new Prisma.Decimal(input.amount);
+    const ref = await prisma.complaint.findUnique({ where: { id }, select: { orderId: true, userId: true } });
+    if (!ref) throw notFound();
+    const refund = await prisma.$transaction(async (tx) => {
+      await lockOrder(tx, ref.orderId);
+      const [row] = await tx.$queryRaw<{ status: ComplaintStatus }[]>`SELECT status FROM "Complaint" WHERE id = ${id} FOR UPDATE`;
+      if (row?.status !== ComplaintStatus.APPROVED) throw new AppError(409, "RETURN_NOT_APPROVED", "Only an approved return can be received");
+      const items = await tx.complaintItem.findMany({
+        where: { complaintId: id },
+        include: { orderItem: { select: { id: true, variantId: true, quantity: true, unavailableQuantity: true, unitPrice: true, discount: true } } },
+      });
+      const returnValue = items.reduce((sum, item) => {
+        const charged = item.orderItem.quantity - item.orderItem.unavailableQuantity;
+        const itemDiscount = charged > 0 ? item.orderItem.discount.mul(item.quantity).div(charged) : new Prisma.Decimal(0);
+        return sum.plus(item.orderItem.unitPrice.mul(item.quantity).minus(itemDiscount));
+      }, new Prisma.Decimal(0));
+      if (amount.gt(returnValue)) {
+        throw new AppError(400, "REFUND_TOO_LARGE", `The returned items were paid for with ${returnValue.toFixed(2)} at most`, { refundable: returnValue.toFixed(2) });
+      }
+      for (const item of items) {
+        await tx.inventory.upsert({ where: { variantId: item.orderItem.variantId }, create: { variantId: item.orderItem.variantId, quantity: item.quantity }, update: { quantity: { increment: item.quantity } } });
+        const [stock] = await tx.$queryRaw<{ quantity: number }[]>`SELECT quantity FROM "Inventory" WHERE "variantId" = ${item.orderItem.variantId} FOR UPDATE`;
+        await tx.inventoryAdjustment.create({ data: { variantId: item.orderItem.variantId, delta: item.quantity, quantityAfter: stock!.quantity, reason: InventoryAdjustmentReason.RESTOCK, note: `Return received for order ${ref.orderId}`, changedById: adminId } });
+      }
+      const savedRefund = await payments.refundDeliveredOrder(tx, { orderId: ref.orderId, amount, method: input.method, reference: input.reference, reason: input.note, complaintId: id, createdById: adminId });
+      await tx.complaint.update({ where: { id }, data: { status: ComplaintStatus.RESOLVED, resolutionNote: input.note, resolvedById: adminId, resolvedAt: new Date() } });
+      return savedRefund;
+    }, { timeout: 20_000 });
+    const orderNumber = await orderNumberOf(ref.orderId);
+    await notify([{ userId: ref.userId, title: "Return received and refund issued", body: `Order ${orderNumber}: ${refundMessage(amount, refund.method)} ${input.note}`, data: { type: "complaint", orderId: ref.orderId } }]);
+    return getComplaint(id);
+  }
+
+  async function confirmRtoReceived(orderId: string, adminId: string) {
+    await prisma.$transaction(async (tx) => {
+      await lockOrder(tx, orderId);
+      const order = await tx.order.findUnique({ where: { id: orderId }, select: { status: true, rtoReceivedAt: true, orderNumber: true, paymentMethod: true } });
+      if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+      if (order.status !== OrderStatus.RTO) throw new AppError(409, "ORDER_NOT_RTO", "Only RTO orders can be received");
+      if (order.rtoReceivedAt) throw new AppError(409, "RTO_ALREADY_RECEIVED", "RTO receipt was already confirmed");
+      const items = await tx.orderItem.findMany({ where: { orderId }, select: { variantId: true, quantity: true, unavailableQuantity: true } });
+      for (const item of items) {
+        const quantity = item.quantity - item.unavailableQuantity;
+        if (!quantity) continue;
+        await tx.inventory.upsert({ where: { variantId: item.variantId }, create: { variantId: item.variantId, quantity }, update: { quantity: { increment: quantity } } });
+        const [stock] = await tx.$queryRaw<{ quantity: number }[]>`SELECT quantity FROM "Inventory" WHERE "variantId" = ${item.variantId} FOR UPDATE`;
+        await tx.inventoryAdjustment.create({ data: { variantId: item.variantId, delta: quantity, quantityAfter: stock!.quantity, reason: InventoryAdjustmentReason.RESTOCK, note: `RTO received for order ${order.orderNumber}`, changedById: adminId } });
+      }
+      await tx.order.update({ where: { id: orderId }, data: { rtoReceivedAt: new Date() } });
+      if (order.paymentMethod === PaymentMethod.ONLINE) {
+        const payment = await tx.payment.findUnique({ where: { orderId }, select: { status: true, amount: true, refundedAmount: true } });
+        if (payment?.status === PaymentStatus.PAID) {
+          const amount = payment.amount.minus(payment.refundedAmount);
+          if (amount.gt(0)) await payments.refundDeliveredOrder(tx, { orderId, amount, method: RefundMethod.GATEWAY, reason: "RTO parcel received", createdById: adminId });
+        }
+      }
+    }, { timeout: 20_000 });
+    return { ok: true };
   }
 
   /** A refund on a delivered order without a complaint, e.g. after the customer phoned. */
@@ -380,7 +518,7 @@ export function createComplaintsService(
     return { ...refund, amount: refund.amount.toFixed(2) };
   }
 
-  return { assertCanReport, createComplaint, listComplaints, getComplaint, refundComplaint, resolveComplaint, refundOrder };
+  return { assertCanReport, createComplaint, listComplaints, getComplaint, resolveComplaint, setReversePickup, bookReversePickup, receiveReturn, confirmRtoReceived, refundOrder };
 }
 
 export type ComplaintsService = ReturnType<typeof createComplaintsService>;

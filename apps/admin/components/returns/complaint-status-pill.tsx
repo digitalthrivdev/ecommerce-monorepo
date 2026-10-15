@@ -6,6 +6,8 @@ import type { ComplaintStatus } from "@/lib/types";
 
 const STYLE: Record<ComplaintStatus, { tone: Tone; icon: LucideIcon }> = {
   OPEN: { tone: "amber", icon: MessageSquareWarning },
+  APPROVED: { tone: "blue", icon: MessageSquareWarning },
+  RECEIVED: { tone: "blue", icon: MessageSquareWarning },
   RESOLVED: { tone: "green", icon: CircleCheck },
   REJECTED: { tone: "gray", icon: CircleX },
 };

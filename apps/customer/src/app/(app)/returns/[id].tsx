@@ -52,7 +52,7 @@ function ItemRow({ item, quantity, onChange }: { item: OrderItem; quantity: numb
       {quantity > 0 ? (
         <QuantityStepper quantity={quantity} max={delivered} onChange={(next) => onChange(Math.max(0, Math.min(next, delivered)))} />
       ) : (
-        <AddButton onPress={() => onChange(1)} disabled={false} accessibilityLabel={`Report a problem with ${item.productName}`} />
+        <AddButton onPress={() => onChange(1)} disabled={false} accessibilityLabel={`Request return for ${item.productName}`} />
       )}
     </View>
   );
@@ -114,7 +114,7 @@ function ReportForm({ order, onSubmitted }: { order: OrderDetail; onSubmitted: (
 
   async function submit() {
     setError(null);
-    if (!items.length) return setError("Choose the items that had a problem.");
+    if (!items.length) return setError("Choose the items you want to return.");
     if (!reason) return setError("Choose what went wrong.");
     if (reason === "OTHER" && !note.trim()) return setError("Tell us what went wrong.");
 
@@ -127,7 +127,7 @@ function ReportForm({ order, onSubmitted }: { order: OrderDetail; onSubmitted: (
       });
       onSubmitted();
       router.back();
-      Alert.alert("Report sent", "Thanks for letting us know. We'll look into it and tell you what we can do.");
+      Alert.alert("Return requested", "We’ll review your request and update you here.");
     } catch (caught) {
       setError(errorMessage(caught));
     }
@@ -141,7 +141,7 @@ function ReportForm({ order, onSubmitted }: { order: OrderDetail; onSubmitted: (
         </Text>
 
         <View className="gap-2">
-          <Text className="text-base font-bold">Which items had a problem?</Text>
+          <Text className="text-base font-bold">Which items would you like to return?</Text>
           <View className={cn("gap-3 rounded-lg p-4", surface)}>
             {deliveredItems.map((item) => (
               <ItemRow
@@ -223,7 +223,7 @@ function ReportForm({ order, onSubmitted }: { order: OrderDetail; onSubmitted: (
           {report.isPending ? (
             <ActivityIndicator color={colors.onPrimary} />
           ) : (
-            <Text className="text-base font-bold">{uploading ? "Uploading photo…" : "Send report"}</Text>
+            <Text className="text-base font-bold">{uploading ? "Uploading photo…" : "Request return"}</Text>
           )}
         </Button>
       </View>
@@ -241,13 +241,13 @@ export default function ReportIssueScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
-      <ScreenHeader title="Report an issue" />
+      <ScreenHeader title="Request a return" />
       {order.data ? (
-        order.data.canReportIssue || submitted ? (
+        order.data.canRequestReturn || submitted ? (
           <ReportForm order={order.data} onSubmitted={() => setSubmitted(true)} />
         ) : (
           <Text className="px-8 py-10 text-center text-sm text-muted-foreground">
-            {order.data.complaint ? "You've already reported a problem with this order." : "Problems can only be reported for a short time after delivery."}
+            {order.data.returnRequest ? "A return request already exists for this order." : "The return window for this order has closed."}
           </Text>
         )
       ) : order.isPending ? (

@@ -30,6 +30,7 @@ export type PlatformSettingsAvgAggregateOutputType = {
   shippingFee: runtime.Decimal | null
   freeShippingThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
+  returnWindowDays: number | null
   codFee: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
@@ -40,6 +41,7 @@ export type PlatformSettingsSumAggregateOutputType = {
   shippingFee: runtime.Decimal | null
   freeShippingThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
+  returnWindowDays: number | null
   codFee: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
@@ -51,6 +53,7 @@ export type PlatformSettingsMinAggregateOutputType = {
   shippingFee: runtime.Decimal | null
   freeShippingThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
+  returnWindowDays: number | null
   codFee: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
@@ -80,6 +83,7 @@ export type PlatformSettingsMaxAggregateOutputType = {
   shippingFee: runtime.Decimal | null
   freeShippingThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal | null
+  returnWindowDays: number | null
   codFee: runtime.Decimal | null
   codMaxOrderValue: runtime.Decimal | null
   deliveryPromiseMinutes: number | null
@@ -109,6 +113,7 @@ export type PlatformSettingsCountAggregateOutputType = {
   shippingFee: number
   freeShippingThreshold: number
   minOrderValue: number
+  returnWindowDays: number
   codFee: number
   weightSlabs: number
   codMaxOrderValue: number
@@ -140,6 +145,7 @@ export type PlatformSettingsAvgAggregateInputType = {
   shippingFee?: true
   freeShippingThreshold?: true
   minOrderValue?: true
+  returnWindowDays?: true
   codFee?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
@@ -150,6 +156,7 @@ export type PlatformSettingsSumAggregateInputType = {
   shippingFee?: true
   freeShippingThreshold?: true
   minOrderValue?: true
+  returnWindowDays?: true
   codFee?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
@@ -161,6 +168,7 @@ export type PlatformSettingsMinAggregateInputType = {
   shippingFee?: true
   freeShippingThreshold?: true
   minOrderValue?: true
+  returnWindowDays?: true
   codFee?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
@@ -190,6 +198,7 @@ export type PlatformSettingsMaxAggregateInputType = {
   shippingFee?: true
   freeShippingThreshold?: true
   minOrderValue?: true
+  returnWindowDays?: true
   codFee?: true
   codMaxOrderValue?: true
   deliveryPromiseMinutes?: true
@@ -219,6 +228,7 @@ export type PlatformSettingsCountAggregateInputType = {
   shippingFee?: true
   freeShippingThreshold?: true
   minOrderValue?: true
+  returnWindowDays?: true
   codFee?: true
   weightSlabs?: true
   codMaxOrderValue?: true
@@ -336,6 +346,7 @@ export type PlatformSettingsGroupByOutputType = {
   shippingFee: runtime.Decimal
   freeShippingThreshold: runtime.Decimal | null
   minOrderValue: runtime.Decimal
+  returnWindowDays: number
   codFee: runtime.Decimal
   weightSlabs: runtime.JsonValue | null
   codMaxOrderValue: runtime.Decimal | null
@@ -389,6 +400,7 @@ export type PlatformSettingsWhereInput = {
   shippingFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFilter<"PlatformSettings"> | number
   codFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.JsonNullableFilter<"PlatformSettings">
   codMaxOrderValue?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -419,6 +431,7 @@ export type PlatformSettingsOrderByWithRelationInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   weightSlabs?: Prisma.SortOrderInput | Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -452,6 +465,7 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   shippingFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFilter<"PlatformSettings"> | number
   codFee?: Prisma.DecimalFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.JsonNullableFilter<"PlatformSettings">
   codMaxOrderValue?: Prisma.DecimalNullableFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -482,6 +496,7 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrderInput | Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   weightSlabs?: Prisma.SortOrderInput | Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -520,6 +535,7 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   shippingFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntWithAggregatesFilter<"PlatformSettings"> | number
   codFee?: Prisma.DecimalWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.JsonNullableWithAggregatesFilter<"PlatformSettings">
   codMaxOrderValue?: Prisma.DecimalNullableWithAggregatesFilter<"PlatformSettings"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -550,6 +566,7 @@ export type PlatformSettingsCreateInput = {
   shippingFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: number
   codFee?: runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -580,6 +597,7 @@ export type PlatformSettingsUncheckedCreateInput = {
   shippingFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: number
   codFee?: runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -610,6 +628,7 @@ export type PlatformSettingsUpdateInput = {
   shippingFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFieldUpdateOperationsInput | number
   codFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -640,6 +659,7 @@ export type PlatformSettingsUncheckedUpdateInput = {
   shippingFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFieldUpdateOperationsInput | number
   codFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -670,6 +690,7 @@ export type PlatformSettingsCreateManyInput = {
   shippingFee: runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue: runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: number
   codFee?: runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -700,6 +721,7 @@ export type PlatformSettingsUpdateManyMutationInput = {
   shippingFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFieldUpdateOperationsInput | number
   codFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -730,6 +752,7 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   shippingFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   freeShippingThreshold?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   minOrderValue?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  returnWindowDays?: Prisma.IntFieldUpdateOperationsInput | number
   codFee?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   weightSlabs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   codMaxOrderValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -760,6 +783,7 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   weightSlabs?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
@@ -789,6 +813,7 @@ export type PlatformSettingsAvgOrderByAggregateInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
@@ -800,6 +825,7 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
@@ -829,6 +855,7 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
@@ -857,6 +884,7 @@ export type PlatformSettingsSumOrderByAggregateInput = {
   shippingFee?: Prisma.SortOrder
   freeShippingThreshold?: Prisma.SortOrder
   minOrderValue?: Prisma.SortOrder
+  returnWindowDays?: Prisma.SortOrder
   codFee?: Prisma.SortOrder
   codMaxOrderValue?: Prisma.SortOrder
   deliveryPromiseMinutes?: Prisma.SortOrder
@@ -870,6 +898,7 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   shippingFee?: boolean
   freeShippingThreshold?: boolean
   minOrderValue?: boolean
+  returnWindowDays?: boolean
   codFee?: boolean
   weightSlabs?: boolean
   codMaxOrderValue?: boolean
@@ -900,6 +929,7 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   shippingFee?: boolean
   freeShippingThreshold?: boolean
   minOrderValue?: boolean
+  returnWindowDays?: boolean
   codFee?: boolean
   weightSlabs?: boolean
   codMaxOrderValue?: boolean
@@ -930,6 +960,7 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   shippingFee?: boolean
   freeShippingThreshold?: boolean
   minOrderValue?: boolean
+  returnWindowDays?: boolean
   codFee?: boolean
   weightSlabs?: boolean
   codMaxOrderValue?: boolean
@@ -960,6 +991,7 @@ export type PlatformSettingsSelectScalar = {
   shippingFee?: boolean
   freeShippingThreshold?: boolean
   minOrderValue?: boolean
+  returnWindowDays?: boolean
   codFee?: boolean
   weightSlabs?: boolean
   codMaxOrderValue?: boolean
@@ -985,7 +1017,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "returnWindowDays" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -995,6 +1027,7 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     shippingFee: runtime.Decimal
     freeShippingThreshold: runtime.Decimal | null
     minOrderValue: runtime.Decimal
+    returnWindowDays: number
     codFee: runtime.Decimal
     weightSlabs: runtime.JsonValue | null
     codMaxOrderValue: runtime.Decimal | null
@@ -1445,6 +1478,7 @@ export interface PlatformSettingsFieldRefs {
   readonly shippingFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly freeShippingThreshold: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly minOrderValue: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
+  readonly returnWindowDays: Prisma.FieldRef<"PlatformSettings", 'Int'>
   readonly codFee: Prisma.FieldRef<"PlatformSettings", 'Decimal'>
   readonly weightSlabs: Prisma.FieldRef<"PlatformSettings", 'Json'>
   readonly codMaxOrderValue: Prisma.FieldRef<"PlatformSettings", 'Decimal'>

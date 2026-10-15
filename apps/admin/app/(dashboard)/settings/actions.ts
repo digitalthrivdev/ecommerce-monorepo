@@ -54,6 +54,7 @@ const settingsSchema = z.object({
   minOrderValue: decimal(AMOUNT),
   codMaxOrderValue: optionalPositiveDecimal("Enter an amount above 0, or leave it empty for no limit"),
   deliveryPromiseMinutes,
+  returnWindowDays: z.string().trim().regex(/^\d{1,2}$/, "Enter 1 to 90 days").transform(Number).pipe(z.number().int().min(1).max(90)),
   supportPhone: optionalPhoneInput,
   supportEmail: optionalEmail,
 });
@@ -67,6 +68,7 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
     minOrderValue: formText(formData, "minOrderValue"),
     codMaxOrderValue: formText(formData, "codMaxOrderValue"),
     deliveryPromiseMinutes: formText(formData, "deliveryPromiseMinutes"),
+    returnWindowDays: formText(formData, "returnWindowDays"),
     supportPhone: formText(formData, "supportPhone"),
     supportEmail: formText(formData, "supportEmail"),
   });
