@@ -167,6 +167,8 @@ export default function AccountScreen() {
               <Row icon={Info} label={`About ${appName}`} onPress={() => openPolicy(policies.home)} />
               <Separator className="ml-16 w-auto" />
               <Row icon={FileText} label="Terms and policies" detail="Privacy, refunds and delivery" onPress={() => openPolicy(policies.index)} />
+              <Separator className="ml-16 w-auto" />
+              <Row icon={Package} label="Returns and refunds" detail="Read the returns policy or contact support" onPress={() => openPolicy(policies.refunds)} />
             </Card>
           </View>
         ) : null}

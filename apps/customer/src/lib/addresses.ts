@@ -4,7 +4,7 @@ import { useCallback } from "react";
 
 import { apiFetch } from "./api";
 import { useSession } from "./session";
-import type { Address, AddressInput, Coordinates } from "./types";
+import type { Address, AddressInput } from "./types";
 
 const ADDRESSES_KEY = ["addresses"] as const;
 
@@ -60,11 +60,6 @@ export function useDeliveryAddress() {
   );
 
   return { address, addresses, select };
-}
-
-export function addressCoordinates(address: Address): Coordinates | null {
-  if (address.latitude === null || address.longitude === null) return null;
-  return { latitude: Number(address.latitude), longitude: Number(address.longitude) };
 }
 
 export const addressLabel = (address: Address) => address.label || "Address";

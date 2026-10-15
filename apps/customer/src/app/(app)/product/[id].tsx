@@ -11,6 +11,7 @@ import { CartBar } from "@/components/cart-bar";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { RatingLine, ReviewsCard } from "@/components/product-reviews";
 import { ProductRow } from "@/components/product-row";
+import { PincodeCheck } from "@/components/pincode-check";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { Icon } from "@/components/ui/icon";
@@ -268,6 +269,7 @@ function ProductDetails({ product, variant, onSelect }: DetailsProps) {
       ) : null}
 
       <DetailRows title="Specifications" rows={product.specifications.map((spec) => [spec.name, spec.value])} />
+      <PincodeCheck weightGrams={variant.weightGrams ?? 0} />
 
       <LabelDetails product={product} />
 

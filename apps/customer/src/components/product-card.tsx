@@ -1,10 +1,9 @@
 import { Image } from "expo-image";
-import { Star, Timer } from "lucide-react-native";
+import { Star } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { ProductCartControl } from "@/components/variant-picker";
-import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { WishlistButton } from "@/components/wishlist-button";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
@@ -12,7 +11,6 @@ import { defaultVariant } from "@/lib/catalog";
 import { discountPercent, formatCount, formatMoney, unitPrice } from "@/lib/format";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
-import { useSettings } from "@/lib/settings";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +19,6 @@ type ProductCardProps = { product: Product; currency: string; className?: string
 /** Shows the first in-stock variant; products with several variants add through a picker. */
 export function ProductCard({ product, currency, className }: ProductCardProps) {
   const surface = useCardSurface();
-  const { deliveryPromiseMinutes } = useSettings();
   const [failed, setFailed] = useState(false);
   const variant = defaultVariant(product.variants);
   if (!variant) return null;
@@ -74,12 +71,6 @@ export function ProductCard({ product, currency, className }: ProductCardProps) 
           {product.name}
         </Text>
         {product.rating && <CardRating average={Number(product.rating.average)} count={product.rating.count} />}
-        {deliveryPromiseMinutes ? (
-          <View className="mt-0.5 flex-row items-center gap-1">
-            <Icon as={Timer} size={11} className="text-muted-foreground" />
-            <Text className="text-[10px] font-semibold text-muted-foreground">{deliveryPromiseMinutes} mins</Text>
-          </View>
-        ) : null}
       </View>
     </Pressable>
   );

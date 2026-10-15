@@ -62,6 +62,7 @@ function toVariantView(row: CatalogProductRow, variant: CatalogProductRow["varia
     compareAtPrice: variant.compareAtPrice?.toFixed(2) ?? null,
     inStock: (variant.inventory?.quantity ?? 0) > 0,
     maxOrderQuantity: maxOrderQuantity(variant),
+    ...(options.detail && { weightGrams: variant.weightGrams }),
     ...(options.detail && { optionValueIds: variant.optionValues.map((link) => link.optionValueId) }),
   };
 }

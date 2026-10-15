@@ -75,6 +75,6 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, t
 }
 
 export function errorMessage(error: unknown) {
-  if (error instanceof ApiError || (error instanceof Error && error.name === "LocationError")) return error.message;
+  if (error instanceof ApiError) return error.message;
   return "Something went wrong. Please try again.";
 }

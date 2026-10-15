@@ -5,7 +5,6 @@ import {
   Banknote,
   ChevronRight,
   ChevronUp,
-  Clock,
   CreditCard,
   House,
   Info,
@@ -31,6 +30,7 @@ import { Text } from "@/components/ui/text";
 import { addressLabel, addressSummary, useDeliveryAddress } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { ProductRow } from "@/components/product-row";
+import { useServiceability } from "@/lib/serviceability";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { CART_KEY, checkoutBlocker, codUnavailableText, useCart, useCartActions, useCartUpdating, useCouponActions, visibleItems } from "@/lib/cart";
 import { formatMoney } from "@/lib/format";
@@ -293,8 +293,13 @@ function CartContent({ cart }: { cart: Cart }) {
   const blocker = checkoutBlocker(cart, settings);
   const methods = cart.checkout?.paymentMethods ?? payments.methods;
   const payWith = methods.includes(method) ? method : (methods[0] ?? method);
+  const weightGrams = visibleItems(cart).reduce((sum, item) => sum + (item.weightGrams ?? 0) * item.quantity, 0);
+  const serviceability = useServiceability(address?.postalCode ?? "", weightGrams, payWith === "COD");
   const codNote = codUnavailableText(cart, currency);
-  const promise = settings.deliveryPromiseMinutes ?? null;
+  const deliveryBlocked = !!address && serviceability.data?.serviceable === false;
+  const codBlocked = !!address && payWith === "COD" && serviceability.data?.codAvailable === false;
+  const deliveryChecking = !!address && serviceability.isFetching && !serviceability.data;
+  const pincodeInvalid = !!address && !/^\d{6}$/.test(address.postalCode);
   const changeAddress = () => router.push("/select-address");
 
   // mutateAsync, not mutate callbacks: those are dropped if this screen unmounts first.
@@ -303,6 +308,7 @@ function CartContent({ cart }: { cart: Cart }) {
       changeAddress();
       return;
     }
+    if (deliveryBlocked || codBlocked || deliveryChecking || serviceability.isError || pincodeInvalid) return;
     let order: OrderDetail;
     try {
       order = await placeOrder.mutateAsync({ addressId: address.id, paymentMethod: payWith });
@@ -322,10 +328,10 @@ function CartContent({ cart }: { cart: Cart }) {
         <View className={cn("mx-4 rounded-lg px-3", surface)}>
           <View className="flex-row items-center gap-3 pt-3">
             <View className="size-9 items-center justify-center rounded-full bg-primary/10">
-              <Icon as={promise ? Clock : ShoppingBag} size={18} className="text-primary" />
+              <Icon as={ShoppingBag} size={18} className="text-primary" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-extrabold">{promise ? `Delivery in about ${promise} minutes` : "Your items"}</Text>
+              <Text className="text-base font-extrabold">Your items</Text>
               <Text className="text-xs text-muted-foreground">
                 {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"}
               </Text>
@@ -365,6 +371,13 @@ function CartContent({ cart }: { cart: Cart }) {
             </Text>
           </View>
         </View>
+        {address && (serviceability.isError || deliveryBlocked || codBlocked || pincodeInvalid) ? (
+          <Pressable onPress={serviceability.isError ? () => void serviceability.refetch() : undefined} accessibilityRole={serviceability.isError ? "button" : undefined}>
+            <Text className="mx-4 text-sm text-destructive">
+              {pincodeInvalid ? "Update this address with a valid 6-digit PIN code." : serviceability.isError ? "Delivery availability could not be checked. Tap to retry." : deliveryBlocked ? "Delivery is not available at this PIN code." : "Cash on delivery is not available at this PIN code. Choose online payment."}
+            </Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <View className="border-t border-border bg-card" style={{ paddingBottom: insets.bottom + 10 }}>
@@ -402,7 +415,7 @@ function CartContent({ cart }: { cart: Cart }) {
             </Text>
           </Pressable>
           <Button
-            disabled={(address ? blocker !== null : false) || updating || placeOrder.isPending}
+            disabled={(address ? blocker !== null || deliveryBlocked || codBlocked || deliveryChecking || serviceability.isError || pincodeInvalid : false) || updating || placeOrder.isPending}
             onPress={submit}
             className="h-14 flex-1 flex-row justify-between rounded-lg px-4"
           >

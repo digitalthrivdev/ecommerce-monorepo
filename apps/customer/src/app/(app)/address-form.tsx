@@ -1,12 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Check, LocateFixed, MapPin } from "lucide-react-native";
-import { useCallback, useState } from "react";
+import { Check } from "lucide-react-native";
+import { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { FormField } from "@/components/form-field";
-import { MapPinPicker } from "@/components/map-pin-picker";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { StatePicker } from "@/components/state-picker";
@@ -14,16 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
-import { addressCoordinates, useAddresses, useDeliveryAddress, useSaveAddress } from "@/lib/addresses";
+import { useAddresses, useDeliveryAddress, useSaveAddress } from "@/lib/addresses";
 import { ApiError, errorMessage } from "@/lib/api";
 import { useAppTheme } from "@/lib/app-theme";
 import { PHONE_COUNTRY_CODE, PHONE_NATIONAL_LENGTH } from "@/lib/config";
 import { matchState } from "@/lib/indian-states";
-import { describePlace, getCurrentCoordinates, type PlaceDetails } from "@/lib/location";
-import { mapsAvailable } from "@/lib/maps";
 import { isValidNationalNumber, toE164 } from "@/lib/phone";
 import { useSession } from "@/lib/session";
-import type { Address, Coordinates } from "@/lib/types";
+import type { Address } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const LABELS = ["Home", "Work", "Other"] as const;
@@ -63,7 +60,7 @@ function validate(fields: Fields): FieldErrors {
   if (!fields.addressLine1.trim()) errors.addressLine1 = "Enter your house or flat number";
   if (!fields.city.trim()) errors.city = "Enter the city";
   if (!fields.state) errors.state = "Choose your state";
-  if (fields.postalCode.trim().length < 3) errors.postalCode = "Enter the PIN code";
+  if (!/^\d{6}$/.test(fields.postalCode.trim())) errors.postalCode = "Enter a 6-digit PIN code";
   if (!fields.name.trim()) errors.name = "Enter the receiver's name";
   if (!isValidNationalNumber(fields.phone)) errors.phone = `Enter a ${PHONE_NATIONAL_LENGTH}-digit phone number`;
   return errors;
@@ -76,11 +73,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
   const { select } = useDeliveryAddress();
   const save = useSaveAddress();
   const [fields, setFields] = useState(() => initialFields(address, user));
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(() => (address ? addressCoordinates(address) : null));
-  const [pinnedPlace, setPinnedPlace] = useState<string | null>(null);
-  const [mapOpen, setMapOpen] = useState(false);
-  const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [makeDefault, setMakeDefault] = useState(address?.isDefault ?? false);
@@ -89,37 +81,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
     setFields((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
-
-  /** Pins the address and fills in the parts of the address the user hasn't typed. */
-  const pin = useCallback((found: Coordinates, place: PlaceDetails | null) => {
-    setCoordinates(found);
-    setPinnedPlace(place?.summary || null);
-    if (place) {
-      setFields((current) => ({
-        ...current,
-        addressLine2: current.addressLine2 || place.area || "",
-        city: current.city || place.city || "",
-        state: current.state || matchState(place.state) || "",
-        postalCode: current.postalCode || place.postalCode || "",
-      }));
-    }
-  }, []);
-
-  /** Without a map: pins the address to the phone's position. */
-  const detect = useCallback(async () => {
-    setLocating(true);
-    setLocationError(null);
-    try {
-      const found = await getCurrentCoordinates();
-      pin(found, await describePlace(found));
-    } catch (caught) {
-      setLocationError(errorMessage(caught));
-    } finally {
-      setLocating(false);
-    }
-  }, [pin]);
-
-  const setLocation = mapsAvailable ? () => setMapOpen(true) : detect;
 
   async function submit() {
     setFormError(null);
@@ -140,7 +101,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
           city: fields.city.trim(),
           state: fields.state.trim(),
           postalCode: fields.postalCode.trim(),
-          ...coordinates,
           ...(makeDefault && { isDefault: true }),
         },
       });
@@ -166,43 +126,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
       <FocusStatusBar />
       <ScreenHeader title={address ? "Edit address" : "Add address"} />
       <ScrollView contentContainerClassName="gap-5 px-4 pb-6 pt-2" keyboardShouldPersistTaps="handled">
-        <Pressable
-          onPress={setLocation}
-          disabled={locating}
-          className="gap-2 rounded-lg border border-border bg-card px-4 py-3.5 active:bg-accent"
-        >
-          <View className="flex-row items-center gap-3">
-            {locating ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : (
-              <Icon as={coordinates ? (mapsAvailable ? MapPin : Check) : LocateFixed} size={20} className="text-primary" />
-            )}
-            <View className="flex-1">
-              <Text className="text-sm font-semibold">
-                {locating
-                  ? "Finding your location…"
-                  : coordinates
-                    ? mapsAvailable
-                      ? "Pinned on the map"
-                      : "Pinned to your location"
-                    : "Map pin (optional)"}
-              </Text>
-              {pinnedPlace && !locating ? (
-                <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-                  {pinnedPlace}
-                </Text>
-              ) : null}
-            </View>
-            <Text className="text-sm font-bold text-primary">{coordinates ? "Change" : mapsAvailable ? "Set on map" : "Detect"}</Text>
-          </View>
-          <Text className="text-xs text-muted-foreground">
-            {mapsAvailable
-              ? "Place the pin on your building's entrance, so the courier finds you easily."
-              : "Stand at the delivery address when you set this, so the courier finds you easily."}
-          </Text>
-          {locationError && <Text className="text-xs text-destructive">{locationError}</Text>}
-        </Pressable>
-
         <View className="gap-1.5">
           <Text className="text-sm font-semibold">Save as</Text>
           <View className="flex-row gap-2">
@@ -264,17 +187,6 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
         </Button>
       </View>
 
-      {mapsAvailable && (
-        <MapPinPicker
-          visible={mapOpen}
-          initial={coordinates}
-          onClose={() => setMapOpen(false)}
-          onConfirm={(found, place) => {
-            pin(found, place);
-            setMapOpen(false);
-          }}
-        />
-      )}
     </KeyboardAvoidingView>
   );
 }

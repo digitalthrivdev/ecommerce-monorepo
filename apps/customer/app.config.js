@@ -18,9 +18,6 @@ const path = require("node:path");
  *   EAS_PROJECT_ID, EXPO_OWNER, APP_SLUG
  *                         The client's EAS project. app.json has none, so every client needs its own
  *                         (docs/deployment.md, "Mobile app per client").
- *   GOOGLE_MAPS_ANDROID_API_KEY
- *                         Google Maps key for Android, restricted to each APP_ID and its signing SHA-1.
- *                         Without it Android builds pin addresses to GPS only, with no map.
  *   GOOGLE_SERVICES_JSON  Firebase config for APP_ID (an EAS file variable), needed for Android push.
  *                         Falls back to ./google-services.json, which is kept out of git.
  *   SENTRY_PROJECT        The client's Sentry project slug. With SENTRY_AUTH_TOKEN and SENTRY_ORG (plus
@@ -148,7 +145,6 @@ module.exports = ({ config: baseConfig }) => {
   const appId = setting("APP_ID", ID_PATTERN) ?? config.android.package;
   const projectId = setting("EAS_PROJECT_ID");
   const googleServicesFile = googleServicesFor(appId);
-  const mapsKey = setting("GOOGLE_MAPS_ANDROID_API_KEY");
   const sentry = sentryPlugin();
   const siteDomain = setting("SITE_DOMAIN", DOMAIN_PATTERN);
   const productLinks = siteDomain && {
@@ -162,7 +158,6 @@ module.exports = ({ config: baseConfig }) => {
     ...config,
     plugins: [
       ...(config.plugins ?? []),
-      ...(mapsKey ? [["react-native-maps", { androidGoogleMapsApiKey: mapsKey }]] : []),
       ...(sentry ? [sentry] : []),
     ],
     name: setting("APP_NAME") ?? config.name,
@@ -182,7 +177,6 @@ module.exports = ({ config: baseConfig }) => {
     },
     extra: {
       ...config.extra,
-      googleMapsAndroid: Boolean(mapsKey),
       ...(siteDomain && { siteDomain }),
       eas: { ...config.extra?.eas, ...(projectId && { projectId }) },
     },

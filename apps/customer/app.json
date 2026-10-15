@@ -44,12 +44,6 @@
       ],
       "expo-image",
       [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Your location is used to find the nearest store and fill in your delivery address."
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "Photos you choose are attached to a report about a delivered order.",

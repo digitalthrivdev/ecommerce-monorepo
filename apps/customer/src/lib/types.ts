@@ -19,8 +19,6 @@ export type PublicSettings = {
   currency: string;
   timezone: string;
   pricing: { shippingFee: string; freeShippingThreshold: string | null; codFee: string; minOrderValue: string };
-  /** "Delivery in about N minutes"; null when the admin hasn't set it, missing from older servers. */
-  deliveryPromiseMinutes?: number | null;
   payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
   support: { phone: string | null; email: string | null };
   /** Links to the public website and its policy pages; null when it is not set up, missing from older servers. */
@@ -84,6 +82,8 @@ export type ProductVariant = {
   compareAtPrice: string | null;
   inStock: boolean;
   maxOrderQuantity: number;
+  /** Present on product detail responses; used by the carrier pincode check. */
+  weightGrams?: number | null;
 };
 
 export type BrandSummary = { id: string; name: string; slug: string; logoUrl: string | null };
@@ -144,6 +144,7 @@ export type CartItem = {
   lineTotal: string | null;
   issue: CartItemIssue | null;
   availableQuantity?: number;
+  weightGrams?: number | null;
 };
 
 /** Preview of the checkout bill for the orderable items; checkout recalculates it. */

@@ -28,17 +28,10 @@ import type { CategoryTab, TabHeader } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function HomeHeader() {
-  const { deliveryPromiseMinutes } = useSettings();
-
   return (
     <View className="flex-row items-center justify-between gap-3 px-4 pb-3 pt-2">
       <View className="flex-1 gap-0.5">
         <BrandMark textClassName="text-highlight-foreground text-2xl" />
-        {deliveryPromiseMinutes ? (
-          <Text className="text-sm font-semibold text-highlight-foreground" numberOfLines={1}>
-            Delivery in about {deliveryPromiseMinutes} minutes
-          </Text>
-        ) : null}
       </View>
       <Pressable
         onPress={() => router.navigate("/account")}

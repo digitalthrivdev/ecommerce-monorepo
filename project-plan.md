@@ -66,7 +66,7 @@
       when the order is created. Addresses take a 6-digit PIN code.
   [x] Phase 7 – Website storefront. Customer website, storefront SEO, hosted
       checkout return, and mock payment/carrier purchase verified.
-  [ ] Phase 8 – Customer app
+  [DONE] Phase 8 – Customer app
   [ ] Phase 9 – Returns and RTO
   [ ] Phase 10 – Admin cleanup and deploy
 
@@ -187,7 +187,7 @@
   typecheck, lint, a production build (one heavy build at a time), and a
   full test purchase with the mock gateway and mock carrier.
 
-  Phase 8: Customer app
+  Phase 8: Customer app [DONE]
 
   Phase 8 – customer app. Remove location permission, current-location
   flow, serviceability/nearest-store, store-closed states and live map

@@ -131,6 +131,7 @@ export function createCartService(prisma: PrismaClient) {
         imageUrl: imagesFor(variant.product.images, variant.id)[0]?.url ?? null,
         unit: variant.unit,
         packQuantity: variant.quantity?.toString() ?? null,
+        weightGrams: listing?.weightGrams ?? null,
         quantity: item.quantity,
         maxQuantity: limit,
         unitPrice: listing?.price.toFixed(2) ?? null,
