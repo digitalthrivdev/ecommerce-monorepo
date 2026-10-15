@@ -7,15 +7,23 @@ import { formatMoney } from "@/lib/format";
 import { useSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
-/** `taxTotal` is the GST already included in the item prices. */
-type Bill = { subtotal: string; deliveryFee: string; discount: string; total: string; taxTotal?: string; amountToFreeDelivery?: string | null };
+/** `taxTotal` is the GST already included in the prices. `total` is the amount this screen is charging. */
+type Bill = {
+  subtotal: string;
+  shippingFee: string;
+  codFee?: string;
+  discount: string;
+  total: string;
+  taxTotal?: string;
+  amountToFreeShipping?: string | null;
+};
 
 type BillDetailsProps = {
   bill: Bill;
   /** What the items would cost at their compare-at prices; see `compareAtTotal`. */
   itemsCompareAt?: string;
-  /** The usual delivery fee, shown struck through when this bill's delivery is free. */
-  regularDeliveryFee?: string;
+  /** The usual shipping fee, shown struck through when this bill's shipping is free. */
+  regularShippingFee?: string;
   totalLabel?: string;
   /** Names the discount row. */
   couponCode?: string | null;
@@ -54,13 +62,14 @@ function Struck({ was, now, highlight = false }: { was: string; now: string; hig
   );
 }
 
-export function BillDetails({ bill, itemsCompareAt, regularDeliveryFee, totalLabel = "To pay", couponCode, stale = false, footer }: BillDetailsProps) {
+export function BillDetails({ bill, itemsCompareAt, regularShippingFee, totalLabel = "To pay", couponCode, stale = false, footer }: BillDetailsProps) {
   const { currency } = useSettings();
   const surface = useCardSurface();
-  const free = toPaise(bill.deliveryFee) === 0;
+  const free = toPaise(bill.shippingFee) === 0;
+  const codFee = bill.codFee ?? "0.00";
   const itemSavings = itemsCompareAt ? Math.max(0, toPaise(itemsCompareAt) - toPaise(bill.subtotal)) : 0;
-  const deliverySavings = free && regularDeliveryFee ? toPaise(regularDeliveryFee) : 0;
-  const totalSavings = itemSavings + deliverySavings + toPaise(bill.discount);
+  const shippingSavings = free && regularShippingFee ? toPaise(regularShippingFee) : 0;
+  const totalSavings = itemSavings + shippingSavings + toPaise(bill.discount);
 
   return (
     <View className={cn("mx-4 overflow-hidden rounded-lg", surface, stale && "opacity-60")}>
@@ -80,17 +89,18 @@ export function BillDetails({ bill, itemsCompareAt, regularDeliveryFee, totalLab
           }
         />
         <BillRow
-          label="Delivery fee"
+          label="Shipping"
           value={
             !free ? (
-              formatMoney(bill.deliveryFee, currency)
-            ) : deliverySavings > 0 ? (
-              <Struck was={formatMoney(regularDeliveryFee!, currency)} now="FREE" highlight />
+              formatMoney(bill.shippingFee, currency)
+            ) : shippingSavings > 0 ? (
+              <Struck was={formatMoney(regularShippingFee!, currency)} now="FREE" highlight />
             ) : (
               <Text className="text-sm font-bold text-primary">FREE</Text>
             )
           }
         />
+        {toPaise(codFee) > 0 && <BillRow label="Cash on delivery" value={formatMoney(codFee, currency)} />}
         {toPaise(bill.discount) > 0 && (
           <BillRow label={couponCode ? `Coupon ${couponCode}` : "Discount"} value={`−${formatMoney(bill.discount, currency)}`} />
         )}
@@ -99,8 +109,8 @@ export function BillDetails({ bill, itemsCompareAt, regularDeliveryFee, totalLab
         {bill.taxTotal && toPaise(bill.taxTotal) > 0 ? (
           <Text className="-mt-1.5 text-xs text-muted-foreground">Includes {formatMoney(bill.taxTotal, currency)} GST</Text>
         ) : null}
-        {bill.amountToFreeDelivery && !free && (
-          <Text className="text-xs font-semibold text-primary">Add {formatMoney(bill.amountToFreeDelivery, currency)} more for free delivery</Text>
+        {bill.amountToFreeShipping && !free && (
+          <Text className="text-xs font-semibold text-primary">Add {formatMoney(bill.amountToFreeShipping, currency)} more for free shipping</Text>
         )}
         {footer}
       </View>
@@ -108,8 +118,8 @@ export function BillDetails({ bill, itemsCompareAt, regularDeliveryFee, totalLab
         <View className="flex-row items-start justify-between gap-3 bg-primary/10 px-4 py-3">
           <View className="flex-1">
             <Text className="text-sm font-bold text-primary">Your total savings</Text>
-            {deliverySavings > 0 && (
-              <Text className="text-xs text-muted-foreground">Includes {formatMoney(fromPaise(deliverySavings), currency)} saved on delivery</Text>
+            {shippingSavings > 0 && (
+              <Text className="text-xs text-muted-foreground">Includes {formatMoney(fromPaise(shippingSavings), currency)} saved on shipping</Text>
             )}
           </View>
           <Text className="text-sm font-extrabold text-primary">{formatMoney(fromPaise(totalSavings), currency)}</Text>

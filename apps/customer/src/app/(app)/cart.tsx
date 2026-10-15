@@ -344,9 +344,13 @@ function CartContent({ cart }: { cart: Cart }) {
 
         {cart.bill && (
           <BillDetails
-            bill={cart.bill}
+            bill={{
+              ...cart.bill,
+              codFee: payWith === "COD" ? cart.bill.codFee : "0.00",
+              total: payWith === "COD" ? cart.bill.totalWithCod : cart.bill.total,
+            }}
             itemsCompareAt={compareAtTotal(orderable)}
-            regularDeliveryFee={pricing.deliveryFee}
+            regularShippingFee={pricing.shippingFee}
             couponCode={cart.coupon?.applied ? cart.coupon.code : null}
             stale={updating}
           />
@@ -404,7 +408,9 @@ function CartContent({ cart }: { cart: Cart }) {
           >
             {address ? (
               <View>
-                <Text className="text-base font-extrabold">{cart.bill ? formatMoney(cart.bill.total, currency) : ""}</Text>
+                <Text className="text-base font-extrabold">
+                  {cart.bill ? formatMoney(payWith === "COD" ? cart.bill.totalWithCod : cart.bill.total, currency) : ""}
+                </Text>
                 <Text className="text-[11px] font-semibold uppercase">Total</Text>
               </View>
             ) : (

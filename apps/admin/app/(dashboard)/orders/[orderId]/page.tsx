@@ -149,7 +149,8 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
               <PackingChecklist order={order} currency={settings.currency} />
               <dl className="flex flex-col gap-1.5 self-end sm:min-w-64">
                 <Row label="Items">{money(order.subtotal)}</Row>
-                <Row label="Delivery fee">{Number(order.deliveryFee) === 0 ? "Free" : money(order.deliveryFee)}</Row>
+                <Row label="Shipping">{Number(order.shippingFee) === 0 ? "Free" : money(order.shippingFee)}</Row>
+                {Number(order.codFee) > 0 && <Row label="Cash on delivery">{money(order.codFee)}</Row>}
                 {Number(order.discount) > 0 && <Row label={order.couponCode ? `Coupon ${order.couponCode}` : "Discount"}>−{money(order.discount)}</Row>}
                 <Row label="Total">
                   <span className="text-base font-bold">{money(order.total)}</span>

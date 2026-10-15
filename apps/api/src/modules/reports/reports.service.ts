@@ -40,7 +40,8 @@ type DailyRow = {
   orders: number;
   items: Prisma.Decimal;
   discount: Prisma.Decimal;
-  deliveryFee: Prisma.Decimal;
+  shippingFee: Prisma.Decimal;
+  codFee: Prisma.Decimal;
   tax: Prisma.Decimal;
   total: Prisma.Decimal;
   cod: Prisma.Decimal;
@@ -48,7 +49,7 @@ type DailyRow = {
 };
 
 type GstRow = {
-  kind: "goods" | "delivery";
+  kind: "goods" | "shipping" | "cod";
   hsn: string | null;
   rate: Prisma.Decimal | null;
   quantity: number | null;
@@ -90,7 +91,8 @@ export function createReportsService(prisma: PrismaClient) {
         count(*)::int AS orders,
         sum(o.subtotal) AS items,
         sum(o.discount) AS discount,
-        sum(o."deliveryFee") AS "deliveryFee",
+        sum(o."shippingFee") AS "shippingFee",
+        sum(o."codFee") AS "codFee",
         sum(o."taxTotal") AS tax,
         sum(o.total) AS total,
         coalesce(sum(o.total) FILTER (WHERE o."paymentMethod" = 'COD'), 0) AS cod,
@@ -101,14 +103,15 @@ export function createReportsService(prisma: PrismaClient) {
       GROUP BY 1
     `;
     const byDay = new Map(rows.map((row) => [row.day, row]));
-    const empty = { orders: 0, items: zero(), discount: zero(), deliveryFee: zero(), tax: zero(), total: zero(), cod: zero(), online: zero() };
+    const empty = { orders: 0, items: zero(), discount: zero(), shippingFee: zero(), codFee: zero(), tax: zero(), total: zero(), cod: zero(), online: zero() };
     const totals = { ...empty };
     let csv = csvLine([
       "date",
       "orders",
       "item_sales",
       "coupon_discounts",
-      "delivery_fees",
+      "shipping_fees",
+      "cod_fees",
       "invoice_total",
       "taxable_value",
       "gst",
@@ -116,13 +119,13 @@ export function createReportsService(prisma: PrismaClient) {
       "paid_online",
     ]);
     const line = (label: string, row: typeof empty) =>
-      csvLine([label, row.orders, row.items, row.discount, row.deliveryFee, row.total, row.total.minus(row.tax), row.tax, row.cod, row.online]);
+      csvLine([label, row.orders, row.items, row.discount, row.shippingFee, row.codFee, row.total, row.total.minus(row.tax), row.tax, row.cod, row.online]);
 
     for (const day of daysBetween(query.from, query.to)) {
       const row = byDay.get(day) ?? empty;
       csv += line(day, row);
       totals.orders += row.orders;
-      for (const key of ["items", "discount", "deliveryFee", "tax", "total", "cod", "online"] as const) {
+      for (const key of ["items", "discount", "shippingFee", "codFee", "tax", "total", "cod", "online"] as const) {
         totals[key] = totals[key].plus(row[key]);
       }
     }
@@ -130,7 +133,7 @@ export function createReportsService(prisma: PrismaClient) {
   }
 
   /**
-   * Taxable value and GST by HSN and rate, with the delivery fee under its SAC. The split follows
+   * Taxable value and GST by HSN and rate, with the shipping and cash-on-delivery fees under their SAC. The split follows
    * each order's snapshot: CGST + SGST within the state, IGST across states. Orders count by invoice
    * date (they are invoiced when packed); orders cancelled after packing are left out. Orders
    * invoiced before the snapshot have their GST under gst_not_split.
@@ -148,9 +151,13 @@ export function createReportsService(prisma: PrismaClient) {
         JOIN "Order" o ON o.id = i."orderId"
         WHERE ${invoiced} AND i.quantity > i."unavailableQuantity"
         UNION ALL
-        SELECT 'delivery', ${DELIVERY_SAC}, o."deliveryFeeGstRate", o."interStateSupply", NULL, o."deliveryFee", o."deliveryFeeTax"
+        SELECT 'shipping', ${DELIVERY_SAC}, o."shippingFeeGstRate", o."interStateSupply", NULL, o."shippingFee", o."shippingFeeTax"
         FROM "Order" o
-        WHERE ${invoiced} AND o."deliveryFee" > 0
+        WHERE ${invoiced} AND o."shippingFee" > 0
+        UNION ALL
+        SELECT 'cod', ${DELIVERY_SAC}, o."shippingFeeGstRate", o."interStateSupply", NULL, o."codFee", o."codFeeTax"
+        FROM "Order" o
+        WHERE ${invoiced} AND o."codFee" > 0
       )
       SELECT kind, hsn, rate,
         sum(quantity)::int AS quantity,
@@ -181,7 +188,7 @@ export function createReportsService(prisma: PrismaClient) {
     ]);
     for (const row of rows) {
       csv += csvLine([
-        row.kind === "goods" ? "Goods" : "Delivery fee",
+        row.kind === "goods" ? "Goods" : row.kind === "cod" ? "Cash on delivery" : "Shipping",
         row.hsn,
         row.rate,
         row.quantity,

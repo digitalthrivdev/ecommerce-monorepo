@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { GST_RATE_PATTERN } from "@shop/validation";
+import { DECIMAL_PATTERN, GST_RATE_PATTERN } from "@shop/validation";
 import { z } from "zod";
 
 import { apiFailure, validationFailure } from "@/lib/action-errors";
@@ -29,9 +29,28 @@ const deliveryPromiseMinutes = z
   .refine((value) => value === "" || (/^\d{1,3}$/.test(value) && Number(value) >= 5 && Number(value) <= 180), "Enter minutes from 5 to 180")
   .transform((value) => (value ? Number(value) : null));
 
+const weightSlabSchema = z.object({
+  maxWeightGrams: z.number().int().positive().max(1_000_000),
+  fee: z.string().trim().regex(DECIMAL_PATTERN, AMOUNT),
+});
+
 const settingsSchema = z.object({
-  deliveryFee: decimal(AMOUNT),
-  freeDeliveryThreshold: optionalDecimal(AMOUNT),
+  shippingFee: decimal(AMOUNT),
+  freeShippingThreshold: optionalDecimal(AMOUNT),
+  codFee: decimal(AMOUNT),
+  weightSlabs: z
+    .string()
+    .trim()
+    .transform((value, context) => {
+      if (!value || value === "[]") return null;
+      try {
+        const parsed = weightSlabSchema.array().max(20).parse(JSON.parse(value));
+        return parsed.length === 0 ? null : parsed;
+      } catch {
+        context.addIssue({ code: "custom", message: "Enter a weight in grams and an amount for each band" });
+        return z.NEVER;
+      }
+    }),
   minOrderValue: decimal(AMOUNT),
   codMaxOrderValue: optionalPositiveDecimal("Enter an amount above 0, or leave it empty for no limit"),
   deliveryPromiseMinutes,
@@ -41,8 +60,10 @@ const settingsSchema = z.object({
 
 export async function updatePlatformSettings(formData: FormData): Promise<ActionResult> {
   const parsed = settingsSchema.safeParse({
-    deliveryFee: formText(formData, "deliveryFee"),
-    freeDeliveryThreshold: formText(formData, "freeDeliveryThreshold"),
+    shippingFee: formText(formData, "shippingFee"),
+    freeShippingThreshold: formText(formData, "freeShippingThreshold"),
+    codFee: formText(formData, "codFee"),
+    weightSlabs: formText(formData, "weightSlabs"),
     minOrderValue: formText(formData, "minOrderValue"),
     codMaxOrderValue: formText(formData, "codMaxOrderValue"),
     deliveryPromiseMinutes: formText(formData, "deliveryPromiseMinutes"),
@@ -123,7 +144,7 @@ export async function updateWebsiteDetails(formData: FormData): Promise<ActionRe
 const invoiceSchema = z.object({
   businessName: optionalText(200),
   gstin: optionalGstin,
-  deliveryFeeGstRate: z
+  shippingFeeGstRate: z
     .string()
     .trim()
     .regex(GST_RATE_PATTERN, "Enter a percentage like 18 or 5"),
@@ -133,7 +154,7 @@ export async function updateInvoiceSettings(formData: FormData): Promise<ActionR
   const parsed = invoiceSchema.safeParse({
     businessName: formText(formData, "businessName"),
     gstin: formText(formData, "gstin"),
-    deliveryFeeGstRate: formText(formData, "deliveryFeeGstRate"),
+    shippingFeeGstRate: formText(formData, "shippingFeeGstRate"),
   });
   if (!parsed.success) return validationFailure(parsed.error);
 

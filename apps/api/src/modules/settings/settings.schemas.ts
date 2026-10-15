@@ -23,10 +23,17 @@ const downloadUrlSchema = z
   .refine((url) => url.startsWith("https://"), "Use an https:// link")
   .nullable();
 
+const weightSlabSchema = z.object({
+  maxWeightGrams: z.number().int().positive().max(1_000_000),
+  fee: decimalSchema,
+});
+
 export const updateSettingsBodySchema = z
   .object({
-    deliveryFee: decimalSchema,
-    freeDeliveryThreshold: decimalSchema.nullable(),
+    shippingFee: decimalSchema,
+    freeShippingThreshold: decimalSchema.nullable(),
+    codFee: decimalSchema,
+    weightSlabs: z.array(weightSlabSchema).max(20).nullable(),
     minOrderValue: decimalSchema,
     codMaxOrderValue: positiveDecimalSchema.nullable(),
     deliveryPromiseMinutes: z.number().int().min(5).max(180).nullable(),
@@ -35,7 +42,7 @@ export const updateSettingsBodySchema = z
     businessName: z.string().trim().min(1).max(200).nullable(),
     businessAddress: z.string().trim().min(1).max(500).nullable(),
     gstin: gstinSchema.nullable(),
-    deliveryFeeGstRate: gstRateSchema,
+    shippingFeeGstRate: gstRateSchema,
     websiteTagline: z.string().trim().min(1).max(160).nullable(),
     playStoreUrl: playStoreUrlSchema,
     appStoreUrl: appStoreUrlSchema,

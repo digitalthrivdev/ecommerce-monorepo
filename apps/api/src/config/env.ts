@@ -90,9 +90,11 @@ const envSchema = z.object({
     .refine(isValidTimeZone, "Must be an IANA time zone, e.g. Asia/Kolkata"),
 
   // Initial values for the platform settings row; afterwards admins edit them in the dashboard.
-  DELIVERY_FEE: moneyEnv.default("25.00"),
+  SHIPPING_FEE: moneyEnv.default("25.00"),
 
-  FREE_DELIVERY_THRESHOLD: moneyEnv.default("199.00"),
+  FREE_SHIPPING_THRESHOLD: moneyEnv.default("199.00"),
+
+  COD_FEE: moneyEnv.default("0.00"),
 
   MIN_ORDER_VALUE: moneyEnv.default("99.00"),
 

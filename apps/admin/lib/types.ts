@@ -246,16 +246,18 @@ export type OrderDetail = {
     taxAmount: string;
   }>;
   subtotal: string;
-  deliveryFee: string;
+  shippingFee: string;
+  codFee: string;
   discount: string;
   /** The coupon that gave the discount. */
   couponCode: string | null;
   total: string;
   /** GST included in the total. */
   taxTotal: string;
-  /** GST rate included in the delivery fee; null for orders placed before it was recorded. */
-  deliveryFeeGstRate: string | null;
-  deliveryFeeTax: string;
+  /** GST rate included in the shipping and cash-on-delivery fees; null for orders placed before it was recorded. */
+  shippingFeeGstRate: string | null;
+  shippingFeeTax: string;
+  codFeeTax: string;
   /** Assigned when the order is packed. */
   invoiceNumber: string | null;
   /** Null until the order is shipped; a cancelled shipment stays until the order ships again. */
@@ -608,9 +610,14 @@ export function activeCarrierOf(settings: Pick<PlatformSettings, "shippingProvid
 
 export type ReviewLogin = { enabled: boolean; phone: string | null; codeSet: boolean };
 
+export type WeightSlab = { maxWeightGrams: number; fee: string };
+
 export type PlatformSettings = {
-  deliveryFee: string;
-  freeDeliveryThreshold: string | null;
+  shippingFee: string;
+  freeShippingThreshold: string | null;
+  codFee: string;
+  /** Ordered lightest first. Empty when the flat shipping fee is used. */
+  weightSlabs: WeightSlab[];
   minOrderValue: string;
   codMaxOrderValue: string | null;
   supportPhone: string | null;
@@ -620,8 +627,8 @@ export type PlatformSettings = {
   businessAddress: string | null;
   /** GSTIN on invoices, when registered in the default pickup location's state. */
   gstin: string | null;
-  /** GST rate included in the delivery fee, e.g. "18.00". */
-  deliveryFeeGstRate: string;
+  /** GST rate included in the shipping and cash-on-delivery fees, e.g. "18.00". */
+  shippingFeeGstRate: string;
   /** "Delivery in about N minutes" in the customer app; null hides it. */
   deliveryPromiseMinutes: number | null;
   websiteTagline: string | null;

@@ -43,19 +43,19 @@ export function InvoiceSettingsForm({ settings }: { settings: PlatformSettings }
             <FieldDescription>Used when it is registered in the state of the default pickup location.</FieldDescription>
             <FieldError>{fieldErrors.gstin}</FieldError>
           </Field>
-          <Field data-invalid={Boolean(fieldErrors.deliveryFeeGstRate)}>
-            <FieldLabel htmlFor="invoice-delivery-gst">GST in the delivery charge (%)</FieldLabel>
+          <Field data-invalid={Boolean(fieldErrors.shippingFeeGstRate)}>
+            <FieldLabel htmlFor="invoice-shipping-gst">GST in the shipping charge (%)</FieldLabel>
             <Input
-              id="invoice-delivery-gst"
-              name="deliveryFeeGstRate"
-              defaultValue={Number(settings.deliveryFeeGstRate).toString()}
+              id="invoice-shipping-gst"
+              name="shippingFeeGstRate"
+              defaultValue={Number(settings.shippingFeeGstRate).toString()}
               inputMode="decimal"
               maxLength={5}
               required
-              aria-invalid={Boolean(fieldErrors.deliveryFeeGstRate)}
+              aria-invalid={Boolean(fieldErrors.shippingFeeGstRate)}
             />
-            <FieldDescription>Included in the charge, not added to it. Applies to new orders.</FieldDescription>
-            <FieldError>{fieldErrors.deliveryFeeGstRate}</FieldError>
+            <FieldDescription>Included in the shipping and cash-on-delivery charges, not added on top. Applies to new orders.</FieldDescription>
+            <FieldError>{fieldErrors.shippingFeeGstRate}</FieldError>
           </Field>
         </div>
       </FieldGroup>

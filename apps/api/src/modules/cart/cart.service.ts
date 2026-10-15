@@ -96,11 +96,12 @@ export function createCartService(prisma: PrismaClient) {
 
     const sellable = await prisma.productVariant.findMany({
       where: { id: { in: cart.items.map((item) => item.variantId) }, ...customerVisibleVariant },
-      select: { id: true, price: true, compareAtPrice: true, inventory: { select: { quantity: true } } },
+      select: { id: true, price: true, compareAtPrice: true, weightGrams: true, inventory: { select: { quantity: true } } },
     });
     const byVariantId = new Map(sellable.map((row) => [row.id, row]));
 
     let subtotal = new Prisma.Decimal(0);
+    let weightGrams = 0;
 
     const items = cart.items.map((item) => {
       const { variant } = item;
@@ -117,6 +118,7 @@ export function createCartService(prisma: PrismaClient) {
       const lineTotal = listing ? listing.price.mul(item.quantity) : null;
       if (lineTotal && !issue) {
         subtotal = subtotal.add(lineTotal);
+        weightGrams += item.quantity * (listing?.weightGrams ?? 0);
       }
 
       return {
@@ -144,7 +146,7 @@ export function createCartService(prisma: PrismaClient) {
       customerOrderBlock(prisma, userId),
       cart.couponCode ? evaluateCoupon(userId, cart.couponCode, subtotal) : null,
     ]);
-    const charges = calculateCharges(subtotal, settings, coupon?.discount);
+    const charges = calculateCharges(subtotal, settings, { discount: coupon?.discount, weightGrams });
 
     return {
       id: cart.id,
@@ -156,14 +158,16 @@ export function createCartService(prisma: PrismaClient) {
       // Preview of the checkout bill for the items that can be ordered; checkout recalculates it.
       bill: {
         subtotal: charges.subtotal.toFixed(2),
-        deliveryFee: charges.deliveryFee.toFixed(2),
+        shippingFee: charges.shippingFee.toFixed(2),
+        codFee: charges.codFee.toFixed(2),
         discount: charges.discount.toFixed(2),
         total: charges.total.toFixed(2),
+        totalWithCod: charges.totalWithCod.toFixed(2),
         minOrderValue: charges.minOrderValue.toFixed(2),
         meetsMinimum: charges.meetsMinimum,
-        amountToFreeDelivery: charges.amountToFreeDelivery?.toFixed(2) ?? null,
+        amountToFreeShipping: charges.amountToFreeShipping?.toFixed(2) ?? null,
       },
-      checkout: await checkoutOptions(prisma, settings, charges.total, block),
+      checkout: await checkoutOptions(prisma, settings, charges.totalWithCod, block),
       isValid: items.every((item) => item.issue === null),
     };
   }

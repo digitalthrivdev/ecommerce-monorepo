@@ -44,18 +44,26 @@
 
   [x] Phase 0 – done (commit 7434e6e)
   [x] Phase 1 – done (commit f53aa21)
-  [x] Phase 2 – done (commit d662ce4). Left open: customer address PIN
-      codes accept 3+ characters (only pickup locations check 6 digits);
-      the app still shows "Delivery in about N minutes"; grocery wording in
-      the website and app; leaflet packages unused in apps/admin.
+  [x] Phase 2 – done (commit d662ce4). Left open: the app still shows
+      "Delivery in about N minutes"; grocery wording in the website and app;
+      leaflet packages unused in apps/admin. Address PIN codes are 6 digits
+      as of Phase 6.
   [x] Phase 3 – done (commit 5f179d3). Manual and mock carriers, Shipment and
       ShipmentEvent, new OrderStatus, webhooks at /shipping/webhooks/:carrier,
       invoice numbered at PACKED. Left open: web tracking timeline (the
       website has no order pages until Phase 7); demo admins can't book
       shipments; RTO restocking is Phase 9.
-  [ ] Phase 4 – Shiprocket
-  [ ] Phase 5 – Fship
-  [ ] Phase 6 – Checkout shipping and COD
+  [x] Phase 4 – done (commit 3dd5ebe). Left open: confirm the cash amount
+      Shiprocket collects on one real test booking before launch; a blank
+      customer email may be rejected; a webhook and a tracking refresh can
+      show the same scan twice.
+  [x] Phase 5 – done (commit ea32284). Left open: Fship publishes no
+      webhooks and nothing polls tracking, so an order stays at its booked
+      status until someone refreshes tracking.
+  [x] Phase 6 – done. Shipping fee, free-shipping threshold, COD fee and
+      optional weight slabs, calculated with Decimal and snapshotted on the
+      order with their GST. Pincode check at GET /serviceability, enforced
+      when the order is created. Addresses take a 6-digit PIN code.
   [ ] Phase 7 – Website storefront
   [ ] Phase 8 – Customer app
   [ ] Phase 9 – Returns and RTO
@@ -152,7 +160,7 @@
   credentials via the registry, unit tests with sample responses, docs.
   Do not change the interface unless both carriers need it.
 
-  Phase 6: Checkout shipping and COD
+  Phase 6: Checkout shipping and COD [DONE]
 
   Phase 6 – checkout. Shipping fee from settings (flat, free threshold,
   COD fee, optional weight slabs) computed on the server with Decimal and

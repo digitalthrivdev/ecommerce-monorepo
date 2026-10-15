@@ -11,7 +11,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input";
 import { useFormAction } from "@/hooks/use-form-action";
 import { formatMoney } from "@/lib/format";
-import type { PlatformSettings } from "@/lib/types";
+import type { PlatformSettings, WeightSlab } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type TextFieldProps = {
@@ -58,21 +58,79 @@ function currencySymbol(currency: string) {
 
 const isAmount = (value: string) => DECIMAL_PATTERN.test(value.trim());
 
-/** "Orders under ₹199 pay ₹25 delivery. …" from what is typed right now. */
-function ChargesSummary({ values, currency }: { values: Record<"deliveryFee" | "freeDeliveryThreshold" | "minOrderValue", string>; currency: string }) {
+/** "Orders under ₹199 pay ₹25 for shipping. …" from what is typed right now. */
+function ChargesSummary({
+  values,
+  currency,
+}: {
+  values: Record<"shippingFee" | "freeShippingThreshold" | "codFee" | "minOrderValue", string>;
+  currency: string;
+}) {
   const money = (value: string) => formatMoney(value.trim(), currency);
   const parts: string[] = [];
   if (isAmount(values.minOrderValue) && Number(values.minOrderValue) > 0) {
     parts.push(`Customers must order at least ${money(values.minOrderValue)}.`);
   }
-  if (isAmount(values.deliveryFee)) {
-    if (Number(values.deliveryFee) === 0) parts.push("Delivery is always free.");
-    else if (isAmount(values.freeDeliveryThreshold)) {
-      parts.push(`Orders under ${money(values.freeDeliveryThreshold)} pay ${money(values.deliveryFee)} for delivery; bigger orders get free delivery.`);
-    } else parts.push(`Every order pays ${money(values.deliveryFee)} for delivery.`);
+  if (isAmount(values.shippingFee)) {
+    if (Number(values.shippingFee) === 0) parts.push("Shipping is always free.");
+    else if (isAmount(values.freeShippingThreshold)) {
+      parts.push(`Orders under ${money(values.freeShippingThreshold)} pay ${money(values.shippingFee)} for shipping; bigger orders get free shipping.`);
+    } else parts.push(`Every order pays ${money(values.shippingFee)} for shipping.`);
+  }
+  if (isAmount(values.codFee) && Number(values.codFee) > 0) {
+    parts.push(`Cash on delivery adds ${money(values.codFee)}.`);
   }
   if (parts.length === 0) return null;
   return <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm">{parts.join(" ")}</p>;
+}
+
+function WeightSlabsField({ initial, error, prefix }: { initial: WeightSlab[]; error?: string; prefix: string }) {
+  const [rows, setRows] = useState<WeightSlab[]>(initial);
+  const update = (index: number, patch: Partial<WeightSlab>) =>
+    setRows((current) => current.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
+
+  return (
+    <Field data-invalid={Boolean(error)}>
+      <FieldLabel>Shipping by weight</FieldLabel>
+      <input type="hidden" name="weightSlabs" value={JSON.stringify(rows)} />
+      <div className="flex flex-col gap-3">
+        {rows.map((row, index) => (
+          <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-center gap-3">
+            <Input
+              inputMode="numeric"
+              maxLength={7}
+              aria-label={`Weight band ${index + 1}, up to grams`}
+              value={row.maxWeightGrams || ""}
+              onChange={(event) => update(index, { maxWeightGrams: Number(event.target.value.replace(/\D/g, "")) })}
+              placeholder="500"
+            />
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">{prefix}</span>
+              <Input
+                inputMode="decimal"
+                maxLength={11}
+                className="pl-8"
+                aria-label={`Weight band ${index + 1} fee`}
+                value={row.fee}
+                onChange={(event) => update(index, { fee: event.target.value })}
+                placeholder="40.00"
+              />
+            </div>
+            <Button type="button" variant="outline" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))}>
+              Remove
+            </Button>
+          </div>
+        ))}
+        {rows.length < 20 && (
+          <Button type="button" variant="outline" className="w-fit" onClick={() => setRows((current) => [...current, { maxWeightGrams: 0, fee: "" }])}>
+            Add a weight band
+          </Button>
+        )}
+      </div>
+      <FieldDescription>Optional. Each row is “up to this many grams, charge this”. The first band the parcel fits replaces the flat shipping charge. A heavier parcel pays the last band. Leave empty to always use the flat charge.</FieldDescription>
+      <FieldError>{error}</FieldError>
+    </Field>
+  );
 }
 
 export function SettingsForm({ settings, currency }: { settings: PlatformSettings; currency: string }) {
@@ -80,8 +138,9 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
   const symbol = currencySymbol(currency);
   const amount = { inputMode: "decimal", maxLength: 11, prefix: symbol } as const;
   const [charges, setCharges] = useState({
-    deliveryFee: settings.deliveryFee,
-    freeDeliveryThreshold: settings.freeDeliveryThreshold ?? "",
+    shippingFee: settings.shippingFee,
+    freeShippingThreshold: settings.freeShippingThreshold ?? "",
+    codFee: settings.codFee,
     minOrderValue: settings.minOrderValue,
   });
   const track = (name: keyof typeof charges) => ({
@@ -95,25 +154,38 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
           <FieldGroup>
             <div className="grid gap-5 sm:grid-cols-2">
               <TextField
-                name="deliveryFee"
-                label="Delivery charge"
-                defaultValue={settings.deliveryFee}
-                error={fieldErrors.deliveryFee}
-                description="Use 0 for always-free delivery."
+                name="shippingFee"
+                label="Shipping charge"
+                defaultValue={settings.shippingFee}
+                error={fieldErrors.shippingFee}
+                description="Use 0 for always-free shipping. Weight bands below replace this."
                 required
                 {...amount}
-                {...track("deliveryFee")}
+                {...track("shippingFee")}
               />
               <TextField
-                name="freeDeliveryThreshold"
-                label="Free delivery on orders above"
-                defaultValue={settings.freeDeliveryThreshold}
-                error={fieldErrors.freeDeliveryThreshold}
-                description="Leave empty to always charge delivery."
+                name="freeShippingThreshold"
+                label="Free shipping on orders above"
+                defaultValue={settings.freeShippingThreshold}
+                error={fieldErrors.freeShippingThreshold}
+                description="Leave empty to always charge shipping."
                 {...amount}
-                {...track("freeDeliveryThreshold")}
+                {...track("freeShippingThreshold")}
               />
             </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <TextField
+                name="codFee"
+                label="Cash on delivery charge"
+                defaultValue={settings.codFee}
+                error={fieldErrors.codFee}
+                description="Added only when the customer pays cash on delivery. Use 0 for no charge."
+                required
+                {...amount}
+                {...track("codFee")}
+              />
+            </div>
+            <WeightSlabsField initial={settings.weightSlabs} error={fieldErrors.weightSlabs} prefix={symbol} />
             <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 name="minOrderValue"

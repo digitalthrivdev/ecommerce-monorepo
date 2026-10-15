@@ -120,8 +120,14 @@ export default async function PackingSlipPage({ params }: PageProps<"/print/orde
         <dl className="ml-auto grid w-64 grid-cols-[1fr_auto] gap-x-4 gap-y-1 tabular-nums">
           <dt>Items</dt>
           <dd className="text-right">{money(order.subtotal)}</dd>
-          <dt>Delivery fee</dt>
-          <dd className="text-right">{Number(order.deliveryFee) === 0 ? "Free" : money(order.deliveryFee)}</dd>
+          <dt>Shipping</dt>
+          <dd className="text-right">{Number(order.shippingFee) === 0 ? "Free" : money(order.shippingFee)}</dd>
+          {Number(order.codFee) > 0 && (
+            <>
+              <dt>Cash on delivery</dt>
+              <dd className="text-right">{money(order.codFee)}</dd>
+            </>
+          )}
           {Number(order.discount) > 0 && (
             <>
               <dt>{order.couponCode ? `Coupon ${order.couponCode}` : "Discount"}</dt>

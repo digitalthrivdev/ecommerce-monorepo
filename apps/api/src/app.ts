@@ -37,6 +37,7 @@ import reportsRoutes from "./modules/reports/reports.routes.js";
 import homeRoutes from "./modules/settings/home.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import pickupLocationsRoutes from "./modules/shipping/pickup-locations.routes.js";
+import serviceabilityRoutes from "./modules/shipping/serviceability.routes.js";
 import shippingWebhooksRoutes from "./modules/shipping/shipping-webhooks.routes.js";
 import uploadsRoutes from "./modules/uploads/uploads.routes.js";
 import customersRoutes from "./modules/users/customers.routes.js";
@@ -105,6 +106,7 @@ export async function buildApp() {
   await app.register(paymentsRoutes, { prefix: "/payments" });
   await app.register(staffRoutes, { prefix: "/staff" });
   await app.register(pickupLocationsRoutes, { prefix: "/pickup-locations" });
+  await app.register(serviceabilityRoutes, { prefix: "/serviceability" });
   await app.register(shippingWebhooksRoutes, { prefix: "/shipping" });
   await app.register(adminOrdersRoutes, { prefix: "/admin/orders" });
   await app.register(dashboardInvoiceRoutes, { prefix: "/admin/orders" });

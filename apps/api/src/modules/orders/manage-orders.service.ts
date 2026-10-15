@@ -227,8 +227,8 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
   }
 
   /**
-   * Removes units staff cannot find from the order. The bill is recalculated (the delivery fee
-   * is kept as charged), the product's stock is set to 0 because the shelf is empty, and online
+   * Removes units staff cannot find from the order. The bill is recalculated (the shipping and
+   * cash-on-delivery fees are kept as charged), the product's stock is set to 0 because the shelf is empty, and online
    * payments are refunded the difference. quantity defaults to every remaining unit of the item.
    */
   async function markItemUnavailable(
@@ -249,8 +249,10 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
         where: { id: orderId },
         select: {
           orderNumber: true,
-          deliveryFee: true,
-          deliveryFeeTax: true,
+          shippingFee: true,
+          shippingFeeTax: true,
+          codFee: true,
+          codFeeTax: true,
           discount: true,
           paymentMethod: true,
           items: true,
@@ -282,7 +284,7 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
       const subtotal = amounts.reduce((sum, amount) => sum.plus(amount), new Prisma.Decimal(0));
       // The coupon is recalculated on what's left; its minimum order no longer applies, since the shop is short.
       const discount = order.coupon ? couponDiscount(subtotal, order.coupon) : Prisma.Decimal.min(order.discount, subtotal);
-      const total = Prisma.Decimal.max(subtotal.plus(order.deliveryFee).minus(discount), 0);
+      const total = Prisma.Decimal.max(subtotal.plus(order.shippingFee).plus(order.codFee).minus(discount), 0);
       const shares = discountShares(amounts, discount);
       const repriced = items.map((candidate, index) => ({
         id: candidate.id,
@@ -290,7 +292,7 @@ export function createManageOrdersService(prisma: PrismaClient, payments: Paymen
         discount: shares[index]!,
         taxAmount: includedTax(amounts[index]!.minus(shares[index]!), candidate.gstRate),
       }));
-      const taxTotal = repriced.reduce((sum, line) => sum.plus(line.taxAmount), order.deliveryFeeTax);
+      const taxTotal = repriced.reduce((sum, line) => sum.plus(line.taxAmount), order.shippingFeeTax.plus(order.codFeeTax));
 
       for (const line of repriced.filter((candidate) => candidate.changed)) {
         await tx.orderItem.update({

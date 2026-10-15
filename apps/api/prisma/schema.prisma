@@ -411,16 +411,19 @@ model Order {
   status OrderStatus @default(PENDING_PAYMENT)
 
   subtotal    Decimal @db.Decimal(10, 2)
-  deliveryFee Decimal @db.Decimal(10, 2)
+  shippingFee Decimal @db.Decimal(10, 2)
+  // Charged only on cash-on-delivery orders.
+  codFee      Decimal @default(0) @db.Decimal(10, 2)
   discount    Decimal @default(0) @db.Decimal(10, 2)
   total       Decimal @db.Decimal(10, 2)
-  // GST included in the item prices and, for orders placed since the delivery fee GST rate was
-  // added, in the delivery fee.
+  // GST included in the item prices and, for orders placed since the shipping fee GST rate was
+  // added, in the shipping and COD fees.
   taxTotal    Decimal @default(0) @db.Decimal(10, 2)
 
-  // GST rate of the delivery fee and the tax included in it. Null rate: placed before it was recorded.
-  deliveryFeeGstRate Decimal? @db.Decimal(5, 2)
-  deliveryFeeTax     Decimal  @default(0) @db.Decimal(10, 2)
+  // GST rate of the fees and the tax included in them. Null rate: placed before it was recorded.
+  shippingFeeGstRate Decimal? @db.Decimal(5, 2)
+  shippingFeeTax     Decimal  @default(0) @db.Decimal(10, 2)
+  codFeeTax          Decimal  @default(0) @db.Decimal(10, 2)
 
   // Assigned when the order is packed, e.g. INV/2026-27/000123, and dated invoicedAt.
   invoiceNumber String?   @unique
@@ -912,10 +915,17 @@ enum PaymentStatus {
 model PlatformSettings {
   id String @id @default("platform")
 
-  deliveryFee           Decimal  @db.Decimal(10, 2)
-  // Null means delivery is never free.
-  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+  shippingFee           Decimal  @db.Decimal(10, 2)
+  // Null means shipping is never free.
+  freeShippingThreshold Decimal? @db.Decimal(10, 2)
   minOrderValue         Decimal  @db.Decimal(10, 2)
+
+  // Flat cash-on-delivery charge, added to the total of COD orders only.
+  codFee Decimal @default(0) @db.Decimal(10, 2)
+
+  // Weight-based shipping rates as [{ "maxWeightGrams": 500, "fee": "40.00" }]; the first entry the
+  // order's total weight fits sets the fee. Null or empty keeps the flat shippingFee.
+  weightSlabs Json?
 
   // Largest order total that can be paid cash on delivery; null means no limit.
   codMaxOrderValue Decimal? @db.Decimal(10, 2)
@@ -933,8 +943,8 @@ model PlatformSettings {
 
   // GSTIN on invoices, when it is registered in the state of the default pickup location.
   gstin              String?
-  // GST rate included in the delivery fee.
-  deliveryFeeGstRate Decimal @default(18) @db.Decimal(5, 2)
+  // GST rate included in the shipping and COD fees.
+  shippingFeeGstRate Decimal @default(18) @db.Decimal(5, 2)
 
   // Public website on SITE_DOMAIN: home page tagline and where to get the customer app. A direct
   // download link only shows while the app has no store listing.

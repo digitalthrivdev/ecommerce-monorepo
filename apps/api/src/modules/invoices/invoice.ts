@@ -2,7 +2,7 @@ import { env } from "../../config/env.js";
 import { Prisma } from "../../generated/prisma/client";
 import { splitIntraState, stateCodes } from "../../shared/gst.js";
 
-/** SAC for local delivery services, used for the delivery fee line. */
+/** SAC for courier and cash-on-delivery charges. */
 export const DELIVERY_SAC = "996813";
 
 export const invoiceSelect = {
@@ -20,9 +20,11 @@ export const invoiceSelect = {
   city: true,
   state: true,
   postalCode: true,
-  deliveryFee: true,
-  deliveryFeeGstRate: true,
-  deliveryFeeTax: true,
+  shippingFee: true,
+  shippingFeeGstRate: true,
+  shippingFeeTax: true,
+  codFee: true,
+  codFeeTax: true,
   total: true,
   sellerName: true,
   sellerGstin: true,
@@ -109,23 +111,22 @@ export function buildInvoice(order: InvoiceOrder) {
       ),
     ];
   });
-  if (order.deliveryFee.gt(0)) {
-    lines.push(
-      invoiceLine(
-        {
-          description: "Delivery charges",
-          hsn: DELIVERY_SAC,
-          quantity: null,
-          unitPrice: null,
-          discount: zero(),
-          rate: order.deliveryFeeGstRate,
-          tax: order.deliveryFeeTax,
-        },
-        order.deliveryFee,
-        interState,
-      ),
+  const feeLine = (description: string, amount: Prisma.Decimal, tax: Prisma.Decimal) =>
+    invoiceLine(
+      {
+        description,
+        hsn: DELIVERY_SAC,
+        quantity: null,
+        unitPrice: null,
+        discount: zero(),
+        rate: order.shippingFeeGstRate,
+        tax,
+      },
+      amount,
+      interState,
     );
-  }
+  if (order.shippingFee.gt(0)) lines.push(feeLine("Shipping charges", order.shippingFee, order.shippingFeeTax));
+  if (order.codFee.gt(0)) lines.push(feeLine("Cash on delivery charges", order.codFee, order.codFeeTax));
 
   const sum = (key: "taxable" | "cgst" | "sgst" | "igst" | "tax" | "total") => lines.reduce((total, line) => total.plus(line[key]), zero());
   const address = [order.addressLine1, order.addressLine2, order.landmark && `Near ${order.landmark}`, order.city, `${order.state} ${order.postalCode}`]

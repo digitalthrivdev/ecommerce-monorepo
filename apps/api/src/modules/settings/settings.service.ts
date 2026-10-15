@@ -38,8 +38,9 @@ export async function getPlatformSettings(db: Db) {
     update: {},
     create: {
       id: SETTINGS_ID,
-      deliveryFee: env.DELIVERY_FEE,
-      freeDeliveryThreshold: env.FREE_DELIVERY_THRESHOLD,
+      shippingFee: env.SHIPPING_FEE,
+      freeShippingThreshold: env.FREE_SHIPPING_THRESHOLD,
+      codFee: env.COD_FEE,
       minOrderValue: env.MIN_ORDER_VALUE,
     },
   });
@@ -47,26 +48,71 @@ export async function getPlatformSettings(db: Db) {
 
 export type PlatformSettings = Awaited<ReturnType<typeof getPlatformSettings>>;
 
+/** One weight band: orders up to maxWeightGrams pay fee. */
+type WeightSlab = { maxWeightGrams: number; fee: string };
+
+/** The saved weight slabs, cheapest-to-heaviest, ignoring malformed entries. */
+export function weightSlabs(settings: PlatformSettings): WeightSlab[] {
+  if (!Array.isArray(settings.weightSlabs)) return [];
+  return (settings.weightSlabs as unknown[])
+    .flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) return [];
+      const { maxWeightGrams, fee } = entry as { maxWeightGrams?: unknown; fee?: unknown };
+      if (typeof maxWeightGrams !== "number" || !Number.isInteger(maxWeightGrams) || maxWeightGrams <= 0 || typeof fee !== "string") {
+        return [];
+      }
+      try {
+        const amount = new Prisma.Decimal(fee);
+        if (!amount.isFinite() || amount.lt(0)) return [];
+        return [{ maxWeightGrams, fee: amount.toFixed(2) }];
+      } catch {
+        return [];
+      }
+    })
+    .sort((a, b) => a.maxWeightGrams - b.maxWeightGrams);
+}
+
 /**
- * Delivery fee and totals for a subtotal and coupon discount. Used for the cart preview and at
- * checkout so they always agree. The minimum order and free delivery use the subtotal before the discount.
+ * The shipping fee for an order: free once the subtotal reaches the free-shipping threshold, otherwise
+ * the fee of the first weight slab the order fits (the last slab's fee above it), or the flat fee when
+ * no slabs are set. The weight is the sum of the ordered lines.
  */
-export function calculateCharges(subtotal: Prisma.Decimal, settings: PlatformSettings, discount = new Prisma.Decimal(0)) {
-  const freeDelivery =
-    settings.freeDeliveryThreshold !== null && subtotal.gte(settings.freeDeliveryThreshold);
-  const deliveryFee = freeDelivery ? new Prisma.Decimal(0) : settings.deliveryFee;
+export function shippingFeeFor(settings: PlatformSettings, subtotal: Prisma.Decimal, weightGrams: number) {
+  if (settings.freeShippingThreshold !== null && subtotal.gte(settings.freeShippingThreshold)) {
+    return new Prisma.Decimal(0);
+  }
+  const slabs = weightSlabs(settings);
+  if (slabs.length > 0) {
+    const slab = slabs.find((entry) => weightGrams <= entry.maxWeightGrams) ?? slabs[slabs.length - 1]!;
+    return new Prisma.Decimal(slab.fee);
+  }
+  return settings.shippingFee;
+}
+
+/**
+ * Shipping fee, COD fee and totals for a subtotal and coupon discount. Used for the cart preview and at
+ * checkout so they always agree. The minimum order and free shipping use the subtotal before the discount.
+ * `total` is what a prepaid order pays; `totalWithCod` adds the COD fee for a cash-on-delivery order.
+ */
+export function calculateCharges(
+  subtotal: Prisma.Decimal,
+  settings: PlatformSettings,
+  { discount = new Prisma.Decimal(0), weightGrams = 0 }: { discount?: Prisma.Decimal; weightGrams?: number } = {},
+) {
+  const shippingFee = shippingFeeFor(settings, subtotal, weightGrams);
+  const total = subtotal.add(shippingFee).sub(discount);
 
   return {
     subtotal,
-    deliveryFee,
+    shippingFee,
+    codFee: settings.codFee,
     discount,
-    total: subtotal.add(deliveryFee).sub(discount),
+    total,
+    totalWithCod: total.add(settings.codFee),
     minOrderValue: settings.minOrderValue,
     meetsMinimum: subtotal.gte(settings.minOrderValue),
-    amountToFreeDelivery:
-      settings.freeDeliveryThreshold === null || freeDelivery
-        ? null
-        : settings.freeDeliveryThreshold.sub(subtotal),
+    amountToFreeShipping:
+      settings.freeShippingThreshold === null || shippingFee.eq(0) ? null : settings.freeShippingThreshold.sub(subtotal),
   };
 }
 
@@ -98,8 +144,10 @@ export async function reviewAccountUserId(db: Db) {
 
 async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: PlatformSettings) {
   return {
-    deliveryFee: settings.deliveryFee.toFixed(2),
-    freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
+    shippingFee: settings.shippingFee.toFixed(2),
+    freeShippingThreshold: settings.freeShippingThreshold?.toFixed(2) ?? null,
+    codFee: settings.codFee.toFixed(2),
+    weightSlabs: weightSlabs(settings),
     minOrderValue: settings.minOrderValue.toFixed(2),
     codMaxOrderValue: settings.codMaxOrderValue?.toFixed(2) ?? null,
     deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
@@ -108,7 +156,7 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     businessName: settings.businessName,
     businessAddress: settings.businessAddress,
     gstin: settings.gstin,
-    deliveryFeeGstRate: settings.deliveryFeeGstRate.toFixed(2),
+    shippingFeeGstRate: settings.shippingFeeGstRate.toFixed(2),
     websiteTagline: settings.websiteTagline,
     playStoreUrl: settings.playStoreUrl,
     appStoreUrl: settings.appStoreUrl,
@@ -145,8 +193,9 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
       currency: env.CURRENCY,
       timezone: env.TIMEZONE,
       pricing: {
-        deliveryFee: settings.deliveryFee.toFixed(2),
-        freeDeliveryThreshold: settings.freeDeliveryThreshold?.toFixed(2) ?? null,
+        shippingFee: settings.shippingFee.toFixed(2),
+        freeShippingThreshold: settings.freeShippingThreshold?.toFixed(2) ?? null,
+        codFee: settings.codFee.toFixed(2),
         minOrderValue: settings.minOrderValue.toFixed(2),
       },
       deliveryPromiseMinutes: settings.deliveryPromiseMinutes,
@@ -181,8 +230,13 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
         shippingProvider: input.shippingProvider,
       });
     }
-    // Manual is what no selection means.
-    const data = input.shippingProvider === MANUAL_CARRIER ? { ...input, shippingProvider: null } : input;
+    // Manual is what no selection means. A null weightSlabs clears the slabs (SQL NULL, not JSON null).
+    const { weightSlabs, ...inputData } = input;
+    const data = {
+      ...inputData,
+      ...(input.shippingProvider === MANUAL_CARRIER && { shippingProvider: null }),
+      ...(weightSlabs !== undefined && { weightSlabs: weightSlabs === null ? Prisma.DbNull : weightSlabs }),
+    };
 
     await getPlatformSettings(prisma);
     const updated = await prisma.platformSettings.update({

@@ -15,6 +15,7 @@ import { activePaymentProvider } from "../payments/gateway-registry.js";
 import { paymentDeadline, type PaymentsService } from "../payments/payments.service.js";
 import { calculateCharges, getPlatformSettings } from "../settings/settings.service.js";
 import { shipmentInclude, toTrackingView } from "../shipping/shipment-views.js";
+import { createServiceabilityService } from "../shipping/serviceability.service.js";
 import { customerVisibleVariant, imageOrder, imagesFor, maxOrderQuantity, variantLabel } from "../products/catalog.js";
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, deliveredAt, deliveredEntry, transitionOrder } from "./order-status.js";
@@ -137,14 +138,16 @@ export function toDetailView(order: OrderDetail) {
       taxAmount: item.taxAmount.toFixed(2),
     })),
     subtotal: order.subtotal.toFixed(2),
-    deliveryFee: order.deliveryFee.toFixed(2),
+    shippingFee: order.shippingFee.toFixed(2),
+    codFee: order.codFee.toFixed(2),
     discount: order.discount.toFixed(2),
     couponCode: order.couponCode,
     total: order.total.toFixed(2),
-    // GST included in the item prices and the delivery fee.
+    // GST included in the item prices and the shipping and COD fees.
     taxTotal: order.taxTotal.toFixed(2),
-    deliveryFeeGstRate: order.deliveryFeeGstRate?.toFixed(2) ?? null,
-    deliveryFeeTax: order.deliveryFeeTax.toFixed(2),
+    shippingFeeGstRate: order.shippingFeeGstRate?.toFixed(2) ?? null,
+    shippingFeeTax: order.shippingFeeTax.toFixed(2),
+    codFeeTax: order.codFeeTax.toFixed(2),
     invoiceNumber: order.invoiceNumber,
     shipment: order.shipment && toTrackingView(order.shipment),
     deliveryAddress: {
@@ -170,6 +173,34 @@ export function toDetailView(order: OrderDetail) {
 }
 
 export function createOrdersService(prisma: PrismaClient, payments: PaymentsService) {
+  const serviceability = createServiceabilityService(prisma);
+
+  /**
+   * Refuses a delivery pincode the active carrier does not serve, and cash on delivery where the
+   * carrier does not offer it. Runs before the order transaction, so a slow carrier response does
+   * not hold the database lock. If the carrier cannot be asked, the order is refused and the
+   * customer can retry.
+   */
+  async function assertDeliverable(address: { postalCode: string }, weightGrams: number, paymentMethod: PaymentMethod) {
+    let result: Awaited<ReturnType<typeof serviceability.check>>;
+    try {
+      result = await serviceability.check({ pincode: address.postalCode, weightGrams, cod: paymentMethod === PaymentMethod.COD });
+    } catch (error) {
+      if (error instanceof AppError && error.statusCode < 500) throw error;
+      throw new AppError(503, "SERVICEABILITY_UNAVAILABLE", "We couldn't check delivery to this PIN code. Please try again.");
+    }
+    if (!result.serviceable) {
+      throw new AppError(400, "PINCODE_NOT_SERVICEABLE", "We don't deliver to this PIN code. Try another address.", {
+        postalCode: address.postalCode,
+      });
+    }
+    if (paymentMethod === PaymentMethod.COD && !result.codAvailable) {
+      throw new AppError(400, "COD_NOT_SERVICEABLE", "Cash on delivery isn't available at this PIN code. Please pay online.", {
+        postalCode: address.postalCode,
+      });
+    }
+  }
+
   async function getOrder(userId: string, orderId: string) {
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId },
@@ -237,6 +268,18 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
       throw new AppError(409, "CART_EMPTY", "Your cart is empty");
     }
 
+    const addressCheck = await prisma.address.findFirst({ where: { id: addressId, userId } });
+    if (!addressCheck) {
+      throw new AppError(404, "ADDRESS_NOT_FOUND", "Address not found");
+    }
+
+    const cartItemsCheck = await prisma.cartItem.findMany({
+      where: { cartId: cartRef.id },
+      select: { quantity: true, variant: { select: { weightGrams: true } } },
+    });
+    const weightGrams = cartItemsCheck.reduce((sum, row) => sum + row.quantity * (row.variant.weightGrams ?? 0), 0);
+    await assertDeliverable(addressCheck, weightGrams, paymentMethod);
+
     const orderId = await prisma.$transaction(
       async (tx) => {
         await lockCart(tx, cartRef.id);
@@ -253,6 +296,7 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
                     name: true,
                     unit: true,
                     quantity: true,
+                    weightGrams: true,
                     maxOrderQuantity: true,
                     product: {
                       select: {
@@ -330,7 +374,8 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
         const subtotal = priced.reduce((sum, line) => sum.add(line.totalPrice), new Prisma.Decimal(0));
         const coupon = cart.couponCode ? await checkCoupon(tx, { code: cart.couponCode, userId, subtotal, lock: true }) : null;
         const settings = await getPlatformSettings(tx);
-        const charges = calculateCharges(subtotal, settings, coupon?.discount);
+        const weightGramsTx = cart.items.reduce((sum, item) => sum + item.quantity * (item.variant.weightGrams ?? 0), 0);
+        const charges = calculateCharges(subtotal, settings, { discount: coupon?.discount, weightGrams: weightGramsTx });
 
         const shares = discountShares(
           priced.map((line) => line.totalPrice),
@@ -341,8 +386,10 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           discount: shares[index]!,
           taxAmount: includedTax(line.totalPrice.minus(shares[index]!), line.gstRate),
         }));
-        const deliveryFeeTax = includedTax(charges.deliveryFee, settings.deliveryFeeGstRate);
-        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), deliveryFeeTax);
+        const shippingFeeTax = includedTax(charges.shippingFee, settings.shippingFeeGstRate);
+        const codFee = paymentMethod === PaymentMethod.COD ? charges.codFee : new Prisma.Decimal(0);
+        const codFeeTax = includedTax(codFee, settings.shippingFeeGstRate);
+        const taxTotal = lines.reduce((sum, line) => sum.add(line.taxAmount), shippingFeeTax.add(codFeeTax));
 
         if (!charges.meetsMinimum) {
           throw new AppError(400, "MIN_ORDER_NOT_MET", `Minimum order value is ${charges.minOrderValue.toFixed(2)}`, {
@@ -351,10 +398,11 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
           });
         }
         if (paymentMethod === PaymentMethod.COD) {
-          assertCodAllowed(settings, charges.total, block);
+          assertCodAllowed(settings, charges.totalWithCod, block);
         }
 
-        const { deliveryFee, discount, total } = charges;
+        const { shippingFee, discount, total: prepaidTotal } = charges;
+        const total = paymentMethod === PaymentMethod.COD ? charges.totalWithCod : prepaidTotal;
 
         try {
           await reserveStock(tx, lines);
@@ -387,12 +435,14 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
             addressId: address.id,
             status,
             subtotal,
-            deliveryFee,
+            shippingFee,
+            codFee,
             discount,
             total,
             taxTotal,
-            deliveryFeeGstRate: settings.deliveryFeeGstRate,
-            deliveryFeeTax,
+            shippingFeeGstRate: settings.shippingFeeGstRate,
+            shippingFeeTax,
+            codFeeTax,
             ...(coupon && { couponId: coupon.coupon.id, couponCode: coupon.coupon.code }),
             paymentMethod,
             customerName: address.name,

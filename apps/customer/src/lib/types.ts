@@ -18,7 +18,7 @@ export type PublicSettings = {
   announcement: Announcement;
   currency: string;
   timezone: string;
-  pricing: { deliveryFee: string; freeDeliveryThreshold: string | null; minOrderValue: string };
+  pricing: { shippingFee: string; freeShippingThreshold: string | null; codFee: string; minOrderValue: string };
   /** "Delivery in about N minutes"; null when the admin hasn't set it, missing from older servers. */
   deliveryPromiseMinutes?: number | null;
   payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
@@ -149,12 +149,16 @@ export type CartItem = {
 /** Preview of the checkout bill for the orderable items; checkout recalculates it. */
 export type CartBill = {
   subtotal: string;
-  deliveryFee: string;
+  shippingFee: string;
+  codFee: string;
   discount: string;
+  /** What a prepaid order pays. */
   total: string;
+  /** `total` plus the cash-on-delivery charge. */
+  totalWithCod: string;
   minOrderValue: string;
   meetsMinimum: boolean;
-  amountToFreeDelivery: string | null;
+  amountToFreeShipping: string | null;
 };
 
 /** `GET /cart`. `bill` is null while the cart is empty. */
@@ -276,7 +280,8 @@ export type OrderDetail = {
     chargedTotal: string;
   }[];
   subtotal: string;
-  deliveryFee: string;
+  shippingFee: string;
+  codFee: string;
   discount: string;
   /** The coupon that gave the discount. */
   couponCode: string | null;

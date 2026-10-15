@@ -3386,12 +3386,14 @@ export const OrderScalarFieldEnum = {
   addressId: 'addressId',
   status: 'status',
   subtotal: 'subtotal',
-  deliveryFee: 'deliveryFee',
+  shippingFee: 'shippingFee',
+  codFee: 'codFee',
   discount: 'discount',
   total: 'total',
   taxTotal: 'taxTotal',
-  deliveryFeeGstRate: 'deliveryFeeGstRate',
-  deliveryFeeTax: 'deliveryFeeTax',
+  shippingFeeGstRate: 'shippingFeeGstRate',
+  shippingFeeTax: 'shippingFeeTax',
+  codFeeTax: 'codFeeTax',
   invoiceNumber: 'invoiceNumber',
   invoicedAt: 'invoicedAt',
   sellerName: 'sellerName',
@@ -3630,9 +3632,11 @@ export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[k
 
 export const PlatformSettingsScalarFieldEnum = {
   id: 'id',
-  deliveryFee: 'deliveryFee',
-  freeDeliveryThreshold: 'freeDeliveryThreshold',
+  shippingFee: 'shippingFee',
+  freeShippingThreshold: 'freeShippingThreshold',
   minOrderValue: 'minOrderValue',
+  codFee: 'codFee',
+  weightSlabs: 'weightSlabs',
   codMaxOrderValue: 'codMaxOrderValue',
   deliveryPromiseMinutes: 'deliveryPromiseMinutes',
   supportPhone: 'supportPhone',
@@ -3640,7 +3644,7 @@ export const PlatformSettingsScalarFieldEnum = {
   businessName: 'businessName',
   businessAddress: 'businessAddress',
   gstin: 'gstin',
-  deliveryFeeGstRate: 'deliveryFeeGstRate',
+  shippingFeeGstRate: 'shippingFeeGstRate',
   websiteTagline: 'websiteTagline',
   playStoreUrl: 'playStoreUrl',
   appStoreUrl: 'appStoreUrl',
@@ -3739,6 +3743,14 @@ export const JsonNullValueInput = {
 } as const
 
 export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {

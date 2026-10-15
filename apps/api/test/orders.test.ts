@@ -95,8 +95,8 @@ describe("checkout", () => {
     expect(line).toMatchObject({ sku: item.sku, productName: item.product.name, quantity: 2 });
     expect(line!.unitPrice.toFixed(2)).toBe(item.price.toFixed(2));
     expect(line!.compareAtPrice?.toFixed(2) ?? null).toBe(item.compareAtPrice?.toFixed(2) ?? null);
-    expect(order.taxTotal.minus(order.deliveryFeeTax).toFixed(2)).toBe(includedTax(amount, item.product.gstRate).toFixed(2));
-    expect(order.total.toFixed(2)).toBe(amount.plus(order.deliveryFee).toFixed(2));
+    expect(order.taxTotal.minus(order.shippingFeeTax).minus(order.codFeeTax).toFixed(2)).toBe(includedTax(amount, item.product.gstRate).toFixed(2));
+    expect(order.total.toFixed(2)).toBe(amount.plus(order.shippingFee).plus(order.codFee).toFixed(2));
     expect(order.state).toBe("Karnataka");
   });
 
