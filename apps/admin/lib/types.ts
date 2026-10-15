@@ -812,6 +812,7 @@ export type DashboardStats = {
   activeOrders: number;
   /** Packed, not picked up by the courier yet. */
   awaitingDispatch: number;
+  shipments: { awaitingPickup: number; ndr: number; rto: number };
   lowStock: { count: number; threshold: number };
   customers: number | null;
   recentOrders: Array<{

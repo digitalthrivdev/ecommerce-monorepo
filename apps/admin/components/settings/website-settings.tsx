@@ -40,7 +40,7 @@ export function WebsiteDetailsForm({ settings }: { settings: PlatformSettings })
             name="websiteTagline"
             defaultValue={settings.websiteTagline ?? ""}
             maxLength={160}
-            placeholder="Groceries and daily essentials, delivered to your door in minutes."
+            placeholder="Quality products, delivered to your door."
             aria-invalid={Boolean(fieldErrors.websiteTagline)}
           />
           <FieldDescription>Leave empty to use the line shown above.</FieldDescription>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Boxes, IndianRupee, PackageCheck, ShoppingBag, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Boxes, IndianRupee, PackageCheck, ShoppingBag, Truck, type LucideIcon } from "lucide-react";
 
 import { OrderStatusPill } from "@/components/status-pill";
 import { PageHeader } from "@/components/page-header";
@@ -67,9 +67,33 @@ export default async function DashboardPage() {
           <StatCard
             title="Low stock"
             value={formatNumber(stats.lowStock.count)}
-            hint={`Sizes on sale with ${stats.lowStock.threshold} or fewer in stock`}
+            hint={`Active variants with ${stats.lowStock.threshold} or fewer in stock`}
             icon={Boxes}
             href="/inventory?tab=low"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard
+            title="Shipments awaiting pickup"
+            value={formatNumber(stats.shipments.awaitingPickup)}
+            hint="Booked or scheduled with the carrier"
+            icon={Truck}
+            href="/orders?tab=active"
+          />
+          <StatCard
+            title="Delivery exceptions (NDR)"
+            value={formatNumber(stats.shipments.ndr)}
+            hint="Carrier reported a failed delivery attempt"
+            icon={AlertTriangle}
+            href="/orders"
+          />
+          <StatCard
+            title="Returning to origin (RTO)"
+            value={formatNumber(stats.shipments.rto)}
+            hint="Orders currently returning to the shop"
+            icon={PackageCheck}
+            href="/orders?tab=rto"
           />
         </div>
 

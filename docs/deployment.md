@@ -33,9 +33,9 @@ Add a row for every new client.
 
 Needs a VPS with Docker Engine and Docker Compose, at least 2 GB RAM plus 2 GB swap: the dashboard and website images each need about 1.5 GB while building, and Compose builds them together. Run one client per VPS: every stack's Nginx binds ports 80 and 443, so two stacks on one server need a proxy in front (see "Servers running Coolify").
 
-1. **DNS:** point the API and dashboard domains, the client's main domain (`SITE_DOMAIN`, the storefront) and its `www` (A records) at the server. Open ports 80 and 443.
+1. **DNS:** point the API domain (`API_DOMAIN`), dashboard domain (`ADMIN_DOMAIN`), storefront domain (`SITE_DOMAIN`) and `www.SITE_DOMAIN` (A records) at the server. Open ports 80 and 443. Nginx routes the API and dashboard domains to their apps, serves `apps/web` on `SITE_DOMAIN`, and redirects `www` to the storefront's canonical domain.
 2. **Code:** `git clone <repository URL> <client>` then `cd <client>/deploy && cp .env.example .env && cp api.env.example api.env`.
-3. **Settings:** fill in both files. Generate every secret on the server, new for this client:
+3. **Settings:** fill in both files. The committed examples list the supported Shiprocket and Fship environment key names; leave each carrier group commented out when its credentials are stored in the dashboard. Generate every secret on the server, new for this client:
    - `POSTGRES_PASSWORD`: `openssl rand -hex 24` (letters and digits only).
    - `JWT_SECRET`: `openssl rand -base64 48`.
    - `SECRETS_ENCRYPTION_KEY`: `openssl rand -base64 32`. Changing it later means re-entering the payment, SMS and carrier keys.

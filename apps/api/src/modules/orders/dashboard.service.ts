@@ -38,7 +38,7 @@ export function createDashboardService(prisma: PrismaClient) {
       WHERE "createdAt" >= ${startOfTodaySql()}
     `;
 
-    const [[today], pipeline, lowStock, recent, customers] = await Promise.all([
+    const [[today], pipeline, lowStock, recent, customers, shipmentStatuses, rtoOrders] = await Promise.all([
       todayQuery,
       prisma.order.groupBy({
         by: ["status"],
@@ -67,6 +67,8 @@ export function createDashboardService(prisma: PrismaClient) {
         },
       }),
       isAdmin ? prisma.user.count({ where: { role: UserRole.CUSTOMER } }) : Promise.resolve(null),
+      prisma.shipment.groupBy({ by: ["status"], _count: { _all: true } }),
+      prisma.order.count({ where: { status: OrderStatus.RTO } }),
     ]);
 
     const pipelineCounts = Object.fromEntries(ACTIVE_STATUSES.map((status) => [status, 0])) as Record<OrderStatus, number>;
@@ -86,6 +88,13 @@ export function createDashboardService(prisma: PrismaClient) {
       pipeline: pipelineCounts,
       activeOrders: Object.values(pipelineCounts).reduce((sum, count) => sum + count, 0),
       awaitingDispatch: pipelineCounts.PACKED,
+      shipments: {
+        awaitingPickup: shipmentStatuses
+          .filter(({ status }) => ["PENDING", "AWB_ASSIGNED", "PICKUP_SCHEDULED"].includes(status))
+          .reduce((sum, row) => sum + row._count._all, 0),
+        ndr: shipmentStatuses.find(({ status }) => status === "NDR")?._count._all ?? 0,
+        rto: rtoOrders,
+      },
       lowStock: { count: lowStock, threshold: LOW_STOCK_THRESHOLD },
       customers,
       recentOrders: recent.map(({ total, ...order }) => ({ ...order, total: total.toFixed(2) })),

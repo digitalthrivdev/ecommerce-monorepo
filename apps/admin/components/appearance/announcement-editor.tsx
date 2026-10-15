@@ -74,7 +74,7 @@ export function AnnouncementEditor({ value, onChange, errors, expanded, onExpand
                 id="announcement-text"
                 value={announcement.text}
                 maxLength={80}
-                placeholder="Groceries delivered in minutes"
+            placeholder="A message for your customers"
                 onChange={(event) => setAnnouncement({ text: event.target.value })}
                 aria-invalid={Boolean(errors["announcement.text"])}
               />
