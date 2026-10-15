@@ -64,7 +64,8 @@
       optional weight slabs, calculated with Decimal and snapshotted on the
       order with their GST. Pincode check at GET /serviceability, enforced
       when the order is created. Addresses take a 6-digit PIN code.
-  [ ] Phase 7 – Website storefront
+  [x] Phase 7 – Website storefront. Customer website, storefront SEO, hosted
+      checkout return, and mock payment/carrier purchase verified.
   [ ] Phase 8 – Customer app
   [ ] Phase 9 – Returns and RTO
   [ ] Phase 10 – Admin cleanup and deploy
@@ -171,7 +172,7 @@
   limits stay. Address: 6-digit pincode validation, lat/lng optional.
   Verify the money paths fully.
 
-  Phase 7: Website storefront
+  Phase 7: Website storefront [DONE]
 
   Phase 7 – turn apps/web into a full storefront on the client's domain.
   Pages: home (existing Appearance sections), category and search listing

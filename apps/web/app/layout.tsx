@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
 import { BrandStyle } from "@/components/brand-style";
@@ -8,9 +9,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getHomeFeed, getSiteUrl, getWebsite } from "@/lib/website";
 import "./globals.css";
 
-// Every page shows live content from the API, which isn't reachable while the image builds.
-export const dynamic = "force-dynamic";
-
 const sans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
@@ -18,7 +16,7 @@ const sans = Plus_Jakarta_Sans({
 
 export async function generateMetadata(): Promise<Metadata> {
   const [{ business, tagline }, siteUrl] = await Promise.all([getWebsite(), getSiteUrl()]);
-  const description = tagline ?? `${business.appName}: groceries and daily essentials delivered to your door.`;
+  const description = tagline ?? `Shop ${business.appName} online. Browse the collection and order for delivery.`;
   return {
     metadataBase: new URL(siteUrl),
     title: { template: `%s · ${business.appName}`, default: business.appName },
@@ -31,6 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Render against the live deployment at request time; production images build without API access.
+  await headers();
   const [website, feed] = await Promise.all([getWebsite(), getHomeFeed().catch(() => null)]);
 
   return (

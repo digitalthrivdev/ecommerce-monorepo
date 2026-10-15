@@ -1,79 +1,51 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ShoppingBasket } from "lucide-react";
+import Link from "next/link";
 
-import { AppBadges } from "@/components/app-badges";
-import type { ProductPreview } from "@/lib/types";
-import { formatMoney } from "@/lib/utils";
-import { getProductPreview, getSettings, getWebsite } from "@/lib/website";
+import { ActionForm, SubmitButton } from "@/components/shop/action-form";
+import { PincodeCheck } from "@/components/shop/pincode-check";
+import { VariantPurchase } from "@/components/shop/variant-purchase";
+import { reviewProduct, saveWishlist } from "@/lib/actions";
+import { getCatalogProduct, productReviews } from "@/lib/catalog";
+import { productPath } from "@/lib/paths";
+import { specificationsOf, formatDate, formatMoney, cardOffer } from "@/lib/utils";
+import { getSettings, getSiteUrl } from "@/lib/website";
+import { getCustomer } from "@/lib/session";
 
-function priceText(price: NonNullable<ProductPreview["price"]>, currency: string) {
-  const amount = formatMoney(price.price, currency);
-  return price.varies ? `From ${amount}` : amount;
-}
-
-export async function generateMetadata({ params }: PageProps<"/p/[id]">): Promise<Metadata> {
-  const [product, { business }, settings] = await Promise.all([getProductPreview((await params).id), getWebsite(), getSettings()]);
+type Props = PageProps<"/p/[id]">;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const [product, settings] = await Promise.all([getCatalogProduct((await params).id), getSettings()]);
   if (!product) return { title: "Product not found" };
-
-  const offer = product.price ? `${priceText(product.price, settings.currency)} on ${business.appName}` : `On ${business.appName}`;
-  const description = product.description ? `${offer}. ${product.description}`.slice(0, 200) : `${offer}, delivered to your door.`;
-  const images = product.imageUrl ? [product.imageUrl] : business.logoUrl ? [business.logoUrl] : undefined;
-  return {
-    title: product.name,
-    description,
-    alternates: { canonical: `/p/${product.id}` },
-    openGraph: { type: "website", siteName: business.appName, title: product.name, description, url: `/p/${product.id}`, images },
-    twitter: { card: product.imageUrl ? "summary_large_image" : "summary", title: product.name, description, images },
-  };
+  const offer = product.variants.length ? `From ${formatMoney(cardOffer(product.variants).price, settings.currency)}` : "";
+  const description = (product.description || `${product.name} ${offer}`).slice(0, 200);
+  return { title: product.name, description, alternates: { canonical: productPath(product.productId) }, openGraph: { type: "website", title: product.name, description, images: product.imageUrl ? [product.imageUrl] : undefined } };
 }
 
-export default async function ProductPage({ params }: PageProps<"/p/[id]">) {
-  const [product, { business, apps }, settings] = await Promise.all([getProductPreview((await params).id), getWebsite(), getSettings()]);
+export default async function ProductPage({ params }: Props) {
+  const id = (await params).id;
+  const [product, settings, reviews, siteUrl, customer] = await Promise.all([getCatalogProduct(id), getSettings(), productReviews(id).catch(() => null), getSiteUrl(), getCustomer()]);
   if (!product) notFound();
-
-  const { price } = product;
-  const compareAtPrice = price?.compareAtPrice && Number(price.compareAtPrice) > Number(price.price) ? price.compareAtPrice : null;
-
-  return (
-    <div className="mx-auto grid w-full max-w-5xl gap-8 px-5 py-10 sm:py-14 md:grid-cols-2 md:gap-12">
-      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl border bg-white shadow-sm">
-        {product.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- product images can be on any host
-          <img src={product.imageUrl} alt={product.name} className="size-full object-contain p-6" />
-        ) : (
-          <ShoppingBasket className="size-24 text-muted-foreground/40" aria-hidden />
-        )}
-      </div>
-
-      <div className="flex flex-col gap-5">
-        <div>
-          {product.brand && <p className="text-sm font-semibold tracking-wider text-primary-ink uppercase">{product.brand}</p>}
-          <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">{product.name}</h1>
-        </div>
-
-        {price ? (
-          <div className="flex flex-col gap-1">
-            <p className="flex flex-wrap items-baseline gap-x-3">
-              <span className="text-3xl font-bold">{priceText(price, settings.currency)}</span>
-              {compareAtPrice && <span className="text-lg text-muted-foreground line-through">{formatMoney(compareAtPrice, settings.currency)}</span>}
-            </p>
-            {price.label && <p className="text-sm text-muted-foreground">{price.label}</p>}
-            {price.varies && <p className="text-sm text-muted-foreground">Prices depend on the option you choose.</p>}
-          </div>
-        ) : (
-          <p className="text-lg font-semibold text-muted-foreground">Currently unavailable</p>
-        )}
-
-        {apps.customer && (
-          <div className="flex flex-col gap-3 rounded-2xl border bg-primary-soft p-5">
-            <p className="font-semibold">Order it on the {business.appName} app</p>
-            <AppBadges links={apps.customer} appName={business.appName} />
-          </div>
-        )}
-
-        {product.description && <p className="leading-relaxed whitespace-pre-line text-muted-foreground">{product.description}</p>}
+  const images = product.images.length ? product.images : product.imageUrl ? [{ id: "primary", url: product.imageUrl, altText: product.name, variantId: null }] : [];
+  const specs = specificationsOf(product.specifications);
+  const offer = product.variants.length ? cardOffer(product.variants) : null;
+  const jsonLd = { "@context": "https://schema.org", "@type": "Product", name: product.name, image: images.map((image) => image.url), description: product.description ?? undefined, brand: product.brand ? { "@type": "Brand", name: product.brand.name } : undefined, offers: offer === null ? undefined : { "@type": "AggregateOffer", priceCurrency: settings.currency, lowPrice: offer.price, offerCount: product.variants.length, availability: offer.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", url: `${siteUrl}${productPath(product.productId)}` } };
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}/>
+    <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-10 sm:py-14 md:grid-cols-2 md:gap-12">
+      <div className="flex flex-col gap-3">{images.length ? images.map((image) => <div key={image.id} className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl border bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element -- uploaded product URLs are client-specific */}
+        <img src={image.url} alt={image.altText ?? product.name} className="size-full object-contain p-5"/>
+      </div>) : <div className="aspect-square rounded-3xl bg-muted"/>}</div>
+      <div className="flex flex-col gap-5"><div><Link className="text-sm text-primary-ink hover:underline" href={`/c/${encodeURIComponent(product.category.slug)}`}>{product.category.name}</Link>{product.brand && <p className="mt-2 text-sm font-semibold uppercase text-muted-foreground">{product.brand.name}</p>}<h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{product.name}</h1></div>
+        {product.variants.length ? customer ? <VariantPurchase variants={product.variants} currency={settings.currency}/> : <Link className="self-start rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground" href={`/signin?next=${encodeURIComponent(productPath(product.productId))}`}>Sign in to add to cart</Link> : <p className="font-semibold text-muted-foreground">Currently unavailable</p>}
+        {customer ? <form action={saveWishlist}><input type="hidden" name="productId" value={product.productId}/><input type="hidden" name="saved" value="false"/><button className="self-start rounded-full border px-4 py-2 text-sm font-semibold hover:border-primary">Save to wishlist</button></form> : <Link className="self-start text-sm underline" href={`/signin?next=${encodeURIComponent(productPath(product.productId))}`}>Sign in to save to wishlist</Link>}
+        <PincodeCheck/>
+        {product.description && <div className="leading-relaxed whitespace-pre-line">{product.description}</div>}
+        {product.manufacturerName && <p className="text-sm text-muted-foreground">Manufacturer: {product.manufacturerName}{product.manufacturerAddress ? ` · ${product.manufacturerAddress}` : ""}</p>}
+        {product.countryOfOrigin && <p className="text-sm text-muted-foreground">Country of origin: {product.countryOfOrigin}</p>}
+        {specs.length > 0 && <section><h2 className="mb-2 text-xl font-bold">Specifications</h2><dl className="divide-y rounded-2xl border px-4">{specs.map((item, index) => <div key={`${item.name}-${index}`} className="grid grid-cols-2 gap-3 py-3 text-sm"><dt className="text-muted-foreground">{item.name}</dt><dd className="font-medium">{item.value}</dd></div>)}</dl></section>}
+        <section className="border-t pt-5"><h2 className="text-xl font-bold">Customer reviews {reviews ? `(${reviews.count})` : ""}</h2>{reviews?.items.map((item) => <article key={item.id} className="border-b py-4"><p className="font-semibold">{item.name} · {"★".repeat(item.rating)}{"☆".repeat(5-item.rating)}</p><p className="mt-1 text-xs text-muted-foreground">{formatDate(item.updatedAt, settings.timezone)}{item.verified ? " · Verified purchase" : ""}</p>{item.comment && <p className="mt-2 whitespace-pre-line">{item.comment}</p>}</article>)}{customer ? <div className="mt-5"><h3 className="mb-2 font-semibold">Write a review</h3><ActionForm action={reviewProduct} className="grid gap-3"><input type="hidden" name="productId" value={product.productId}/><label className="grid gap-1 text-sm">Rating<select name="rating" required className="h-11 rounded-xl border bg-white px-3">{[5,4,3,2,1].map((n)=><option key={n} value={n}>{n} stars</option>)}</select></label><label className="grid gap-1 text-sm">Comment<textarea name="comment" maxLength={2000} rows={3} className="rounded-xl border p-3"/></label><SubmitButton>Submit review</SubmitButton></ActionForm></div> : <p className="mt-4 text-sm"><Link className="underline" href={`/signin?next=${encodeURIComponent(productPath(product.productId))}`}>Sign in</Link> to write a review.</p>}</section>
       </div>
     </div>
-  );
+  </>;
 }

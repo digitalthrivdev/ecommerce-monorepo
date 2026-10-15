@@ -15,8 +15,7 @@ export default async function ContactPage() {
   return (
     <>
       <PageTitle eyebrow="We're here to help" title="Contact Us">
-        Questions about an order, a refund or your account? Reach {business.name} here. You can also find your orders and their status in the{" "}
-        {business.appName} app.
+        Questions about an order, a refund or your account? Reach {business.name} here. You can also find your order status in your {business.appName} account.
       </PageTitle>
       <div className="mx-auto w-full max-w-3xl px-5 py-12">
         <ContactList business={business} />

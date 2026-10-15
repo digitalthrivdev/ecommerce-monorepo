@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-/** The website only serves pages for now: refuse anything but GET and HEAD. */
+/** Pages and server actions. Other methods have no route on the website. */
 export function proxy(request: NextRequest) {
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return new NextResponse(null, { status: 405, headers: { allow: "GET, HEAD" } });
+  if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
+    return new NextResponse(null, { status: 405, headers: { allow: "GET, HEAD, POST" } });
   }
   return NextResponse.next();
 }

@@ -60,7 +60,7 @@ export function PhonePreview({ appName, logoUrl, sections }: { appName: string; 
               <img src={banner.imageUrl} alt="" className="aspect-[2/1] w-full rounded-xl object-cover" />
             ) : (
               <div className="flex aspect-[2/1] w-full flex-col justify-center rounded-xl bg-accent px-4 text-accent-foreground">
-                <p className="text-sm font-extrabold">Fresh groceries</p>
+                <p className="text-sm font-extrabold">Shop the collection</p>
                 <p className="text-[11px] opacity-80">Delivered to your door</p>
               </div>
             )}

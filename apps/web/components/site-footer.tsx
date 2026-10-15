@@ -17,7 +17,7 @@ export function SiteFooter({ website }: { website: Website }) {
             <BrandMark appName={business.appName} logoUrl={business.logoUrl} />
             <span className="text-lg tracking-tight">{business.appName}</span>
           </Link>
-          <p className="max-w-sm text-sm leading-6">Groceries and daily essentials from {business.appName}, delivered to your door.</p>
+          <p className="max-w-sm text-sm leading-6">Shop the {business.appName} collection online and get your order delivered.</p>
           {apps.customer && <AppBadges links={apps.customer} appName={business.appName} className="mt-2 [&_a]:h-12 [&_a]:min-w-40" />}
         </div>
 

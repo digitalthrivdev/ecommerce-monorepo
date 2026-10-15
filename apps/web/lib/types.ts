@@ -79,5 +79,226 @@ export type HomeSection = SectionBase &
     | { type: "offer_strip"; title: string; subtitle: string | null; imageUrl: string | null; backgroundColor: string; textColor: string; link: HomeLink }
   );
 
-/** GET /home. Other section types may appear and are skipped. */
-export type HomeFeed = { sections: (HomeSection | (SectionBase & { type: string }))[] };
+/** GET /home includes the enabled Appearance sections and their catalog data. */
+export type HomeFeed = { sections: (HomeSection | ShopHomeSection)[] };
+
+export type Page<T> = { items: T[]; total: number; limit: number; offset: number };
+
+export type CategorySummary = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  parentId: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  childCount: number;
+};
+
+export type CategoryDetail = CategorySummary & {
+  parent: { id: string; name: string; slug: string } | null;
+  children: { id: string; name: string; slug: string; imageUrl: string | null; isActive: boolean; sortOrder: number }[];
+};
+
+export type CatalogVariant = {
+  variantId: string;
+  label: string;
+  name: string;
+  unit: string | null;
+  quantity: string | null;
+  imageUrl: string | null;
+  price: string;
+  compareAtPrice: string | null;
+  inStock: boolean;
+  maxOrderQuantity: number;
+  optionValueIds?: string[];
+};
+
+export type CatalogProduct = {
+  productId: string;
+  name: string;
+  slug: string;
+  category: { id: string; name: string; slug: string; parentId: string | null };
+  brand: { id: string; name: string; slug: string; logoUrl: string | null } | null;
+  imageUrl: string | null;
+  variants: CatalogVariant[];
+  rating: { average: string; count: number } | null;
+};
+
+export type CatalogImage = { id: string; url: string; altText: string | null; variantId: string | null };
+
+export type CatalogProductDetail = Omit<CatalogProduct, "rating"> & {
+  description: string | null;
+  manufacturerName: string | null;
+  manufacturerAddress: string | null;
+  countryOfOrigin: string | null;
+  specifications: unknown;
+  images: CatalogImage[];
+  options: { id: string; name: string; values: { id: string; value: string }[] }[];
+};
+
+export type ProductReviews = {
+  average: string | null;
+  count: number;
+  distribution: number[];
+  items: { id: string; rating: number; comment: string | null; updatedAt: string; name: string; verified: boolean }[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type Serviceability = { pincode: string; serviceable: boolean; codAvailable: boolean; etaDays: number | null };
+
+export type CartItemIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK" | "QUANTITY_LIMIT";
+
+export type Cart = {
+  id: string | null;
+  items: {
+    id: string;
+    productId: string;
+    variantId: string;
+    name: string;
+    variantLabel: string;
+    slug: string;
+    imageUrl: string | null;
+    unit: string | null;
+    packQuantity: string | null;
+    quantity: number;
+    maxQuantity: number;
+    unitPrice: string | null;
+    compareAtPrice: string | null;
+    lineTotal: string | null;
+    issue: CartItemIssue | null;
+    availableQuantity?: number;
+  }[];
+  itemCount: number;
+  subtotal: string;
+  coupon: { code: string; description: string | null; applied: boolean; message: string | null } | null;
+  bill: {
+    subtotal: string;
+    shippingFee: string;
+    codFee: string;
+    discount: string;
+    total: string;
+    totalWithCod: string;
+    minOrderValue: string;
+    meetsMinimum: boolean;
+    amountToFreeShipping: string | null;
+  } | null;
+  checkout: {
+    blocked: boolean;
+    paymentMethods: ("COD" | "ONLINE")[];
+    codUnavailable: "BLOCKED" | "LIMIT" | null;
+    codMaxOrderValue: string | null;
+  } | null;
+  isValid: boolean;
+};
+
+export type Address = {
+  id: string;
+  label: string | null;
+  name: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  landmark: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  isDefault: boolean;
+};
+
+export type OrderSummary = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  paymentMethod: "COD" | "ONLINE";
+  total: string;
+  createdAt: string;
+  itemCount: number;
+  canCancel: boolean;
+  canRate: boolean;
+};
+
+export type ShipmentTracking = {
+  status: string;
+  courierName: string | null;
+  awb: string | null;
+  trackingUrl: string | null;
+  events: { status: string; occurredAt: string; location: string | null; description: string | null }[];
+};
+
+export type OrderDetail = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  canCancel: boolean;
+  paymentMethod: "COD" | "ONLINE";
+  payment: { status: string; amount: string; refundedAmount: string; paidAt: string | null; refundedAt: string | null } | null;
+  paymentExpiresAt: string | null;
+  items: {
+    id: string;
+    productId: string;
+    variantId: string | null;
+    productName: string;
+    variantName: string;
+    imageUrl: string | null;
+    quantity: number;
+    unavailableQuantity: number;
+    unitPrice: string;
+    totalPrice: string;
+    chargedTotal: string;
+  }[];
+  subtotal: string;
+  shippingFee: string;
+  codFee: string;
+  discount: string;
+  couponCode: string | null;
+  total: string;
+  taxTotal: string;
+  invoiceNumber: string | null;
+  shipment: ShipmentTracking | null;
+  deliveryAddress: {
+    name: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2: string | null;
+    landmark: string | null;
+    city: string;
+    state: string;
+    postalCode: string;
+  };
+  statusHistory: { toStatus: string; createdAt: string; note: string | null }[];
+  createdAt: string;
+};
+
+export type WishlistItem = {
+  productId: string;
+  name: string;
+  imageUrl: string | null;
+  addedAt: string;
+  product: CatalogProduct | null;
+};
+
+export type BrandSummary = { id: string; name: string; slug: string; logoUrl: string | null; productCount: number };
+
+/** Home sections that list products or brands. The website links them into the shop. */
+export type ShopHomeSection = SectionBase &
+  (
+    | ({ type: "product_rail"; category: HomeCategory; products: CatalogProduct[] } & Titled)
+    | ({ type: "deals_rail"; category: HomeCategory | null; products: CatalogProduct[] } & Titled)
+    | ({ type: "brand_rail"; brands: BrandSummary[] } & Titled)
+    | ({
+        type: "category_deals";
+        categories: (HomeCategory & { maxDiscountPercent: number })[];
+      } & Titled)
+    | {
+        type: "sale_hero";
+        title: string;
+        subtitle: string | null;
+        tagline: string | null;
+        deals: { label: string; category: HomeCategory | null; products: CatalogProduct[] } | null;
+        categories: (HomeCategory & { maxDiscountPercent: number; imageUrls: string[] })[];
+      }
+    | ({ type: "buy_again" } & Titled)
+  );
