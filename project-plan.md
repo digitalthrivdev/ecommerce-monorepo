@@ -70,7 +70,9 @@
   [DONE] Phase 9 – Returns and RTO. Return requests, admin decisions,
       Shiprocket/manual reverse pickup, receipt restocking/refunds, and
       one-time RTO receipt restocking/online refunds implemented and verified.
-  [ ] Phase 10 – Admin cleanup and deploy
+  [DONE] Phase 10 – Admin cleanup and deploy. Dashboard shipment attention
+      metrics, grocery wording cleanup, deployment documentation, and local
+      Docker builds verified across API, admin, storefront, and migrate.
 
   Phase 0: Detach from the grocery project and rewrite the docs [DONE]
 
@@ -207,7 +209,7 @@
   through the existing Refund flow. RTO shipments: admin confirms receipt,
   restock, refund online payments. Verify fully (money and stock).
 
-  Phase 10: Admin cleanup and deploy
+  Phase 10: Admin cleanup and deploy [DONE]
 
   Phase 10 – admin polish and deployment. Dashboard and reports for a shop
   (sales, orders by status, shipments awaiting pickup, NDR/RTO, low stock).

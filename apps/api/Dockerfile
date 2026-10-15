@@ -11,7 +11,10 @@ COPY apps/api/package.json apps/api/
 COPY packages/validation packages/validation
 
 FROM base AS build
-RUN pnpm install --frozen-lockfile --filter @shop/api --config.node-linker=isolated
+RUN --mount=type=secret,id=pnpm-verified-cache,target=/tmp/pnpm-lockfile-verified.jsonl,required=false \
+  mkdir -p /root/.cache/pnpm \
+  && if [ -f /tmp/pnpm-lockfile-verified.jsonl ]; then cp /tmp/pnpm-lockfile-verified.jsonl /root/.cache/pnpm/lockfile-verified.jsonl; fi \
+  && pnpm install --frozen-lockfile --filter @shop/api --config.node-linker=isolated
 COPY apps/api apps/api
 RUN cd apps/api && node_modules/.bin/tsc -p tsconfig.build.json
 
@@ -24,7 +27,10 @@ FROM base AS runtime
 ENV NODE_ENV=production
 COPY apps/api/scripts/prune-runtime-deps.mjs /tmp/
 # The pnpm store is hard-linked into node_modules, so it goes too, in the same layer.
-RUN pnpm install --frozen-lockfile --prod --filter @shop/api --config.node-linker=isolated \
+RUN --mount=type=secret,id=pnpm-verified-cache,target=/tmp/pnpm-lockfile-verified.jsonl,required=false \
+  mkdir -p /root/.cache/pnpm \
+  && if [ -f /tmp/pnpm-lockfile-verified.jsonl ]; then cp /tmp/pnpm-lockfile-verified.jsonl /root/.cache/pnpm/lockfile-verified.jsonl; fi \
+  && pnpm install --frozen-lockfile --prod --filter @shop/api --config.node-linker=isolated \
   && node /tmp/prune-runtime-deps.mjs \
   && rm -rf /tmp/prune-runtime-deps.mjs "$(pnpm store path)" /root/.cache
 COPY --from=build /repo/apps/api/dist apps/api/dist

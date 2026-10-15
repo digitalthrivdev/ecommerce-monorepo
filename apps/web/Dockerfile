@@ -8,7 +8,10 @@ WORKDIR /repo
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json apps/web/
-RUN pnpm install --frozen-lockfile --filter web --config.node-linker=isolated
+RUN --mount=type=secret,id=pnpm-verified-cache,target=/tmp/pnpm-lockfile-verified.jsonl,required=false \
+  mkdir -p /root/.cache/pnpm \
+  && if [ -f /tmp/pnpm-lockfile-verified.jsonl ]; then cp /tmp/pnpm-lockfile-verified.jsonl /root/.cache/pnpm/lockfile-verified.jsonl; fi \
+  && pnpm install --frozen-lockfile --filter web --config.node-linker=isolated
 COPY apps/web apps/web
 RUN cd apps/web && node_modules/.bin/next build
 

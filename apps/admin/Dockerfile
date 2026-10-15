@@ -9,7 +9,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin/package.json apps/admin/
 COPY packages/validation packages/validation
-RUN pnpm install --frozen-lockfile --filter admin --config.node-linker=isolated
+RUN --mount=type=secret,id=pnpm-verified-cache,target=/tmp/pnpm-lockfile-verified.jsonl,required=false \
+  mkdir -p /root/.cache/pnpm \
+  && if [ -f /tmp/pnpm-lockfile-verified.jsonl ]; then cp /tmp/pnpm-lockfile-verified.jsonl /root/.cache/pnpm/lockfile-verified.jsonl; fi \
+  && pnpm install --frozen-lockfile --filter admin --config.node-linker=isolated
 COPY apps/admin apps/admin
 RUN cd apps/admin && node_modules/.bin/next build
 
