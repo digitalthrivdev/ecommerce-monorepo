@@ -24,7 +24,7 @@ export function defaultAppearance(): Appearance {
       cardStyle: "outlined",
       colorScheme: "light",
     },
-    announcement: { enabled: true, text: "Groceries delivered in minutes", backgroundColor: null, textColor: null },
+    announcement: { enabled: true, text: "Free shipping on orders over ₹999 • All India delivery", backgroundColor: null, textColor: null },
     categoryTabs: { enabled: false, tabs: [] },
     homeSections: [{ id: "categories", type: "category_grid", enabled: true, title: "Shop by category", description: null, background: null, columns: 4, categoryIds: [] }],
   };
