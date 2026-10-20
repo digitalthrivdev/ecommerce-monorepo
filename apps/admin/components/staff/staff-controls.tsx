@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 
 import { addStaff, removeStaff, setStaffPassword } from "@/app/(dashboard)/staff/actions";
 import {
@@ -34,6 +34,7 @@ import type { StaffMember } from "@/lib/types";
 
 export function AddStaffDialog() {
   const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(addStaff, () => setOpen(false));
 
   return (
@@ -41,7 +42,10 @@ export function AddStaffDialog() {
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) reset();
+        if (!next) {
+          reset();
+          setShowPassword(false);
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -64,16 +68,29 @@ export function AddStaffDialog() {
             </Field>
             <Field data-invalid={Boolean(fieldErrors.password)}>
               <FieldLabel htmlFor="staff-password">Password</FieldLabel>
-              <Input
-                id="staff-password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                maxLength={128}
-                required
-                aria-invalid={Boolean(fieldErrors.password)}
-              />
+              <div className="relative">
+                <Input
+                  id="staff-password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  minLength={8}
+                  maxLength={128}
+                  className="pr-10"
+                  required
+                  aria-invalid={Boolean(fieldErrors.password)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </Button>
+              </div>
               <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
               <FieldError>{fieldErrors.password}</FieldError>
             </Field>
@@ -109,6 +126,7 @@ export function AddStaffDialog() {
 
 export function SetStaffPasswordDialog({ member }: { member: StaffMember & { email: string } }) {
   const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { pending, fieldErrors, onSubmit, reset } = useFormAction(setStaffPassword, () => setOpen(false));
   const label = member.name ?? member.email;
 
@@ -117,7 +135,10 @@ export function SetStaffPasswordDialog({ member }: { member: StaffMember & { ema
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) reset();
+        if (!next) {
+          reset();
+          setShowPassword(false);
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -134,16 +155,29 @@ export function SetStaffPasswordDialog({ member }: { member: StaffMember & { ema
           <input type="hidden" name="userId" value={member.id} />
           <Field data-invalid={Boolean(fieldErrors.password)}>
             <FieldLabel htmlFor={`password-${member.id}`}>New password</FieldLabel>
-            <Input
-              id={`password-${member.id}`}
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              maxLength={128}
-              required
-              aria-invalid={Boolean(fieldErrors.password)}
-            />
+            <div className="relative">
+              <Input
+                id={`password-${member.id}`}
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                className="pr-10"
+                required
+                aria-invalid={Boolean(fieldErrors.password)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
+              </Button>
+            </div>
             <FieldDescription>At least 8 characters. Share it with them privately.</FieldDescription>
             <FieldError>{fieldErrors.password}</FieldError>
           </Field>

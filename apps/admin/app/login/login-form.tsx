@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useRef } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { useActionState, useRef, useState } from "react";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ type DemoLogin = DemoDashboardLogin & { label: string };
 
 export function LoginForm({ next, initialError, demoLogins = [] }: { next?: string; initialError?: string; demoLogins?: DemoLogin[] }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const [showPassword, setShowPassword] = useState(false);
   const error = state === initialState ? initialError : state.error;
   const formRef = useRef<HTMLFormElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -58,15 +59,28 @@ export function LoginForm({ next, initialError, demoLogins = [] }: { next?: stri
         </Field>
         <Field data-invalid={Boolean(state.fieldErrors?.password)}>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
-            ref={passwordRef}
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={Boolean(state.fieldErrors?.password)}
-            required
-          />
+          <div className="relative">
+            <Input
+              ref={passwordRef}
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              aria-invalid={Boolean(state.fieldErrors?.password)}
+              className="pr-10"
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </Button>
+          </div>
           <FieldDescription>Forgot it? Ask an admin to reset it.</FieldDescription>
           <FieldError>{state.fieldErrors?.password}</FieldError>
         </Field>
