@@ -15,5 +15,5 @@ export async function GET(request: NextRequest) {
       ? links?.appStore
       : null;
 
-  return NextResponse.redirect(target ?? new URL(links ? "/#download" : "/", request.url), 302);
+  return NextResponse.redirect(target ?? links?.download ?? new URL(links ? "/#download" : "/", request.url), 302);
 }
