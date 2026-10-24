@@ -25,7 +25,7 @@ There is no shared database and no `tenantId`. Never point one client's app or w
 
 | Client | Server (SSH host) | Stack folder | Domains | App build profiles | Package ID |
 | --- | --- | --- | --- | --- | --- |
-| (none yet) | | | | | |
+| Moozy Shop | `37.60.235.73` | `/home/deploy/shop` | `shop.moozy.in`, `shop-admin.moozy.in`, `shop-api.moozy.in` | | |
 
 Add a row for every new client.
 
