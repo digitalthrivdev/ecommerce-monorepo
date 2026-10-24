@@ -584,17 +584,24 @@ const categories: SeedCategory[] = [
 ];
 
 async function main() {
-  if (env.NODE_ENV === "production") {
-    throw new Error("Refusing to run the development seed with NODE_ENV=production");
+  if (env.NODE_ENV === "production" && !process.env.ALLOW_PROD_SEED) {
+    throw new Error("Refusing to run the development seed with NODE_ENV=production (set ALLOW_PROD_SEED=1 to seed a demo instance)");
   }
 
   console.log("Seeding users...");
   for (const user of users) {
-    await prisma.user.upsert({
-      where: { phone: user.phone },
-      update: { name: user.name, email: user.email, role: user.role },
-      create: user,
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ phone: user.phone }, ...(user.email ? [{ email: user.email }] : [])] },
     });
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          ...user,
+          passwordHash: user.role === UserRole.ADMIN || user.role === UserRole.STAFF ? await hashPassword(DEV_PASSWORD) : null,
+          isTestAccount: true,
+        },
+      });
+    }
   }
 
   // Only where none is set, so a password changed while testing survives a reseed.
