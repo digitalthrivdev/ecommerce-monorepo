@@ -3,7 +3,7 @@ import { RotateCcw } from "lucide-react-native";
 import { FlatList, RefreshControl, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CartBar } from "@/components/cart-bar";
+import { CartButton } from "@/components/cart-button";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductCard } from "@/components/product-card";
 import { QueryError } from "@/components/query-error";
@@ -48,7 +48,10 @@ export default function OrderAgainScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
-      <Text className="px-4 pb-4 pt-3 text-2xl font-extrabold">Order again</Text>
+      <View className="flex-row items-center justify-between px-4 pb-2 pt-2">
+        <Text className="text-2xl font-extrabold">Order again</Text>
+        <CartButton />
+      </View>
       <FlatList
         data={query.data?.items ?? []}
         keyExtractor={(product) => product.productId}
@@ -75,7 +78,6 @@ export default function OrderAgainScreen() {
           )
         }
       />
-      <CartBar inset={false} />
     </View>
   );
 }

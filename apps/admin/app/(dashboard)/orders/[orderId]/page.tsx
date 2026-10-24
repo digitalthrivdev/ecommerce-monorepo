@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronDown, FileText, MapPin, Phone } from "lucide-react";
 
-import { AutoRefresh } from "@/components/auto-refresh";
 import { RefundDialog } from "@/components/returns/refund-dialog";
 import { Notice } from "@/components/notice";
-import { Elapsed } from "@/components/orders/elapsed";
 import { NextStepButton, OrderMoreMenu } from "@/components/orders/order-actions";
 import { OrderProgress } from "@/components/orders/order-progress";
 import { PackingChecklist } from "@/components/orders/packing-checklist";
@@ -27,7 +25,6 @@ import {
   REFUND_METHOD_LABELS,
   ROLE_LABELS,
 } from "@/lib/format";
-import { statusChangedAt } from "@/lib/order-flow";
 import { getOrder } from "@/lib/orders";
 
 export const metadata: Metadata = { title: "Order" };
@@ -60,7 +57,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
 
   return (
     <>
-      {isOpen && <AutoRefresh seconds={30} />}
       <PageHeader
         back={{ href: "/orders", label: "Orders" }}
         title={order.orderNumber}
@@ -68,7 +64,6 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
           <>
             <OrderStatusPill status={order.status} size="md" />
             {order.reviewAccount && <ReviewAccountPill size="md" />}
-            {isOpen && order.status !== "PENDING_PAYMENT" && <Elapsed since={statusChangedAt(order)} status={order.status} className="h-8 px-3 text-sm" />}
           </>
         }
         description={[
@@ -140,14 +135,7 @@ export default async function OrderPage({ params }: PageProps<"/orders/[orderId]
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="flex min-w-0 flex-col gap-6">
-            <Section
-              title={`Items (${order.items.length})`}
-              hint={
-                order.allowedActions.includes("mark-unavailable")
-                  ? "Tick each item as you pack it. Can't find one? Tap Item not found."
-                  : undefined
-              }
-            >
+            <Section title={`Items (${order.items.length})`}>
               <PackingChecklist order={order} currency={settings.currency} />
               <dl className="flex flex-col gap-1.5 self-end sm:min-w-64">
                 <Row label="Items">{money(order.subtotal)}</Row>

@@ -39,7 +39,7 @@ export default fp(async (app) => {
 
   app.decorate("forbidTestAccount", async (request: FastifyRequest) => {
     if (!request.user) {
-      throw new AppError(401, "UNAUTHORIZED", "Missing or invalid access token");
+      throw new AppError(401, "UNAUTHORIZED", "Please sign in to continue");
     }
     if (request.user.test) {
       throw testAccountError();
@@ -81,7 +81,7 @@ export default fp(async (app) => {
 
   app.decorate("authenticate", async (request: FastifyRequest) => {
     if (!(await verify(request))) {
-      throw new AppError(401, "UNAUTHORIZED", "Missing or invalid access token");
+      throw new AppError(401, "UNAUTHORIZED", "Please sign in to continue");
     }
   });
 

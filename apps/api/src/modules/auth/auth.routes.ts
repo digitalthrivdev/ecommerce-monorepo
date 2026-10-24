@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyPluginAsync } from "fastify";
 
+import { getPlatformSettings } from "../settings/settings.service.js";
 import { createAuthService } from "./auth.service.js";
-import { loginBodySchema, sendOtpBodySchema, verifyOtpBodySchema } from "./auth.schemas.js";
+import { loginBodySchema, lookupPhoneBodySchema, sendOtpBodySchema, verifyOtpBodySchema } from "./auth.schemas.js";
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   const authService = createAuthService({
@@ -12,6 +13,22 @@ const authRoutes: FastifyPluginAsync = async (app) => {
     otp: app.otp,
     // The ID lets one token be revoked on sign-out.
     signToken: (payload) => app.jwt.sign({ ...payload, jti: randomUUID() }),
+  });
+
+  app.post("/lookup-phone", async (request) => {
+    const { phone } = lookupPhoneBodySchema.parse(request.body);
+    const user = await app.prisma.user.findUnique({
+      where: { phone },
+      select: { id: true, name: true, role: true },
+    });
+    const settings = await getPlatformSettings(app.prisma);
+    const addressCount = user ? await app.prisma.address.count({ where: { userId: user.id } }) : 0;
+    return {
+      exists: Boolean(user),
+      requireOtp: settings.requireCheckoutOtp,
+      hasSavedAddresses: addressCount > 0,
+      name: user?.name ?? null,
+    };
   });
 
   app.post("/send-otp", async (request) => {

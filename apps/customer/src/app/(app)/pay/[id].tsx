@@ -32,8 +32,8 @@ function PaymentPanel({ order }: { order: OrderDetail }) {
       <View className="items-center gap-3 px-8 py-12">
         {paid && <Icon as={CircleCheck} size={48} className="text-primary" />}
         <Text className="text-center text-lg font-extrabold">{paid ? "Payment received" : "This order isn't waiting for payment"}</Text>
-        <Button onPress={() => router.back()} className="mt-2 h-11 rounded-lg px-8">
-          <Text className="font-semibold">View order</Text>
+        <Button onPress={() => router.replace({ pathname: "/order/[id]", params: { id: order.id, placed: "1" } })} className="mt-2 h-11 rounded-lg px-8">
+          <Text className="font-semibold">Continue</Text>
         </Button>
       </View>
     );

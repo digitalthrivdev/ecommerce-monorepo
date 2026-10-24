@@ -149,6 +149,9 @@ const envSchema = z.object({
   // 0 disables the background check for unpaid orders and pending refunds.
   PAYMENT_SWEEP_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(3600).default(60),
 
+  // 0 disables the background tracking poll for active carrier shipments.
+  TRACKING_SYNC_INTERVAL_SECONDS: z.coerce.number().int().min(0).max(86400).default(1800),
+
   // OTP sends allowed per client IP (IPv6: per /64) per hour, across all phone numbers. Mobile
   // networks share one IP between many customers, so keep this generous.
   OTP_SENDS_PER_IP_PER_HOUR: z.coerce.number().int().min(1).max(10_000).default(30),

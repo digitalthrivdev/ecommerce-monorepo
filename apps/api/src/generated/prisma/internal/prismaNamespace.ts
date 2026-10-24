@@ -3660,6 +3660,7 @@ export const PlatformSettingsScalarFieldEnum = {
   reviewLoginEnabled: 'reviewLoginEnabled',
   reviewLoginPhone: 'reviewLoginPhone',
   reviewLoginCodeHash: 'reviewLoginCodeHash',
+  requireCheckoutOtp: 'requireCheckoutOtp',
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   shippingProvider: 'shippingProvider',

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CartBar } from "@/components/cart-bar";
+import { CartButton } from "@/components/cart-button";
 import { CategoryGrid, CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
@@ -116,6 +116,7 @@ export default function SearchScreen() {
             </Pressable>
           )}
         </View>
+        <CartButton />
       </View>
 
       {searching ? (
@@ -127,7 +128,6 @@ export default function SearchScreen() {
           {categories.data ? <CategoryGrid categories={topLevelCategories(categories.data.items)} /> : <CategoryGridSkeleton />}
         </ScrollView>
       )}
-      <CartBar />
     </View>
   );
 }

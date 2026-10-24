@@ -92,6 +92,11 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
     return orders.getOrder(orderId, actor(request));
   });
 
+  /** Manually triggers a tracking sweep for all active carrier shipments. Admins only. */
+  app.post("/shipments/sync-all", adminOnly, async () => {
+    return shipments.sweepTracking();
+  });
+
   /** For carriers without tracking: delivered marks cash on delivery as collected. */
   app.post("/:orderId/shipment/events", adminOnly, async (request) => {
     const { orderId } = orderParamsSchema.parse(request.params);

@@ -643,6 +643,8 @@ export type PlatformSettings = {
   appDownloadUrl: string | null;
   /** One customer number that signs in with a fixed code, for app store and payment gateway reviewers. */
   reviewLogin: ReviewLogin;
+  /** Whether every customer must verify an OTP to complete checkout. */
+  requireCheckoutOtp: boolean;
   /** Gateway new online payments use; null means cash on delivery only. */
   paymentProvider: string | null;
   paymentGateways: PaymentGatewayOption[];

@@ -20,6 +20,7 @@ export type PublicSettings = {
   timezone: string;
   pricing: { shippingFee: string; freeShippingThreshold: string | null; codFee: string; minOrderValue: string };
   payments: { methods: ("COD" | "ONLINE")[]; onlinePaymentTimeoutMinutes: number };
+  checkout?: { requireOtp: boolean };
   support: { phone: string | null; email: string | null };
   /** Links to the public website and its policy pages; null when it is not set up, missing from older servers. */
   policies?: Record<"home" | "index" | "terms" | "privacy" | "refunds" | "shipping" | "contact", string> | null;
@@ -339,7 +340,10 @@ export type OrderComplaint = {
   items: { orderItemId: string; quantity: number }[];
 };
 
-export type HomeLink = { type: "none" } | { type: "category"; category: Category };
+export type HomeLink =
+  | { type: "none" }
+  | { type: "category"; category: Category }
+  | { type: "product"; product: { id: string; name: string; slug: string } };
 
 export type BannerCarouselSection = {
   id: string;

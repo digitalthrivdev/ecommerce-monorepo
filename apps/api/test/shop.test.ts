@@ -42,20 +42,19 @@ afterAll(async () => {
 
 describe("customer catalog", () => {
   it("lists products with prices and stock flags, without signing in", async () => {
-    const listed = await call(app, "GET", "/catalog/products", { query: { search: "T-Shirt" } });
+    const listed = await call(app, "GET", "/catalog/products", { query: { search: "Heavyweight" } });
     expect(listed.status).toBe(200);
-    const shirt = listed.body.items.find((item: { slug: string }) => item.slug === "classic-cotton-t-shirt");
-    expect(shirt.variants).toContainEqual(expect.objectContaining({ price: "499.00", compareAtPrice: "699.00", inStock: true }));
-    expect(shirt.variants).toContainEqual(expect.objectContaining({ price: "449.00", inStock: false }));
+    const shirt = listed.body.items.find((item: { slug: string }) => item.slug === "heavyweight-cotton-tee");
+    expect(shirt.variants).toContainEqual(expect.objectContaining({ price: "799.00", compareAtPrice: "1299.00", inStock: true }));
     expect(JSON.stringify(listed.body)).not.toMatch(/stockQuantity|"quantity":\d/);
   });
 
   it("shows a product's options, specifications and variants", async () => {
-    const product = await app.prisma.product.findUniqueOrThrow({ where: { slug: "classic-cotton-t-shirt" } });
+    const product = await app.prisma.product.findUniqueOrThrow({ where: { slug: "heavyweight-cotton-tee" } });
     const detail = await call(app, "GET", `/catalog/products/${product.id}`);
     expect(detail.status).toBe(200);
     expect(detail.body.options.map((option: { name: string }) => option.name)).toEqual(["Size", "Colour"]);
-    expect(detail.body.specifications).toContainEqual({ name: "Material", value: "100% cotton" });
+    expect(detail.body.specifications).toContainEqual({ name: "Fabric", value: "100% Combed Organic Cotton (240 GSM)" });
     expect(detail.body.variants[0].optionValueIds).toHaveLength(2);
   });
 
@@ -72,7 +71,7 @@ describe("customer catalog", () => {
   it("lists brands with something in stock", async () => {
     const brands = await call(app, "GET", "/catalog/brands");
     expect(brands.status).toBe(200);
-    expect(brands.body.items.map((brand: { slug: string }) => brand.slug)).toContain("everyday-basics");
+    expect(brands.body.items.map((brand: { slug: string }) => brand.slug)).toContain("zenith-wear");
   });
 });
 
@@ -82,10 +81,10 @@ describe("dashboard products", () => {
     expect((await call(app, "GET", "/products", { token: customer })).status).toBe(403);
     const listed = await call(app, "GET", "/products", { token: staff, query: { search: "Hoodie" } });
     expect(listed.status).toBe(200);
-    expect(listed.body.items[0]).toMatchObject({ priceRange: { min: "1299.00", max: "1349.00" }, stockQuantity: expect.any(Number) });
+    expect(listed.body.items[0]).toMatchObject({ priceRange: { min: "1699.00", max: "1799.00" }, stockQuantity: expect.any(Number) });
 
     const detail = await call(app, "GET", `/products/${listed.body.items[0].id}`, { token: staff });
-    expect(detail.body.variants[0]).toMatchObject({ price: "1299.00", weightGrams: 550, lengthCm: "35", stockQuantity: expect.any(Number) });
+    expect(detail.body.variants[0]).toMatchObject({ price: "1699.00", weightGrams: 580, lengthCm: "35", stockQuantity: expect.any(Number) });
   });
 
   it("require a price and a compare-at price at least as high", async () => {
@@ -152,8 +151,8 @@ describe("cart without a store", () => {
     await call(app, "PATCH", `/variants/${variantId}`, { token: admin, body: { isActive: false } });
     expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId } })).status).toBe(404);
 
-    const soldOut = await variantBySku("TSHIRT-L-WHT");
-    expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId: soldOut.id } })).body.error).toBe("INSUFFICIENT_STOCK");
+    const { variantId: soldOutVariantId } = await newProduct("250", 0);
+    expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId: soldOutVariantId } })).body.error).toBe("INSUFFICIENT_STOCK");
     expect((await call(app, "POST", "/cart/items", { token: customer, body: { variantId, quantity: 0 } })).status).toBe(400);
     expect((await call(app, "POST", "/cart/items", { body: { variantId } })).status).toBe(401);
   });

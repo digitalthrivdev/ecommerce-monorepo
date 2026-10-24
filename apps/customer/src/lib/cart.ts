@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsMutating, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
@@ -5,6 +6,7 @@ import { Alert } from "react-native";
 import { ApiError, apiFetch, errorMessage } from "./api";
 import { formatMoney, shortfall } from "./format";
 import { formatPhone } from "./phone";
+import { useSession } from "./session";
 import type { Cart, CartItem, Product, ProductVariant } from "./types";
 
 /** The API's cap per cart line; a variant can have a lower one. */
@@ -14,13 +16,72 @@ export const CART_KEY = ["cart"] as const;
 /** Id of a line the server hasn't created yet. */
 const PENDING_ID = "pending:";
 
+export const EMPTY_CART: Cart = {
+  id: null,
+  items: [],
+  itemCount: 0,
+  subtotal: "0.00",
+  bill: null,
+  checkout: null,
+  isValid: false,
+  coupon: null,
+};
+
+const GUEST_CART_STORAGE_KEY = "guest_cart_items";
+
+export async function readGuestCart(): Promise<{ variantId: string; quantity: number }[]> {
+  try {
+    const raw = await AsyncStorage.getItem(GUEST_CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(
+        (it) => typeof it?.variantId === "string" && typeof it?.quantity === "number" && it.quantity > 0,
+      );
+    }
+  } catch {}
+  return [];
+}
+
+export async function writeGuestCart(items: { variantId: string; quantity: number }[]): Promise<void> {
+  if (items.length === 0) {
+    await AsyncStorage.removeItem(GUEST_CART_STORAGE_KEY).catch(() => {});
+  } else {
+    await AsyncStorage.setItem(GUEST_CART_STORAGE_KEY, JSON.stringify(items)).catch(() => {});
+  }
+}
+
+export async function clearGuestCart(): Promise<void> {
+  await AsyncStorage.removeItem(GUEST_CART_STORAGE_KEY).catch(() => {});
+}
+
 /** What the cart needs to show a line before the server has created it. */
 export type Sellable = { product: Pick<Product, "productId" | "name" | "slug" | "imageUrl">; variant: ProductVariant };
 
 type QuantityChange = { variantId: string; quantity: number; item?: Sellable };
 
 export function useCart<T = Cart>({ select, refetchOnMount }: { select?: (cart: Cart) => T; refetchOnMount?: "always" } = {}) {
-  return useQuery({ queryKey: CART_KEY, queryFn: () => apiFetch<Cart>("/cart"), staleTime: 30_000, select, refetchOnMount });
+  const { token } = useSession();
+  return useQuery({
+    queryKey: CART_KEY,
+    queryFn: async () => {
+      if (token) {
+        try {
+          return await apiFetch<Cart>("/cart");
+        } catch (err) {
+          if (!(err instanceof ApiError && err.status === 401)) throw err;
+        }
+      }
+      const guestItems = await readGuestCart();
+      if (!guestItems.length) {
+        return EMPTY_CART;
+      }
+      return apiFetch<Cart>("/cart/preview", { method: "POST", body: { items: guestItems } });
+    },
+    staleTime: 30_000,
+    select,
+    refetchOnMount,
+  });
 }
 
 /** True while cart changes are still being saved, so totals may be out of date. */
@@ -146,14 +207,36 @@ function syncItemIds(cart: Cart, server: Cart): Cart {
 }
 
 /** Runs after earlier cart changes have been saved, so cached line ids match the server. */
-function sendQuantity(queryClient: QueryClient, { variantId, quantity }: QuantityChange) {
-  const id = queryClient.getQueryData<Cart>(CART_KEY)?.items.find((item) => item.variantId === variantId)?.id;
-  if (id && !id.startsWith(PENDING_ID)) {
-    const path = `/cart/items/${encodeURIComponent(id)}`;
-    return quantity > 0 ? apiFetch<Cart>(path, { method: "PATCH", body: { quantity } }) : apiFetch<Cart>(path, { method: "DELETE" });
+async function sendQuantity(queryClient: QueryClient, { variantId, quantity }: QuantityChange): Promise<Cart> {
+  try {
+    const id = queryClient.getQueryData<Cart>(CART_KEY)?.items.find((item) => item.variantId === variantId)?.id;
+    if (id && !id.startsWith(PENDING_ID) && !id.startsWith("guest:")) {
+      const path = `/cart/items/${encodeURIComponent(id)}`;
+      return quantity > 0
+        ? await apiFetch<Cart>(path, { method: "PATCH", body: { quantity } })
+        : await apiFetch<Cart>(path, { method: "DELETE" });
+    }
+    if (quantity > 0) return await apiFetch<Cart>("/cart/items", { method: "POST", body: { variantId, quantity } });
+    return await apiFetch<Cart>("/cart");
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      const items = await readGuestCart();
+      const existing = items.find((it) => it.variantId === variantId);
+      if (existing) {
+        if (quantity <= 0) {
+          items.splice(items.indexOf(existing), 1);
+        } else {
+          existing.quantity = quantity;
+        }
+      } else if (quantity > 0) {
+        items.push({ variantId, quantity });
+      }
+      await writeGuestCart(items);
+      if (items.length === 0) return EMPTY_CART;
+      return await apiFetch<Cart>("/cart/preview", { method: "POST", body: { items } });
+    }
+    throw error;
   }
-  if (quantity > 0) return apiFetch<Cart>("/cart/items", { method: "POST", body: { variantId, quantity } });
-  return apiFetch<Cart>("/cart");
 }
 
 let alertOpen = false;

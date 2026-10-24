@@ -1,15 +1,19 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 
+import { BannerCarousel } from "@/components/banner-carousel";
 import { CategoryTile } from "@/components/category-tile";
 import { ProductGrid } from "@/components/shop/product-card";
+import { productPath } from "@/lib/paths";
 import type { HomeFeed, HomeLink, SectionBackground } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const WEB_SECTION_TYPES = new Set<string>(["banner_carousel", "category_grid", "subcategory_grid", "category_collection", "image_tiles", "offer_strip", "product_rail", "deals_rail", "brand_rail", "category_deals", "sale_hero"]);
 
 function linkHref(link: HomeLink) {
-  return link.type === "category" ? `/c/${encodeURIComponent(link.category.slug)}` : null;
+  if (link.type === "category") return `/c/${encodeURIComponent(link.category.slug)}`;
+  if (link.type === "product") return productPath(link.product.slug || link.product.id);
+  return null;
 }
 
 function Linked({ link, children }: { link: HomeLink; children: ReactNode }) {
@@ -51,29 +55,7 @@ function SectionContent({ section, currency }: { section: HomeFeed["sections"][n
 
   switch (section.type) {
     case "banner_carousel": {
-      const single = section.banners.length === 1;
-      return (
-        <Rail>
-          {section.banners.map((banner) => (
-            <Linked key={banner.id} link={banner.link}><figure
-              key={banner.id}
-              className={cn(
-                "relative shrink-0 snap-start overflow-hidden rounded-3xl bg-muted shadow-sm ring-1 ring-black/5",
-                single ? "aspect-[2/1] max-h-80 w-full sm:aspect-[3/1]" : "aspect-[2/1] w-[85%] sm:w-[calc(50%-0.5rem)]",
-              )}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- banner images can be on any host */}
-              <img src={banner.imageUrl} alt={banner.title ?? ""} loading="lazy" className="size-full object-cover" />
-              {(banner.title || banner.subtitle) && (
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
-                  {banner.title && <p className="text-lg font-bold sm:text-2xl">{banner.title}</p>}
-                  {banner.subtitle && <p className="text-sm opacity-90 sm:text-base">{banner.subtitle}</p>}
-                </figcaption>
-              )}
-            </figure></Linked>
-          ))}
-        </Rail>
-      );
+      return <BannerCarousel banners={section.banners} autoplay={section.autoplay} />;
     }
 
     case "category_grid":

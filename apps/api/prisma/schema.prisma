@@ -969,6 +969,9 @@ model PlatformSettings {
   reviewLoginPhone    String?
   reviewLoginCodeHash String?
 
+  // Require OTP verification before any customer can checkout.
+  requireCheckoutOtp Boolean @default(false)
+
   // Gateway new online payments use (e.g. "razorpay", "cashfree"); null means cash on delivery only.
   // Only gateways with working keys can be selected.
   paymentProvider String?

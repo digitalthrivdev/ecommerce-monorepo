@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { QuantityStepper } from "@/components/add-to-cart";
 import { BillDetails, compareAtTotal } from "@/components/bill-details";
+import { DirectCheckoutSheet } from "@/components/direct-checkout-sheet";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
@@ -38,6 +39,7 @@ import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
 import { usePlaceOrder } from "@/lib/orders";
 import { useAlsoBought } from "@/lib/queries";
+import { useSession } from "@/lib/session";
 import { useSettings } from "@/lib/settings";
 import type { Cart, CartCoupon, CartItem, OrderDetail, PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -280,6 +282,7 @@ function CartContent({ cart }: { cart: Cart }) {
   const surface = useCardSurface();
   const { colors } = useAppTheme();
   const settings = useSettings();
+  const { user } = useSession();
   const { currency, payments, pricing } = settings;
   const { address } = useDeliveryAddress();
   const queryClient = useQueryClient();
@@ -287,6 +290,7 @@ function CartContent({ cart }: { cart: Cart }) {
   const placeOrder = usePlaceOrder();
   const [method, setMethod] = useState<PaymentMethod>(payments.methods[0] ?? "COD");
   const [choosingPayment, setChoosingPayment] = useState(false);
+  const [directCheckoutOpen, setDirectCheckoutOpen] = useState(false);
 
   const items = visibleItems(cart);
   const orderable = items.filter((item) => item.issue === null);
@@ -304,8 +308,8 @@ function CartContent({ cart }: { cart: Cart }) {
 
   // mutateAsync, not mutate callbacks: those are dropped if this screen unmounts first.
   async function submit() {
-    if (!address) {
-      changeAddress();
+    if (!user || !address) {
+      setDirectCheckoutOpen(true);
       return;
     }
     if (deliveryBlocked || codBlocked || deliveryChecking || serviceability.isError || pincodeInvalid) return;
@@ -381,7 +385,10 @@ function CartContent({ cart }: { cart: Cart }) {
       </ScrollView>
 
       <View className="border-t border-border bg-card" style={{ paddingBottom: insets.bottom + 10 }}>
-        <Pressable onPress={changeAddress} className="flex-row items-center gap-3 border-b border-border px-4 py-2.5 active:bg-accent">
+        <Pressable
+          onPress={user ? changeAddress : () => setDirectCheckoutOpen(true)}
+          className="flex-row items-center gap-3 border-b border-border px-4 py-2.5 active:bg-accent"
+        >
           <View className="size-9 items-center justify-center rounded-full bg-primary/10">
             <Icon as={House} size={18} className="text-primary" />
           </View>
@@ -390,10 +397,10 @@ function CartContent({ cart }: { cart: Cart }) {
               {address ? `Delivering to ${addressLabel(address)}` : "Where should we deliver?"}
             </Text>
             <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-              {address ? addressSummary(address) : "Choose a saved address for delivery."}
+              {address ? addressSummary(address) : user ? "Choose a saved address for delivery." : "Enter delivery details at checkout."}
             </Text>
           </View>
-          <Text className="text-sm font-bold text-primary">{address ? "Change" : "Choose"}</Text>
+          <Text className="text-sm font-bold text-primary">{address ? "Change" : user ? "Choose" : "Enter"}</Text>
         </Pressable>
 
         {(blocker ?? codNote) && <Text className="px-4 pt-2 text-center text-xs text-muted-foreground">{blocker ?? codNote}</Text>}
@@ -415,25 +422,21 @@ function CartContent({ cart }: { cart: Cart }) {
             </Text>
           </Pressable>
           <Button
-            disabled={(address ? blocker !== null || deliveryBlocked || codBlocked || deliveryChecking || serviceability.isError || pincodeInvalid : false) || updating || placeOrder.isPending}
+            disabled={updating || placeOrder.isPending || (address ? blocker !== null || deliveryBlocked || codBlocked || deliveryChecking || serviceability.isError || pincodeInvalid : false)}
             onPress={submit}
             className="h-14 flex-1 flex-row justify-between rounded-lg px-4"
           >
-            {address ? (
-              <View>
-                <Text className="text-base font-extrabold">
-                  {cart.bill ? formatMoney(payWith === "COD" ? cart.bill.totalWithCod : cart.bill.total, currency) : ""}
-                </Text>
-                <Text className="text-[11px] font-semibold uppercase">Total</Text>
-              </View>
-            ) : (
-              <View />
-            )}
+            <View>
+              <Text className="text-base font-extrabold">
+                {cart.bill ? formatMoney(payWith === "COD" ? cart.bill.totalWithCod : cart.bill.total, currency) : formatMoney(cart.subtotal, currency)}
+              </Text>
+              <Text className="text-[11px] font-semibold uppercase">Total</Text>
+            </View>
             {placeOrder.isPending ? (
               <ActivityIndicator color={colors.onPrimary} />
             ) : (
               <View className="flex-row items-center gap-0.5">
-                <Text className="text-base font-extrabold">{!address ? "Choose address" : payWith === "COD" ? "Place order" : "Pay & order"}</Text>
+                <Text className="text-base font-extrabold">{!user || !address ? "Proceed to checkout" : payWith === "COD" ? "Place order" : "Pay & order"}</Text>
                 <Icon as={ChevronRight} size={18} className="text-primary-foreground" />
               </View>
             )}
@@ -448,6 +451,19 @@ function CartContent({ cart }: { cart: Cart }) {
         timeoutMinutes={payments.onlinePaymentTimeoutMinutes}
         onSelect={setMethod}
         onClose={() => setChoosingPayment(false)}
+      />
+
+      <DirectCheckoutSheet
+        visible={directCheckoutOpen}
+        onClose={() => setDirectCheckoutOpen(false)}
+        items={orderable.map((item) => ({
+          variantId: item.variantId,
+          name: item.name,
+          variantLabel: item.variantLabel,
+          imageUrl: item.imageUrl,
+          price: item.unitPrice ?? "0",
+          quantity: item.quantity,
+        }))}
       />
     </>
   );

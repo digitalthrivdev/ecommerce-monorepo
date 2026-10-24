@@ -266,10 +266,14 @@ const categories: SeedCategory[] = [
           { sku: "TEE-M-BLK", price: "799.00", compareAtPrice: "1299.00", stock: 30, weightGrams: 240, dimensions: ["30", "25", "3"], optionValues: ["M", "Pitch Black"] },
           { sku: "TEE-L-BLK", price: "799.00", compareAtPrice: "1299.00", stock: 25, weightGrams: 260, dimensions: ["30", "25", "3"], optionValues: ["L", "Pitch Black"] },
           { sku: "TEE-XL-BLK", price: "849.00", compareAtPrice: "1299.00", stock: 15, weightGrams: 280, dimensions: ["32", "26", "3"], optionValues: ["XL", "Pitch Black"] },
+          { sku: "TEE-S-WHT", price: "799.00", compareAtPrice: "1299.00", stock: 20, weightGrams: 220, dimensions: ["30", "25", "3"], optionValues: ["S", "Vintage White"] },
           { sku: "TEE-M-WHT", price: "799.00", compareAtPrice: "1299.00", stock: 20, weightGrams: 240, dimensions: ["30", "25", "3"], optionValues: ["M", "Vintage White"] },
           { sku: "TEE-L-WHT", price: "799.00", compareAtPrice: "1299.00", stock: 18, weightGrams: 260, dimensions: ["30", "25", "3"], optionValues: ["L", "Vintage White"] },
+          { sku: "TEE-XL-WHT", price: "849.00", compareAtPrice: "1299.00", stock: 15, weightGrams: 280, dimensions: ["32", "26", "3"], optionValues: ["XL", "Vintage White"] },
+          { sku: "TEE-S-OLV", price: "799.00", compareAtPrice: "1299.00", stock: 20, weightGrams: 220, dimensions: ["30", "25", "3"], optionValues: ["S", "Earthy Olive"] },
           { sku: "TEE-M-OLV", price: "799.00", compareAtPrice: "1299.00", stock: 15, weightGrams: 240, dimensions: ["30", "25", "3"], optionValues: ["M", "Earthy Olive"] },
           { sku: "TEE-L-OLV", price: "799.00", compareAtPrice: "1299.00", stock: 12, weightGrams: 260, dimensions: ["30", "25", "3"], optionValues: ["L", "Earthy Olive"] },
+          { sku: "TEE-XL-OLV", price: "849.00", compareAtPrice: "1299.00", stock: 15, weightGrams: 280, dimensions: ["32", "26", "3"], optionValues: ["XL", "Earthy Olive"] },
         ],
       },
       {
@@ -300,6 +304,7 @@ const categories: SeedCategory[] = [
           { sku: "HOOD-XL-GRY", price: "1799.00", compareAtPrice: "2499.00", stock: 10, weightGrams: 660, dimensions: ["36", "31", "6"], optionValues: ["XL", "Heather Grey"] },
           { sku: "HOOD-M-BLK", price: "1699.00", compareAtPrice: "2499.00", stock: 22, weightGrams: 580, dimensions: ["35", "30", "6"], optionValues: ["M", "Onyx Black"] },
           { sku: "HOOD-L-BLK", price: "1699.00", compareAtPrice: "2499.00", stock: 15, weightGrams: 620, dimensions: ["35", "30", "6"], optionValues: ["L", "Onyx Black"] },
+          { sku: "HOOD-XL-BLK", price: "1799.00", compareAtPrice: "2499.00", stock: 15, weightGrams: 660, dimensions: ["36", "31", "6"], optionValues: ["XL", "Onyx Black"] },
         ],
       },
       {

@@ -54,20 +54,15 @@ function Root() {
 }
 
 function RootNavigator() {
-  const { token } = useSession();
   const { scheme } = useAppTheme();
 
   return (
     <>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={Boolean(token)}>
-          <Stack.Screen name="(app)" />
-        </Stack.Protected>
-        <Stack.Protected guard={!token}>
-          <Stack.Screen name="sign-in" />
-          <Stack.Screen name="verify" />
-        </Stack.Protected>
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="sign-in" options={{ presentation: "modal" }} />
+        <Stack.Screen name="verify" options={{ presentation: "modal" }} />
       </Stack>
     </>
   );

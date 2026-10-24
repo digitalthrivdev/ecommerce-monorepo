@@ -130,9 +130,11 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
     }
 
     let pending: PendingOtp;
+    let devOtp: string | undefined;
     try {
-      const { reference } = await otpProvider.start(phone);
-      pending = { provider: otpProvider.name, reference };
+      const started = await otpProvider.start(phone);
+      pending = { provider: otpProvider.name, reference: started.reference };
+      devOtp = started.devOtp;
     } catch (error) {
       await release();
       throw error;
@@ -144,7 +146,10 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       .del(keys.attempts(phone))
       .exec();
 
-    return { expiresInSeconds: OTP_TTL_SECONDS };
+    return {
+      expiresInSeconds: OTP_TTL_SECONDS,
+      ...(env.NODE_ENV !== "production" && devOtp ? { devOtp } : {}),
+    };
   }
 
   async function verifyOtp(phone: string, code: string) {

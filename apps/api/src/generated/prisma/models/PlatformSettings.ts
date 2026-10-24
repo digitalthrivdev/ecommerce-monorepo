@@ -70,6 +70,7 @@ export type PlatformSettingsMinAggregateOutputType = {
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
+  requireCheckoutOtp: boolean | null
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
@@ -100,6 +101,7 @@ export type PlatformSettingsMaxAggregateOutputType = {
   reviewLoginEnabled: boolean | null
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
+  requireCheckoutOtp: boolean | null
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
@@ -131,6 +133,7 @@ export type PlatformSettingsCountAggregateOutputType = {
   reviewLoginEnabled: number
   reviewLoginPhone: number
   reviewLoginCodeHash: number
+  requireCheckoutOtp: number
   paymentProvider: number
   otpProvider: number
   shippingProvider: number
@@ -185,6 +188,7 @@ export type PlatformSettingsMinAggregateInputType = {
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
+  requireCheckoutOtp?: true
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
@@ -215,6 +219,7 @@ export type PlatformSettingsMaxAggregateInputType = {
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
+  requireCheckoutOtp?: true
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
@@ -246,6 +251,7 @@ export type PlatformSettingsCountAggregateInputType = {
   reviewLoginEnabled?: true
   reviewLoginPhone?: true
   reviewLoginCodeHash?: true
+  requireCheckoutOtp?: true
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
@@ -364,6 +370,7 @@ export type PlatformSettingsGroupByOutputType = {
   reviewLoginEnabled: boolean
   reviewLoginPhone: string | null
   reviewLoginCodeHash: string | null
+  requireCheckoutOtp: boolean
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
@@ -418,6 +425,7 @@ export type PlatformSettingsWhereInput = {
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  requireCheckoutOtp?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -449,6 +457,7 @@ export type PlatformSettingsOrderByWithRelationInput = {
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  requireCheckoutOtp?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -483,6 +492,7 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   reviewLoginEnabled?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  requireCheckoutOtp?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
@@ -514,6 +524,7 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  requireCheckoutOtp?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -553,6 +564,7 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   reviewLoginEnabled?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
   reviewLoginPhone?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   reviewLoginCodeHash?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  requireCheckoutOtp?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
@@ -584,6 +596,7 @@ export type PlatformSettingsCreateInput = {
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
+  requireCheckoutOtp?: boolean
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
@@ -615,6 +628,7 @@ export type PlatformSettingsUncheckedCreateInput = {
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
+  requireCheckoutOtp?: boolean
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
@@ -646,6 +660,7 @@ export type PlatformSettingsUpdateInput = {
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCheckoutOtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -677,6 +692,7 @@ export type PlatformSettingsUncheckedUpdateInput = {
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCheckoutOtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -708,6 +724,7 @@ export type PlatformSettingsCreateManyInput = {
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: string | null
   reviewLoginCodeHash?: string | null
+  requireCheckoutOtp?: boolean
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
@@ -739,6 +756,7 @@ export type PlatformSettingsUpdateManyMutationInput = {
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCheckoutOtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -770,6 +788,7 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   reviewLoginEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reviewLoginPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reviewLoginCodeHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  requireCheckoutOtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -801,6 +820,7 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
+  requireCheckoutOtp?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
@@ -842,6 +862,7 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
+  requireCheckoutOtp?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
@@ -872,6 +893,7 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   reviewLoginEnabled?: Prisma.SortOrder
   reviewLoginPhone?: Prisma.SortOrder
   reviewLoginCodeHash?: Prisma.SortOrder
+  requireCheckoutOtp?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
@@ -916,6 +938,7 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
+  requireCheckoutOtp?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
@@ -947,6 +970,7 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
+  requireCheckoutOtp?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
@@ -978,6 +1002,7 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
+  requireCheckoutOtp?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
@@ -1009,6 +1034,7 @@ export type PlatformSettingsSelectScalar = {
   reviewLoginEnabled?: boolean
   reviewLoginPhone?: boolean
   reviewLoginCodeHash?: boolean
+  requireCheckoutOtp?: boolean
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
@@ -1017,7 +1043,7 @@ export type PlatformSettingsSelectScalar = {
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "returnWindowDays" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "returnWindowDays" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "requireCheckoutOtp" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -1045,6 +1071,7 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     reviewLoginEnabled: boolean
     reviewLoginPhone: string | null
     reviewLoginCodeHash: string | null
+    requireCheckoutOtp: boolean
     paymentProvider: string | null
     otpProvider: string | null
     shippingProvider: string | null
@@ -1496,6 +1523,7 @@ export interface PlatformSettingsFieldRefs {
   readonly reviewLoginEnabled: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
   readonly reviewLoginPhone: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly reviewLoginCodeHash: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly requireCheckoutOtp: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
   readonly paymentProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly otpProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly shippingProvider: Prisma.FieldRef<"PlatformSettings", 'String'>

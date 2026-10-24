@@ -57,6 +57,7 @@ const settingsSchema = z.object({
   returnWindowDays: z.string().trim().regex(/^\d{1,2}$/, "Enter 1 to 90 days").transform(Number).pipe(z.number().int().min(1).max(90)),
   supportPhone: optionalPhoneInput,
   supportEmail: optionalEmail,
+  requireCheckoutOtp: z.boolean(),
 });
 
 export async function updatePlatformSettings(formData: FormData): Promise<ActionResult> {
@@ -71,6 +72,7 @@ export async function updatePlatformSettings(formData: FormData): Promise<Action
     returnWindowDays: formText(formData, "returnWindowDays"),
     supportPhone: formText(formData, "supportPhone"),
     supportEmail: formText(formData, "supportEmail"),
+    requireCheckoutOtp: formChecked(formData, "requireCheckoutOtp"),
   });
   if (!parsed.success) return validationFailure(parsed.error);
 

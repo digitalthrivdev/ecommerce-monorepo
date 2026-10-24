@@ -6,6 +6,13 @@ export type PublicSettings = {
   timezone: string;
   currency: string;
   payments: { methods: ("COD" | "ONLINE")[] };
+  checkout?: { requireOtp: boolean };
+  announcement?: {
+    enabled: boolean;
+    text: string;
+    backgroundColor: string | null;
+    textColor: string | null;
+  };
 };
 
 /** GET /products/:id/preview: what a shared product link shows. */
@@ -56,7 +63,10 @@ export type PolicyPage = {
 
 export type HomeCategory = { id: string; name: string; slug: string; imageUrl: string | null };
 
-export type HomeLink = { type: "none" } | { type: "category"; category: HomeCategory };
+export type HomeLink =
+  | { type: "none" }
+  | { type: "category"; category: HomeCategory }
+  | { type: "product"; product: { id: string; name: string; slug: string } };
 
 /** A coloured band behind a section, as set in Appearance. */
 export type SectionBackground = { color: string; textColor: string; edge: "straight" | "zigzag" | "wave" } | null;
@@ -79,8 +89,19 @@ export type HomeSection = SectionBase &
     | { type: "offer_strip"; title: string; subtitle: string | null; imageUrl: string | null; backgroundColor: string; textColor: string; link: HomeLink }
   );
 
+export type CategoryTab = {
+  id: string;
+  category: { id: string; name: string; slug: string };
+  icon?: { type: "image"; url: string } | { type: "preset"; name: string };
+  badge?: string | null;
+  opens: "page" | "category";
+};
+
 /** GET /home includes the enabled Appearance sections and their catalog data. */
-export type HomeFeed = { sections: (HomeSection | ShopHomeSection)[] };
+export type HomeFeed = {
+  categoryTabs?: CategoryTab[];
+  sections: (HomeSection | ShopHomeSection)[];
+};
 
 export type Page<T> = { items: T[]; total: number; limit: number; offset: number };
 

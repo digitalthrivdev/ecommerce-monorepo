@@ -19,9 +19,12 @@ export default fp(async (app) => {
     reply,
   ) => {
     if (error instanceof ZodError) {
+      request.log.warn({ issues: error.issues, body: request.body }, "Validation failed");
+      const firstIssue = error.issues[0];
+      const issueMsg = firstIssue ? `${firstIssue.path.join(".") || "field"}: ${firstIssue.message}` : "Invalid request";
       return reply.status(400).send({
         error: "VALIDATION_ERROR",
-        message: "Invalid request",
+        message: issueMsg,
         issues: error.issues.map((issue) => ({
           path: issue.path.join("."),
           message: issue.message,

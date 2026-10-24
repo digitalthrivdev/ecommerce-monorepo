@@ -117,24 +117,63 @@ function toProductDetailView(row: CatalogProductDetailRow) {
 
 /** What customers browse and buy, with prices and whether each variant is in stock. */
 export function createCatalogService(prisma: PrismaClient) {
-  async function listProducts({ limit, offset, categoryId, brandId, search }: ListCatalogQuery) {
+  async function listProducts({ limit, offset, categoryId, brandId, search, minPrice, maxPrice, inStock, sortBy }: ListCatalogQuery) {
+    const variantWhere: Prisma.ProductVariantWhereInput = {
+      isActive: true,
+      ...(minPrice !== undefined && { price: { gte: new Prisma.Decimal(minPrice) } }),
+      ...(maxPrice !== undefined && { price: { ...(minPrice !== undefined ? { gte: new Prisma.Decimal(minPrice) } : {}), lte: new Prisma.Decimal(maxPrice) } }),
+      ...(inStock && { inventory: { quantity: { gt: 0 } } }),
+    };
+
+    const hasVariantFilter = minPrice !== undefined || maxPrice !== undefined || inStock;
+
     const where: Prisma.ProductWhereInput = {
       ...catalogProductWhere,
       ...(brandId && { brandId }),
+      ...(hasVariantFilter && {
+        variants: {
+          some: variantWhere,
+        },
+      }),
       AND: [categoryId ? inCategory(categoryId) : {}, search ? productSearch(search, { matchCodes: false }) : {}],
     };
 
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { name: "asc" };
+    if (sortBy === "newest") {
+      orderBy = { createdAt: "desc" };
+    } else if (sortBy === "name_asc") {
+      orderBy = { name: "asc" };
+    }
+
     const [rows, total] = await prisma.$transaction([
-      prisma.product.findMany({ where, include: catalogProductInclude, orderBy: { name: "asc" }, take: limit, skip: offset }),
+      prisma.product.findMany({ where, include: catalogProductInclude, orderBy, take: limit, skip: offset }),
       prisma.product.count({ where }),
     ]);
 
-    return { items: await toProductCards(prisma, rows), total, limit, offset };
+    let items = await toProductCards(prisma, rows);
+    if (sortBy === "price_asc") {
+      items.sort((a, b) => {
+        const minA = Math.min(...a.variants.map((v) => Number(v.price)));
+        const minB = Math.min(...b.variants.map((v) => Number(v.price)));
+        return minA - minB;
+      });
+    } else if (sortBy === "price_desc") {
+      items.sort((a, b) => {
+        const maxA = Math.max(...a.variants.map((v) => Number(v.price)));
+        const maxB = Math.max(...b.variants.map((v) => Number(v.price)));
+        return maxB - maxA;
+      });
+    }
+
+    return { items, total, limit, offset };
   }
 
   async function getProduct(productId: string) {
     const product = await prisma.product.findFirst({
-      where: { id: productId, ...catalogProductWhere },
+      where: {
+        OR: [{ id: productId }, { slug: productId }],
+        ...catalogProductWhere,
+      },
       include: productInclude({ detail: true }),
     });
 

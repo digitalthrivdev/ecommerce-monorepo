@@ -21,6 +21,7 @@ import { Alert, Linking, Pressable, ScrollView, Share, View, type AlertButton } 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FocusStatusBar } from "@/components/focus-status-bar";
+import { CartButton } from "@/components/cart-button";
 import { openPolicy } from "@/components/policy-link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -102,40 +103,57 @@ export default function AccountScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <ScrollView contentContainerClassName="gap-4 px-4 pb-10 pt-3">
-        <Text className="text-2xl font-extrabold">Account</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-2xl font-extrabold">Account</Text>
+          <CartButton />
+        </View>
 
-        <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Edit profile">
-          <Card className="flex-row items-center gap-4 px-4 py-4">
-            <View className="size-14 items-center justify-center rounded-full bg-highlight">
-              {user?.name ? (
-                <Text className="text-xl font-extrabold text-highlight-foreground">{user.name.charAt(0).toUpperCase()}</Text>
-              ) : (
-                <Icon as={UserRound} size={26} className="text-highlight-foreground" />
-              )}
-            </View>
-            <View className="flex-1 gap-0.5">
-              <Text className="text-lg font-bold" numberOfLines={1}>
-                {user?.name ?? "Add your name"}
-              </Text>
-              {user ? <Text className="text-sm text-muted-foreground">{formatPhone(user.phone)}</Text> : null}
-              {user?.email ? (
-                <Text className="text-sm text-muted-foreground" numberOfLines={1}>
-                  {user.email}
+        {user ? (
+          <Pressable onPress={() => router.push("/profile")} accessibilityRole="button" accessibilityLabel="Edit profile">
+            <Card className="flex-row items-center gap-4 px-4 py-4">
+              <View className="size-14 items-center justify-center rounded-full bg-highlight">
+                {user.name ? (
+                  <Text className="text-xl font-extrabold text-highlight-foreground">{user.name.charAt(0).toUpperCase()}</Text>
+                ) : (
+                  <Icon as={UserRound} size={26} className="text-highlight-foreground" />
+                )}
+              </View>
+              <View className="flex-1 gap-0.5">
+                <Text className="text-lg font-bold" numberOfLines={1}>
+                  {user.name ?? "Add your name"}
                 </Text>
-              ) : null}
+                <Text className="text-sm text-muted-foreground">{formatPhone(user.phone)}</Text>
+                {user.email ? (
+                  <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+                    {user.email}
+                  </Text>
+                ) : null}
+              </View>
+              <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
+            </Card>
+          </Pressable>
+        ) : (
+          <Card className="gap-3 p-4">
+            <View className="gap-1">
+              <Text className="text-lg font-bold">Sign in or create account</Text>
+              <Text className="text-xs text-muted-foreground">
+                View your past orders, saved addresses and faster checkout.
+              </Text>
             </View>
-            <Icon as={ChevronRight} size={18} className="text-muted-foreground" />
+            <Button onPress={() => router.push("/sign-in")} className="h-11 rounded-lg">
+              <Text className="font-bold">Log in / Sign up</Text>
+            </Button>
           </Card>
-        </Pressable>
+        )}
 
         <View className="flex-row gap-3">
-          <Tile icon={Package} label="Your orders" onPress={() => router.push("/orders")} />
-          <Tile icon={Heart} label="Wishlist" onPress={() => router.push("/wishlist")} />
+          <Tile icon={Package} label="Your orders" onPress={() => router.push(user ? "/orders" : "/sign-in")} />
+          <Tile icon={Heart} label="Wishlist" onPress={() => router.push(user ? "/wishlist" : "/sign-in")} />
           {openHelp ? <Tile icon={Headset} label="Help" onPress={openHelp} /> : null}
         </View>
 
         <Card className="gap-0 overflow-hidden py-1">
-          <Row icon={MapPin} label="Saved addresses" onPress={() => router.push("/addresses")} />
+          <Row icon={MapPin} label="Saved addresses" onPress={() => router.push(user ? "/addresses" : "/sign-in")} />
           <Separator className="ml-16 w-auto" />
           <Row
             icon={Bell}
@@ -173,10 +191,12 @@ export default function AccountScreen() {
           </View>
         ) : null}
 
-        <Button variant="outline" onPress={confirmSignOut} className="mt-2 h-12 rounded-lg">
-          <Icon as={LogOut} size={18} className="text-destructive" />
-          <Text className="font-semibold text-destructive">Log out</Text>
-        </Button>
+        {user ? (
+          <Button variant="outline" onPress={confirmSignOut} className="mt-2 h-12 rounded-lg">
+            <Icon as={LogOut} size={18} className="text-destructive" />
+            <Text className="font-semibold text-destructive">Log out</Text>
+          </Button>
+        ) : null}
 
         <Text className="text-center text-xs text-muted-foreground">
           {appName} · version {Constants.expoConfig?.version ?? "1.0.0"}

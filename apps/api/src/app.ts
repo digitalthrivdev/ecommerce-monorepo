@@ -11,6 +11,7 @@ import otpPlugin from "./plugins/otp.js";
 import paymentsPlugin from "./plugins/payments.js";
 import prismaPlugin from "./plugins/prisma.js";
 import redisPlugin from "./plugins/redis.js";
+import shippingPlugin from "./plugins/shipping.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import brandsRoutes from "./modules/brands/brands.routes.js";
 import cartRoutes from "./modules/cart/cart.routes.js";
@@ -72,6 +73,7 @@ export async function buildApp() {
   await app.register(otpPlugin);
   await app.register(paymentsPlugin);
   await app.register(notificationsPlugin);
+  await app.register(shippingPlugin);
 
   app.get("/health", async () => {
     await app.prisma.$queryRaw`SELECT 1`;

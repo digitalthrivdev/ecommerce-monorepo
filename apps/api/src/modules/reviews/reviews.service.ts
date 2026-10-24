@@ -53,10 +53,14 @@ export function createReviewsService(prisma: PrismaClient) {
 
   /** The product's average rating over visible reviews, and those with a comment, newest first. */
   async function productReviews(productId: string, { limit, offset }: ProductReviewsQuery) {
-    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } });
+    const product = await prisma.product.findFirst({
+      where: { OR: [{ id: productId }, { slug: productId }] },
+      select: { id: true },
+    });
     if (!product) throw productNotFound();
 
-    const visible = { productId, isHidden: false } satisfies Prisma.ProductReviewWhereInput;
+    const resolvedProductId = product.id;
+    const visible = { productId: resolvedProductId, isHidden: false } satisfies Prisma.ProductReviewWhereInput;
     const withComment = { ...visible, comment: { not: null } } satisfies Prisma.ProductReviewWhereInput;
     const [summary, byRating, rows, total] = await prisma.$transaction([
       prisma.productReview.aggregate({ where: visible, _avg: { rating: true }, _count: true }),

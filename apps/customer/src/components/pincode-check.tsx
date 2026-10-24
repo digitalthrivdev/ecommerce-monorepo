@@ -10,6 +10,19 @@ import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { useServiceability } from "@/lib/serviceability";
 import { cn } from "@/lib/utils";
 
+function formatEstimatedDelivery(etaDays: number | null): string {
+  if (etaDays && etaDays > 0) {
+    const target = new Date(Date.now() + etaDays * 86_400_000);
+    const formatted = target.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+    return `Estimated delivery by ${formatted} (${etaDays} ${etaDays === 1 ? "day" : "days"})`;
+  }
+  return "Standard delivery available (typically 3–5 business days)";
+}
+
 export function PincodeCheck({ weightGrams = 0 }: { weightGrams?: number }) {
   const surface = useCardSurface();
   const { colors } = useAppTheme();
@@ -36,7 +49,7 @@ export function PincodeCheck({ weightGrams = 0 }: { weightGrams?: number }) {
           <Icon as={query.data.serviceable ? Check : MapPin} size={17} className={query.data.serviceable ? "text-primary" : "text-destructive"} />
           <Text className="flex-1 text-sm text-muted-foreground">
             {query.data.serviceable
-              ? `Delivery is available${query.data.etaDays ? ` in about ${query.data.etaDays} days` : ""}. ${query.data.codAvailable ? "Cash on delivery is available." : "Cash on delivery is not available here."}`
+              ? `${formatEstimatedDelivery(query.data.etaDays)}. ${query.data.codAvailable ? "Cash on delivery available." : "Online payment only."}`
               : "Delivery isn't available at this PIN code."}
           </Text>
         </View>

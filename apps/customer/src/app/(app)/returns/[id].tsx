@@ -134,7 +134,7 @@ function ReportForm({ order, onSubmitted }: { order: OrderDetail; onSubmitted: (
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
       <ScrollView contentContainerClassName="gap-5 px-4 pb-6 pt-2" keyboardShouldPersistTaps="handled">
         <Text className="text-sm text-muted-foreground">
           Order {order.orderNumber}

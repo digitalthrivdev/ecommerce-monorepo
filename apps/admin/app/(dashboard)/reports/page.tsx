@@ -28,6 +28,11 @@ const REPORTS = [
     title: "Online payments and refunds",
     description: "Every online payment received and every refund paid, with the gateway reference, to match your settlements.",
   },
+  {
+    id: "abandoned-carts",
+    title: "Abandoned carts",
+    description: "Active carts with items not yet converted into orders, customer contact info, total value, and applied coupons.",
+  },
 ] as const;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);

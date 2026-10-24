@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CartBar } from "@/components/cart-bar";
+import { CartButton } from "@/components/cart-button";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { ProductList } from "@/components/product-list";
 import { Icon } from "@/components/ui/icon";
@@ -100,9 +100,12 @@ export default function CategoryScreen() {
         <Text className="flex-1 px-1 text-base font-bold" numberOfLines={1} accessibilityRole="header">
           {title}
         </Text>
-        <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={8}>
-          <Icon as={Search} size={21} />
-        </Pressable>
+        <View className="flex-row items-center">
+          <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={8}>
+            <Icon as={Search} size={21} />
+          </Pressable>
+          <CartButton />
+        </View>
       </View>
       <View className="flex-1 flex-row">
         {rail.length > 0 && <SubCategoryRail key={`rail-${top?.id}`} items={rail} selectedId={id} />}
@@ -116,7 +119,6 @@ export default function CategoryScreen() {
           />
         </View>
       </View>
-      <CartBar />
     </View>
   );
 }

@@ -18,7 +18,7 @@ export type OtpCheck = "valid" | "invalid" | "expired" | "too-many-attempts";
  */
 export interface OtpProvider {
   readonly name: string;
-  start(phone: string): Promise<{ reference: string }>;
+  start(phone: string): Promise<{ reference: string; devOtp?: string }>;
   check(input: { phone: string; code: string; reference: string }): Promise<OtpCheck>;
   /** False when the provider rejects the credentials. Used before saving keys entered by an admin. */
   checkCredentials(): Promise<boolean>;
@@ -77,7 +77,8 @@ export function createLogProvider(log: FastifyBaseLogger): OtpProvider {
     async start(phone) {
       const otp = randomInt(0, 10 ** OTP_LENGTH).toString().padStart(OTP_LENGTH, "0");
       log.info({ phone, otp }, "Login OTP (not sent via SMS)");
-      return { reference: hashOtp(phone, otp) };
+      console.log(`\n=======================================================\n🔑 [DEV OTP] Verification code for ${phone} is: ${otp}\n=======================================================\n`);
+      return { reference: hashOtp(phone, otp), devOtp: otp };
     },
     async check({ phone, code, reference }) {
       return sameHash(reference, hashOtp(phone, code)) ? "valid" : "invalid";

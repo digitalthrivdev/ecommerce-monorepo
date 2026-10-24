@@ -75,6 +75,11 @@ export async function apiFetch<T>(path: string, { method = "GET", body, query, t
 }
 
 export function errorMessage(error: unknown) {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    if (error.status === 401 || error.code === "UNAUTHORIZED" || error.message.toLowerCase().includes("token")) {
+      return "Please sign in to continue 😊";
+    }
+    return error.message;
+  }
   return "Something went wrong. Please try again.";
 }

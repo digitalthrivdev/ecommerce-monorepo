@@ -7,10 +7,9 @@ import { BackHandler, Pressable, RefreshControl, ScrollView, View } from "react-
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ActiveOrderBar } from "@/components/active-order-bar";
 import { AnnouncementBar } from "@/components/announcement-bar";
-import { CartBar } from "@/components/cart-bar";
 import { BrandMark } from "@/components/brand-mark";
+import { CartButton } from "@/components/cart-button";
 import { CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { CategoryTabs, opensPage } from "@/components/home/category-tabs";
@@ -33,14 +32,17 @@ function HomeHeader() {
       <View className="flex-1 gap-0.5">
         <BrandMark textClassName="text-highlight-foreground text-2xl" />
       </View>
-      <Pressable
-        onPress={() => router.navigate("/account")}
-        className="size-10 items-center justify-center rounded-full bg-card active:opacity-80"
-        accessibilityLabel="Account"
-        hitSlop={6}
-      >
-        <Icon as={UserRound} size={20} />
-      </Pressable>
+      <View className="flex-row items-center gap-1.5">
+        <CartButton size={40} iconSize={20} className="bg-card" />
+        <Pressable
+          onPress={() => router.navigate("/account")}
+          className="size-10 items-center justify-center rounded-full bg-card active:opacity-80"
+          accessibilityLabel="Account"
+          hitSlop={6}
+        >
+          <Icon as={UserRound} size={20} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -184,8 +186,6 @@ export default function HomeScreen() {
             <HomeContent tab={selectedTab} />
           </View>
         </ScrollView>
-        <ActiveOrderBar />
-        <CartBar inset={false} />
       </View>
     </HeaderLookProvider>
   );

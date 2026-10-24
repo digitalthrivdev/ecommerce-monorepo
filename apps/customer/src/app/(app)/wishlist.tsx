@@ -17,6 +17,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { useAppTheme, useCardSurface } from "@/lib/app-theme";
 import { smallImage } from "@/lib/images";
 import { openProduct } from "@/lib/navigation";
+import { useSession } from "@/lib/session";
 import { useSettings } from "@/lib/settings";
 import type { WishlistItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ function UnavailableCard({ item }: { item: WishlistItem }) {
 export default function WishlistScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const { user } = useSession();
   const { currency } = useSettings();
   const screen = useWindowDimensions();
   const wishlist = useWishlist();
@@ -73,6 +75,17 @@ export default function WishlistScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <ScreenHeader title="Your wishlist" />
+      {!user ? (
+        <View className="mx-4 mb-2 flex-row items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <View className="flex-1 pr-3">
+            <Text className="text-xs font-bold text-foreground">Sign in to sync your wishlist</Text>
+            <Text className="text-[11px] text-muted-foreground">Keep your saved items across all devices</Text>
+          </View>
+          <Button size="sm" onPress={() => router.push("/sign-in")} className="h-8 rounded-lg px-3">
+            <Text className="text-xs font-bold">Sign in</Text>
+          </Button>
+        </View>
+      ) : null}
       <FlatList
         data={items}
         keyExtractor={(item) => item.productId}

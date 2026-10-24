@@ -55,8 +55,12 @@ export default function VerifyScreen() {
         setError("This number is registered for staff or delivery work. Use a different number to shop.");
         return;
       }
-      // The protected routes in the root layout move to the home screen once the session exists.
       await signIn(accessToken, user);
+      if (router.canDismiss()) {
+        router.dismissAll();
+      } else {
+        router.replace("/");
+      }
     } catch (caught) {
       setCode("");
       setError(caught instanceof ApiError && caught.code === "INVALID_OTP" ? "That code is incorrect or has expired. Try again." : errorMessage(caught));
@@ -82,7 +86,7 @@ export default function VerifyScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <View className="h-14 flex-row items-center gap-2 px-2">
         <Pressable onPress={() => router.back()} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Back" hitSlop={8}>

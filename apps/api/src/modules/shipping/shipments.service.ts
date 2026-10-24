@@ -256,6 +256,33 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
     return prisma.$transaction((tx) => recordShipmentEvents(tx, { orderId, shipmentId: shipment.id, changedById: null, events }));
   }
 
+  /**
+   * Periodic background sweep for active shipments: polls carrier tracking for shipments that
+   * have not yet reached a final status and records any new events.
+   */
+  async function sweepTracking(): Promise<{ checked: number; updated: number }> {
+    const activeShipments = await prisma.shipment.findMany({
+      where: {
+        status: { notIn: [ShipmentStatus.DELIVERED, ShipmentStatus.RTO_DELIVERED, ShipmentStatus.CANCELLED] },
+        provider: { notIn: [...HAND_TRACKED_CARRIERS] },
+        OR: [{ awb: { not: null } }, { providerShipmentId: { not: null } }],
+      },
+      select: { orderId: true, provider: true, awb: true },
+    });
+
+    let updated = 0;
+    for (const shipment of activeShipments) {
+      try {
+        const newEventsCount = await syncTracking(shipment.orderId);
+        if (newEventsCount > 0) updated++;
+      } catch (error) {
+        log.warn({ err: error, orderId: shipment.orderId, provider: shipment.provider, awb: shipment.awb }, "Failed to sync tracking during background sweep");
+      }
+    }
+
+    return { checked: activeShipments.length, updated };
+  }
+
   /** Carrier webhooks. Updates already recorded and unknown shipments are acknowledged, so the carrier stops retrying. */
   async function handleWebhook(carrier: string, rawBody: string, headers: IncomingHttpHeaders) {
     const provider = await getShippingProvider(prisma, carrier);
@@ -289,7 +316,7 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
     );
   }
 
-  return { shipOrder, cancelShipment, refreshLabel, addEvent, syncTracking, handleWebhook };
+  return { shipOrder, cancelShipment, refreshLabel, addEvent, syncTracking, sweepTracking, handleWebhook };
 }
 
 export type ShipmentsService = ReturnType<typeof createShipmentsService>;

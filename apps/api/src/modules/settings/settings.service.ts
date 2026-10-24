@@ -167,6 +167,7 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
       phone: settings.reviewLoginPhone,
       codeSet: settings.reviewLoginCodeHash !== null,
     },
+    requireCheckoutOtp: settings.requireCheckoutOtp,
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
     shippingProvider: settings.shippingProvider ?? MANUAL_CARRIER,
@@ -204,6 +205,9 @@ export function createSettingsService(prisma: PrismaClient, otp: OtpRegistry) {
       payments: {
         methods: (await activePaymentProvider(prisma, settings)) ? [PaymentMethod.COD, PaymentMethod.ONLINE] : [PaymentMethod.COD],
         onlinePaymentTimeoutMinutes: env.PAYMENT_TIMEOUT_MINUTES,
+      },
+      checkout: {
+        requireOtp: settings.requireCheckoutOtp,
       },
       support: {
         phone: settings.supportPhone,

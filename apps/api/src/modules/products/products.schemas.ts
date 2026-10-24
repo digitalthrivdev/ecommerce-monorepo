@@ -188,6 +188,10 @@ export const listCatalogQuerySchema = paginationQuerySchema.extend({
   categoryId: idSchema.optional(),
   brandId: idSchema.optional(),
   search: searchQuery,
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  inStock: booleanQuery,
+  sortBy: z.enum(["newest", "price_asc", "price_desc", "name_asc"]).optional(),
 });
 
 const idList = z

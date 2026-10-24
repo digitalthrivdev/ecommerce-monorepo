@@ -2,7 +2,7 @@ import { ChevronRight } from "lucide-react-native";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CartBar } from "@/components/cart-bar";
+import { CartButton } from "@/components/cart-button";
 import { CategoryGrid, CategoryGridSkeleton } from "@/components/category-grid";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { QueryError } from "@/components/query-error";
@@ -56,11 +56,14 @@ export default function CategoriesScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
+      <View className="flex-row items-center justify-between px-4 pb-2 pt-2">
+        <Text className="text-2xl font-extrabold">All categories</Text>
+        <CartButton />
+      </View>
       <ScrollView
         contentContainerClassName="pb-8"
         refreshControl={<RefreshControl refreshing={categories.isRefetching} onRefresh={() => categories.refetch()} tintColor={colors.primary} />}
       >
-        <Text className="px-4 pb-4 pt-3 text-2xl font-extrabold">All categories</Text>
         {categories.isPending ? (
           <CategoryGridSkeleton />
         ) : categories.isError ? (
@@ -69,7 +72,6 @@ export default function CategoriesScreen() {
           <CategorySections categories={categories.data.items} />
         )}
       </ScrollView>
-      <CartBar inset={false} />
     </View>
   );
 }

@@ -273,5 +273,54 @@ export function createReportsService(prisma: PrismaClient) {
       csvLine(["Net", null, null, null, null, null, null, null, received.minus(refunded), null]);
   }
 
-  return { dailySales, gstSummary, payments };
+  async function abandonedCarts(query: ReportQuery) {
+    const start = startOfDay(query.from, env.TIMEZONE);
+    const end = endOfDay(query.to, env.TIMEZONE);
+
+    const carts = await prisma.cart.findMany({
+      where: {
+        updatedAt: { gte: start, lte: end },
+        items: { some: {} },
+      },
+      include: {
+        user: { select: { name: true, phone: true, email: true } },
+        items: {
+          include: {
+            variant: {
+              select: {
+                name: true,
+                price: true,
+                product: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const time = new Intl.DateTimeFormat("en-IN", { timeZone: env.TIMEZONE, dateStyle: "short", timeStyle: "short" });
+    const header = csvLine(["Last active", "Customer name", "Phone", "Email", "Item count", "Cart total", "Items in cart", "Coupon"]);
+    const lines = carts.map((cart) => {
+      const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+      const total = cart.items.reduce((sum, item) => sum.plus(item.variant.price.mul(item.quantity)), zero());
+      const itemDescriptions = cart.items
+        .map((item) => `${item.quantity}x ${item.variant.product.name}${item.variant.name ? ` (${item.variant.name})` : ""}`)
+        .join("; ");
+      return csvLine([
+        time.format(cart.updatedAt),
+        cart.user.name,
+        cart.user.phone,
+        cart.user.email,
+        itemCount,
+        total,
+        itemDescriptions,
+        cart.couponCode,
+      ]);
+    });
+
+    return header + lines.join("");
+  }
+
+  return { dailySales, gstSummary, payments, abandonedCarts };
 }

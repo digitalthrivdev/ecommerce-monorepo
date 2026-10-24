@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const REPORTS = ["daily-sales", "gst-summary", "payments"] as const;
+export const REPORTS = ["daily-sales", "gst-summary", "payments", "abandoned-carts"] as const;
 export type Report = (typeof REPORTS)[number];
 
 /** Longest range one export can cover, in days. */

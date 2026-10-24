@@ -132,6 +132,87 @@ describe("checkout", () => {
   });
 });
 
+describe("direct checkout", () => {
+  it("places an order as a guest without prior sign-in, creates account and returns token", async () => {
+    const item = await listing({ price: { gte: 100 } });
+    const beforeStock = await stock(item.id);
+    const guestPhone = "9988776655";
+
+    const response = await call(app, "POST", "/orders/direct", {
+      body: {
+        items: [{ variantId: item.id, quantity: 1 }],
+        customer: {
+          name: "Guest Shopper",
+          phone: guestPhone,
+          email: "guest@example.com",
+        },
+        address: {
+          addressLine1: "Flat 101, Sunshine Apts, Indiranagar",
+          landmark: "Near Metro",
+          city: "Bengaluru",
+          state: "Karnataka",
+          postalCode: "560038",
+        },
+        paymentMethod: "COD",
+      },
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.order).toBeDefined();
+    expect(response.body.accessToken).toBeTypeOf("string");
+    expect(response.body.user).toMatchObject({
+      name: "Guest Shopper",
+      phone: "+919988776655",
+    });
+
+    const orderId = response.body.order.id;
+    const order = await app.prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      include: { items: true, statusHistory: true },
+    });
+    expect(order.status).toBe("CONFIRMED");
+    expect(order.customerName).toBe("Guest Shopper");
+    expect(order.customerPhone).toBe("+919988776655");
+    expect(await stock(item.id)).toBe(beforeStock - 1);
+
+    // Using the returned accessToken to access private endpoints
+    const orderView = await call(app, "GET", `/orders/${orderId}`, { token: response.body.accessToken });
+    expect(orderView.status).toBe(200);
+    expect(orderView.body.id).toBe(orderId);
+  });
+
+  it("links direct order to existing user and lets them reuse details", async () => {
+    const item = await listing({ price: { gte: 100 } });
+    const response = await call(app, "POST", "/orders/direct", {
+      token: customer,
+      body: {
+        items: [{ variantId: item.id, quantity: 1 }],
+        addressId,
+        paymentMethod: "COD",
+      },
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.order).toBeDefined();
+    expect(response.body.order.deliveryAddress.phone).toBe(SEED.customerPhone);
+  });
+
+  it("previews a guest cart and calculates charges and issues without auth", async () => {
+    const item = await listing({ price: { gte: 50 } });
+    const response = await call(app, "POST", "/cart/preview", {
+      body: {
+        items: [{ variantId: item.id, quantity: 2 }],
+      },
+    });
+    expect(response.status).toBe(200);
+    expect(response.body.items).toHaveLength(1);
+    expect(response.body.items[0].variantId).toBe(item.id);
+    expect(response.body.items[0].quantity).toBe(2);
+    expect(response.body.subtotal).toBe(item.price.mul(2).toFixed(2));
+    expect(response.body.bill).toBeDefined();
+  });
+});
+
 describe("after checkout", () => {
   let orderId: string;
   let variantId: string;

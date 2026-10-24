@@ -1,7 +1,6 @@
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-  ArrowLeft,
   Bell,
   Check,
   CircleCheck,
@@ -17,12 +16,11 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { ActivityIndicator, Alert, Animated, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, BackHandler, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BillDetails, compareAtTotal } from "@/components/bill-details";
 import { FocusStatusBar } from "@/components/focus-status-bar";
-import { FormField } from "@/components/form-field";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
 import { StarRating } from "@/components/star-rating";
@@ -37,13 +35,10 @@ import {
   COMPLAINT_REASON_TEXT,
   isOrderFinished,
   ORDER_STATUS_TEXT,
-  ORDER_STEPS,
-  orderStep,
   SHIPMENT_STATUS_TEXT,
   useCancelOrder,
   useOpenInvoice,
   useOrder,
-  useRateOrder,
 } from "@/lib/orders";
 import { formatPhone } from "@/lib/phone";
 import { useNotificationsBlocked } from "@/lib/push";
@@ -88,61 +83,6 @@ function InfoCard({ icon, title, detail, right, action, children }: InfoCardProp
   );
 }
 
-/** Being prepared or delivered: shown with the status header. */
-const isLive = (order: OrderDetail) => !isOrderFinished(order.status) && order.status !== "PENDING_PAYMENT";
-
-function StatusHeader({ order }: { order: OrderDetail }) {
-  const insets = useSafeAreaInsets();
-  const text = ORDER_STATUS_TEXT[order.status];
-
-  return (
-    <View className="bg-primary px-2 pb-4" style={{ paddingTop: insets.top + 4 }}>
-      <FocusStatusBar onPrimary />
-      <View className="flex-row items-center">
-        <Pressable
-          onPress={() => router.back()}
-          className="size-11 items-center justify-center rounded-full bg-primary-foreground/15 active:opacity-70"
-          accessibilityLabel="Back"
-          hitSlop={8}
-        >
-          <Icon as={ArrowLeft} size={22} className="text-primary-foreground" />
-        </Pressable>
-        <View className="flex-1 items-center px-2">
-          <Text className="text-2xl font-extrabold text-primary-foreground">{text.title}</Text>
-          <Text className="text-center text-sm font-semibold text-primary-foreground" numberOfLines={2}>
-            {text.detail}
-          </Text>
-        </View>
-        <View className="size-11" />
-      </View>
-    </View>
-  );
-}
-
-function StepsCard({ order }: { order: OrderDetail }) {
-  const step = orderStep(order.status);
-  if (step === null) return null;
-
-  return (
-    <Card>
-      <View className="gap-1.5">
-        <View className="flex-row gap-1">
-          {ORDER_STEPS.map((label, index) => (
-            <View key={label} className={cn("h-1.5 flex-1 rounded-full", index <= step ? "bg-primary" : "bg-muted")} />
-          ))}
-        </View>
-        <View className="flex-row">
-          {ORDER_STEPS.map((label, index) => (
-            <Text key={label} className={cn("flex-1 text-center text-[10px]", index === step ? "font-bold text-primary" : "text-muted-foreground")}>
-              {label}
-            </Text>
-          ))}
-        </View>
-      </View>
-    </Card>
-  );
-}
-
 /** Delivered, cancelled, returned or awaiting payment. */
 function StatusCard({ order }: { order: OrderDetail }) {
   const text = ORDER_STATUS_TEXT[order.status];
@@ -160,9 +100,8 @@ function StatusCard({ order }: { order: OrderDetail }) {
   );
 }
 
-/** The courier, the AWB and the tracking events, newest first. */
+/** The courier, the AWB and tracking link. */
 function TrackingCard({ shipment }: { shipment: NonNullable<OrderDetail["shipment"]> }) {
-  const events = [...shipment.events].reverse();
   const trackingUrl = shipment.trackingUrl;
 
   return (
@@ -170,30 +109,13 @@ function TrackingCard({ shipment }: { shipment: NonNullable<OrderDetail["shipmen
       icon={Truck}
       title={shipment.courierName ?? "Shipment"}
       detail={SHIPMENT_STATUS_TEXT[shipment.status]}
-      action={trackingUrl ? { label: "Track on courier site", onPress: () => Linking.openURL(trackingUrl) } : undefined}
+      action={trackingUrl ? { label: "Track on courier website", onPress: () => Linking.openURL(trackingUrl) } : undefined}
     >
       {shipment.awb ? (
         <Text selectable className="text-sm text-muted-foreground">
           AWB <Text className="text-sm font-semibold text-foreground">{shipment.awb}</Text>
         </Text>
       ) : null}
-      {events.length > 0 && (
-        <View>
-          {events.map((event, index) => (
-            <View key={`${index}-${event.occurredAt}`} className="flex-row gap-3">
-              <View className="items-center">
-                <View className={cn("mt-1 size-2.5 rounded-full", index === 0 ? "bg-primary" : "bg-muted-foreground/40")} />
-                {index < events.length - 1 && <View className="w-px flex-1 bg-border" />}
-              </View>
-              <View className={cn("flex-1 gap-0.5", index < events.length - 1 && "pb-3")}>
-                <Text className={cn("text-sm", index === 0 ? "font-bold" : "font-semibold text-muted-foreground")}>{SHIPMENT_STATUS_TEXT[event.status]}</Text>
-                {event.description ? <Text className="text-xs text-muted-foreground">{event.description}</Text> : null}
-                <Text className="text-xs text-muted-foreground">{[formatDateTime(event.occurredAt), event.location].filter(Boolean).join(" · ")}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
     </InfoCard>
   );
 }
@@ -256,81 +178,6 @@ function ComplaintCard({ order }: { order: OrderDetail }) {
   );
 }
 
-const DELIVERY_RATING_TEXT = ["", "Very poor", "Poor", "Okay", "Good", "Excellent"] as const;
-
-function RatingCard({ order }: { order: OrderDetail }) {
-  const rate = useRateOrder(order.id);
-  const [deliveryRating, setDeliveryRating] = useState(0);
-  const [itemsRating, setItemsRating] = useState(0);
-  const [comment, setComment] = useState("");
-
-  const rating = order.rating;
-  if (rating) {
-    return (
-      <Card>
-        <View className="flex-row items-center gap-3">
-          <Icon as={Star} size={22} className="text-primary" />
-          <Text className="flex-1 text-base font-bold">Thanks for your rating</Text>
-        </View>
-        <View className="flex-row items-center justify-between">
-          <Text className="text-sm text-muted-foreground">Delivery</Text>
-          <StarRating value={rating.deliveryRating} label="Delivery" size={18} />
-        </View>
-        {rating.itemsRating ? (
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm text-muted-foreground">Items</Text>
-            <StarRating value={rating.itemsRating} label="Items" size={18} />
-          </View>
-        ) : null}
-        {rating.comment ? <Text className="text-sm text-muted-foreground">“{rating.comment}”</Text> : null}
-      </Card>
-    );
-  }
-  if (!order.canRate) return null;
-
-  const submit = () =>
-    rate.mutate(
-      { deliveryRating, ...(itemsRating > 0 && { itemsRating }), ...(comment.trim() && { comment: comment.trim() }) },
-      { onError: (error) => Alert.alert("Couldn't send your rating", errorMessage(error)) },
-    );
-
-  return (
-    <Card>
-      <View className="gap-0.5">
-        <Text className="text-base font-bold">Rate your order</Text>
-        <Text className="text-sm text-muted-foreground">How was the delivery?</Text>
-      </View>
-      <View className="flex-row items-center gap-3">
-        <StarRating value={deliveryRating} onChange={setDeliveryRating} label="Delivery rating" />
-        {deliveryRating > 0 && <Text className="text-sm font-semibold text-muted-foreground">{DELIVERY_RATING_TEXT[deliveryRating]}</Text>}
-      </View>
-      {deliveryRating > 0 && (
-        <>
-          <View className="gap-1.5">
-            <Text className="text-sm font-semibold">
-              And the items?<Text className="text-sm font-normal text-muted-foreground"> (optional)</Text>
-            </Text>
-            <StarRating value={itemsRating} onChange={(value) => setItemsRating(value === itemsRating ? 0 : value)} label="Items rating" size={28} />
-          </View>
-          <FormField
-            label="Anything to add?"
-            optional
-            value={comment}
-            onChangeText={setComment}
-            placeholder="Quick delivery, everything fresh"
-            multiline
-            maxLength={500}
-            textAlignVertical="top"
-            className="h-20 py-3"
-          />
-          <Button onPress={submit} disabled={rate.isPending} className="h-11 rounded-lg">
-            <Text className="font-semibold">{rate.isPending ? "Sending…" : "Submit rating"}</Text>
-          </Button>
-        </>
-      )}
-    </Card>
-  );
-}
 
 function ProductReviewRow({ item, orderId }: { item: OrderReviewItem; orderId: string }) {
   const save = useReviewProduct(orderId);
@@ -445,7 +292,6 @@ function OrderBody({ order }: { order: OrderDetail }) {
   const cancel = useCancelOrder(order.id);
   const invoice = useOpenInvoice(order.id);
   const address = order.deliveryAddress;
-  const live = isLive(order);
   const hasInvoice = order.invoiceNumber !== null && order.status !== "CANCELLED";
   const chargedLines = order.items.map((item) => ({ compareAtPrice: item.compareAtPrice, unitPrice: item.unitPrice, quantity: item.quantity - item.unavailableQuantity }));
 
@@ -457,13 +303,11 @@ function OrderBody({ order }: { order: OrderDetail }) {
 
   return (
     <>
-      {live ? <StepsCard order={order} /> : <StatusCard order={order} />}
+      <StatusCard order={order} />
 
       {order.status === "PENDING_PAYMENT" && <PaymentPending order={order} />}
 
       {order.shipment && order.shipment.status !== "CANCELLED" && <TrackingCard shipment={order.shipment} />}
-
-      <RatingCard order={order} />
 
       <ProductReviewsCard order={order} />
 
@@ -540,13 +384,16 @@ function OrderBody({ order }: { order: OrderDetail }) {
   );
 }
 
-/** Full-screen confirmation shown for a moment after a cash order is placed. */
+/** Full-screen confirmation shown after an order is placed, then returns to home. */
 function PlacedScreen({ order, onDone }: { order: OrderDetail; onDone: () => void }) {
   const [opacity] = useState(() => new Animated.Value(1));
   const address = order.deliveryAddress;
 
   useEffect(() => {
-    const animation = Animated.sequence([Animated.delay(PLACED_SCREEN_MS), Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true })]);
+    const animation = Animated.sequence([
+      Animated.delay(PLACED_SCREEN_MS),
+      Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]);
     animation.start(({ finished }) => {
       if (finished) onDone();
     });
@@ -555,13 +402,19 @@ function PlacedScreen({ order, onDone }: { order: OrderDetail; onDone: () => voi
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { opacity, zIndex: 10 }]}>
-      <Pressable onPress={onDone} className="flex-1 items-center justify-center gap-3 bg-background px-8" accessibilityLabel="Continue to order">
+      <Pressable onPress={onDone} className="flex-1 items-center justify-center gap-3 bg-background px-8" accessibilityLabel="Continue to home">
         <View className="size-28 items-center justify-center rounded-full bg-primary">
           <Icon as={Check} size={56} className="text-primary-foreground" />
         </View>
-        <Text className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Order placed</Text>
-        <Text className="text-center text-2xl font-extrabold">Delivering to {address.name}</Text>
-        <Text className="text-center text-sm text-muted-foreground">{[address.addressLine1, address.addressLine2, address.city].filter(Boolean).join(", ")}</Text>
+        <Text className="pt-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Thank you for your order</Text>
+        <Text className="text-center text-2xl font-extrabold">Order placed</Text>
+        <Text className="text-center text-sm text-muted-foreground">
+          Delivering to {address.name}
+          {[address.addressLine1, address.city].filter(Boolean).length > 0 ? ` · ${[address.addressLine1, address.city].filter(Boolean).join(", ")}` : ""}
+        </Text>
+        <View className="mt-4 rounded-full bg-muted px-4 py-2">
+          <Text className="text-xs font-semibold text-muted-foreground">Returning to home…</Text>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -574,8 +427,19 @@ export default function OrderScreen() {
   const order = useOrder(id);
   const [refreshing, setRefreshing] = useState(false);
   const [showPlaced, setShowPlaced] = useState(placed === "1");
-  const hidePlaced = useCallback(() => setShowPlaced(false), []);
-  const live = order.data ? isLive(order.data) : false;
+  const handlePlacedDone = useCallback(() => {
+    setShowPlaced(false);
+    router.replace("/");
+  }, []);
+
+  useEffect(() => {
+    if (!showPlaced) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      handlePlacedDone();
+      return true;
+    });
+    return () => sub.remove();
+  }, [showPlaced, handlePlacedDone]);
 
   async function refresh() {
     setRefreshing(true);
@@ -585,14 +449,10 @@ export default function OrderScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      {live && order.data ? (
-        <StatusHeader order={order.data} />
-      ) : (
-        <View style={{ paddingTop: insets.top }}>
-          <FocusStatusBar />
-          <ScreenHeader title="Order details" />
-        </View>
-      )}
+      <View style={{ paddingTop: insets.top }}>
+        <FocusStatusBar />
+        <ScreenHeader title="Order details" />
+      </View>
       {order.data ? (
         <ScrollView
           contentContainerClassName="gap-4 pt-4"
@@ -607,7 +467,7 @@ export default function OrderScreen() {
       ) : (
         <QueryError error={order.error} onRetry={() => order.refetch()} />
       )}
-      {showPlaced && order.data && order.data.status !== "PENDING_PAYMENT" && <PlacedScreen order={order.data} onDone={hidePlaced} />}
+      {showPlaced && order.data && order.data.status !== "PENDING_PAYMENT" && <PlacedScreen order={order.data} onDone={handlePlacedDone} />}
     </View>
   );
 }

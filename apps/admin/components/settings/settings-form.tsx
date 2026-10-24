@@ -238,6 +238,25 @@ export function SettingsForm({ settings, currency }: { settings: PlatformSetting
         </Panel>
       </Section>
 
+      <Section title="Customer checkout" hint="Decide whether customers must verify their phone number with OTP to checkout.">
+        <Panel className="p-5">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="requireCheckoutOtp"
+              defaultChecked={settings.requireCheckoutOtp}
+              className="mt-1 size-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <div className="grid gap-1">
+              <span className="text-sm font-semibold text-foreground">Require OTP verification for checkout</span>
+              <span className="text-xs text-muted-foreground leading-normal">
+                When enabled, every customer must verify an SMS OTP code before placing an order. When disabled, new customers can complete 1-click checkout directly without OTP.
+              </span>
+            </div>
+          </label>
+        </Panel>
+      </Section>
+
       <Section title="Customer help line" hint="Shown in the customer app so people can reach you. Both are optional.">
         <Panel className="p-5">
           <div className="grid gap-5 sm:grid-cols-2">

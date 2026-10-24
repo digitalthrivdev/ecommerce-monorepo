@@ -33,7 +33,7 @@ function ReviewForm({ item, orderId }: { item: OrderReviewItem; orderId: string 
     );
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
       <ScrollView contentContainerClassName="gap-5 p-4" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-3">
           <View className="size-16 items-center justify-center overflow-hidden rounded-md bg-tile">

@@ -5,9 +5,11 @@ import {
   OrderStatus,
   PaymentMethod,
   Prisma,
+  UserRole,
   type PrismaClient,
 } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
+import { signsInWithPassword } from "../../shared/roles.js";
 import { lockCart } from "../cart/cart.service.js";
 import { checkCoupon } from "../coupons/coupons.service.js";
 import { reserveStock } from "../inventory/inventory.service.js";
@@ -20,7 +22,7 @@ import { customerVisibleVariant, imageOrder, imagesFor, maxOrderQuantity, varian
 import { assertCanOrder, assertCodAllowed, customerOrderBlock } from "./checkout-rules.js";
 import { ACTIVE_ORDER_STATUSES, deliveredAt, deliveredEntry, transitionOrder } from "./order-status.js";
 import { discountShares, includedTax } from "./tax.js";
-import type { CreateOrderInput, ListOrdersQuery } from "./orders.schemas.js";
+import type { CreateOrderInput, DirectOrderInput, ListOrdersQuery } from "./orders.schemas.js";
 
 export const CUSTOMER_CANCELLABLE_STATUSES: OrderStatus[] = [
   OrderStatus.PENDING_PAYMENT,
@@ -496,5 +498,112 @@ export function createOrdersService(prisma: PrismaClient, payments: PaymentsServ
     return getOrder(userId, orderId);
   }
 
-  return { getOrder, listOrders, createOrder, cancelOrder };
+  async function directOrder(currentUserId: string | null, input: DirectOrderInput) {
+    let userId = currentUserId;
+    let user: { id: string; role: UserRole; isTestAccount: boolean; name: string | null; phone: string } | null = null;
+
+    if (userId) {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, isTestAccount: true, name: true, phone: true },
+      });
+      if (!user) {
+        throw new AppError(404, "USER_NOT_FOUND", "User not found");
+      }
+      if (input.customer?.name && !user.name) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { name: input.customer.name },
+          select: { id: true, role: true, isTestAccount: true, name: true, phone: true },
+        });
+      }
+    } else {
+      const settings = await getPlatformSettings(prisma);
+      if (settings.requireCheckoutOtp) {
+        throw new AppError(401, "OTP_REQUIRED", "Please verify your mobile number with OTP to complete checkout");
+      }
+
+      if (!input.customer?.name || !input.customer?.phone) {
+        throw new AppError(400, "CUSTOMER_REQUIRED", "Please enter your name and phone number");
+      }
+      const phone = input.customer.phone;
+      const existing = await prisma.user.findUnique({
+        where: { phone },
+        select: { id: true, role: true, isTestAccount: true, name: true, phone: true },
+      });
+
+      if (existing) {
+        if (signsInWithPassword(existing.role)) {
+          throw new AppError(403, "PASSWORD_LOGIN_REQUIRED", "This account is for staff/admin. Please sign in with email.");
+        }
+        user = existing;
+        if (!user.name && input.customer.name) {
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              name: input.customer.name,
+              ...(input.customer.email ? { email: input.customer.email } : {}),
+            },
+            select: { id: true, role: true, isTestAccount: true, name: true, phone: true },
+          });
+        }
+      } else {
+        user = await prisma.user.create({
+          data: {
+            phone,
+            name: input.customer.name,
+            email: input.customer.email ?? null,
+            role: UserRole.CUSTOMER,
+          },
+          select: { id: true, role: true, isTestAccount: true, name: true, phone: true },
+        });
+      }
+      userId = user.id;
+    }
+
+    let addressId = input.addressId;
+    if (input.address) {
+      const createdAddress = await prisma.address.create({
+        data: {
+          userId,
+          name: input.customer?.name ?? user.name ?? "Customer",
+          phone: input.customer?.phone ?? user.phone,
+          addressLine1: input.address.addressLine1,
+          addressLine2: input.address.addressLine2 ?? null,
+          landmark: input.address.landmark ?? null,
+          city: input.address.city,
+          state: input.address.state,
+          postalCode: input.address.postalCode,
+        },
+      });
+      addressId = createdAddress.id;
+    }
+
+    if (!addressId) {
+      throw new AppError(400, "ADDRESS_REQUIRED", "Delivery address is required");
+    }
+
+    // Set user's cart with direct order items
+    const cart = await prisma.cart.upsert({
+      where: { userId },
+      update: { couponCode: input.couponCode ?? null },
+      create: { userId, couponCode: input.couponCode ?? null },
+      select: { id: true },
+    });
+
+    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    await prisma.cartItem.createMany({
+      data: input.items.map((it) => ({
+        cartId: cart.id,
+        variantId: it.variantId,
+        quantity: it.quantity,
+      })),
+    });
+
+    const order = await createOrder(userId, { addressId, paymentMethod: input.paymentMethod });
+
+    return { order, user };
+  }
+
+  return { getOrder, listOrders, createOrder, cancelOrder, directOrder };
 }

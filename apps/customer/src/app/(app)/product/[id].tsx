@@ -7,13 +7,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AddToCartButton } from "@/components/add-to-cart";
 import { BrandRow } from "@/components/brand-row";
-import { CartBar } from "@/components/cart-bar";
+import { CartButton } from "@/components/cart-button";
+import { DirectCheckoutSheet } from "@/components/direct-checkout-sheet";
 import { FocusStatusBar } from "@/components/focus-status-bar";
 import { RatingLine, ReviewsCard } from "@/components/product-reviews";
 import { ProductRow } from "@/components/product-row";
 import { PincodeCheck } from "@/components/pincode-check";
 import { QueryError } from "@/components/query-error";
 import { ScreenHeader } from "@/components/screen-header";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
@@ -170,8 +172,12 @@ function VariantChoices({ product, variant, onSelect }: { product: ProductDetail
                     selected={value.id === selected?.id}
                     dimmed={!exact?.inStock}
                     onPress={() => {
-                      const next = pickVariant(product, variant, optionIndex, value.id);
-                      if (next) onSelect(next.variantId);
+                      if (exact) {
+                        onSelect(exact.variantId);
+                      } else {
+                        const next = pickVariant(product, variant, optionIndex, value.id);
+                        if (next) onSelect(next.variantId);
+                      }
                     }}
                   />
                 );
@@ -341,11 +347,12 @@ function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
   }
 
   return (
-    <View className="flex-row">
+    <View className="flex-row items-center">
       <Pressable onPress={() => router.push("/search")} className="size-11 items-center justify-center rounded-full active:bg-accent" accessibilityLabel="Search" hitSlop={4}>
         <Icon as={Search} size={22} />
       </Pressable>
       <WishlistButton productId={productId} className="size-11 active:bg-accent" />
+      <CartButton size={44} iconSize={22} />
       <Pressable
         onPress={share}
         disabled={!product || !variant}
@@ -362,20 +369,46 @@ function HeaderActions({ productId, product, variant }: HeaderActionsProps) {
 function ProductFooter({ product, variant }: { product: ProductDetail; variant: Variant }) {
   const insets = useSafeAreaInsets();
   const { currency } = useSettings();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const directItem = {
+    variantId: variant.variantId,
+    name: product.name,
+    variantLabel: variant.label,
+    imageUrl: imagesFor(product.images, variant.variantId)[0]?.url,
+    price: variant.price,
+    quantity: 1,
+  };
 
   return (
-    <View className="gap-1 border-t border-border bg-card pt-3" style={{ paddingBottom: insets.bottom + 4 }}>
-      <View className="flex-row items-center justify-between gap-3 px-4 pb-2">
-        <View className="shrink">
-          <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-            {variant.label || product.name}
-          </Text>
-          <Text className="text-lg font-extrabold">{formatMoney(variant.price, currency)}</Text>
+    <>
+      <View className="gap-2 border-t border-border bg-card pt-3" style={{ paddingBottom: insets.bottom + 4 }}>
+        <View className="flex-row items-center justify-between gap-3 px-4 pb-1">
+          <View className="shrink">
+            <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+              {variant.label || product.name}
+            </Text>
+            <Text className="text-lg font-extrabold">{formatMoney(variant.price, currency)}</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <AddToCartButton product={product} variant={variant} size="lg" />
+            <Button
+              onPress={() => setSheetOpen(true)}
+              disabled={!variant.inStock}
+              className="h-11 rounded-md px-4"
+            >
+              <Text className="font-extrabold text-sm">BUY NOW</Text>
+            </Button>
+          </View>
         </View>
-        <AddToCartButton product={product} variant={variant} size="lg" />
       </View>
-      <CartBar inset={false} className="bg-card pt-0" />
-    </View>
+
+      <DirectCheckoutSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        items={[directItem]}
+      />
+    </>
   );
 }
 

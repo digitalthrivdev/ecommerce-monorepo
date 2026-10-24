@@ -50,6 +50,22 @@ function referencedCategoryIds(sections: HomeSection[]) {
   });
 }
 
+function referencedProductIds(sections: HomeSection[]) {
+  const linked = (link: SectionLink) => (link.type === "product" ? [link.productId] : []);
+  return sections.flatMap((section) => {
+    switch (section.type) {
+      case "banner_carousel":
+        return section.banners.flatMap((banner) => linked(banner.link));
+      case "image_tiles":
+        return section.tiles.flatMap((tile) => linked(tile.link));
+      case "offer_strip":
+        return linked(section.link);
+      default:
+        return [];
+    }
+  });
+}
+
 /** Shows every top-level category: an empty category grid or category deals list. */
 const needsAllCategories = (section: HomeSection) =>
   (section.type === "category_grid" || section.type === "category_deals") && section.categoryIds.length === 0;
@@ -87,8 +103,9 @@ export function createHomeService(prisma: PrismaClient) {
   async function resolveSections(allSections: HomeSection[], extraCategoryIds: string[]) {
     const sections = allSections.filter((section) => section.enabled);
     const ids = [...new Set([...referencedCategoryIds(sections), ...extraCategoryIds])];
+    const productIds = [...new Set(referencedProductIds(sections))];
 
-    const [referenced, allActive] = await Promise.all([
+    const [referenced, allActive, referencedProducts] = await Promise.all([
       ids.length > 0 ? prisma.category.findMany({ where: { id: { in: ids }, isActive: true }, select: categorySelect }) : [],
       sections.some(needsAllCategories)
         ? prisma.category.findMany({
@@ -98,12 +115,26 @@ export function createHomeService(prisma: PrismaClient) {
             take: ALL_CATEGORIES_LIMIT,
           })
         : [],
+      productIds.length > 0
+        ? prisma.product.findMany({
+            where: { id: { in: productIds }, isActive: true },
+            select: { id: true, name: true, slug: true },
+          })
+        : [],
     ]);
     const categories = new Map<string, HomeCategory>(referenced.map((category) => [category.id, category]));
+    const products = new Map(referencedProducts.map((product) => [product.id, product]));
 
     const resolveLink = (link: SectionLink) => {
-      const category = link.type === "category" ? categories.get(link.categoryId) : undefined;
-      return category ? { type: "category" as const, category } : { type: "none" as const };
+      if (link.type === "category") {
+        const category = categories.get(link.categoryId);
+        return category ? { type: "category" as const, category } : { type: "none" as const };
+      }
+      if (link.type === "product") {
+        const product = products.get(link.productId);
+        return product ? { type: "product" as const, product } : { type: "none" as const };
+      }
+      return { type: "none" as const };
     };
 
     const resolveSection = async (section: HomeSection) => {

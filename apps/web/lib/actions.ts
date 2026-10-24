@@ -3,14 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 
-import { ApiError, apiAuth, apiAuthForm, apiRequest, clearToken, writeToken } from "./api";
+import { ApiError, apiAuth, apiAuthForm, apiRequest, clearToken, readToken, writeToken } from "./api";
+import { listAddresses, listProducts } from "./catalog";
+import { addGuestCartItem, clearGuestCart, removeGuestCartItem, updateGuestCartItem } from "./guest-cart";
 import { safeNext } from "./paths";
+import type { Address } from "./types";
+import { cardOffer } from "./utils";
 import { getSiteUrl } from "./website";
 
 export type FormState = { error: string | null; success?: string | null };
 
 function errorMessage(error: unknown) {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    if (error.status === 401 || error.code === "UNAUTHORIZED" || error.message.toLowerCase().includes("token")) {
+      return "Please sign in to continue 😊";
+    }
+    return error.message;
+  }
   return "Something went wrong. Please try again.";
 }
 
@@ -77,10 +86,16 @@ export async function updateProfile(_prev: FormState, formData: FormData): Promi
 export async function addToCart(_prev: FormState, formData: FormData): Promise<FormState> {
   const variantId = String(formData.get("variantId") ?? "");
   const quantity = Number(formData.get("quantity") ?? 1);
+  const qty = Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
   try {
-    await apiAuth("/cart/items", { method: "POST", body: { variantId, quantity: Number.isInteger(quantity) && quantity > 0 ? quantity : 1 } });
+    const token = await readToken();
+    if (token) {
+      await apiAuth("/cart/items", { method: "POST", body: { variantId, quantity: qty } });
+    } else {
+      await addGuestCartItem(variantId, qty);
+    }
     revalidatePath("/", "layout");
-    return { error: null };
+    return { error: null, success: "Item added to cart" };
   } catch (error) {
     return fail(error);
   }
@@ -88,9 +103,16 @@ export async function addToCart(_prev: FormState, formData: FormData): Promise<F
 
 export async function updateCartItem(_prev: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
+  const variantId = String(formData.get("variantId") ?? "");
   const quantity = Number(formData.get("quantity") ?? 1);
+  const qty = Number.isInteger(quantity) && quantity >= 0 ? quantity : 1;
   try {
-    await apiAuth(`/cart/items/${encodeURIComponent(id)}`, { method: "PATCH", body: { quantity } });
+    const token = await readToken();
+    if (token && !id.startsWith("guest:")) {
+      await apiAuth(`/cart/items/${encodeURIComponent(id)}`, { method: "PATCH", body: { quantity: qty } });
+    } else {
+      await updateGuestCartItem(variantId || id.replace(/^guest:\d+:/, ""), qty);
+    }
     revalidatePath("/", "layout");
     return { error: null };
   } catch (error) {
@@ -98,10 +120,32 @@ export async function updateCartItem(_prev: FormState, formData: FormData): Prom
   }
 }
 
+export async function changeCartQuantity(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const variantId = String(formData.get("variantId") ?? "");
+  const quantity = Number(formData.get("quantity") ?? 1);
+  const qty = Number.isInteger(quantity) && quantity >= 0 ? quantity : 1;
+  try {
+    const token = await readToken();
+    if (token && !id.startsWith("guest:")) {
+      await apiAuth(`/cart/items/${encodeURIComponent(id)}`, { method: "PATCH", body: { quantity: qty } });
+    } else {
+      await updateGuestCartItem(variantId || id.replace(/^guest:\d+:/, ""), qty);
+    }
+    revalidatePath("/", "layout");
+  } catch {}
+}
+
 export async function removeCartItem(formData: FormData) {
   const id = String(formData.get("id") ?? "");
+  const variantId = String(formData.get("variantId") ?? "");
   try {
-    await apiAuth(`/cart/items/${encodeURIComponent(id)}`, { method: "DELETE" });
+    const token = await readToken();
+    if (token && !id.startsWith("guest:")) {
+      await apiAuth(`/cart/items/${encodeURIComponent(id)}`, { method: "DELETE" });
+    } else {
+      await removeGuestCartItem(variantId || id.replace(/^guest:\d+:/, ""));
+    }
   } catch (error) {
     unstable_rethrow(error);
   }
@@ -129,10 +173,18 @@ export async function removeCoupon() {
 export async function saveWishlist(formData: FormData) {
   const productId = String(formData.get("productId") ?? "");
   const saved = String(formData.get("saved") ?? "") === "true";
-  if (saved) await apiAuth(`/wishlist/${encodeURIComponent(productId)}`, { method: "DELETE" });
-  else await apiAuth(`/wishlist/${encodeURIComponent(productId)}`, { method: "PUT" });
-  revalidatePath("/", "layout");
-  revalidatePath("/account/wishlist");
+  const token = await readToken();
+  if (!token) {
+    redirect(`/signin?next=${encodeURIComponent(`/p/${productId}`)}`);
+  }
+  try {
+    if (saved) await apiAuth(`/wishlist/${encodeURIComponent(productId)}`, { method: "DELETE" });
+    else await apiAuth(`/wishlist/${encodeURIComponent(productId)}`, { method: "PUT" });
+    revalidatePath("/", "layout");
+    revalidatePath("/account/wishlist");
+  } catch (error) {
+    unstable_rethrow(error);
+  }
 }
 
 export async function saveAddress(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -188,6 +240,115 @@ export async function placeOrder(_prev: FormState, formData: FormData): Promise<
       redirect(session.checkoutUrl);
     }
     redirect(`/account/orders/${order.id}`);
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function placeDirectOrder(_prev: FormState, formData: FormData): Promise<FormState> {
+  let items: Array<{ variantId: string; quantity: number }> = [];
+  const rawItems = formData.get("items");
+  if (typeof rawItems === "string" && rawItems) {
+    try {
+      items = JSON.parse(rawItems);
+    } catch {}
+  }
+  if (!items.length) {
+    const variantId = String(formData.get("variantId") ?? "");
+    const quantity = Number(formData.get("quantity") ?? 1);
+    if (variantId) {
+      items = [{ variantId, quantity: Number.isInteger(quantity) && quantity > 0 ? quantity : 1 }];
+    }
+  }
+
+  if (!items.length) {
+    return { error: "No items selected to purchase" };
+  }
+
+  const name = String(formData.get("name") ?? "").trim();
+  const phone = phoneToE164(String(formData.get("phone") ?? ""));
+  const email = String(formData.get("email") ?? "").trim();
+  const addressLine1 = String(formData.get("addressLine1") ?? "").trim();
+  const addressLine2 = String(formData.get("addressLine2") ?? "").trim() || undefined;
+  const landmark = String(formData.get("landmark") ?? "").trim() || undefined;
+  const city = String(formData.get("city") ?? "").trim();
+  const state = String(formData.get("state") ?? "").trim();
+  const postalCode = String(formData.get("postalCode") ?? "").trim();
+  const paymentMethod = String(formData.get("paymentMethod") ?? "COD");
+  const addressId = String(formData.get("addressId") ?? "").trim() || undefined;
+  const couponCode = String(formData.get("couponCode") ?? "").trim() || undefined;
+
+  if (paymentMethod !== "COD" && paymentMethod !== "ONLINE") {
+    return { error: "Choose how you want to pay (Cash on Delivery or Pay Online)" };
+  }
+
+  const token = await readToken();
+  const siteUrl = await getSiteUrl();
+
+  const body: Record<string, unknown> = {
+    items,
+    paymentMethod,
+    returnUrl: `${siteUrl}/checkout/return`,
+  };
+  if (couponCode) body.couponCode = couponCode;
+
+  if (addressId) {
+    body.addressId = addressId;
+  } else {
+    if (!addressLine1) return { error: "Your address seems incomplete 🙏 Kindly add House/Flat No. & Street name." };
+    if (!city) return { error: "Please recheck your city & state to match the PIN code ✔️" };
+    if (!state) return { error: "This field is required." };
+    if (!/^\d{6}$/.test(postalCode)) return { error: "Please enter a valid 6-digit PIN code to ensure smooth delivery 🚚" };
+
+    body.address = {
+      addressLine1,
+      addressLine2,
+      landmark,
+      city,
+      state,
+      postalCode,
+    };
+  }
+
+  if (!token) {
+    if (!name) return { error: "Kindly enter your full name in English so we can deliver without confusion 😊" };
+    if (!/^\+91[6-9]\d{9}$/.test(phone)) return { error: "Please enter your 10-digit active mobile number so our delivery partner can reach you 📞" };
+    body.customer = {
+      name,
+      phone,
+      email: email || undefined,
+    };
+  } else {
+    const customerUpdate: Record<string, string> = {};
+    if (name) customerUpdate.name = name;
+    if (phone && /^\+91[6-9]\d{9}$/.test(phone)) customerUpdate.phone = phone;
+    if (email) customerUpdate.email = email;
+    if (Object.keys(customerUpdate).length > 0) {
+      body.customer = customerUpdate;
+    }
+  }
+
+  try {
+    const result = await apiRequest<{
+      order: { id: string };
+      accessToken: string;
+      payment: { checkoutUrl: string } | null;
+    }>("/orders/direct", {
+      method: "POST",
+      body,
+      auth: Boolean(token),
+    });
+
+    if (result.accessToken) {
+      await writeToken(result.accessToken);
+    }
+    await clearGuestCart();
+    revalidatePath("/", "layout");
+
+    if (paymentMethod === "ONLINE" && result.payment?.checkoutUrl) {
+      redirect(result.payment.checkoutUrl);
+    }
+    redirect(`/account/orders/${result.order.id}`);
   } catch (error) {
     return fail(error);
   }
@@ -295,5 +456,100 @@ export async function checkPincode(_prev: PincodeState, formData: FormData): Pro
   } catch (error) {
     unstable_rethrow(error);
     return { error: errorMessage(error), result: null };
+  }
+}
+
+export type SearchSuggestion = {
+  productId: string;
+  name: string;
+  slug: string;
+  categoryName: string;
+  brandName: string | null;
+  imageUrl: string | null;
+  price: string;
+  compareAtPrice: string | null;
+  inStock: boolean;
+};
+
+export async function searchSuggestions(query: string): Promise<SearchSuggestion[]> {
+  const trimmed = query.trim();
+  if (!trimmed || trimmed.length < 2) return [];
+  try {
+    const page = await listProducts({ search: trimmed, pageSize: 6 });
+    return page.items.map((p) => {
+      const offer = p.variants.length > 0 ? cardOffer(p.variants) : null;
+      return {
+        productId: p.productId,
+        name: p.name,
+        slug: p.slug,
+        categoryName: p.category.name,
+        brandName: p.brand?.name ?? null,
+        imageUrl: p.imageUrl,
+        price: offer ? offer.price : (p.variants[0]?.price ?? "0.00"),
+        compareAtPrice: offer?.compareAtPrice ?? null,
+        inStock: offer ? offer.inStock : (p.variants[0]?.inStock ?? true),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+export type PhoneLookupResult = {
+  exists: boolean;
+  requireOtp: boolean;
+  hasSavedAddresses: boolean;
+  name: string | null;
+};
+
+export async function lookupCheckoutPhone(phoneInput: string): Promise<PhoneLookupResult> {
+  const phone = phoneToE164(phoneInput);
+  try {
+    return await apiRequest<PhoneLookupResult>("/auth/lookup-phone", {
+      method: "POST",
+      body: { phone },
+    });
+  } catch {
+    return { exists: false, requireOtp: false, hasSavedAddresses: false, name: null };
+  }
+}
+
+export async function sendCheckoutOtp(phoneInput: string): Promise<{ success: boolean; error?: string; devOtp?: string }> {
+  const phone = phoneToE164(phoneInput);
+  try {
+    const res = await apiRequest<{ message?: string; expiresInSeconds?: number; devOtp?: string }>("/auth/send-otp", {
+      method: "POST",
+      body: { phone },
+    });
+    if (res.devOtp) {
+      console.log(`\n=======================================================\n🔑 [DEV OTP] Verification code for ${phone} is: ${res.devOtp}\n=======================================================\n`);
+    }
+    return { success: true, devOtp: res.devOtp };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
+  }
+}
+
+export async function verifyCheckoutOtp(
+  phoneInput: string,
+  otp: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  user?: { id: string; name: string | null; phone: string; email?: string | null };
+  addresses?: Address[];
+}> {
+  const phone = phoneToE164(phoneInput);
+  try {
+    const result = await apiRequest<{
+      accessToken: string;
+      user: { id: string; name: string | null; phone: string; email?: string | null };
+    }>("/auth/verify-otp", { method: "POST", body: { phone, otp: otp.trim() } });
+
+    await writeToken(result.accessToken);
+    const addressResult = await listAddresses().catch(() => ({ items: [] }));
+    return { success: true, user: result.user, addresses: addressResult.items };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }

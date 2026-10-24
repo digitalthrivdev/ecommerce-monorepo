@@ -25,6 +25,7 @@ const optionalLabel = (max: number) =>
     .transform((value) => value || null);
 
 const categoryId = z.string().trim().min(1, "Choose a category").max(64);
+const productId = z.string().trim().min(1, "Choose a product").max(64);
 
 /** Client-generated, stable across edits so the admin editor and apps can key list items. */
 const itemId = z
@@ -32,10 +33,11 @@ const itemId = z
   .trim()
   .regex(/^[A-Za-z0-9_-]{1,40}$/, "Invalid id");
 
-/** Where tapping a banner or offer goes. Products can be added once the admin has a product picker. */
+/** Where tapping a banner or offer goes: none, category, or direct product link. */
 const linkSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("none") }),
   z.object({ type: z.literal("category"), categoryId }),
+  z.object({ type: z.literal("product"), productId }),
 ]);
 
 export const themeSchema = z.object({

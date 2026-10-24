@@ -27,6 +27,8 @@ const reportsRoutes: FastifyPluginAsync = async (app) => {
           yield* lines;
         })(),
       );
+    } else if (report === "abandoned-carts") {
+      body = "\uFEFF" + (await reports.abandonedCarts(query));
     } else {
       body = "\uFEFF" + (report === "daily-sales" ? await reports.dailySales(query) : await reports.gstSummary(query));
     }

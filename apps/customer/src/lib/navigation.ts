@@ -25,5 +25,7 @@ export function productShareUrl(productId: string) {
 
 /** Where a banner or offer goes; plain ones are not tappable. */
 export function linkAction(link: HomeLink) {
-  return link.type === "category" ? () => openCategory(link.category) : undefined;
+  if (link.type === "category") return () => openCategory(link.category);
+  if (link.type === "product") return () => openProduct(link.product.id);
+  return undefined;
 }

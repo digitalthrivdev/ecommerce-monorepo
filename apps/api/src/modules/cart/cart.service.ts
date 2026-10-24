@@ -287,5 +287,109 @@ export function createCartService(prisma: PrismaClient) {
     return getCart(userId);
   }
 
-  return { getCart, addItem, updateItem, removeItem, clearCart, applyCoupon, removeCoupon };
+  async function previewCart(items: Array<{ variantId: string; quantity: number }>, _couponCode?: string | null) {
+    if (items.length === 0) {
+      return {
+        id: null,
+        items: [],
+        itemCount: 0,
+        subtotal: "0.00",
+        coupon: null,
+        bill: null,
+        checkout: null,
+        isValid: false,
+      };
+    }
+
+    const sellable = await prisma.productVariant.findMany({
+      where: { id: { in: items.map((item) => item.variantId) }, ...customerVisibleVariant },
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        quantity: true,
+        maxOrderQuantity: true,
+        price: true,
+        compareAtPrice: true,
+        weightGrams: true,
+        inventory: { select: { quantity: true } },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            images: { orderBy: imageOrder, select: { url: true, variantId: true } },
+          },
+        },
+      },
+    });
+    const byVariantId = new Map(sellable.map((row) => [row.id, row]));
+
+    let subtotal = new Prisma.Decimal(0);
+    let weightGrams = 0;
+
+    const cartItems = items.map((item, index) => {
+      const listing = byVariantId.get(item.variantId);
+      const available = listing?.inventory?.quantity ?? 0;
+      const limit = listing ? maxOrderQuantity(listing) : 50;
+
+      let issue: CartItemIssue | null = null;
+      if (!listing) issue = "UNAVAILABLE";
+      else if (available === 0) issue = "OUT_OF_STOCK";
+      else if (item.quantity > available) issue = "INSUFFICIENT_STOCK";
+      else if (item.quantity > limit) issue = "QUANTITY_LIMIT";
+
+      const lineTotal = listing ? listing.price.mul(item.quantity) : null;
+      if (lineTotal && !issue) {
+        subtotal = subtotal.add(lineTotal);
+        weightGrams += item.quantity * (listing?.weightGrams ?? 0);
+      }
+
+      return {
+        id: `guest:${index}:${item.variantId}`,
+        productId: listing?.product.id ?? "",
+        variantId: item.variantId,
+        name: listing?.product.name ?? "Unavailable product",
+        variantLabel: listing ? variantLabel(listing) : "",
+        slug: listing?.product.slug ?? "",
+        imageUrl: listing ? imagesFor(listing.product.images, listing.id)[0]?.url ?? null : null,
+        unit: listing?.unit ?? null,
+        packQuantity: listing?.quantity?.toString() ?? null,
+        weightGrams: listing?.weightGrams ?? null,
+        quantity: item.quantity,
+        maxQuantity: limit,
+        unitPrice: listing?.price.toFixed(2) ?? null,
+        compareAtPrice: listing?.compareAtPrice?.toFixed(2) ?? null,
+        lineTotal: lineTotal?.toFixed(2) ?? null,
+        issue,
+        ...(issue === "INSUFFICIENT_STOCK" && { availableQuantity: available }),
+      };
+    });
+
+    const settings = await getPlatformSettings(prisma);
+    const charges = calculateCharges(subtotal, settings, { weightGrams });
+
+    return {
+      id: null,
+      items: cartItems,
+      itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+      subtotal: subtotal.toFixed(2),
+      coupon: null,
+      bill: {
+        subtotal: charges.subtotal.toFixed(2),
+        shippingFee: charges.shippingFee.toFixed(2),
+        codFee: charges.codFee.toFixed(2),
+        discount: charges.discount.toFixed(2),
+        total: charges.total.toFixed(2),
+        totalWithCod: charges.totalWithCod.toFixed(2),
+        minOrderValue: charges.minOrderValue.toFixed(2),
+        meetsMinimum: charges.meetsMinimum,
+        amountToFreeShipping: charges.amountToFreeShipping?.toFixed(2) ?? null,
+      },
+      checkout: await checkoutOptions(prisma, settings, charges.totalWithCod, null),
+      isValid: cartItems.length > 0 && cartItems.every((item) => item.issue === null),
+    };
+  }
+
+  return { getCart, previewCart, addItem, updateItem, removeItem, clearCart, applyCoupon, removeCoupon };
 }

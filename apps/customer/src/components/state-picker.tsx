@@ -8,10 +8,16 @@ import { Text } from "@/components/ui/text";
 import { INDIAN_STATES } from "@/lib/indian-states";
 import { cn } from "@/lib/utils";
 
-type StatePickerProps = { value: string; onChange: (state: string) => void; error?: string };
+type StatePickerProps = {
+  value: string;
+  onChange: (state: string) => void;
+  error?: string;
+  label?: string;
+  required?: boolean;
+};
 
 /** The address's state, chosen from the list in a bottom sheet. */
-export function StatePicker({ value, onChange, error }: StatePickerProps) {
+export function StatePicker({ value, onChange, error, label = "State", required = false }: StatePickerProps) {
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const choose = (state: string) => {
@@ -21,19 +27,25 @@ export function StatePicker({ value, onChange, error }: StatePickerProps) {
 
   return (
     <View className="gap-1.5">
-      <Text className="text-sm font-semibold">State</Text>
+      <Text className="text-xs font-semibold">
+        {label}
+        {required ? <Text className="text-destructive">*</Text> : null}
+      </Text>
       <Pressable
         onPress={() => setOpen(true)}
-        className={cn("h-12 flex-row items-center rounded-lg border bg-card px-3 active:bg-accent", error ? "border-destructive" : "border-input")}
+        className={cn(
+          "h-11 flex-row items-center rounded-lg border bg-card px-3 active:bg-accent",
+          error ? "border-2 border-destructive" : "border-input",
+        )}
         accessibilityRole="button"
         accessibilityLabel={value ? `State: ${value}. Change` : "Choose your state"}
       >
-        <Text className={cn("flex-1 text-[15px]", !value && "text-muted-foreground")} numberOfLines={1}>
-          {value || "Choose your state"}
+        <Text className={cn("flex-1 text-sm", !value && "text-muted-foreground")} numberOfLines={1}>
+          {value || "State"}
         </Text>
         <Icon as={ChevronDown} size={18} className="text-muted-foreground" />
       </Pressable>
-      {error ? <Text className="text-xs text-destructive">{error}</Text> : null}
+      {error ? <Text className="text-[11px] font-medium text-destructive">{error}</Text> : null}
 
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)} statusBarTranslucent navigationBarTranslucent>
         <View className="flex-1 justify-end">

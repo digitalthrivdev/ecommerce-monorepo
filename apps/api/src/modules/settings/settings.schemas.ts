@@ -51,6 +51,7 @@ export const updateSettingsBodySchema = z
     paymentProvider: z.string().trim().min(1).max(32).nullable(),
     otpProvider: z.string().trim().min(1).max(32).nullable(),
     shippingProvider: z.string().trim().min(1).max(32).nullable(),
+    requireCheckoutOtp: z.boolean(),
   })
   .partial()
   .strict()

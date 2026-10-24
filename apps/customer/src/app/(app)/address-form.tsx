@@ -122,7 +122,7 @@ function AddressForm({ address, selectAfterSave }: { address?: Address; selectAf
   const selectedLabel = (LABELS as readonly string[]).includes(fields.label) ? fields.label : "Other";
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <FocusStatusBar />
       <ScreenHeader title={address ? "Edit address" : "Add address"} />
       <ScrollView contentContainerClassName="gap-5 px-4 pb-6 pt-2" keyboardShouldPersistTaps="handled">

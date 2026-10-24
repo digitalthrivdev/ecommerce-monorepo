@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useState, useTransition, type ReactNode } from "react";
-import { Ban, Copy, FileDown, Loader2, MoreHorizontal, Plus, Printer, RefreshCw, Truck } from "lucide-react";
+import { Ban, Copy, FileDown, Loader2, MoreHorizontal, Printer, RefreshCw, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  addTrackingUpdate,
   cancelOrder,
   cancelShipment,
   fetchShipmentLabel,
@@ -49,13 +48,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useFormAction } from "@/hooks/use-form-action";
-import { ORDER_ACTION_LABELS, productTitle, SHIPMENT_STATUS_LABELS } from "@/lib/format";
+import { ORDER_ACTION_LABELS, productTitle } from "@/lib/format";
 import { toastResult } from "@/lib/action-toast";
 import { nextStep } from "@/lib/order-flow";
 import { clearPackingTicks, usePackingTicks } from "@/lib/packing-ticks";
 import {
   MANUAL_CARRIER,
-  MANUAL_TRACKING_STATUSES,
   type ActionResult,
   type ActiveCarrier,
   type OrderAction,
@@ -535,98 +533,6 @@ function CancelShipmentButton({ orderId }: Target) {
   );
 }
 
-/** datetime-local has no time zone; the browser's is the admin's own. */
-async function addTrackingInBrowserTime(formData: FormData) {
-  const local = String(formData.get("occurredAt") ?? "");
-  if (local) formData.set("occurredAt", new Date(local).toISOString());
-  return addTrackingUpdate(formData);
-}
-
-function AddTrackingDialog({ orderId }: Target) {
-  const [open, setOpen] = useState(false);
-  const { pending, fieldErrors, onSubmit, reset } = useFormAction(addTrackingInBrowserTime, () => setOpen(false));
-  const invalid = (name: string) => Boolean(fieldErrors[name]);
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) reset();
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Plus />
-          {ORDER_ACTION_LABELS["add-tracking"]}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <input type="hidden" name="orderId" value={orderId} />
-          <DialogHeader>
-            <DialogTitle>Add a tracking update</DialogTitle>
-            <DialogDescription>
-              From the courier&apos;s tracking page. The order and the customer&apos;s app follow it; Delivered marks cash on
-              delivery as collected.
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup>
-            <Field data-invalid={invalid("status")}>
-              <FieldLabel htmlFor="tracking-status">What happened</FieldLabel>
-              <Select name="status" required>
-                <SelectTrigger id="tracking-status" className="w-full" aria-invalid={invalid("status")}>
-                  <SelectValue placeholder="Choose" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MANUAL_TRACKING_STATUSES.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {SHIPMENT_STATUS_LABELS[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError>{fieldErrors.status}</FieldError>
-            </Field>
-            <Field data-invalid={invalid("occurredAt")}>
-              <FieldLabel htmlFor="tracking-time">
-                When <span className="font-normal text-muted-foreground">(optional)</span>
-              </FieldLabel>
-              <Input id="tracking-time" name="occurredAt" type="datetime-local" aria-invalid={invalid("occurredAt")} />
-              <FieldDescription>Leave empty for now.</FieldDescription>
-              <FieldError>{fieldErrors.occurredAt}</FieldError>
-            </Field>
-            <Field data-invalid={invalid("location")}>
-              <FieldLabel htmlFor="tracking-location">
-                Location <span className="font-normal text-muted-foreground">(optional)</span>
-              </FieldLabel>
-              <Input id="tracking-location" name="location" maxLength={200} placeholder="e.g. Pune hub" aria-invalid={invalid("location")} />
-              <FieldError>{fieldErrors.location}</FieldError>
-            </Field>
-            <Field data-invalid={invalid("description")}>
-              <FieldLabel htmlFor="tracking-description">
-                Note <span className="font-normal text-muted-foreground">(optional)</span>
-              </FieldLabel>
-              <Textarea id="tracking-description" name="description" maxLength={500} rows={2} aria-invalid={invalid("description")} />
-              <FieldError>{fieldErrors.description}</FieldError>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={pending}>
-              {pending && <Loader2 className="animate-spin" />}
-              Add update
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /** Label, tracking and cancel buttons under the shipment. Manual shipments have no label or carrier tracking. */
 export function ShipmentActions({ orderId, provider, labelUrl, allowedActions }: Target & {
@@ -656,7 +562,6 @@ export function ShipmentActions({ orderId, provider, labelUrl, allowedActions }:
           Refresh tracking
         </ShipmentButton>
       )}
-      {allowedActions.includes("add-tracking") && <AddTrackingDialog orderId={orderId} />}
       {allowedActions.includes("cancel-shipment") && <CancelShipmentButton orderId={orderId} />}
     </div>
   );

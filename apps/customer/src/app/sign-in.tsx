@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Apple, Carrot, Coffee, Cookie, Egg, Milk, type LucideIcon } from "lucide-react-native";
-import { useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from "react-native";
+import { Apple, Carrot, Coffee, Cookie, Egg, Milk, X, type LucideIcon } from "lucide-react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandMark } from "@/components/brand-mark";
@@ -55,6 +55,7 @@ export default function SignInScreen() {
   const demo = demoLogins?.customer;
   const { colors, neutral } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
   const [digits, setDigits] = useState("");
   const [error, setError] = useState<string | null>(null);
   const sendOtp = useMutation({ mutationFn: (phone: string) => apiFetch("/auth/send-otp", { method: "POST", body: { phone } }) });
@@ -78,14 +79,23 @@ export default function SignInScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background">
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1 bg-background">
       <FocusStatusBar onHighlight />
-      <ScrollView contentContainerClassName="flex-grow" keyboardShouldPersistTaps="handled" bounces={false}>
+      <ScrollView ref={scrollRef} contentContainerClassName="flex-grow" keyboardShouldPersistTaps="handled" bounces={false}>
         <LinearGradient
           colors={[colors.accent, colors.accent, neutral.background]}
           locations={[0, 0.72, 1]}
           style={{ paddingTop: insets.top + 28, paddingBottom: 36, overflow: "hidden" }}
         >
+          <Pressable
+            onPress={() => router.back()}
+            className="absolute left-4 z-10 size-10 items-center justify-center rounded-full bg-background/80 active:opacity-70"
+            style={{ top: insets.top + 10 }}
+            accessibilityLabel="Close"
+            hitSlop={8}
+          >
+            <Icon as={X} size={20} />
+          </Pressable>
           <Collage />
         </LinearGradient>
 
@@ -109,6 +119,11 @@ export default function SignInScreen() {
               onChangeText={(text) => {
                 setDigits(text.replace(/\D/g, ""));
                 setError(null);
+              }}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({ animated: true });
+                }, 120);
               }}
               onSubmitEditing={() => submit()}
               placeholder="Enter mobile number"

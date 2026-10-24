@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { createContext, use, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 import { apiFetch, setAccessToken, setUnauthorizedHandler } from "./api";
+import { syncGuestWishlist } from "./guest-wishlist";
 import { unregisterPush } from "./push";
 import { queryClient } from "./query-client";
 import type { User } from "./types";
@@ -53,6 +54,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setAccessToken(nextToken);
     setToken(nextToken);
     setUserState(nextUser);
+    syncGuestWishlist().catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ["wishlist"] });
   }, []);
 
   useEffect(() => {

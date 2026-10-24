@@ -19,4 +19,15 @@ export const cartItemParamsSchema = z.object({
   id: idSchema,
 });
 
+export const cartPreviewBodySchema = z.object({
+  items: z.array(
+    z.object({
+      variantId: idSchema,
+      quantity: quantitySchema,
+    }),
+  ),
+  couponCode: z.string().trim().min(1).optional(),
+});
+
 export type AddCartItemInput = z.infer<typeof addCartItemBodySchema>;
+export type CartPreviewInput = z.infer<typeof cartPreviewBodySchema>;

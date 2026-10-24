@@ -154,6 +154,13 @@ export async function shipOrder(formData: FormData): Promise<ActionResult> {
   if (!parsed.success) return validationFailure(parsed.error);
   const { orderId, courierName, awb, trackingUrl, ...parcel } = parsed.data;
 
+  // Auto-pack if order is still CONFIRMED so order can be shipped directly in one step
+  try {
+    await apiFetch(orderPath(orderId, "pack"), { method: "POST" });
+  } catch {
+    // If already packed, continue to shipment creation
+  }
+
   return run(
     orderPath(orderId, "shipment"),
     { ...parcel, ...(courierName && awb ? { courierName, awb } : {}), ...(trackingUrl ? { trackingUrl } : {}) },

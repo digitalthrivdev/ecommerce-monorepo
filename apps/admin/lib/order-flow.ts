@@ -12,12 +12,17 @@ export const BOARD_STATUSES = BOARD_COLUMNS.flatMap((column) => column.statuses)
 
 /** Shipping opens a dialog for the parcel; packing is one tap. */
 export const NEXT_STEP: Partial<Record<OrderStatus, { action: Extract<OrderAction, "pack" | "ship">; label: string }>> = {
-  CONFIRMED: { action: "pack", label: "Mark packed" },
+  CONFIRMED: { action: "ship", label: "Ship order" },
   PACKED: { action: "ship", label: "Ship order" },
 };
 
 /** The step that can be taken now, if the API allows it for this user. */
 export function nextStep(status: OrderStatus, allowedActions: OrderAction[]) {
+  if (status === "CONFIRMED" || status === "PACKED") {
+    if (allowedActions.includes("ship") || allowedActions.includes("pack")) {
+      return { action: "ship" as const, label: "Ship order" };
+    }
+  }
   const step = NEXT_STEP[status];
   return step && allowedActions.includes(step.action) ? step : null;
 }

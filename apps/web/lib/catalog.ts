@@ -2,7 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
-import { ApiError, apiAuth, apiGet, apiRequest } from "./api";
+import { ApiError, apiAuth, apiGet, apiRequest, readToken } from "./api";
+import { readGuestCart } from "./guest-cart";
 import type {
   Address,
   Cart,
@@ -58,7 +59,17 @@ export const categoryBySlug = cache(async (slug: string) => {
   }
 });
 
-export function listProducts(params: { categoryId?: string; brandId?: string; search?: string; page?: number; pageSize?: number }) {
+export function listProducts(params: {
+  categoryId?: string;
+  brandId?: string;
+  search?: string;
+  minPrice?: number | string;
+  maxPrice?: number | string;
+  inStock?: boolean | string;
+  sortBy?: "newest" | "price_asc" | "price_desc" | "name_asc" | string;
+  page?: number;
+  pageSize?: number;
+}) {
   return apiGet<Page<CatalogProduct>>(
     `/catalog/products${query({
       limit: params.pageSize ?? PAGE,
@@ -66,6 +77,10 @@ export function listProducts(params: { categoryId?: string; brandId?: string; se
       categoryId: params.categoryId,
       brandId: params.brandId,
       search: params.search,
+      minPrice: params.minPrice,
+      maxPrice: params.maxPrice,
+      inStock: params.inStock ? "true" : undefined,
+      sortBy: params.sortBy,
     })}`,
   );
 }
@@ -97,8 +112,49 @@ export function checkServiceability(pincode: string) {
   return apiRequest<Serviceability>(`/serviceability${query({ pincode, weightGrams: 0, cod: "true" })}`, { revalidate: 300 });
 }
 
-export function getCart() {
-  return apiAuth<Cart>("/cart");
+export async function getCart(): Promise<Cart> {
+  const token = await readToken();
+  if (token) {
+    try {
+      return await apiAuth<Cart>("/cart");
+    } catch (e) {
+      if (!(e instanceof ApiError && e.status === 401)) {
+        throw e;
+      }
+    }
+  }
+
+  const items = await readGuestCart();
+  if (items.length === 0) {
+    return {
+      id: null,
+      items: [],
+      itemCount: 0,
+      subtotal: "0.00",
+      coupon: null,
+      bill: null,
+      checkout: null,
+      isValid: false,
+    };
+  }
+
+  try {
+    return await apiRequest<Cart>("/cart/preview", {
+      method: "POST",
+      body: { items },
+    });
+  } catch {
+    return {
+      id: null,
+      items: [],
+      itemCount: 0,
+      subtotal: "0.00",
+      coupon: null,
+      bill: null,
+      checkout: null,
+      isValid: false,
+    };
+  }
 }
 
 export function listAddresses() {

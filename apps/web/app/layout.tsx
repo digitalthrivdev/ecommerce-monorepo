@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Plus_Jakarta_Sans } from "next/font/google";
 
+import { AnnouncementBar } from "@/components/announcement-bar";
 import { BrandStyle } from "@/components/brand-style";
-import { shownSections } from "@/components/home-sections";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getHomeFeed, getSiteUrl, getWebsite } from "@/lib/website";
+import { getCart } from "@/lib/catalog";
+import { getHomeFeed, getSettings, getSiteUrl, getWebsite } from "@/lib/website";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -31,13 +32,18 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Render against the live deployment at request time; production images build without API access.
   await headers();
-  const [website, feed] = await Promise.all([getWebsite(), getHomeFeed().catch(() => null)]);
+  const [website, settings, cart] = await Promise.all([
+    getWebsite(),
+    getSettings(),
+    getCart().catch(() => ({ itemCount: 0, subtotal: "0.00" })),
+  ]);
 
   return (
     <html lang="en" className={`${sans.variable} h-full`}>
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col bg-background text-foreground antialiased">
         <BrandStyle />
-        <SiteHeader website={website} hasShop={feed !== null && shownSections(feed).length > 0} />
+        <AnnouncementBar announcement={settings.announcement} />
+        <SiteHeader website={website} cartCount={cart.itemCount} currency={settings.currency} />
         <main className="flex flex-1 flex-col">{children}</main>
         <SiteFooter website={website} />
       </body>
