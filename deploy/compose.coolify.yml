@@ -23,10 +23,10 @@ services:
       - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-shop}-https.redirectscheme.scheme=https
       - traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-shop}-https.redirectscheme.permanent=true
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.entrypoints=http
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`)
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}-http.middlewares=${COMPOSE_PROJECT_NAME:-shop}-https
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.entrypoints=https
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`) || Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.rule=Host(`${API_DOMAIN}`) || Host(`${ADMIN_DOMAIN}`) || Host(`${SITE_DOMAIN}`)
       - traefik.http.routers.${COMPOSE_PROJECT_NAME:-shop}.tls.certresolver=letsencrypt
 
   certbot:
