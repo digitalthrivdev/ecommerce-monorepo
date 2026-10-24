@@ -146,9 +146,12 @@ export function createAuthService({ prisma, redis, otp, signToken }: AuthService
       .del(keys.attempts(phone))
       .exec();
 
+    const effectiveDevOtp =
+      devOtp ?? (env.DEMO_LOGINS?.customer && phone === env.DEMO_LOGINS.customer.phone ? env.DEMO_LOGINS.customer.code : undefined);
+
     return {
       expiresInSeconds: OTP_TTL_SECONDS,
-      ...(env.NODE_ENV !== "production" && devOtp ? { devOtp } : {}),
+      ...((env.NODE_ENV !== "production" || env.DEMO_LOGINS) && effectiveDevOtp ? { devOtp: effectiveDevOtp } : {}),
     };
   }
 

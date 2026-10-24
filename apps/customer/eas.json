@@ -51,6 +51,32 @@
         "EAS_PROJECT_ID": "",
         "EXPO_OWNER": ""
       }
+    },
+    "moozy-preview": {
+      "extends": "preview",
+      "env": {
+        "APP_BRAND": "moozy",
+        "APP_NAME": "Moozy Shop",
+        "APP_ID": "in.moozy.shop",
+        "APP_SCHEME": "moozyshop",
+        "SITE_DOMAIN": "shop.moozy.in",
+        "EXPO_PUBLIC_API_URL": "https://shop-api.moozy.in",
+        "EAS_PROJECT_ID": "",
+        "EXPO_OWNER": ""
+      }
+    },
+    "moozy-production": {
+      "extends": "production",
+      "env": {
+        "APP_BRAND": "moozy",
+        "APP_NAME": "Moozy Shop",
+        "APP_ID": "in.moozy.shop",
+        "APP_SCHEME": "moozyshop",
+        "SITE_DOMAIN": "shop.moozy.in",
+        "EXPO_PUBLIC_API_URL": "https://shop-api.moozy.in",
+        "EAS_PROJECT_ID": "",
+        "EXPO_OWNER": ""
+      }
     }
   },
   "submit": {

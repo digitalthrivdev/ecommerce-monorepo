@@ -131,7 +131,7 @@ export function createOtpRegistry({ prisma, ...deps }: OtpProviderDeps & { prism
     if (reviewLogin && (await loaded()).review?.phone === phone) return reviewProvider;
     const provider = await active();
     if (provider) return provider;
-    if (env.NODE_ENV !== "production") return logProvider;
+    if (env.NODE_ENV !== "production" || env.DEMO_LOGINS) return logProvider;
     throw new AppError(503, "OTP_NOT_CONFIGURED", "Sign-in by SMS is not available yet. Please try again later.");
   }
 

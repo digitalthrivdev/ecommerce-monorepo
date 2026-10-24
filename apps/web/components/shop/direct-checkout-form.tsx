@@ -132,6 +132,7 @@ export function DirectCheckoutForm({
       setOtpSent(true);
       if (res.devOtp) {
         setDevOtp(res.devOtp);
+        setOtpCode(res.devOtp);
         console.log(`\n=======================================================\n🔑 [DEV OTP] Code for +91${cleanPhone}: ${res.devOtp}\n=======================================================\n`);
       }
       setResendCooldown(30);
@@ -185,6 +186,7 @@ export function DirectCheckoutForm({
       }
       if (res.devOtp) {
         setDevOtp(res.devOtp);
+        setOtpCode(res.devOtp);
         console.log(`\n=======================================================\n🔑 [DEV OTP] Resent code for +91${cleanPhone}: ${res.devOtp}\n=======================================================\n`);
       }
       setResendCooldown(30);
@@ -452,17 +454,6 @@ export function DirectCheckoutForm({
               <p className="text-xs text-gray-600">
                 Enter the 6-digit OTP sent to <strong className="text-gray-900">+91 {phone}</strong>
               </p>
-
-              {devOtp && (
-                <button
-                  type="button"
-                  onClick={() => setOtpCode(devOtp)}
-                  className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary/20"
-                >
-                  <span>🔑 Dev Mode OTP: {devOtp}</span>
-                  <span className="text-[11px] font-normal text-gray-500">(Click to auto-fill)</span>
-                </button>
-              )}
 
               <div className="flex items-center gap-2">
                 <input

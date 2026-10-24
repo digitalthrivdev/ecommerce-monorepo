@@ -27,10 +27,16 @@ export default function VerifyScreen() {
   const demoCode = phone && demoLogins?.customer?.phone === phone ? demoLogins.customer.code : null;
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(demoCode ?? "");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(alreadySent ? "We sent you a code a moment ago. It is valid for 5 minutes." : null);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
+
+  useEffect(() => {
+    if (demoCode && !code) {
+      setCode(demoCode);
+    }
+  }, [demoCode]);
 
   const verify = useMutation({
     mutationFn: (otp: string) => apiFetch<{ accessToken: string; user: User }>("/auth/verify-otp", { method: "POST", body: { phone, otp } }),

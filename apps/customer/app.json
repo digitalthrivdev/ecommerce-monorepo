@@ -13,7 +13,7 @@
     "android": {
       "package": "com.example.shop",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#006AE0",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -36,9 +36,9 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#006AE0",
           "dark": {
-            "backgroundColor": "#0F1012"
+            "backgroundColor": "#0A1324"
           }
         }
       ],

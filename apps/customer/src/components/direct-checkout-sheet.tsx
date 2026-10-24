@@ -68,6 +68,7 @@ export function DirectCheckoutSheet({ visible, onClose, items }: Props) {
   const { currency } = useSettings();
   const { user, signIn } = useSession();
   const queryClient = useQueryClient();
+  const { demoLogins } = useSettings();
 
   const addressesQuery = useAddresses();
   const savedAddresses = addressesQuery.data ?? [];
@@ -150,7 +151,10 @@ export function DirectCheckoutSheet({ visible, onClose, items }: Props) {
       setOtpSent(true);
       if (res.devOtp) {
         setDevOtp(res.devOtp);
+        setOtpCode(res.devOtp);
         console.log(`\n=======================================================\n🔑 [DEV OTP] Code for +91${cleanPhone}: ${res.devOtp}\n=======================================================\n`);
+      } else if (demoLogins?.customer?.code && cleanPhone === demoLogins.customer.phone.replace(/\D/g, "")) {
+        setOtpCode(demoLogins.customer.code);
       }
       setResendCooldown(30);
     } catch (err) {
@@ -206,7 +210,10 @@ export function DirectCheckoutSheet({ visible, onClose, items }: Props) {
       });
       if (res.devOtp) {
         setDevOtp(res.devOtp);
+        setOtpCode(res.devOtp);
         console.log(`\n=======================================================\n🔑 [DEV OTP] Resent code for +91${cleanPhone}: ${res.devOtp}\n=======================================================\n`);
+      } else if (demoLogins?.customer?.code && cleanPhone === demoLogins.customer.phone.replace(/\D/g, "")) {
+        setOtpCode(demoLogins.customer.code);
       }
       setResendCooldown(30);
     } catch (err) {
@@ -571,17 +578,6 @@ export function DirectCheckoutSheet({ visible, onClose, items }: Props) {
                     <Text className="text-xs text-muted-foreground">
                       Enter the 6-digit OTP sent to <Text className="font-bold text-foreground">+91 {phone}</Text>
                     </Text>
-
-                    {/* Development Mode Helper Badge */}
-                    {devOtp ? (
-                      <Pressable
-                        onPress={() => setOtpCode(devOtp)}
-                        className="flex-row items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 active:opacity-70 self-start"
-                      >
-                        <Text className="text-xs font-bold text-primary">🔑 Dev Mode OTP: {devOtp}</Text>
-                        <Text className="text-[11px] font-medium text-muted-foreground">(Tap to fill)</Text>
-                      </Pressable>
-                    ) : null}
 
                     <View className="flex-row items-center gap-2">
                       <TextInput
