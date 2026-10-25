@@ -150,12 +150,14 @@ const assignAwbSchema = z.object({
         .object({
           awb_code: z.string().nullish(),
           courier_name: z.string().nullish(),
+          awb_assign_error: z.string().nullish(),
         })
         .passthrough()
         .optional(),
     })
     .passthrough()
     .optional(),
+  message: z.string().optional(),
 });
 
 const pickupSchema = z.object({ pickup_status: z.coerce.number().optional() }).passthrough();
@@ -497,9 +499,19 @@ export function createShiprocketProvider(config: {
       const parsed = assignAwbSchema.parse(result.body);
       const awb = parsed.response?.data?.awb_code;
       if (parsed.awb_assign_status !== 1 || !awb) {
-        throw new AppError(502, "SHIPPING_AWB_FAILED", "Shiprocket could not assign a courier and AWB for this order.", {
-          shipment_id: shipment.providerShipmentId,
-        });
+        const reason =
+          parsed.response?.data?.awb_assign_error?.trim() ||
+          parsed.message?.trim() ||
+          null;
+        throw new AppError(
+          502,
+          "SHIPPING_AWB_FAILED",
+          reason ? `Shiprocket: ${reason}` : "Shiprocket could not assign a courier and AWB for this order.",
+          {
+            shipment_id: shipment.providerShipmentId,
+            response: result.body,
+          },
+        );
       }
       return { awb, courierName: parsed.response?.data?.courier_name ?? null, trackingUrl: trackingUrl(awb) };
     },

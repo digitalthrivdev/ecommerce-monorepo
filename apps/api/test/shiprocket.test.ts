@@ -310,10 +310,14 @@ describe("booking a shipment", () => {
     expect(await carrier.getLabel(ref)).toEqual({ labelUrl: "https://kr-shipmultichannel.s3.amazonaws.com/label.pdf" });
   });
 
-  it("fails clearly when Shiprocket refuses the AWB", async () => {
-    stubFetch(withLogin((url) => (url.includes("courier/assign/awb") ? json({ awb_assign_status: 0 }) : undefined)));
+  it("fails clearly when Shiprocket refuses the AWB and preserves the carrier error message", async () => {
+    stubFetch(withLogin((url) => (url.includes("courier/assign/awb") ? json({
+      awb_assign_status: 0,
+      response: { data: { awb_assign_error: "Please recharge your ShipRocket wallet." } },
+    }) : undefined)));
     await expect(provider().assignAwb({ providerOrderId: "1", providerShipmentId: "2", awb: null })).rejects.toMatchObject({
       code: "SHIPPING_AWB_FAILED",
+      message: "Shiprocket: Please recharge your ShipRocket wallet.",
     });
   });
 
