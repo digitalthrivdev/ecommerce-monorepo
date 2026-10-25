@@ -74,6 +74,7 @@ export type PlatformSettingsMinAggregateOutputType = {
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
+  autoPushShipment: boolean | null
   updatedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -105,6 +106,7 @@ export type PlatformSettingsMaxAggregateOutputType = {
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
+  autoPushShipment: boolean | null
   updatedById: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -137,6 +139,7 @@ export type PlatformSettingsCountAggregateOutputType = {
   paymentProvider: number
   otpProvider: number
   shippingProvider: number
+  autoPushShipment: number
   updatedById: number
   createdAt: number
   updatedAt: number
@@ -192,6 +195,7 @@ export type PlatformSettingsMinAggregateInputType = {
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
+  autoPushShipment?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -223,6 +227,7 @@ export type PlatformSettingsMaxAggregateInputType = {
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
+  autoPushShipment?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -255,6 +260,7 @@ export type PlatformSettingsCountAggregateInputType = {
   paymentProvider?: true
   otpProvider?: true
   shippingProvider?: true
+  autoPushShipment?: true
   updatedById?: true
   createdAt?: true
   updatedAt?: true
@@ -374,6 +380,7 @@ export type PlatformSettingsGroupByOutputType = {
   paymentProvider: string | null
   otpProvider: string | null
   shippingProvider: string | null
+  autoPushShipment: boolean
   updatedById: string | null
   createdAt: Date
   updatedAt: Date
@@ -429,6 +436,7 @@ export type PlatformSettingsWhereInput = {
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  autoPushShipment?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
@@ -461,6 +469,7 @@ export type PlatformSettingsOrderByWithRelationInput = {
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoPushShipment?: Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -496,6 +505,7 @@ export type PlatformSettingsWhereUniqueInput = Prisma.AtLeast<{
   paymentProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
+  autoPushShipment?: Prisma.BoolFilter<"PlatformSettings"> | boolean
   updatedById?: Prisma.StringNullableFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"PlatformSettings"> | Date | string
@@ -528,6 +538,7 @@ export type PlatformSettingsOrderByWithAggregationInput = {
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   otpProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   shippingProvider?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoPushShipment?: Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -568,6 +579,7 @@ export type PlatformSettingsScalarWhereWithAggregatesInput = {
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   otpProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   shippingProvider?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
+  autoPushShipment?: Prisma.BoolWithAggregatesFilter<"PlatformSettings"> | boolean
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"PlatformSettings"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformSettings"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"PlatformSettings"> | Date | string
@@ -600,6 +612,7 @@ export type PlatformSettingsCreateInput = {
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
+  autoPushShipment?: boolean
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -632,6 +645,7 @@ export type PlatformSettingsUncheckedCreateInput = {
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
+  autoPushShipment?: boolean
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -664,6 +678,7 @@ export type PlatformSettingsUpdateInput = {
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoPushShipment?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -696,6 +711,7 @@ export type PlatformSettingsUncheckedUpdateInput = {
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoPushShipment?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -728,6 +744,7 @@ export type PlatformSettingsCreateManyInput = {
   paymentProvider?: string | null
   otpProvider?: string | null
   shippingProvider?: string | null
+  autoPushShipment?: boolean
   updatedById?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -760,6 +777,7 @@ export type PlatformSettingsUpdateManyMutationInput = {
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoPushShipment?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -792,6 +810,7 @@ export type PlatformSettingsUncheckedUpdateManyInput = {
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   otpProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   shippingProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoPushShipment?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -824,6 +843,7 @@ export type PlatformSettingsCountOrderByAggregateInput = {
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
+  autoPushShipment?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -866,6 +886,7 @@ export type PlatformSettingsMaxOrderByAggregateInput = {
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
+  autoPushShipment?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -897,6 +918,7 @@ export type PlatformSettingsMinOrderByAggregateInput = {
   paymentProvider?: Prisma.SortOrder
   otpProvider?: Prisma.SortOrder
   shippingProvider?: Prisma.SortOrder
+  autoPushShipment?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -942,6 +964,7 @@ export type PlatformSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
+  autoPushShipment?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -974,6 +997,7 @@ export type PlatformSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
+  autoPushShipment?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1006,6 +1030,7 @@ export type PlatformSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
+  autoPushShipment?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1038,12 +1063,13 @@ export type PlatformSettingsSelectScalar = {
   paymentProvider?: boolean
   otpProvider?: boolean
   shippingProvider?: boolean
+  autoPushShipment?: boolean
   updatedById?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "returnWindowDays" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "requireCheckoutOtp" | "paymentProvider" | "otpProvider" | "shippingProvider" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
+export type PlatformSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "shippingFee" | "freeShippingThreshold" | "minOrderValue" | "returnWindowDays" | "codFee" | "weightSlabs" | "codMaxOrderValue" | "deliveryPromiseMinutes" | "supportPhone" | "supportEmail" | "businessName" | "businessAddress" | "gstin" | "shippingFeeGstRate" | "websiteTagline" | "playStoreUrl" | "appStoreUrl" | "appDownloadUrl" | "reviewLoginEnabled" | "reviewLoginPhone" | "reviewLoginCodeHash" | "requireCheckoutOtp" | "paymentProvider" | "otpProvider" | "shippingProvider" | "autoPushShipment" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["platformSettings"]>
 
 export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "PlatformSettings"
@@ -1075,6 +1101,7 @@ export type $PlatformSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     paymentProvider: string | null
     otpProvider: string | null
     shippingProvider: string | null
+    autoPushShipment: boolean
     updatedById: string | null
     createdAt: Date
     updatedAt: Date
@@ -1527,6 +1554,7 @@ export interface PlatformSettingsFieldRefs {
   readonly paymentProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly otpProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly shippingProvider: Prisma.FieldRef<"PlatformSettings", 'String'>
+  readonly autoPushShipment: Prisma.FieldRef<"PlatformSettings", 'Boolean'>
   readonly updatedById: Prisma.FieldRef<"PlatformSettings", 'String'>
   readonly createdAt: Prisma.FieldRef<"PlatformSettings", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"PlatformSettings", 'DateTime'>

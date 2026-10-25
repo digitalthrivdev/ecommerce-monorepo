@@ -4,7 +4,12 @@ import { env } from "../config/env.js";
 import { createPaymentsService } from "../modules/payments/payments.service.js";
 
 export default fp(async (app) => {
-  const payments = createPaymentsService(app.prisma, app.redis, app.log);
+  const payments = createPaymentsService(
+    app.prisma,
+    app.redis,
+    app.log,
+    (orderId) => app.shipments.autoPushIfEnabled(orderId),
+  );
   app.decorate("payments", payments);
 
   if (env.PAYMENT_SWEEP_INTERVAL_SECONDS === 0) {

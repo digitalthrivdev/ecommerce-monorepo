@@ -326,10 +326,16 @@ export async function removeCarrierKeys(input: { name: string }): Promise<Action
   return removeKeys("/settings/shipping-carriers", input, "Unknown shipping carrier", "Carrier keys removed");
 }
 
-const carrierSchema = z.object({ shippingProvider: integrationName });
+const carrierSchema = z.object({
+  shippingProvider: integrationName,
+  autoPushShipment: z.boolean(),
+});
 
 export async function updateShippingCarrier(formData: FormData): Promise<ActionResult> {
-  const parsed = carrierSchema.safeParse({ shippingProvider: formText(formData, "shippingProvider") });
+  const parsed = carrierSchema.safeParse({
+    shippingProvider: formText(formData, "shippingProvider"),
+    autoPushShipment: formData.get("autoPushShipment") === "on",
+  });
   if (!parsed.success) return { ok: false, error: "Choose a carrier", fieldErrors: { shippingProvider: "Choose a carrier" } };
 
   try {

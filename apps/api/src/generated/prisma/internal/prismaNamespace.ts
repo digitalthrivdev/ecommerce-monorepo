@@ -3664,6 +3664,7 @@ export const PlatformSettingsScalarFieldEnum = {
   paymentProvider: 'paymentProvider',
   otpProvider: 'otpProvider',
   shippingProvider: 'shippingProvider',
+  autoPushShipment: 'autoPushShipment',
   updatedById: 'updatedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

@@ -984,6 +984,10 @@ model PlatformSettings {
   // courier and types the AWB. Only carriers with working keys can be selected.
   shippingProvider String?
 
+  // Automatically pack and push newly placed/confirmed orders to the active shipping carrier
+  // (e.g. Shiprocket) when a non-manual carrier is configured.
+  autoPushShipment Boolean @default(false)
+
   updatedById String?
 
   createdAt DateTime @default(now())

@@ -71,9 +71,9 @@ export async function buildApp() {
   await app.register(redisPlugin);
   await app.register(authPlugin);
   await app.register(otpPlugin);
+  await app.register(shippingPlugin);
   await app.register(paymentsPlugin);
   await app.register(notificationsPlugin);
-  await app.register(shippingPlugin);
 
   app.get("/health", async () => {
     await app.prisma.$queryRaw`SELECT 1`;

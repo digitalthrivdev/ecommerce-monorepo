@@ -6,10 +6,10 @@ import { dimensionSchema, MAX_WEIGHT_GRAMS } from "../products/products.schemas.
 /** The parcel as packed. Courier details are for the manual carrier, which needs them. */
 export const shipOrderBodySchema = z
   .object({
-    weightGrams: z.number().int().min(1).max(MAX_WEIGHT_GRAMS),
-    lengthCm: dimensionSchema,
-    breadthCm: dimensionSchema,
-    heightCm: dimensionSchema,
+    weightGrams: z.number().int().min(1).max(MAX_WEIGHT_GRAMS).optional(),
+    lengthCm: dimensionSchema.optional(),
+    breadthCm: dimensionSchema.optional(),
+    heightCm: dimensionSchema.optional(),
     courierName: z.string().trim().min(1).max(100).optional(),
     awb: z
       .string()
@@ -26,6 +26,12 @@ export const shipOrderBodySchema = z
   });
 
 export type ShipOrderBody = z.infer<typeof shipOrderBodySchema>;
+
+export const bulkShipOrdersBodySchema = z.object({
+  orderIds: z.array(z.string().trim().min(1).max(64)).min(1).max(100),
+});
+
+export type BulkShipOrdersBody = z.infer<typeof bulkShipOrdersBodySchema>;
 
 /** Updates an admin can record by hand; booking and cancelling have their own actions. */
 export const MANUAL_EVENT_STATUSES = [

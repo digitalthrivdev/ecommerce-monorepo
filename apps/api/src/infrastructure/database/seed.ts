@@ -598,7 +598,7 @@ async function main() {
         data: {
           ...user,
           passwordHash: user.role === UserRole.ADMIN || user.role === UserRole.STAFF ? await hashPassword(DEV_PASSWORD) : null,
-          isTestAccount: true,
+          isTestAccount: Boolean(process.env.ALLOW_PROD_SEED),
         },
       });
     }

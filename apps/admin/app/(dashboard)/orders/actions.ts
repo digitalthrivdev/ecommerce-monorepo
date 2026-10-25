@@ -169,6 +169,36 @@ export async function shipOrder(formData: FormData): Promise<ActionResult> {
   );
 }
 
+export async function bulkShipOrders(orderIds: string[]): Promise<ActionResult> {
+  if (!orderIds.length) return { ok: false, error: "No orders selected" };
+  try {
+    const res = await apiFetch<{
+      total: number;
+      succeeded: number;
+      failed: number;
+      results: Array<{ orderId: string; orderNumber?: string; success: boolean; error?: string }>;
+    }>("/admin/orders/bulk-ship", {
+      method: "POST",
+      body: { orderIds },
+    });
+    refresh();
+    if (res.failed === 0) {
+      return { ok: true, message: `${res.succeeded} ${res.succeeded === 1 ? "order" : "orders"} pushed to carrier` };
+    }
+    const failures = res.results
+      .filter((r) => !r.success)
+      .map((r) => `${r.orderNumber ?? r.orderId}: ${r.error}`)
+      .join(", ");
+    return {
+      ok: res.succeeded > 0,
+      message: `${res.succeeded} pushed, ${res.failed} failed: ${failures}`,
+      error: res.succeeded === 0 ? `Failed to push orders: ${failures}` : "",
+    };
+  } catch (error) {
+    return apiFailure(error);
+  }
+}
+
 export async function cancelShipment(input: { orderId: string }): Promise<ActionResult> {
   const parsed = targetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid request" };

@@ -27,7 +27,7 @@ function badge(carrier: ShippingCarrierOption) {
   return carrier.testMode ? <Pill tone="amber">Test</Pill> : <Pill tone="green">Live</Pill>;
 }
 
-export function ShippingCarrierForm({ settings }: { settings: Pick<PlatformSettings, "shippingProvider" | "shippingCarriers"> }) {
+export function ShippingCarrierForm({ settings }: { settings: Pick<PlatformSettings, "shippingProvider" | "shippingCarriers" | "autoPushShipment"> }) {
   const { pending, fieldErrors, onSubmit } = useFormAction(updateShippingCarrier);
   const carriers = settings.shippingCarriers;
   const active = activeCarrierOf(settings);
@@ -65,6 +65,23 @@ export function ShippingCarrierForm({ settings }: { settings: Pick<PlatformSetti
         </div>
         <FieldError>{fieldErrors.shippingProvider}</FieldError>
       </FieldSet>
+
+      <div className="flex flex-col gap-2 rounded-xl border bg-card p-4">
+        <label className="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            name="autoPushShipment"
+            defaultChecked={settings.autoPushShipment}
+            className="mt-0.5 size-4 rounded accent-primary cursor-pointer"
+          />
+          <div>
+            <span className="text-sm font-semibold">Automatically push orders to carrier</span>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              When enabled and a carrier (such as Shiprocket) is selected, newly confirmed orders are automatically packed and pushed to the carrier without having to manually ship each order.
+            </p>
+          </div>
+        </label>
+      </div>
 
       <p className="text-sm text-muted-foreground">
         Switching is safe: orders already shipped keep the carrier they were booked with.

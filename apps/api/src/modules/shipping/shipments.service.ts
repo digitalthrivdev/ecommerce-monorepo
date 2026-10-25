@@ -5,12 +5,13 @@ import type { FastifyBaseLogger } from "fastify";
 
 import { OrderStatus, PaymentMethod, Prisma, ShipmentStatus, type PrismaClient } from "../../generated/prisma/client";
 import { AppError } from "../../shared/errors.js";
-import { lockOrder } from "../orders/order-status.js";
+import { lockOrder, transitionOrder } from "../orders/order-status.js";
+import { MAX_WEIGHT_GRAMS } from "../products/products.schemas.js";
 import { getPlatformSettings } from "../settings/settings.service.js";
 import { activeShippingProvider, getShippingProvider } from "./carrier-registry.js";
 import { defaultPickupLocation } from "./pickup-locations.service.js";
 import { CANCELLABLE_SHIPMENT_STATUSES, recordShipmentEvents } from "./shipment-status.js";
-import { HAND_TRACKED_CARRIERS, type ShipmentEventInput, type ShipmentRef, type ShippingProvider } from "./shipping-provider.js";
+import { HAND_TRACKED_CARRIERS, MANUAL_CARRIER, type ShipmentEventInput, type ShipmentRef, type ShippingProvider } from "./shipping-provider.js";
 import type { ShipmentEventBody, ShipOrderBody } from "./shipments.schemas.js";
 
 type Actor = { userId: string };
@@ -23,6 +24,41 @@ const refOf = (shipment: ShipmentRef): ShipmentRef => ({
 
 function notFound(): never {
   throw new AppError(404, "SHIPMENT_NOT_FOUND", "This order has no shipment");
+}
+
+export function deriveParcel(
+  items: Array<{
+    quantity: number;
+    unavailableQuantity: number;
+    variant?: {
+      weightGrams: number | null;
+      lengthCm: Prisma.Decimal | null;
+      breadthCm: Prisma.Decimal | null;
+      heightCm: Prisma.Decimal | null;
+    } | null;
+  }>,
+): { weightGrams: number; lengthCm: string; breadthCm: string; heightCm: string } {
+  let totalWeightGrams = 0;
+  let maxLength = 10;
+  let maxBreadth = 10;
+  let maxHeight = 10;
+
+  for (const item of items) {
+    const qty = item.quantity - item.unavailableQuantity;
+    if (qty <= 0) continue;
+    const v = item.variant;
+    totalWeightGrams += (v?.weightGrams ?? 200) * qty;
+    if (v?.lengthCm) maxLength = Math.max(maxLength, Number(v.lengthCm));
+    if (v?.breadthCm) maxBreadth = Math.max(maxBreadth, Number(v.breadthCm));
+    if (v?.heightCm) maxHeight = Math.max(maxHeight, Number(v.heightCm));
+  }
+
+  return {
+    weightGrams: Math.min(Math.max(totalWeightGrams, 100), MAX_WEIGHT_GRAMS),
+    lengthCm: String(Math.max(maxLength, 1)),
+    breadthCm: String(Math.max(maxBreadth, 1)),
+    heightCm: String(Math.max(maxHeight, 1)),
+  };
 }
 
 export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLogger) {
@@ -54,14 +90,38 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
    * the pickup and fetches the label. The carrier is called before the order is locked, so the
    * order is checked again before the shipment is saved; a booking that loses that race is cancelled.
    */
-  async function shipOrder(orderId: string, input: ShipOrderBody, actor: Actor) {
-    const order = await prisma.order.findUnique({
+  async function shipOrder(orderId: string, input: Partial<ShipOrderBody> = {}, actor: Actor) {
+    let order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { orderBy: { createdAt: "asc" } }, shipment: { select: { status: true } } },
+      include: {
+        items: {
+          include: {
+            variant: {
+              select: { weightGrams: true, lengthCm: true, breadthCm: true, heightCm: true },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        shipment: { select: { status: true } },
+      },
     });
     if (!order || order.status === OrderStatus.PENDING_PAYMENT) {
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
+
+    if (order.status === OrderStatus.CONFIRMED) {
+      await prisma.$transaction((tx) =>
+        transitionOrder(tx, {
+          orderId,
+          allowedFrom: [OrderStatus.CONFIRMED],
+          to: OrderStatus.PACKED,
+          changedById: actor.userId,
+          note: "Auto-packed for shipping",
+        }),
+      );
+      order = { ...order, status: OrderStatus.PACKED };
+    }
+
     const assertShippable = (status: OrderStatus, shipment: { status: ShipmentStatus } | null) => {
       if (shipment && shipment.status !== ShipmentStatus.CANCELLED) {
         throw new AppError(409, "SHIPMENT_EXISTS", "This order already has a shipment. Cancel it first to ship again.");
@@ -77,11 +137,17 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
       throw new AppError(409, "PICKUP_LOCATION_REQUIRED", "Add a pickup location in Settings before shipping");
     }
     const provider = await activeShippingProvider(prisma, await getPlatformSettings(prisma));
+
+    if (provider.name === MANUAL_CARRIER && (!input.courierName || !input.awb)) {
+      throw new AppError(400, "COURIER_DETAILS_REQUIRED", "Manual shipping requires courier name and AWB number");
+    }
+
+    const derived = deriveParcel(order.items);
     const parcel = {
-      weightGrams: input.weightGrams,
-      lengthCm: new Prisma.Decimal(input.lengthCm),
-      breadthCm: new Prisma.Decimal(input.breadthCm),
-      heightCm: new Prisma.Decimal(input.heightCm),
+      weightGrams: input.weightGrams ?? derived.weightGrams,
+      lengthCm: new Prisma.Decimal(input.lengthCm ?? derived.lengthCm),
+      breadthCm: new Prisma.Decimal(input.breadthCm ?? derived.breadthCm),
+      heightCm: new Prisma.Decimal(input.heightCm ?? derived.heightCm),
     };
 
     const booked = await provider.createShipment({
@@ -334,7 +400,99 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
     );
   }
 
-  return { shipOrder, cancelShipment, refreshLabel, addEvent, syncTracking, sweepTracking, handleWebhook };
+  /**
+   * Pushes multiple orders to the carrier in bulk. Auto-packs confirmed orders and derives parcel
+   * dimensions for each order.
+   */
+  async function bulkShipOrders(orderIds: string[], actor: Actor) {
+    const results: Array<{ orderId: string; orderNumber?: string; success: boolean; error?: string }> = [];
+
+    for (const orderId of orderIds) {
+      try {
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { orderNumber: true, status: true, shipment: { select: { status: true } } },
+        });
+
+        if (!order) {
+          results.push({ orderId, success: false, error: "Order not found" });
+          continue;
+        }
+
+        if (order.shipment && order.shipment.status !== ShipmentStatus.CANCELLED) {
+          results.push({ orderId, orderNumber: order.orderNumber, success: false, error: "Shipment already exists" });
+          continue;
+        }
+
+        if (order.status !== OrderStatus.CONFIRMED && order.status !== OrderStatus.PACKED) {
+          results.push({
+            orderId,
+            orderNumber: order.orderNumber,
+            success: false,
+            error: `Order is ${order.status}; must be CONFIRMED or PACKED`,
+          });
+          continue;
+        }
+
+        await shipOrder(orderId, {}, actor);
+        results.push({ orderId, orderNumber: order.orderNumber, success: true });
+      } catch (err: any) {
+        log.warn({ err, orderId }, "Bulk ship failed for order");
+        results.push({
+          orderId,
+          success: false,
+          error: err?.message || "Failed to push shipment",
+        });
+      }
+    }
+
+    const succeeded = results.filter((r) => r.success).length;
+    return {
+      total: orderIds.length,
+      succeeded,
+      failed: orderIds.length - succeeded,
+      results,
+    };
+  }
+
+  /**
+   * When autoPushShipment is enabled and a non-manual shipping carrier is configured, automatically
+   * packs and pushes confirmed orders to the carrier without manual intervention.
+   */
+  async function autoPushIfEnabled(orderId: string) {
+    const settings = await getPlatformSettings(prisma);
+    if (!settings.autoPushShipment || !settings.shippingProvider || settings.shippingProvider === MANUAL_CARRIER) {
+      return;
+    }
+
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { orderNumber: true, status: true, shipment: { select: { status: true } } },
+      });
+
+      if (!order) return;
+      if (order.shipment && order.shipment.status !== ShipmentStatus.CANCELLED) return;
+      if (order.status !== OrderStatus.CONFIRMED && order.status !== OrderStatus.PACKED) return;
+
+      await shipOrder(orderId, {}, { userId: "system" });
+      log.info({ orderId, orderNumber: order.orderNumber }, "Order auto-pushed to shipping carrier");
+    } catch (error) {
+      log.warn({ err: error, orderId }, "Auto-push order to carrier failed");
+    }
+  }
+
+  return {
+    shipOrder,
+    bulkShipOrders,
+    autoPushIfEnabled,
+    cancelShipment,
+    refreshLabel,
+    addEvent,
+    syncTracking,
+    sweepTracking,
+    handleWebhook,
+  };
 }
 
 export type ShipmentsService = ReturnType<typeof createShipmentsService>;

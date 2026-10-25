@@ -215,4 +215,40 @@ describe("shipping with a carrier", () => {
       await call(app, "PATCH", "/settings/platform", { token: admin, body: { shippingProvider: "mock" } });
     }
   });
+
+  it("bulk ships multiple orders", async () => {
+    const order1 = await packedOrder();
+    const order2 = await packedOrder();
+
+    const bulk = await call(app, "POST", "/admin/orders/bulk-ship", {
+      token: staff,
+      body: { orderIds: [order1.orderId, order2.orderId] },
+    });
+    expect(bulk.status).toBe(200);
+    expect(bulk.body).toMatchObject({ total: 2, succeeded: 2, failed: 0 });
+
+    const check1 = await call(app, "GET", order1.orderPath, { token: staff });
+    const check2 = await call(app, "GET", order2.orderPath, { token: staff });
+    expect(check1.body.shipment).not.toBeNull();
+    expect(check2.body.shipment).not.toBeNull();
+  });
+
+  it("auto-pushes order to carrier when autoPushShipment is enabled and packed", async () => {
+    await call(app, "PATCH", "/settings/platform", { token: admin, body: { autoPushShipment: true } });
+    try {
+      // Create a confirmed order
+      const variant = await app.prisma.productVariant.findFirstOrThrow({ where: { isActive: true, inventory: { quantity: { gt: 5 } } } });
+      await call(app, "POST", "/cart/items", { token: customer, body: { variantId: variant.id, quantity: 1 } });
+      const order = await call(app, "POST", "/orders", { token: customer, body: { addressId, paymentMethod: "COD" } });
+      expect(order.status).toBe(201);
+      const orderId = order.body.id;
+
+      // Because autoPushShipment is enabled, creating a confirmed COD order immediately auto-packs and pushes shipment!
+      const fetched = await call(app, "GET", `/admin/orders/${orderId}`, { token: staff });
+      expect(fetched.body.shipment).not.toBeNull();
+      expect(fetched.body.shipment.provider).toBe("mock");
+    } finally {
+      await call(app, "PATCH", "/settings/platform", { token: admin, body: { autoPushShipment: false } });
+    }
+  });
 });

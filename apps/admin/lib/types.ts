@@ -650,6 +650,8 @@ export type PlatformSettings = {
   paymentGateways: PaymentGatewayOption[];
   /** Carrier new shipments are booked with; "manual" when none is chosen. */
   shippingProvider: string;
+  /** Whether newly confirmed orders are automatically pushed to the carrier. */
+  autoPushShipment: boolean;
   shippingCarriers: ShippingCarrierOption[];
   /** False until SECRETS_ENCRYPTION_KEY is set on the server; keys can then only come from its environment. */
   canStoreSecrets: boolean;

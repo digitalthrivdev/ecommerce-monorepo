@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyPluginAsync } from "fastify";
 
-import { PaymentMethod, UserRole } from "../../generated/prisma/client";
+import { OrderStatus, PaymentMethod, UserRole } from "../../generated/prisma/client";
 import { idParamsSchema } from "../../shared/schemas.js";
 import { sendPdf } from "../invoices/invoices.routes.js";
 import { createInvoicesService } from "../invoices/invoices.service.js";
@@ -43,6 +43,10 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
+    if (order.status === OrderStatus.CONFIRMED) {
+      await app.shipments.autoPushIfEnabled(order.id);
+    }
+
     return reply.status(201).send({
       order,
       accessToken,
@@ -57,6 +61,9 @@ const ordersRoutes: FastifyPluginAsync = async (app) => {
     authed.post("/", async (request, reply) => {
       const body = createOrderBodySchema.parse(request.body);
       const order = await ordersService.createOrder(request.user.sub, body);
+      if (order.status === OrderStatus.CONFIRMED) {
+        await app.shipments.autoPushIfEnabled(order.id);
+      }
       return reply.status(201).send(order);
     });
 

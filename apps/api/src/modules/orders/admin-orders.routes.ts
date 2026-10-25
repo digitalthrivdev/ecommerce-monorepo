@@ -5,7 +5,7 @@ import { env } from "../../config/env.js";
 import { UserRole } from "../../generated/prisma/client";
 import { orderRefundBodySchema } from "../complaints/complaints.schemas.js";
 import { createComplaintsService } from "../complaints/complaints.service.js";
-import { shipmentEventBodySchema, shipOrderBodySchema } from "../shipping/shipments.schemas.js";
+import { shipmentEventBodySchema, shipOrderBodySchema, bulkShipOrdersBodySchema } from "../shipping/shipments.schemas.js";
 import { createShipmentsService } from "../shipping/shipments.service.js";
 import { createImageStore } from "../uploads/image-store.js";
 import { createDashboardService } from "./dashboard.service.js";
@@ -63,9 +63,18 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
     app.post(`/:orderId/${action}`, async (request) => {
       const { orderId } = orderParamsSchema.parse(request.params);
       const { note } = actionBodySchema.parse(request.body ?? undefined);
-      return orders.performAction(orderId, action, actor(request), note);
+      await orders.performAction(orderId, action, actor(request), note);
+      if (action === "pack") {
+        await shipments.autoPushIfEnabled(orderId);
+      }
+      return orders.getOrder(orderId, actor(request));
     });
   }
+
+  app.post("/bulk-ship", async (request) => {
+    const { orderIds } = bulkShipOrdersBodySchema.parse(request.body);
+    return shipments.bulkShipOrders(orderIds, actor(request));
+  });
 
   app.post("/:orderId/shipment", async (request, reply) => {
     const { orderId } = orderParamsSchema.parse(request.params);

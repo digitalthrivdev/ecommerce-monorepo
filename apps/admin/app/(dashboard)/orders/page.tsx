@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
 import Form from "next/form";
-import Link from "next/link";
 import { ClipboardList, Search } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
-import { NextStepButton } from "@/components/orders/order-actions";
+import { OrdersTable } from "@/components/orders/orders-table";
 import { PageHeader } from "@/components/page-header";
 import { PageTabs } from "@/components/page-tabs";
 import { PaginationLinks } from "@/components/pagination-links";
 import { PageBody, Panel } from "@/components/section";
-import { OrderStatusPill, ReviewAccountPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getActiveCarrier, getCurrentUser, getPublicSettings } from "@/lib/dal";
-import { formatDateTime, formatMoney } from "@/lib/format";
 import { listOrders } from "@/lib/orders";
-import type { OrderListItem, OrderStatus } from "@/lib/types";
+import type { OrderStatus } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Orders" };
 
@@ -34,16 +30,6 @@ const TABS: Tab[] = [
 ];
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-
-function payment(order: OrderListItem, currency: string) {
-  return order.paymentMethod === "COD" ? `Cash ${formatMoney(order.total, currency)}` : `Paid online · ${formatMoney(order.total, currency)}`;
-}
-
-function shipmentLine(order: OrderListItem) {
-  const shipment = order.shipment;
-  if (!shipment?.awb || shipment.status === "CANCELLED") return null;
-  return [shipment.courierName, `AWB ${shipment.awb}`].filter(Boolean).join(" · ");
-}
 
 export default async function OrdersPage({ searchParams }: PageProps<"/orders">) {
   const user = await getCurrentUser();
@@ -130,85 +116,12 @@ export default async function OrdersPage({ searchParams }: PageProps<"/orders">)
               description={q ? "Check the order number or phone number, or search in All." : undefined}
             />
           ) : (
-            <>
-              <ul className="divide-y md:hidden">
-                {orders.items.map((order) => (
-                  <li key={order.id} className="relative flex flex-col gap-1.5 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <Link href={`/orders/${order.id}`} className="font-semibold break-all after:absolute after:inset-0">
-                        {order.orderNumber}
-                      </Link>
-                      <OrderStatusPill status={order.status} />
-                    </div>
-                    {order.reviewAccount && <ReviewAccountPill />}
-                    <p className="text-sm">
-                      {order.customerName}
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {order.itemCount} {order.itemCount === 1 ? "item" : "items"}
-                      </span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {payment(order, currency)} · {formatDateTime(order.createdAt, settings.timezone)}
-                    </p>
-                    {shipmentLine(order) && <p className="text-xs text-muted-foreground">{shipmentLine(order)}</p>}
-                  </li>
-                ))}
-              </ul>
-              <Table className="hidden md:table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-4">Order</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="pr-4 text-right">
-                      <span className="sr-only">Next step</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.items.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="pl-4">
-                        <Link href={`/orders/${order.id}`} className="font-semibold underline-offset-4 hover:underline">
-                          {order.orderNumber}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDateTime(order.createdAt, settings.timezone)} · {order.itemCount}{" "}
-                          {order.itemCount === 1 ? "item" : "items"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>{order.customerName}</div>
-                        <div className="text-xs text-muted-foreground">{order.customerPhone}</div>
-                        {order.reviewAccount && <ReviewAccountPill />}
-                      </TableCell>
-                      <TableCell>
-                        <OrderStatusPill status={order.status} />
-                        {shipmentLine(order) && <div className="mt-1 text-xs text-muted-foreground">{shipmentLine(order)}</div>}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="tabular-nums">{formatMoney(order.total, currency)}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {order.paymentMethod === "COD" ? "Cash" : "Online"}
-                        </div>
-                      </TableCell>
-                      <TableCell className="pr-4 text-right">
-                        <NextStepButton
-                          orderId={order.id}
-                          orderNumber={order.orderNumber}
-                          status={order.status}
-                          allowedActions={order.allowedActions}
-                          carrier={carrier}
-                          size="default"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
+            <OrdersTable
+              orders={orders.items}
+              currency={currency}
+              timezone={settings.timezone}
+              carrier={carrier}
+            />
           )}
         </Panel>
 

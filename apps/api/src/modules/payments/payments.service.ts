@@ -63,7 +63,12 @@ type PaymentWithOrder = Prisma.PaymentGetPayload<{ select: typeof paymentSelect 
 
 export type PaymentsService = ReturnType<typeof createPaymentsService>;
 
-export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: FastifyBaseLogger) {
+export function createPaymentsService(
+  prisma: PrismaClient,
+  redis: Redis,
+  log: FastifyBaseLogger,
+  onOrderConfirmed?: (orderId: string) => Promise<void> | void,
+) {
   function providerFor(name: string | null) {
     return getPaymentProvider(prisma, name);
   }
@@ -276,7 +281,7 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
       return;
     }
 
-    const refundNeeded = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const [order] = await tx.$queryRaw<{ status: OrderStatus }[]>`
         SELECT status FROM "Order" WHERE id = ${ref.orderId} FOR UPDATE
       `;
@@ -292,7 +297,7 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
             "Second payment captured for an already paid order; refund it manually",
           );
         }
-        return false;
+        return { refundNeeded: false, confirmed: false };
       }
 
       await tx.payment.update({
@@ -313,14 +318,19 @@ export function createPaymentsService(prisma: PrismaClient, redis: Redis, log: F
           changedById: null,
           note: "Payment received",
         });
-        return false;
+        return { refundNeeded: false, confirmed: true };
       }
 
-      return order!.status === OrderStatus.CANCELLED;
+      return { refundNeeded: order!.status === OrderStatus.CANCELLED, confirmed: false };
     });
 
-    if (refundNeeded) {
+    if (result.refundNeeded) {
       await refundSafely(ref.orderId);
+    }
+    if (result.confirmed && onOrderConfirmed) {
+      Promise.resolve(onOrderConfirmed(ref.orderId)).catch((err) => {
+        log.warn({ err, orderId: ref.orderId }, "onOrderConfirmed callback failed");
+      });
     }
   }
 

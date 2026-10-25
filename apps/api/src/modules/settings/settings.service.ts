@@ -171,6 +171,7 @@ async function toAdminView(prisma: PrismaClient, otp: OtpRegistry, settings: Pla
     paymentProvider: settings.paymentProvider,
     paymentGateways: await paymentGatewayOptions(prisma),
     shippingProvider: settings.shippingProvider ?? MANUAL_CARRIER,
+    autoPushShipment: settings.autoPushShipment,
     shippingCarriers: await shippingCarrierOptions(prisma),
     canStoreSecrets,
     sms: await otp.adminView(),
