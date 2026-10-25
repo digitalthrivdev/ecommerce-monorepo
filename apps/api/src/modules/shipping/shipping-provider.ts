@@ -25,6 +25,7 @@ export type ShipmentWebhook =
       type: "event";
       awb: string | null;
       providerShipmentId: string | null;
+      providerOrderId?: string | null;
       orderNumber?: string | null;
       courierName?: string | null;
       event: ShipmentEventInput;
@@ -79,6 +80,14 @@ export type ReturnPickupInput = {
 
 export type ReturnPickup = { providerOrderId: string; providerShipmentId: string; awb: string; courierName: string; trackingUrl: string };
 
+export type ShipmentDetails = {
+  awb?: string | null;
+  courierName?: string | null;
+  trackingUrl?: string | null;
+  labelUrl?: string | null;
+  status?: ShipmentStatus | null;
+};
+
 /**
  * A shipping carrier or aggregator. The API books a shipment, gets an AWB, schedules the pickup and
  * fetches the label; afterwards the carrier reports progress by webhook (or `track`). Add a carrier
@@ -103,6 +112,9 @@ export interface ShippingProvider {
   }): Promise<{ serviceable: boolean; codAvailable: boolean; etaDays: number | null }>;
 
   createShipment(input: ShipmentInput): Promise<BookedShipment>;
+
+  /** Optional: fetches current shipment metadata (AWB, courier, tracking URL, label URL, status) from the carrier. */
+  getShipmentDetails?(shipment: ShipmentRef): Promise<ShipmentDetails | null>;
 
   /** Optional carrier generated reverse pickup. Unsupported carriers use manual details. */
   createReturnPickup?(input: ReturnPickupInput): Promise<ReturnPickup>;

@@ -35,7 +35,20 @@ export function ShipmentCard({ orderId, shipment, allowedActions, timezone }: {
     >
       <dl className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
         <Row label="Carrier">
-          <span className="capitalize">{shipment.provider === MANUAL_CARRIER ? "Manual" : shipment.provider}</span>
+          <div className="flex items-center justify-end gap-2">
+            <span className="capitalize">{shipment.provider === MANUAL_CARRIER ? "Manual" : shipment.provider}</span>
+            {shipment.provider === "shiprocket" && shipment.providerOrderId && (
+              <a
+                href={`https://app.shiprocket.in/seller/orders/details/${encodeURIComponent(shipment.providerOrderId)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+              >
+                View in Shiprocket
+                <ExternalLink className="size-3" aria-hidden />
+              </a>
+            )}
+          </div>
         </Row>
         <Row label="Courier">{shipment.courierName ?? <span className="text-muted-foreground">Not assigned yet</span>}</Row>
         <Row label="AWB">
@@ -51,14 +64,21 @@ export function ShipmentCard({ orderId, shipment, allowedActions, timezone }: {
         <Row label="Parcel">
           {formatNumber(parcel.weightGrams)} g · {Number(parcel.lengthCm)} × {Number(parcel.breadthCm)} × {Number(parcel.heightCm)} cm
         </Row>
-        {shipment.trackingUrl && (
-          <Row label="Tracking">
+        <Row label="Tracking">
+          {shipment.trackingUrl ? (
             <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-primary-ink underline-offset-4 hover:underline">
               Courier&apos;s tracking page
               <ExternalLink className="size-3.5" aria-hidden />
             </a>
-          </Row>
-        )}
+          ) : shipment.awb ? (
+            <a href={`https://shiprocket.co/tracking/${encodeURIComponent(shipment.awb)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-primary-ink underline-offset-4 hover:underline">
+              Shiprocket tracking
+              <ExternalLink className="size-3.5" aria-hidden />
+            </a>
+          ) : (
+            <span className="text-muted-foreground">Available once booked with courier</span>
+          )}
+        </Row>
       </dl>
 
       {!cancelled && (

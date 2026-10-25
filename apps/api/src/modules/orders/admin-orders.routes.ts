@@ -2,9 +2,10 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import { env } from "../../config/env.js";
-import { UserRole } from "../../generated/prisma/client";
+import { ShipmentStatus, UserRole } from "../../generated/prisma/client";
 import { orderRefundBodySchema } from "../complaints/complaints.schemas.js";
 import { createComplaintsService } from "../complaints/complaints.service.js";
+import { HAND_TRACKED_CARRIERS } from "../shipping/shipping-provider.js";
 import { shipmentEventBodySchema, shipOrderBodySchema, bulkShipOrdersBodySchema } from "../shipping/shipments.schemas.js";
 import { createShipmentsService } from "../shipping/shipments.service.js";
 import { createImageStore } from "../uploads/image-store.js";
@@ -56,6 +57,17 @@ const adminOrdersRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/:orderId", async (request) => {
     const { orderId } = orderParamsSchema.parse(request.params);
+    try {
+      const sh = await app.prisma.shipment.findUnique({
+        where: { orderId },
+        select: { provider: true, awb: true, status: true },
+      });
+      if (sh && !sh.awb && !HAND_TRACKED_CARRIERS.includes(sh.provider) && sh.status !== ShipmentStatus.CANCELLED) {
+        await shipments.syncTracking(orderId);
+      }
+    } catch {
+      // Background sync on read is best-effort
+    }
     return orders.getOrder(orderId, actor(request));
   });
 

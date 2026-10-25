@@ -109,7 +109,7 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     }
 
-    if (order.status === OrderStatus.CONFIRMED) {
+    if (order.status === OrderStatus.CONFIRMED && !input.courierName) {
       await prisma.$transaction((tx) =>
         transitionOrder(tx, {
           orderId,
@@ -319,7 +319,56 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
   /** Fetches the carrier's tracking history and records anything new. */
   async function syncTracking(orderId: string) {
     const shipment = await currentShipment(orderId);
-    const events = await (await providerFor(shipment.provider)).track(refOf(shipment));
+    const provider = await providerFor(shipment.provider);
+
+    if (provider.getShipmentDetails) {
+      try {
+        const details = await provider.getShipmentDetails(refOf(shipment));
+        if (details) {
+          const updates: Prisma.ShipmentUpdateInput = {};
+          if (details.awb && details.awb !== shipment.awb) {
+            updates.awb = details.awb;
+          }
+          if (details.courierName && details.courierName !== shipment.courierName) {
+            updates.courierName = details.courierName;
+          }
+          if (details.trackingUrl && details.trackingUrl !== shipment.trackingUrl) {
+            updates.trackingUrl = details.trackingUrl;
+          } else if (details.awb && !shipment.trackingUrl) {
+            updates.trackingUrl = `https://shiprocket.co/tracking/${encodeURIComponent(details.awb)}`;
+          }
+          if (details.labelUrl && details.labelUrl !== shipment.labelUrl) {
+            updates.labelUrl = details.labelUrl;
+          }
+          if (Object.keys(updates).length > 0) {
+            await prisma.shipment.update({ where: { id: shipment.id }, data: updates });
+            Object.assign(shipment, updates);
+          }
+          if (details.status && details.status !== shipment.status && details.status !== ShipmentStatus.PENDING) {
+            await prisma.$transaction((tx) =>
+              recordShipmentEvents(tx, {
+                orderId,
+                shipmentId: shipment.id,
+                changedById: null,
+                events: [
+                  {
+                    status: details.status!,
+                    providerEventId: `sync:${details.status}:${Date.now()}`,
+                    occurredAt: new Date(),
+                    location: null,
+                    description: `Status updated to ${details.status} from ${provider.label}`,
+                  },
+                ],
+              }),
+            );
+          }
+        }
+      } catch (err) {
+        log.warn({ err, orderId, provider: shipment.provider }, "Failed to fetch shipment details from carrier");
+      }
+    }
+
+    const events = await provider.track(refOf(shipment));
     if (events.length === 0) return 0;
     return prisma.$transaction((tx) => recordShipmentEvents(tx, { orderId, shipmentId: shipment.id, changedById: null, events }));
   }
@@ -333,7 +382,7 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
       where: {
         status: { notIn: [ShipmentStatus.DELIVERED, ShipmentStatus.RTO_DELIVERED, ShipmentStatus.CANCELLED] },
         provider: { notIn: [...HAND_TRACKED_CARRIERS] },
-        OR: [{ awb: { not: null } }, { providerShipmentId: { not: null } }],
+        OR: [{ awb: { not: null } }, { providerShipmentId: { not: null } }, { providerOrderId: { not: null } }],
       },
       select: { orderId: true, provider: true, awb: true },
     });
@@ -369,6 +418,7 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
         OR: [
           ...(webhook.awb ? [{ awb: webhook.awb }] : []),
           ...(webhook.providerShipmentId ? [{ providerShipmentId: webhook.providerShipmentId }] : []),
+          ...(webhook.providerOrderId ? [{ providerOrderId: webhook.providerOrderId }] : []),
           ...(webhook.orderNumber ? [{ order: { orderNumber: webhook.orderNumber } }] : []),
         ],
       },
@@ -376,18 +426,22 @@ export function createShipmentsService(prisma: PrismaClient, log: FastifyBaseLog
     });
     if (!shipment) {
       log.warn(
-        { provider: provider.name, awb: webhook.awb, providerShipmentId: webhook.providerShipmentId, orderNumber: webhook.orderNumber },
+        { provider: provider.name, awb: webhook.awb, providerShipmentId: webhook.providerShipmentId, providerOrderId: webhook.providerOrderId, orderNumber: webhook.orderNumber },
         "Shipping webhook for an unknown shipment",
       );
       return;
     }
 
     const updates: Prisma.ShipmentUpdateInput = {};
-    if (webhook.awb && !shipment.awb) {
-      updates.awb = webhook.awb;
-      updates.trackingUrl = `https://shiprocket.co/tracking/${encodeURIComponent(webhook.awb)}`;
+    if (webhook.awb) {
+      if (!shipment.awb || shipment.awb !== webhook.awb) {
+        updates.awb = webhook.awb;
+      }
+      if (!shipment.trackingUrl && provider.name === "shiprocket") {
+        updates.trackingUrl = `https://shiprocket.co/tracking/${encodeURIComponent(webhook.awb)}`;
+      }
     }
-    if (webhook.courierName && !shipment.courierName) {
+    if (webhook.courierName && (!shipment.courierName || shipment.courierName !== webhook.courierName)) {
       updates.courierName = webhook.courierName;
     }
     if (Object.keys(updates).length > 0) {

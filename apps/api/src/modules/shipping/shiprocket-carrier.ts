@@ -6,6 +6,7 @@ import { AppError } from "../../shared/errors.js";
 import { headerValue, safeEqual } from "../payments/gateway-helpers.js";
 import type {
   BookedShipment,
+  ShipmentDetails,
   ShipmentEventInput,
   ShipmentInput,
   ShipmentRef,
@@ -51,14 +52,21 @@ const STATUS_BY_ID: Record<number, ShipmentStatus> = {
   8: ShipmentStatus.CANCELLED,
   9: ShipmentStatus.RTO_IN_TRANSIT, // RTO initiated
   10: ShipmentStatus.RTO_DELIVERED,
+  11: ShipmentStatus.PICKUP_SCHEDULED, // processing / manifest generated
   12: ShipmentStatus.LOST,
+  13: ShipmentStatus.PENDING, // pickup error
   14: ShipmentStatus.RTO_IN_TRANSIT, // RTO acknowledged
+  15: ShipmentStatus.IN_TRANSIT, // reached destination hub
   17: ShipmentStatus.OUT_FOR_DELIVERY,
   18: ShipmentStatus.IN_TRANSIT,
   19: ShipmentStatus.PICKUP_SCHEDULED, // out for pickup
+  20: ShipmentStatus.IN_TRANSIT, // checkpoint scan
   21: ShipmentStatus.NDR, // undelivered
+  22: ShipmentStatus.IN_TRANSIT,
+  23: ShipmentStatus.IN_TRANSIT,
   24: ShipmentStatus.LOST, // destroyed
   25: ShipmentStatus.LOST, // damaged
+  26: ShipmentStatus.IN_TRANSIT,
   38: ShipmentStatus.IN_TRANSIT, // reached destination hub
   39: ShipmentStatus.IN_TRANSIT, // misrouted
   41: ShipmentStatus.RTO_IN_TRANSIT, // RTO out for delivery
@@ -89,10 +97,25 @@ export function mapShiprocketStatus(raw: string | number | null | undefined): Sh
   if (text.includes("PICKUP ERROR") || text.includes("PICKUP EXCEPTION")) return null;
   if (text.includes("OUT FOR PICKUP")) return ShipmentStatus.PICKUP_SCHEDULED;
   if (text.includes("PICKED UP") || text.includes("PICKUP COMPLETE")) return ShipmentStatus.PICKED_UP;
-  if (text.includes("PICKUP SCHEDUL") || text.includes("PICKUP QUEUE") || text.includes("PICKUP RESCHEDUL") || text.includes("MANIFEST")) {
+  if (
+    text.includes("PICKUP SCHEDUL") ||
+    text.includes("PICKUP QUEUE") ||
+    text.includes("PICKUP RESCHEDUL") ||
+    text.includes("MANIFEST") ||
+    text.includes("PICKUP GENERAT")
+  ) {
     return ShipmentStatus.PICKUP_SCHEDULED;
   }
-  if (text.includes("AWB ASSIGN") || text.includes("LABEL GENERAT") || text.includes("BOOKED")) return ShipmentStatus.AWB_ASSIGNED;
+  if (
+    text.includes("AWB ASSIGN") ||
+    text.includes("LABEL GENERAT") ||
+    text.includes("BOOKED") ||
+    text.includes("READY TO SHIP") ||
+    text.includes("PROCESSING") ||
+    text.includes("COURIER ASSIGN")
+  ) {
+    return ShipmentStatus.AWB_ASSIGNED;
+  }
   if (text.includes("IN TRANSIT") || text.includes("SHIPPED") || text.includes("REACHED") || text.includes("MISROUT") || text.includes("DESTINATION")) {
     return ShipmentStatus.IN_TRANSIT;
   }
@@ -192,29 +215,29 @@ const trackingSchema = z
 
 const webhookSchema = z
   .object({
-    awb: z.string().min(1).optional(),
-    courier_name: z.string().optional(),
-    current_status: z.string().optional(),
-    current_status_id: z.union([z.number(), z.string()]).optional(),
-    shipment_status: z.string().optional(),
-    shipment_status_id: z.union([z.number(), z.string()]).optional(),
-    current_timestamp: z.string().optional(),
-    date: z.string().optional(),
-    order_id: z.union([z.number(), z.string()]).optional(),
-    sr_order_id: z.union([z.number(), z.string()]).optional(),
-    shipment_id: z.union([z.number(), z.string()]).optional(),
+    awb: z.union([z.string(), z.number()]).nullish().transform((v) => (v != null ? String(v).trim() : undefined)),
+    courier_name: z.string().nullish(),
+    current_status: z.string().nullish(),
+    current_status_id: z.union([z.number(), z.string()]).nullish(),
+    shipment_status: z.string().nullish(),
+    shipment_status_id: z.union([z.number(), z.string()]).nullish(),
+    current_timestamp: z.string().nullish(),
+    date: z.string().nullish(),
+    order_id: z.union([z.number(), z.string()]).nullish(),
+    sr_order_id: z.union([z.number(), z.string()]).nullish(),
+    shipment_id: z.union([z.number(), z.string()]).nullish(),
     scans: z
       .array(
         z
           .object({
-            date: z.string().optional(),
-            location: z.string().optional(),
-            "sr-status": z.union([z.number(), z.string()]).optional(),
-            "sr-status-label": z.string().optional(),
+            date: z.string().nullish(),
+            location: z.string().nullish(),
+            "sr-status": z.union([z.number(), z.string()]).nullish(),
+            "sr-status-label": z.string().nullish(),
           })
           .passthrough(),
       )
-      .optional(),
+      .nullish(),
   })
   .passthrough();
 
@@ -596,6 +619,58 @@ export function createShiprocketProvider(config: {
       });
     },
 
+    async getShipmentDetails(shipment: ShipmentRef): Promise<ShipmentDetails | null> {
+      let data: any = null;
+      if (shipment.providerOrderId) {
+        const result = await authorized(`orders/show/${encodeURIComponent(shipment.providerOrderId)}`);
+        if (result.ok) {
+          data = (result.body as any)?.data;
+        }
+      }
+      if (!data && shipment.providerShipmentId) {
+        const result = await authorized(`shipments/${encodeURIComponent(shipment.providerShipmentId)}`);
+        if (result.ok) {
+          data = (result.body as any)?.data;
+        }
+      }
+      if (!data) return null;
+
+      const awb =
+        (typeof data.awb_data?.awb === "string" && data.awb_data.awb.trim()) ||
+        (typeof data.shipments?.awb === "string" && data.shipments.awb.trim()) ||
+        (typeof data.last_mile_awb === "string" && data.last_mile_awb.trim()) ||
+        (typeof data.awb === "string" && data.awb.trim()) ||
+        null;
+
+      const courierName =
+        (typeof data.shipments?.courier === "string" && data.shipments.courier.trim()) ||
+        (typeof data.last_mile_courier_name === "string" && data.last_mile_courier_name.trim()) ||
+        (typeof data.courier_name === "string" && data.courier_name.trim()) ||
+        (typeof data.courier === "string" && data.courier.trim()) ||
+        null;
+
+      const labelUrl =
+        (typeof data.shipments?.invoice_link === "string" && data.shipments.invoice_link.trim()) ||
+        (typeof data.invoice_link === "string" && data.invoice_link.trim()) ||
+        (typeof data.label_url === "string" && data.label_url.trim()) ||
+        null;
+
+      const trackingUrlVal =
+        (typeof data.last_mile_awb_track_url === "string" && data.last_mile_awb_track_url.trim()) ||
+        (awb ? trackingUrl(awb) : null);
+
+      const rawStatus = data.status ?? data.shipments?.status ?? data.status_code;
+      const status = mapShiprocketStatus(rawStatus) ?? (awb ? ShipmentStatus.AWB_ASSIGNED : null);
+
+      return {
+        awb: awb || null,
+        courierName: courierName || null,
+        trackingUrl: trackingUrlVal || null,
+        labelUrl: labelUrl || null,
+        status: status || null,
+      };
+    },
+
     async cancelShipment(shipment: ShipmentRef) {
       if (shipment.providerOrderId) {
         const result = await authorized("orders/cancel", {
@@ -626,33 +701,45 @@ export function createShiprocketProvider(config: {
       } catch {
         return { type: "ignored" };
       }
-      if (!body.awb && !body.shipment_id && !body.order_id) return { type: "ignored" };
+      if (!body.awb && !body.shipment_id && !body.order_id && !body.sr_order_id) return { type: "ignored" };
+
+      const awb = body.awb ? String(body.awb).trim() : null;
+      const providerShipmentId =
+        body.shipment_id != null ? String(body.shipment_id) : body.sr_order_id != null ? String(body.sr_order_id) : null;
+      const rawOrderId =
+        body.order_id != null ? String(body.order_id) : body.sr_order_id != null ? String(body.sr_order_id) : null;
+      const orderNumber = rawOrderId ? rawOrderId.replace(/-[a-z0-9]{4,10}$/i, "") : null;
+
+      const hasStatus =
+        body.shipment_status != null ||
+        body.current_status != null ||
+        body.shipment_status_id != null ||
+        body.current_status_id != null;
 
       // Prefer the status label; the numeric ids are not consistent between Shiprocket endpoints.
       const numericId = Number(body.shipment_status_id ?? body.current_status_id);
-      const status =
+      let status =
         mapShiprocketStatus(body.shipment_status ?? body.current_status) ??
         mapShiprocketStatus(Number.isFinite(numericId) ? numericId : null);
+      if (!status && !hasStatus && awb) {
+        status = ShipmentStatus.AWB_ASSIGNED;
+      }
       if (!status) return { type: "ignored" };
 
       const occurredAt = parseDate(body.current_timestamp ?? body.date) ?? new Date();
       const statusId = body.shipment_status_id ?? body.current_status_id ?? body.shipment_status ?? body.current_status;
       const location = [...(body.scans ?? [])].reverse().find((scan) => scan.location)?.location ?? null;
 
-      const providerShipmentId =
-        body.shipment_id != null ? String(body.shipment_id) : body.sr_order_id != null ? String(body.sr_order_id) : null;
-      const rawOrderId = body.order_id != null ? String(body.order_id) : null;
-      const orderNumber = rawOrderId ? rawOrderId.replace(/-[a-z0-9]{4,10}$/i, "") : null;
-
       return {
         type: "event",
-        awb: body.awb ?? null,
+        awb,
         providerShipmentId,
+        providerOrderId: rawOrderId,
         orderNumber: orderNumber ?? rawOrderId,
         courierName: body.courier_name ?? null,
         event: {
           status,
-          providerEventId: `${body.awb ?? providerShipmentId ?? rawOrderId}:${statusId}:${body.current_timestamp ?? body.date ?? occurredAt.toISOString()}`,
+          providerEventId: `${awb ?? providerShipmentId ?? rawOrderId}:${statusId}:${body.current_timestamp ?? body.date ?? occurredAt.toISOString()}`,
           occurredAt,
           location,
           description: body.current_status ?? body.shipment_status ?? null,
