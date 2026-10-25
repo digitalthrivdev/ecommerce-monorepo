@@ -21,7 +21,14 @@ export type ShipmentEventInput = {
 
 /** A webhook names the shipment by AWB or by the carrier's shipment id. */
 export type ShipmentWebhook =
-  | { type: "event"; awb: string | null; providerShipmentId: string | null; event: ShipmentEventInput }
+  | {
+      type: "event";
+      awb: string | null;
+      providerShipmentId: string | null;
+      orderNumber?: string | null;
+      courierName?: string | null;
+      event: ShipmentEventInput;
+    }
   | { type: "ignored" };
 
 export type ShipmentAddress = {
@@ -85,6 +92,8 @@ export interface ShippingProvider {
   readonly testMode: boolean;
   /** False when the admin moves the shipment along by hand (no webhooks or tracking API). */
   readonly reportsTracking: boolean;
+  /** True when courier assignment, AWB generation and pickup scheduling happen automatically in-app. Default: false. */
+  readonly booksInApp?: boolean;
 
   checkServiceability(input: {
     pickupPincode: string;

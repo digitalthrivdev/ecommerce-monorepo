@@ -200,6 +200,9 @@ const webhookSchema = z
     shipment_status_id: z.union([z.number(), z.string()]).optional(),
     current_timestamp: z.string().optional(),
     date: z.string().optional(),
+    order_id: z.union([z.number(), z.string()]).optional(),
+    sr_order_id: z.union([z.number(), z.string()]).optional(),
+    shipment_id: z.union([z.number(), z.string()]).optional(),
     scans: z
       .array(
         z
@@ -362,6 +365,7 @@ export function createShiprocketProvider(config: {
     label: "Shiprocket",
     testMode: false,
     reportsTracking: true,
+    booksInApp: false,
 
     async checkServiceability({ pickupPincode, deliveryPincode, weightGrams, cod }) {
       const params = new URLSearchParams({
@@ -384,37 +388,52 @@ export function createShiprocketProvider(config: {
 
     async createShipment(input: ShipmentInput): Promise<BookedShipment> {
       const { firstName, lastName } = splitName(input.delivery.name);
-      const result = await authorized("orders/create/adhoc", {
+      const payload = {
+        order_id: input.orderNumber,
+        order_date: orderDate(input.orderDate),
+        pickup_location: config.pickupLocation,
+        billing_customer_name: firstName,
+        billing_last_name: lastName,
+        billing_address: [input.delivery.addressLine1, input.delivery.addressLine2, input.delivery.landmark].filter(Boolean).join(", "),
+        billing_city: input.delivery.city,
+        billing_pincode: input.delivery.postalCode,
+        billing_state: input.delivery.state,
+        billing_country: "India",
+        // The customer's email is not part of ShipmentAddress; Shiprocket accepts a blank one.
+        billing_email: "",
+        billing_phone: tenDigitPhone(input.delivery.phone),
+        shipping_is_billing: true,
+        order_items: input.items.map((item) => ({
+          name: item.name,
+          sku: item.sku,
+          units: item.quantity,
+          selling_price: Number(item.unitPrice.toString()),
+        })),
+        payment_method: input.codAmount.gt(0) ? "COD" : "Prepaid",
+        sub_total: Number(input.orderTotal.toString()),
+        length: Number(input.parcel.lengthCm.toString()),
+        breadth: Number(input.parcel.breadthCm.toString()),
+        height: Number(input.parcel.heightCm.toString()),
+        weight: input.parcel.weightGrams / 1000,
+      };
+
+      let result = await authorized("orders/create/adhoc", {
         method: "POST",
-        json: {
-          order_id: input.orderNumber,
-          order_date: orderDate(input.orderDate),
-          pickup_location: config.pickupLocation,
-          billing_customer_name: firstName,
-          billing_last_name: lastName,
-          billing_address: [input.delivery.addressLine1, input.delivery.addressLine2, input.delivery.landmark].filter(Boolean).join(", "),
-          billing_city: input.delivery.city,
-          billing_pincode: input.delivery.postalCode,
-          billing_state: input.delivery.state,
-          billing_country: "India",
-          // The customer's email is not part of ShipmentAddress; Shiprocket accepts a blank one.
-          billing_email: "",
-          billing_phone: tenDigitPhone(input.delivery.phone),
-          shipping_is_billing: true,
-          order_items: input.items.map((item) => ({
-            name: item.name,
-            sku: item.sku,
-            units: item.quantity,
-            selling_price: Number(item.unitPrice.toString()),
-          })),
-          payment_method: input.codAmount.gt(0) ? "COD" : "Prepaid",
-          sub_total: Number(input.orderTotal.toString()),
-          length: Number(input.parcel.lengthCm.toString()),
-          breadth: Number(input.parcel.breadthCm.toString()),
-          height: Number(input.parcel.heightCm.toString()),
-          weight: input.parcel.weightGrams / 1000,
-        },
+        json: payload,
       });
+
+      // If Shiprocket rejects because order_id already exists (e.g. from a previous cancelled attempt), retry with a unique suffix
+      if (!result.ok && result.status === 422) {
+        const errorText = JSON.stringify(result.body);
+        if (errorText.includes("already been taken") || errorText.includes("already exists")) {
+          const retryOrderId = `${input.orderNumber}-${Math.floor(Date.now() / 1000).toString(36)}`.slice(0, 50);
+          result = await authorized("orders/create/adhoc", {
+            method: "POST",
+            json: { ...payload, order_id: retryOrderId },
+          });
+        }
+      }
+
       if (!result.ok) throw errorFor("orders/create/adhoc", result);
 
       const order = createOrderSchema.parse(result.body);
@@ -607,7 +626,7 @@ export function createShiprocketProvider(config: {
       } catch {
         return { type: "ignored" };
       }
-      if (!body.awb) return { type: "ignored" };
+      if (!body.awb && !body.shipment_id && !body.order_id) return { type: "ignored" };
 
       // Prefer the status label; the numeric ids are not consistent between Shiprocket endpoints.
       const numericId = Number(body.shipment_status_id ?? body.current_status_id);
@@ -620,13 +639,20 @@ export function createShiprocketProvider(config: {
       const statusId = body.shipment_status_id ?? body.current_status_id ?? body.shipment_status ?? body.current_status;
       const location = [...(body.scans ?? [])].reverse().find((scan) => scan.location)?.location ?? null;
 
+      const providerShipmentId =
+        body.shipment_id != null ? String(body.shipment_id) : body.sr_order_id != null ? String(body.sr_order_id) : null;
+      const rawOrderId = body.order_id != null ? String(body.order_id) : null;
+      const orderNumber = rawOrderId ? rawOrderId.replace(/-[a-z0-9]{4,10}$/i, "") : null;
+
       return {
         type: "event",
-        awb: body.awb,
-        providerShipmentId: null,
+        awb: body.awb ?? null,
+        providerShipmentId,
+        orderNumber: orderNumber ?? rawOrderId,
+        courierName: body.courier_name ?? null,
         event: {
           status,
-          providerEventId: `${body.awb}:${statusId}:${body.current_timestamp ?? body.date ?? occurredAt.toISOString()}`,
+          providerEventId: `${body.awb ?? providerShipmentId ?? rawOrderId}:${statusId}:${body.current_timestamp ?? body.date ?? occurredAt.toISOString()}`,
           occurredAt,
           location,
           description: body.current_status ?? body.shipment_status ?? null,

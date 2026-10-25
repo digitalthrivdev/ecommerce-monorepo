@@ -36,6 +36,7 @@ export const mockCarrier: ShippingProvider = {
   label: "Test carrier",
   testMode: true,
   reportsTracking: true,
+  booksInApp: true,
 
   async checkServiceability({ deliveryPincode }) {
     const serviceable = deliveryPincode !== MOCK_UNSERVICEABLE_PINCODE;

@@ -393,7 +393,9 @@ describe("webhooks", () => {
     expect(pickedUp).toMatchObject({
       type: "event",
       awb: "SRBC0763219581",
-      providerShipmentId: null,
+      providerShipmentId: "1569076321",
+      orderNumber: "PD8CWL6H32PPN2KPK4",
+      courierName: "Ekart Shopdeck",
       event: { status: "PICKED_UP", location: "MotherHub_STV SURAT", description: "PICKED UP" },
     });
     if (pickedUp?.type === "event") {
