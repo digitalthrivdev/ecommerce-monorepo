@@ -6,6 +6,7 @@ import {
   createShiprocketProvider,
   mapShiprocketStatus,
   SHIPROCKET_WEBHOOK_HEADER,
+  splitName,
 } from "../src/modules/shipping/shiprocket-carrier.js";
 import type { ShipmentInput } from "../src/modules/shipping/shipping-provider.js";
 
@@ -195,6 +196,20 @@ describe("mapShiprocketStatus", () => {
   });
 });
 
+describe("splitName", () => {
+  it("splits full name into first and last name", () => {
+    expect(splitName("Asha Rao")).toEqual({ firstName: "Asha", lastName: "Rao" });
+    expect(splitName("Asha Devi Rao")).toEqual({ firstName: "Asha", lastName: "Devi Rao" });
+    expect(splitName("   Asha    Rao   ")).toEqual({ firstName: "Asha", lastName: "Rao" });
+  });
+
+  it("handles single-word names and empty names", () => {
+    expect(splitName("Asha")).toEqual({ firstName: "Asha", lastName: "" });
+    expect(splitName("")).toEqual({ firstName: "Customer", lastName: "" });
+    expect(splitName("   ")).toEqual({ firstName: "Customer", lastName: "" });
+  });
+});
+
 describe("checkServiceability", () => {
   it("answers from Shiprocket's courier list", async () => {
     stubFetch(withLogin((url) => (url.includes("courier/serviceability") ? json(SERVICEABILITY) : undefined)));
@@ -243,7 +258,8 @@ describe("booking a shipment", () => {
     expect(body).toMatchObject({
       order_id: "ORD-2026-0001",
       pickup_location: "Main Warehouse",
-      billing_customer_name: "Asha Rao",
+      billing_customer_name: "Asha",
+      billing_last_name: "Rao",
       billing_address: "12 Marine Drive, Near Churchgate",
       billing_city: "Mumbai",
       billing_pincode: "400020",
@@ -259,6 +275,20 @@ describe("booking a shipment", () => {
       weight: 0.6,
       order_items: [{ name: "Cotton Shirt (M)", sku: "SHIRT-M", units: 2, selling_price: 499 }],
     });
+  });
+
+  it("handles customers with a single name by passing an empty last name", async () => {
+    stubFetch(withLogin((url) => (url.includes("orders/create/adhoc") ? json(CREATE_ORDER) : undefined)));
+
+    await provider().createShipment({
+      ...SHIPMENT_INPUT,
+      delivery: { ...SHIPMENT_INPUT.delivery, name: "Asha" },
+    });
+
+    const request = callLog.find((call) => call.url.includes("orders/create/adhoc"))!;
+    const body = JSON.parse(String(request.init?.body));
+    expect(body.billing_customer_name).toBe("Asha");
+    expect(body.billing_last_name).toBe("");
   });
 
   it("assigns the AWB, schedules the pickup and fetches the label", async () => {
@@ -320,6 +350,10 @@ describe("booking a shipment", () => {
     expect(request.url).toContain("/v1/external/shipments/create/return-shipment");
     expect(JSON.parse(String(request.init?.body))).toMatchObject({
       order_id: "RET-ORD-2026-0001",
+      pickup_customer_name: "Asha",
+      pickup_last_name: "Rao",
+      shipping_customer_name: "Warehouse",
+      shipping_last_name: "",
       pickup_pincode: 400020,
       shipping_pincode: 201301,
       request_pickup: true,

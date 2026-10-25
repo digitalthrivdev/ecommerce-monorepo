@@ -231,6 +231,26 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
+/**
+ * Splits a full customer name into first name and last name for carriers (e.g. Shiprocket)
+ * that require `billing_customer_name` and `billing_last_name`. If only a single name was
+ * provided, the last name is an empty string.
+ */
+export function splitName(fullName: string): { firstName: string; lastName: string } {
+  const cleaned = fullName.trim().replace(/\s+/g, " ");
+  if (!cleaned) {
+    return { firstName: "Customer", lastName: "" };
+  }
+  const index = cleaned.indexOf(" ");
+  if (index === -1) {
+    return { firstName: cleaned, lastName: "" };
+  }
+  return {
+    firstName: cleaned.slice(0, index),
+    lastName: cleaned.slice(index + 1),
+  };
+}
+
 /** Shiprocket's order_date format: "yyyy-mm-dd HH:mm". */
 function orderDate(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -361,13 +381,15 @@ export function createShiprocketProvider(config: {
     },
 
     async createShipment(input: ShipmentInput): Promise<BookedShipment> {
+      const { firstName, lastName } = splitName(input.delivery.name);
       const result = await authorized("orders/create/adhoc", {
         method: "POST",
         json: {
           order_id: input.orderNumber,
           order_date: orderDate(input.orderDate),
           pickup_location: config.pickupLocation,
-          billing_customer_name: input.delivery.name,
+          billing_customer_name: firstName,
+          billing_last_name: lastName,
           billing_address: [input.delivery.addressLine1, input.delivery.addressLine2, input.delivery.landmark].filter(Boolean).join(", "),
           billing_city: input.delivery.city,
           billing_pincode: input.delivery.postalCode,
@@ -405,12 +427,15 @@ export function createShiprocketProvider(config: {
     },
 
     async createReturnPickup(input: ReturnPickupInput) {
+      const pickupName = splitName(input.pickup.name);
+      const deliveryName = splitName(input.delivery.name);
       const result = await authorized("shipments/create/return-shipment", {
         method: "POST",
         json: {
           order_id: `RET-${input.orderNumber}`.slice(0, 50),
           order_date: orderDate(input.orderDate),
-          pickup_customer_name: input.pickup.name,
+          pickup_customer_name: pickupName.firstName,
+          pickup_last_name: pickupName.lastName,
           pickup_address: [input.pickup.addressLine1, input.pickup.addressLine2, input.pickup.landmark].filter(Boolean).join(", "),
           pickup_address_2: "",
           pickup_city: input.pickup.city,
@@ -420,7 +445,8 @@ export function createShiprocketProvider(config: {
           pickup_email: input.pickup.email,
           pickup_phone: tenDigitPhone(input.pickup.phone),
           pickup_isd_code: "91",
-          shipping_customer_name: input.delivery.name,
+          shipping_customer_name: deliveryName.firstName,
+          shipping_last_name: deliveryName.lastName,
           shipping_address: [input.delivery.addressLine1, input.delivery.addressLine2, input.delivery.landmark].filter(Boolean).join(", "),
           shipping_address_2: "",
           shipping_city: input.delivery.city,
