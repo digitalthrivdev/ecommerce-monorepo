@@ -44,24 +44,28 @@ function createProvider(definition: CarrierDefinition, credentials: Credentials 
 async function load(prisma: PrismaClient) {
   const rows = new Map((await prisma.shippingCarrierCredential.findMany()).map((row) => [row.carrier, row]));
 
-  return new Map(
-    CARRIERS.map((definition): [string, LoadedCarrier] => {
-      const row = rows.get(definition.name);
-      const stored = row ? readStored(definition, row.credentials) : null;
-      const fromEnv = definition.fromEnv();
-      const credentials = fromEnv ?? stored;
-      return [
-        definition.name,
-        {
-          definition,
-          provider: createProvider(definition, credentials),
-          source: fromEnv ? "env" : stored ? "dashboard" : null,
-          credentials,
-          stored: row ? { updatedAt: row.updatedAt, readable: stored !== null } : null,
-        },
-      ];
-    }),
-  );
+  const map = new Map<string, LoadedCarrier>();
+  for (const definition of CARRIERS) {
+    const row = rows.get(definition.name);
+    const stored = row ? readStored(definition, row.credentials) : null;
+    const fromEnv = definition.fromEnv();
+    const credentials = fromEnv ?? stored;
+    const loaded: LoadedCarrier = {
+      definition,
+      provider: createProvider(definition, credentials),
+      source: fromEnv ? "env" : stored ? "dashboard" : null,
+      credentials,
+      stored: row ? { updatedAt: row.updatedAt, readable: stored !== null } : null,
+    };
+    map.set(definition.name, loaded);
+    if (definition.webhookSlug) {
+      map.set(definition.webhookSlug, loaded);
+    }
+    for (const alias of definition.webhookAliases ?? []) {
+      map.set(alias, loaded);
+    }
+  }
+  return map;
 }
 
 function loadCarriers(prisma: PrismaClient) {
@@ -88,23 +92,26 @@ export async function activeShippingProvider(prisma: PrismaClient, settings: { s
 /** For the admin dashboard. Contains no secret values. */
 export async function shippingCarrierOptions(prisma: PrismaClient) {
   const carriers = await loadCarriers(prisma);
-  return [...carriers.values()].map(({ definition, provider, source, credentials, stored }) => ({
-    name: definition.name,
-    label: definition.label,
-    configured: provider !== null,
-    testMode: provider?.testMode ?? null,
-    source,
-    needsCredentials: definition.fields.length > 0,
-    editable: definition.fields.length > 0 && source !== "env" && canStoreSecrets,
-    fields: summarizeCredentials(definition.fields, credentials),
-    savedKeysUnreadable: stored !== null && !stored.readable,
-    webhookUrl:
-      definition.webhookEvents && env.PUBLIC_API_URL
-        ? `${env.PUBLIC_API_URL.replace(/\/+$/, "")}/shipping/webhooks/${definition.name}`
-        : null,
-    webhookEvents: definition.webhookEvents,
-    keysUpdatedAt: source === "dashboard" ? (stored?.updatedAt ?? null) : null,
-  }));
+  return CARRIERS.map((definition) => {
+    const loaded = carriers.get(definition.name)!;
+    return {
+      name: definition.name,
+      label: definition.label,
+      configured: loaded.provider !== null,
+      testMode: loaded.provider?.testMode ?? null,
+      source: loaded.source,
+      needsCredentials: definition.fields.length > 0,
+      editable: definition.fields.length > 0 && loaded.source !== "env" && canStoreSecrets,
+      fields: summarizeCredentials(definition.fields, loaded.credentials),
+      savedKeysUnreadable: loaded.stored !== null && !loaded.stored.readable,
+      webhookUrl:
+        definition.webhookEvents && env.PUBLIC_API_URL
+          ? `${env.PUBLIC_API_URL.replace(/\/+$/, "")}/shipping/webhooks/${definition.webhookSlug ?? definition.name}`
+          : null,
+      webhookEvents: definition.webhookEvents,
+      keysUpdatedAt: loaded.source === "dashboard" ? (loaded.stored?.updatedAt ?? null) : null,
+    };
+  });
 }
 
 function editableCarrier(name: string) {

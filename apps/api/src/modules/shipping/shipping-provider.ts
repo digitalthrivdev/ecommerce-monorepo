@@ -121,6 +121,10 @@ export interface ShippingProvider {
 export type CarrierDefinition = {
   name: string;
   label: string;
+  /** Custom slug for webhook URLs when the carrier name has restricted words (e.g. Shiprocket blocks its own name). */
+  webhookSlug?: string;
+  /** Other path slugs accepted on incoming webhooks (e.g. ['srocket', 'rocket']). */
+  webhookAliases?: readonly string[];
   /** Empty for carriers that need no credentials. */
   fields: readonly CredentialField[];
   /** What to register in the carrier's dashboard, or null when it has no webhooks. */
@@ -135,6 +139,8 @@ export type CarrierDefinition = {
 function defineCarrier<S extends z.ZodObject<Record<string, z.ZodType<string>>>>(definition: {
   name: string;
   label: string;
+  webhookSlug?: string;
+  webhookAliases?: readonly string[];
   fields: readonly CredentialField[];
   webhookEvents: string | null;
   schema: S;
@@ -170,6 +176,8 @@ export const CARRIERS: readonly CarrierDefinition[] = [
   defineCarrier({
     name: "shiprocket",
     label: "Shiprocket",
+    webhookSlug: "rocket",
+    webhookAliases: ["srocket", "rocket"],
     fields: [
       { key: "email", label: "API user email", secret: false },
       { key: "password", label: "API user password", secret: true },

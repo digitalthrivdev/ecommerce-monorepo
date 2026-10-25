@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
-import { KeyRound, Loader2 } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2 } from "lucide-react";
 
 import {
   AlertDialog,
@@ -39,6 +39,54 @@ type Actions = {
   save: (formData: FormData) => Promise<ActionResult>;
   remove: (input: { name: string }) => Promise<ActionResult>;
 };
+
+function SecretFieldInput({
+  id,
+  name,
+  hint,
+  optional,
+  error,
+}: {
+  id: string;
+  name: string;
+  hint?: string | null;
+  optional?: boolean;
+  error?: string;
+}) {
+  const [show, setShow] = useState(false);
+  const [value, setValue] = useState("");
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        name={name}
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={hint ? `Saved, ${hint}` : undefined}
+        autoComplete="new-password"
+        spellCheck={false}
+        maxLength={512}
+        required={!optional && !hint}
+        aria-invalid={Boolean(error)}
+        className="pr-10"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        tabIndex={-1}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setShow((prev) => !prev)}
+        className="absolute right-0.5 top-1/2 -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
+        aria-label={show ? "Hide value" : "Show value"}
+      >
+        {show ? <EyeOff /> : <Eye />}
+      </Button>
+    </div>
+  );
+}
 
 function EditKeysDialog<T extends IntegrationKeys>({
   item,
@@ -100,17 +148,24 @@ function EditKeysDialog<T extends IntegrationKeys>({
                         ))}
                       </SelectContent>
                     </Select>
+                  ) : field.secret ? (
+                    <SecretFieldInput
+                      id={id}
+                      name={field.key}
+                      hint={field.hint}
+                      optional={field.optional}
+                      error={error}
+                    />
                   ) : (
                     <Input
                       id={id}
                       name={field.key}
-                      type={field.secret ? "password" : "text"}
-                      defaultValue={field.secret ? "" : (field.value ?? "")}
-                      placeholder={field.secret && field.hint ? `Saved, ${field.hint}` : undefined}
-                      autoComplete={field.secret ? "new-password" : "off"}
+                      type="text"
+                      defaultValue={field.value ?? ""}
+                      autoComplete="off"
                       spellCheck={false}
                       maxLength={512}
-                      required={!field.optional && (!field.secret || !field.hint)}
+                      required={!field.optional}
                       aria-invalid={Boolean(error)}
                     />
                   )}
